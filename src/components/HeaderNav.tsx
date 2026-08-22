@@ -247,6 +247,19 @@ export default function HeaderNav() {
           >
             Outer
           </button>
+
+          {/* Prasna Tantra Direct Portal Link */}
+          <a
+            href="https://prasna-tantra-2-eqcdmsstvnm6buvdjcjfad.streamlit.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-950 via-indigo-950 to-purple-900 border border-purple-500/60 hover:border-purple-400 text-purple-200 hover:text-white font-extrabold flex items-center gap-1.5 transition-all shadow-md hover:shadow-purple-500/20 hover:scale-105 active:scale-95 group ml-1"
+            title="Open Vedic Horary Prasna Tantra Oracle in a new window"
+          >
+            <span className="text-sm animate-pulse">🔮</span>
+            <span>Prasna Tantra</span>
+            <span className="text-[10px] text-purple-400 group-hover:text-purple-200">↗</span>
+          </a>
         </div>
       </div>
 

@@ -90,8 +90,18 @@ export default function HomePage() {
       <EntityDetailModal />
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 py-4 text-center text-xs text-slate-500">
-        Vedic Sky Tracker & Planetary Ephemeris Engine • Powered by High-Precision Celestial Mechanics
+      <footer className="border-t border-slate-900 py-4 px-4 text-center text-xs text-slate-500 flex flex-wrap items-center justify-center gap-4">
+        <span>Vedic Sky Tracker & Planetary Ephemeris Engine • Powered by High-Precision Celestial Mechanics</span>
+        <span className="text-slate-700">•</span>
+        <a
+          href="https://prasna-tantra-2-eqcdmsstvnm6buvdjcjfad.streamlit.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-purple-400 hover:text-purple-300 font-bold underline decoration-purple-500/40 hover:decoration-purple-300 transition-colors flex items-center gap-1"
+        >
+          <span>🔮 Prasna Tantra (Horary Astrology) Portal</span>
+          <span>↗</span>
+        </a>
       </footer>
     </div>
   );
