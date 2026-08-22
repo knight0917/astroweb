@@ -439,10 +439,12 @@ export interface FullNumerologyReport {
   loshu: LoshuGridResult;
 }
 
-export function generateNumerologyReport(date: Date): FullNumerologyReport {
-  const day = date.getUTCDate();
-  const month = date.getUTCMonth() + 1;
-  const year = date.getUTCFullYear();
+export function generateNumerologyReport(date: Date, timezoneOffsetHours = 0): FullNumerologyReport {
+  // Convert UTC timestamp to observer's local date
+  const localDate = new Date(date.getTime() + timezoneOffsetHours * 3600 * 1000);
+  const day = localDate.getUTCDate();
+  const month = localDate.getUTCMonth() + 1;
+  const year = localDate.getUTCFullYear();
 
   const mulankData = calculateMulank(day);
   const bhagyankData = calculateBhagyank(day, month, year);

@@ -13,10 +13,10 @@ export default function NumerologyView() {
   const [userName, setUserName] = useState("Vedic Seeker");
   const [selectedProfileNumber, setSelectedProfileNumber] = useState<number | null>(null);
 
-  // Generate date report from current active date
+  // Generate date report from current active date using observer timezone offset
   const report = useMemo(() => {
-    return generateNumerologyReport(currentDate);
-  }, [currentDate]);
+    return generateNumerologyReport(currentDate, location.timezoneOffsetHours);
+  }, [currentDate, location.timezoneOffsetHours]);
 
   // Name calculation
   const nameData = useMemo(() => {
