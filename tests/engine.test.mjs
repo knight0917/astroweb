@@ -120,6 +120,20 @@ test("Classical Parashari Ashtakavarga & Bhinnaashtakavarga Verification", async
   assert.equal(av.bav["Jupiter"].totalBindus, 56, "Jupiter BAV must have 56 bindus");
   assert.equal(av.bav["Venus"].totalBindus, 52, "Venus BAV must have 52 bindus");
   assert.equal(av.bav["Saturn"].totalBindus, 39, "Saturn BAV must have 39 bindus");
+
+  // Verify Directional Strength (East 1-5-9, South 2-6-10, West 3-7-11, North 4-8-12)
+  const dir = av.directionalAnalysis.overall;
+  const dirSum = dir.east + dir.south + dir.west + dir.north;
+  assert.equal(dirSum, 337, `Directional sum must equal 337, got ${dirSum}`);
+  assert.ok(dir.bestDirection.bindus > 0, "Best direction must have positive bindus");
+  assert.equal(dir.directions.length, 4, "Must have 4 directions");
+
+  // Verify planet directional sums
+  for (const planetId of ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"]) {
+    const pDir = av.directionalAnalysis.planetDirections[planetId];
+    const pSum = pDir.east + pDir.south + pDir.west + pDir.north;
+    assert.equal(pSum, av.bav[planetId].totalBindus, `${planetId} directional sum must equal total BAV`);
+  }
 });
 
 test("Vedic & Chaldean Numerology Suite Verification", async () => {
