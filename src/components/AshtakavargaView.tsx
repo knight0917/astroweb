@@ -81,30 +81,30 @@ export default function AshtakavargaView() {
     number,
     { rashi: { x: number; y: number }; bindu: { x: number; y: number }; label: { x: number; y: number } }
   > = {
-    // 1: Center Top Diamond
-    1: { rashi: { x: 150, y: 50 }, bindu: { x: 150, y: 76 }, label: { x: 150, y: 98 } },
-    // 2: Top Left Triangle
-    2: { rashi: { x: 110, y: 16 }, bindu: { x: 96, y: 36 }, label: { x: 88, y: 52 } },
-    // 3: Far Top-Left Corner Triangle
-    3: { rashi: { x: 42, y: 16 }, bindu: { x: 26, y: 36 }, label: { x: 16, y: 52 } },
-    // 4: Left Center Diamond
-    4: { rashi: { x: 75, y: 124 }, bindu: { x: 75, y: 150 }, label: { x: 75, y: 172 } },
-    // 5: Far Bottom-Left Corner Triangle
-    5: { rashi: { x: 16, y: 248 }, bindu: { x: 26, y: 266 }, label: { x: 42, y: 286 } },
-    // 6: Bottom Left Triangle
-    6: { rashi: { x: 88, y: 248 }, bindu: { x: 96, y: 266 }, label: { x: 110, y: 286 } },
-    // 7: Center Bottom Diamond
-    7: { rashi: { x: 150, y: 200 }, bindu: { x: 150, y: 226 }, label: { x: 150, y: 248 } },
-    // 8: Bottom Right Triangle
-    8: { rashi: { x: 212, y: 248 }, bindu: { x: 204, y: 266 }, label: { x: 190, y: 286 } },
-    // 9: Far Bottom-Right Corner Triangle
-    9: { rashi: { x: 284, y: 248 }, bindu: { x: 274, y: 266 }, label: { x: 258, y: 286 } },
-    // 10: Right Center Diamond
-    10: { rashi: { x: 225, y: 124 }, bindu: { x: 225, y: 150 }, label: { x: 225, y: 172 } },
-    // 11: Far Top-Right Corner Triangle
-    11: { rashi: { x: 258, y: 16 }, bindu: { x: 274, y: 36 }, label: { x: 284, y: 52 } },
-    // 12: Top Right Triangle
-    12: { rashi: { x: 190, y: 16 }, bindu: { x: 204, y: 36 }, label: { x: 212, y: 52 } },
+    // 1: Center Top Diamond (Lagna)
+    1: { rashi: { x: 150, y: 48 }, bindu: { x: 150, y: 76 }, label: { x: 150, y: 98 } },
+    // 2: Top Left Upper Triangle (between (0,0) and (150,0))
+    2: { rashi: { x: 105, y: 18 }, bindu: { x: 75, y: 35 }, label: { x: 75, y: 56 } },
+    // 3: Left Top Outer Triangle (between (0,0) and (0,150))
+    3: { rashi: { x: 22, y: 48 }, bindu: { x: 35, y: 75 }, label: { x: 35, y: 98 } },
+    // 4: Left Center Diamond (Sukha Bhava)
+    4: { rashi: { x: 75, y: 122 }, bindu: { x: 75, y: 150 }, label: { x: 75, y: 174 } },
+    // 5: Left Bottom Outer Triangle (between (0,150) and (0,300))
+    5: { rashi: { x: 22, y: 198 }, bindu: { x: 35, y: 225 }, label: { x: 35, y: 248 } },
+    // 6: Bottom Left Lower Triangle (between (0,300) and (150,300))
+    6: { rashi: { x: 105, y: 282 }, bindu: { x: 75, y: 265 }, label: { x: 75, y: 244 } },
+    // 7: Center Bottom Diamond (Kalatra Bhava)
+    7: { rashi: { x: 150, y: 198 }, bindu: { x: 150, y: 226 }, label: { x: 150, y: 250 } },
+    // 8: Bottom Right Lower Triangle (between (150,300) and (300,300))
+    8: { rashi: { x: 195, y: 282 }, bindu: { x: 225, y: 265 }, label: { x: 225, y: 244 } },
+    // 9: Right Bottom Outer Triangle (between (300,150) and (300,300))
+    9: { rashi: { x: 278, y: 198 }, bindu: { x: 265, y: 225 }, label: { x: 265, y: 248 } },
+    // 10: Right Center Diamond (Karma Bhava)
+    10: { rashi: { x: 225, y: 122 }, bindu: { x: 225, y: 150 }, label: { x: 225, y: 174 } },
+    // 11: Right Top Outer Triangle (between (300,0) and (300,150))
+    11: { rashi: { x: 278, y: 48 }, bindu: { x: 265, y: 75 }, label: { x: 265, y: 98 } },
+    // 12: Top Right Upper Triangle (between (150,0) and (300,0))
+    12: { rashi: { x: 195, y: 18 }, bindu: { x: 225, y: 35 }, label: { x: 225, y: 56 } },
   };
 
   return (
