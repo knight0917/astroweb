@@ -342,6 +342,209 @@ function LowerNakshatraBelt3D() {
   );
 }
 
+const VEDIC_HOUSES_DATA = [
+  {
+    house: 1,
+    name: "1st House",
+    sanskritName: "तनु भाव (Tanu)",
+    significance: "Self • Body • Vitality",
+    karaka: "Sun",
+    type: "Kendra & Trikona (Lagna)",
+    color: "#f59e0b",
+  },
+  {
+    house: 2,
+    name: "2nd House",
+    sanskritName: "धन भाव (Dhana)",
+    significance: "Wealth • Family • Speech",
+    karaka: "Jupiter",
+    type: "Maraka / Dhana",
+    color: "#10b981",
+  },
+  {
+    house: 3,
+    name: "3rd House",
+    sanskritName: "सहज भाव (Sahaja)",
+    significance: "Siblings • Courage • Effort",
+    karaka: "Mars",
+    type: "Upachaya / Bhratri",
+    color: "#06b6d4",
+  },
+  {
+    house: 4,
+    name: "4th House",
+    sanskritName: "सुख भाव (Sukha)",
+    significance: "Mother • Home • Vehicles",
+    karaka: "Moon",
+    type: "Kendra (Sukha)",
+    color: "#3b82f6",
+  },
+  {
+    house: 5,
+    name: "5th House",
+    sanskritName: "पुत्र भाव (Putra)",
+    significance: "Intellect • Children • Purvapunya",
+    karaka: "Jupiter",
+    type: "Trikona (Lakshmi Sthana)",
+    color: "#8b5cf6",
+  },
+  {
+    house: 6,
+    name: "6th House",
+    sanskritName: "शत्रु भाव (Shatru)",
+    significance: "Debts • Disease • Service",
+    karaka: "Mars / Saturn",
+    type: "Dusthana & Upachaya",
+    color: "#ef4444",
+  },
+  {
+    house: 7,
+    name: "7th House",
+    sanskritName: "जाया भाव (Jaya)",
+    significance: "Spouse • Partnership • Public",
+    karaka: "Venus",
+    type: "Kendra & Maraka (Descendant)",
+    color: "#ec4899",
+  },
+  {
+    house: 8,
+    name: "8th House",
+    sanskritName: "आयु भाव (Ayur)",
+    significance: "Longevity • Transformation • Occult",
+    karaka: "Saturn",
+    type: "Dusthana (Randhra)",
+    color: "#6366f1",
+  },
+  {
+    house: 9,
+    name: "9th House",
+    sanskritName: "धर्म भाव (Dharma)",
+    significance: "Fortune • Guru • Higher Wisdom",
+    karaka: "Jupiter",
+    type: "Trikona (Supreme Bhagya)",
+    color: "#f59e0b",
+  },
+  {
+    house: 10,
+    name: "10th House",
+    sanskritName: "कर्म भाव (Karma)",
+    significance: "Career • Authority • Fame",
+    karaka: "Sun / Mercury",
+    type: "Kendra (Midheaven / MC)",
+    color: "#10b981",
+  },
+  {
+    house: 11,
+    name: "11th House",
+    sanskritName: "लाभ भाव (Labha)",
+    significance: "Gains • Aspirations • Network",
+    karaka: "Jupiter",
+    type: "Upachaya (Supreme Labha)",
+    color: "#06b6d4",
+  },
+  {
+    house: 12,
+    name: "12th House",
+    sanskritName: "व्यय भाव (Vyaya)",
+    significance: "Expenditure • Foreign Lands • Moksha",
+    karaka: "Saturn / Ketu",
+    type: "Dusthana (Moksha Sthana)",
+    color: "#a855f7",
+  },
+];
+
+// 12 Vedic Houses (Bhava Chakra) Belt (Lower Ring Tier 2: Y = -9.0, Radius = 40)
+// 1st House starts at Ascendant (Lagna) and all 12 houses rotate dynamically with Asc. point
+function LowerVedicHousesBelt3D({
+  ascendantLongitude,
+  cusps,
+}: {
+  ascendantLongitude: number;
+  cusps?: number[];
+}) {
+  const radius = 40;
+  const yOffset = -9.0;
+
+  return (
+    <group>
+      {/* Main Vedic Houses Base Ring */}
+      <mesh position={[0, yOffset, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[radius, 0.12, 16, 128]} />
+        <meshBasicMaterial color="#38bdf8" transparent opacity={0.65} />
+      </mesh>
+
+      {/* 12 House Sectors rotating dynamically with Ascendant */}
+      {VEDIC_HOUSES_DATA.map((hData, i) => {
+        const startLon =
+          cusps && cusps[i] !== undefined
+            ? cusps[i]
+            : (ascendantLongitude + i * 30) % 360;
+        const endLon =
+          cusps && cusps[(i + 1) % 12] !== undefined
+            ? cusps[(i + 1) % 12]
+            : (startLon + 30) % 360;
+
+        let span = (endLon - startLon + 360) % 360;
+        if (span === 0) span = 30;
+        const midLon = (startLon + span / 2) % 360;
+
+        const pos = eclipticToCartesian(midLon, 0, radius);
+        const startPos = eclipticToCartesian(startLon, 0, radius - 1.2);
+        const endPos = eclipticToCartesian(startLon, 0, radius + 1.2);
+
+        const tickLine = new Float32Array([
+          startPos[0],
+          startPos[1] + yOffset,
+          startPos[2],
+          endPos[0],
+          endPos[1] + yOffset,
+          endPos[2],
+        ]);
+
+        return (
+          <group key={hData.house}>
+            {/* Cusp Divider Line */}
+            <line>
+              <bufferGeometry>
+                <bufferAttribute attach="attributes-position" args={[tickLine, 3]} />
+              </bufferGeometry>
+              <lineBasicMaterial color={hData.color} transparent opacity={0.85} />
+            </line>
+
+            {/* 12 House Dynamic Label Badge */}
+            <group position={[pos[0], pos[1] + yOffset, pos[2]]}>
+              <Html distanceFactor={44} center zIndexRange={[0, 10]}>
+                <div
+                  style={{ borderColor: `${hData.color}90` }}
+                  className="select-none text-center pointer-events-none px-2 py-1 rounded-xl bg-slate-950/90 border shadow-2xl backdrop-blur-md transition-transform hover:scale-110 whitespace-nowrap min-w-[90px]"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span
+                      style={{ color: hData.color }}
+                      className="font-extrabold text-[10.5px] font-mono"
+                    >
+                      H{hData.house}
+                    </span>
+                    <span className="font-bold text-[9.5px] text-slate-100">
+                      {hData.sanskritName.split(" ")[0]}
+                    </span>
+                  </div>
+                  <div className="text-[7.5px] text-slate-300 font-mono mt-0.5">
+                    {hData.significance}
+                  </div>
+                  <div className="text-[7px] text-amber-400 font-mono flex items-center justify-center gap-1 mt-0.5">
+                    <span>{startLon.toFixed(1)}° - {endLon.toFixed(1)}°</span>
+                  </div>
+                </div>
+              </Html>
+            </group>
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
 // 3D Planet Marker with Planetary Aspect Rays (Graha Drishti) & Hover Degree Tooltip
 function PlanetMesh({
   id,
@@ -717,10 +920,16 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
         <meshBasicMaterial color="#eab308" transparent opacity={0.35} />
       </mesh>
 
-      {/* 3. Lower Ring: 27 Nakshatras with Pada ticks (Y = -4.5, Radius = 40) */}
+      {/* 3. Lower Ring 1: 27 Nakshatras with Pada ticks (Y = -4.5, Radius = 40) */}
       <LowerNakshatraBelt3D />
 
-      {/* 4. Ascendant (Lagna) East Rising Vector Marker (Middle Belt) */}
+      {/* 4. Lower Ring 2: 12 Vedic Houses (Bhava Chakra) rotating with Ascendant (Y = -9.0, Radius = 40) */}
+      <LowerVedicHousesBelt3D
+        ascendantLongitude={ephemeris.ascendant.siderealLongitude}
+        cusps={ephemeris.houses?.cusps}
+      />
+
+      {/* 5. Ascendant (Lagna) East Rising Vector Marker (Middle Belt) */}
       <PlanetMesh
         id="Ascendant"
         name="Lagna"
