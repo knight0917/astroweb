@@ -1080,6 +1080,20 @@ export default function SkyDome() {
   }, []);
 
   const handleWheel = (e: React.WheelEvent) => {
+    const target = e.target as HTMLElement | null;
+    if (
+      target &&
+      (target.closest(".side-dock") ||
+        target.closest(".deck-scrollable") ||
+        target.closest(".glass-panel") ||
+        target.closest("button") ||
+        target.closest("select") ||
+        target.closest("input") ||
+        target.closest(".custom-scrollbar"))
+    ) {
+      return;
+    }
+
     e.preventDefault();
     const zoomDelta = e.deltaY * 0.05;
     setFov((prev) => Math.min(95, Math.max(5, prev + zoomDelta)));

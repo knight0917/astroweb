@@ -73,7 +73,11 @@ export default function PlanetIndexDeck() {
 
       {/* Expanded Vertical Sidebar */}
       {isOpen && (
-        <div className="w-64 xl:w-72 max-w-[85vw] max-h-[calc(100vh-140px)] min-h-[340px] glass-panel rounded-2xl border border-slate-700/80 bg-slate-950/98 shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-right-4 duration-200 relative z-50 backdrop-blur-2xl">
+        <div
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+          className="side-dock deck-scrollable w-64 xl:w-72 max-w-[85vw] max-h-[calc(100vh-140px)] min-h-[340px] glass-panel rounded-2xl border border-slate-700/80 bg-slate-950/98 shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-right-4 duration-200 relative z-50 backdrop-blur-2xl"
+        >
           {/* Header */}
           <div className="p-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
             <div className="flex items-center gap-2">
@@ -132,7 +136,11 @@ export default function PlanetIndexDeck() {
           </div>
 
           {/* Scrollable Entity List */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar divide-y divide-slate-800/40">
+          <div
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            className="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar deck-scrollable divide-y divide-slate-800/40"
+          >
             {/* 1. Lagna & MC */}
             {(filterTab === "all" || filterTab === "navagraha") && (
               <div className="space-y-1 pt-1 first:pt-0">

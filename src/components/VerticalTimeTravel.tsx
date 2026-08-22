@@ -153,7 +153,11 @@ export default function VerticalTimeTravel() {
 
       {/* Expanded Vertical Left Dock */}
       {isOpen && (
-        <div className="w-64 xl:w-72 max-w-[85vw] max-h-[calc(100vh-140px)] min-h-[340px] glass-panel rounded-2xl border border-slate-700/80 bg-slate-950/98 shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-4 duration-200 relative z-50 backdrop-blur-2xl">
+        <div
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+          className="side-dock deck-scrollable w-64 xl:w-72 max-w-[85vw] max-h-[calc(100vh-140px)] min-h-[340px] glass-panel rounded-2xl border border-slate-700/80 bg-slate-950/98 shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-4 duration-200 relative z-50 backdrop-blur-2xl"
+        >
           {/* Header */}
           <div className="p-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
             <div className="flex items-center gap-2">
@@ -177,7 +181,11 @@ export default function VerticalTimeTravel() {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
+          <div
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar deck-scrollable"
+          >
             {/* 1. Place / Location Selector Card */}
             <div className="space-y-2 bg-slate-900/60 p-2.5 rounded-xl border border-amber-500/30">
               <div className="flex items-center justify-between">
