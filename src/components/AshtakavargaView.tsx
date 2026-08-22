@@ -322,24 +322,29 @@ export default function AshtakavargaView() {
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">🧭</span>
                   <h3 className="font-extrabold text-base md:text-lg text-slate-100 uppercase tracking-wider flex items-center gap-2">
-                    <span>Ashtakavarga Directional Strength (दिशा बल)</span>
+                    {activeDetail ? (
+                      <span style={{ color: activeDetail.color }}>
+                        {activeDetail.symbol} {activeDetail.sanskritName} ({activeDetail.planetName}) Directional Strength (दिशा बल)
+                      </span>
+                    ) : (
+                      <span>Sarvashtakavarga (SAV) Directional Strength (दिशा बल)</span>
+                    )}
                   </h3>
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Calculated by summing the Trikona houses: <strong>East (1, 5, 9)</strong>, <strong>South (2, 6, 10)</strong>, <strong>West (3, 7, 11)</strong>, and <strong>North (4, 8, 12)</strong>
+                  Calculated by summing Trikona houses: <strong>East (1, 5, 9)</strong>, <strong>South (2, 6, 10)</strong>, <strong>West (3, 7, 11)</strong>, and <strong>North (4, 8, 12)</strong>
                 </p>
               </div>
 
-              {/* Best Overall Direction Trophy Badge */}
+              {/* Best Direction Trophy Badge */}
               <div className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-amber-500/20 border border-amber-500/50 shadow-lg text-right">
                 <span className="text-[9px] uppercase font-bold text-amber-400 block tracking-wider">
-                  🏆 Overall Best Direction (सर्वश्रेष्ठ दिशा)
+                  {activeDetail ? `🏆 ${activeDetail.sanskritName}'s Best Direction` : "🏆 Overall Best Direction (सर्वश्रेष्ठ दिशा)"}
                 </span>
                 <span className="text-base font-extrabold text-amber-300 font-mono flex items-center justify-end gap-1.5">
-                  <span>{avResult.directionalAnalysis.overall.bestDirection.direction}</span>
-                  <span className="text-xs text-slate-300">({avResult.directionalAnalysis.overall.bestDirection.sanskritName.split(" ")[0]})</span>
+                  <span>{activeDetail ? activeDetail.directional.bestDirection : avResult.directionalAnalysis.overall.bestDirection.direction}</span>
                   <span className="text-xs px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-bold ml-1">
-                    {avResult.directionalAnalysis.overall.bestDirection.bindus} Bindus
+                    {activeDetail ? activeDetail.directional.bestBindus : avResult.directionalAnalysis.overall.bestDirection.bindus} Bindus
                   </span>
                 </span>
               </div>
@@ -347,13 +352,73 @@ export default function AshtakavargaView() {
 
             {/* 4 Cardinal Direction Cards (East, South, West, North) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {avResult.directionalAnalysis.overall.directions.map((dir, idx) => {
-                const isWinner = dir.direction === avResult.directionalAnalysis.overall.bestDirection.direction;
-                const rank = idx + 1;
+              {(activeDetail
+                ? [
+                    {
+                      dir: "East" as const,
+                      name: "East",
+                      sanskrit: "Purva (पूर्व)",
+                      houses: [1, 5, 9] as [number, number, number],
+                      trikona: "Dharma Trikona",
+                      element: "Fire (Agni)",
+                      bindus: activeDetail.directional.east,
+                      total: activeDetail.totalBindus,
+                      icon: "🌅",
+                    },
+                    {
+                      dir: "South" as const,
+                      name: "South",
+                      sanskrit: "Dakshina (दक्षिण)",
+                      houses: [2, 6, 10] as [number, number, number],
+                      trikona: "Artha Trikona",
+                      element: "Earth (Prithvi)",
+                      bindus: activeDetail.directional.south,
+                      total: activeDetail.totalBindus,
+                      icon: "☀️",
+                    },
+                    {
+                      dir: "West" as const,
+                      name: "West",
+                      sanskrit: "Pashchima (पश्चिम)",
+                      houses: [3, 7, 11] as [number, number, number],
+                      trikona: "Kama Trikona",
+                      element: "Air (Vayu)",
+                      bindus: activeDetail.directional.west,
+                      total: activeDetail.totalBindus,
+                      icon: "🌇",
+                    },
+                    {
+                      dir: "North" as const,
+                      name: "North",
+                      sanskrit: "Uttara (उत्तर)",
+                      houses: [4, 8, 12] as [number, number, number],
+                      trikona: "Moksha Trikona",
+                      element: "Water (Jala)",
+                      bindus: activeDetail.directional.north,
+                      total: activeDetail.totalBindus,
+                      icon: "🌌",
+                    },
+                  ]
+                : avResult.directionalAnalysis.overall.directions.map((d) => ({
+                    dir: d.direction,
+                    name: d.direction,
+                    sanskrit: d.sanskritName,
+                    houses: d.houses,
+                    trikona: d.trikonaName,
+                    element: d.element,
+                    bindus: d.bindus,
+                    total: 337,
+                    icon: d.direction === "East" ? "🌅" : d.direction === "South" ? "☀️" : d.direction === "West" ? "🌇" : "🌌",
+                  }))
+              ).map((dirItem) => {
+                const isWinner = activeDetail
+                  ? dirItem.dir === activeDetail.directional.bestDirection
+                  : dirItem.dir === avResult.directionalAnalysis.overall.bestDirection.direction;
+                const percentage = Math.round((dirItem.bindus / dirItem.total) * 100);
 
                 return (
                   <div
-                    key={dir.direction}
+                    key={dirItem.name}
                     className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
                       isWinner
                         ? "bg-gradient-to-b from-amber-950/40 to-slate-950/90 border-amber-500/70 shadow-2xl ring-1 ring-amber-500/30 scale-[1.02]"
@@ -363,14 +428,12 @@ export default function AshtakavargaView() {
                     <div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-lg">
-                            {dir.direction === "East" ? "🌅" : dir.direction === "South" ? "☀️" : dir.direction === "West" ? "🌇" : "🌌"}
-                          </span>
+                          <span className="text-lg">{dirItem.icon}</span>
                           <div>
                             <h4 className="font-extrabold text-sm text-slate-100">
-                              {dir.direction} • {dir.sanskritName.split(" ")[0]}
+                              {dirItem.name} • {dirItem.sanskrit.split(" ")[0]}
                             </h4>
-                            <span className="text-[10px] text-amber-400 font-medium">{dir.trikonaName.split(" ")[0]}</span>
+                            <span className="text-[10px] text-amber-400 font-medium">{dirItem.trikona.split(" ")[0]}</span>
                           </div>
                         </div>
 
@@ -381,41 +444,35 @@ export default function AshtakavargaView() {
                               : "bg-slate-800 text-slate-400"
                           }`}
                         >
-                          {isWinner ? "🏆 #1 Rank" : `#${rank} Rank`}
+                          {isWinner ? "🏆 Best" : "Direction"}
                         </span>
                       </div>
 
                       {/* Bindu Count & Houses */}
                       <div className="mt-3.5 flex items-baseline justify-between border-b border-slate-800/80 pb-2">
                         <div>
-                          <span className="text-2xl font-extrabold text-slate-100 font-mono">{dir.bindus}</span>
-                          <span className="text-xs text-slate-400 ml-1">/ 337 Bindus</span>
+                          <span className="text-2xl font-extrabold text-slate-100 font-mono">{dirItem.bindus}</span>
+                          <span className="text-xs text-slate-400 ml-1">/ {dirItem.total} Bindus</span>
                         </div>
                         <span className="text-xs font-bold font-mono text-amber-300">
-                          {dir.percentage}%
+                          {percentage}%
                         </span>
                       </div>
 
                       <div className="mt-2 text-[10.5px] text-slate-400 font-mono">
                         <span className="text-slate-500">Houses: </span>
-                        <strong className="text-slate-300">{dir.houses.map((h) => `H${h}`).join(" + ")}</strong>
-                        <span className="text-slate-500"> • {dir.element}</span>
+                        <strong className="text-slate-300">{dirItem.houses.map((h) => `H${h}`).join(" + ")}</strong>
+                        <span className="text-slate-500"> • {dirItem.element.split(" ")[0]}</span>
                       </div>
-
-                      <p className="text-[11px] text-slate-300 mt-2 leading-relaxed">
-                        {dir.significance}
-                      </p>
                     </div>
 
-                    <div className="mt-3 pt-2 border-t border-slate-800/60 text-[10px] text-slate-400 space-y-0.5">
-                      <span className="text-[9px] font-bold text-amber-400 uppercase block">Auspicious Endeavors:</span>
-                      {dir.recommendedActivities.map((act, i) => (
-                        <div key={i} className="flex items-center gap-1 text-slate-300">
-                          <span className="text-amber-500 text-xs">•</span>
-                          <span className="truncate">{act}</span>
-                        </div>
-                      ))}
-                    </div>
+                    {/* Specific Planet Recommendation Banner */}
+                    {activeDetail && isWinner && (
+                      <div className="mt-3 p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[10px] text-amber-200">
+                        <span className="font-bold text-amber-400 block mb-0.5">🌟 Auspicious Focus for {activeDetail.sanskritName}:</span>
+                        <span>{activeDetail.directional.purpose}</span>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -426,7 +483,7 @@ export default function AshtakavargaView() {
               <div className="flex items-center justify-between">
                 <h4 className="font-extrabold text-xs text-slate-200 uppercase tracking-wider flex items-center gap-2">
                   <span>🪐</span>
-                  <span>Individual Graha Directional Strength & Best Focus</span>
+                  <span>7-Graha Directional Strength & Best Focus Summary</span>
                 </h4>
                 <span className="text-[10px] text-slate-400 font-mono">BAV Trikona Aggregation</span>
               </div>
@@ -446,11 +503,24 @@ export default function AshtakavargaView() {
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
                     {Object.values(avResult.directionalAnalysis.planetDirections).map((p) => {
+                      const isRowSelected = activeDetail?.planetId === p.planetId;
+
                       return (
-                        <tr key={p.planetId} className="hover:bg-slate-900/40">
+                        <tr
+                          key={p.planetId}
+                          onClick={() => setSelectedGraha(p.planetId)}
+                          className={`hover:bg-slate-900/50 cursor-pointer transition-colors ${
+                            isRowSelected ? "bg-amber-500/10 border-l-4 border-amber-500" : ""
+                          }`}
+                        >
                           <td className="p-3 font-bold" style={{ color: p.color }}>
                             <span className="mr-1.5">{p.symbol}</span>
                             <span>{p.sanskritName} ({p.planetName})</span>
+                            {isRowSelected && (
+                              <span className="text-[9px] ml-1.5 px-1.5 py-0.2 rounded bg-amber-500 text-slate-950 font-bold">
+                                Active
+                              </span>
+                            )}
                           </td>
 
                           <td className={`p-3 text-center ${p.bestDirection === "East" ? "bg-amber-500/20 text-amber-300 font-extrabold rounded" : "text-slate-300"}`}>
