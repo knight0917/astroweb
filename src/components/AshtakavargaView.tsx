@@ -76,19 +76,35 @@ export default function AshtakavargaView() {
     12: "150,0 225,0 225,75", // Top Right Triangle (H12)
   };
 
-  const HOUSE_TEXT_CENTERS: Record<number, { x: number; y: number }> = {
-    1: { x: 150, y: 75 },
-    2: { x: 100, y: 35 },
-    3: { x: 35, y: 25 },
-    4: { x: 70, y: 150 },
-    5: { x: 35, y: 275 },
-    6: { x: 100, y: 265 },
-    7: { x: 150, y: 225 },
-    8: { x: 200, y: 265 },
-    9: { x: 265, y: 275 },
-    10: { x: 230, y: 150 },
-    11: { x: 265, y: 25 },
-    12: { x: 200, y: 35 },
+  // Precise geometric centroid and text layout for all 12 North Indian houses (300x300 box)
+  const HOUSE_LAYOUTS: Record<
+    number,
+    { rashi: { x: number; y: number }; bindu: { x: number; y: number }; label: { x: number; y: number } }
+  > = {
+    // 1: Center Top Diamond
+    1: { rashi: { x: 150, y: 50 }, bindu: { x: 150, y: 76 }, label: { x: 150, y: 98 } },
+    // 2: Top Left Triangle
+    2: { rashi: { x: 110, y: 16 }, bindu: { x: 96, y: 36 }, label: { x: 88, y: 52 } },
+    // 3: Far Top-Left Corner Triangle
+    3: { rashi: { x: 42, y: 16 }, bindu: { x: 26, y: 36 }, label: { x: 16, y: 52 } },
+    // 4: Left Center Diamond
+    4: { rashi: { x: 75, y: 124 }, bindu: { x: 75, y: 150 }, label: { x: 75, y: 172 } },
+    // 5: Far Bottom-Left Corner Triangle
+    5: { rashi: { x: 16, y: 248 }, bindu: { x: 26, y: 266 }, label: { x: 42, y: 286 } },
+    // 6: Bottom Left Triangle
+    6: { rashi: { x: 88, y: 248 }, bindu: { x: 96, y: 266 }, label: { x: 110, y: 286 } },
+    // 7: Center Bottom Diamond
+    7: { rashi: { x: 150, y: 200 }, bindu: { x: 150, y: 226 }, label: { x: 150, y: 248 } },
+    // 8: Bottom Right Triangle
+    8: { rashi: { x: 212, y: 248 }, bindu: { x: 204, y: 266 }, label: { x: 190, y: 286 } },
+    // 9: Far Bottom-Right Corner Triangle
+    9: { rashi: { x: 284, y: 248 }, bindu: { x: 274, y: 266 }, label: { x: 258, y: 286 } },
+    // 10: Right Center Diamond
+    10: { rashi: { x: 225, y: 124 }, bindu: { x: 225, y: 150 }, label: { x: 225, y: 172 } },
+    // 11: Far Top-Right Corner Triangle
+    11: { rashi: { x: 258, y: 16 }, bindu: { x: 274, y: 36 }, label: { x: 284, y: 52 } },
+    // 12: Top Right Triangle
+    12: { rashi: { x: 190, y: 16 }, bindu: { x: 204, y: 36 }, label: { x: 212, y: 52 } },
   };
 
   return (
@@ -199,7 +215,7 @@ export default function AshtakavargaView() {
 
               {/* House Polygons & Bindu Numbers */}
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((houseNum) => {
-                const center = HOUSE_TEXT_CENTERS[houseNum];
+                const layout = HOUSE_LAYOUTS[houseNum];
                 const rashiIdx = (lagnaRashi + houseNum - 1) % 12;
                 const rashi = RASHIS[rashiIdx];
 
@@ -217,23 +233,23 @@ export default function AshtakavargaView() {
                   <g key={houseNum}>
                     {/* Rashi Number in House Corner */}
                     <text
-                      x={center.x}
-                      y={center.y - 12}
+                      x={layout.rashi.x}
+                      y={layout.rashi.y}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      className="fill-slate-500 text-[10px] font-mono font-bold select-none"
+                      className="fill-slate-400 text-[10.5px] font-mono font-bold select-none"
                     >
                       {rashi.symbol} {rashiIdx + 1}
                     </text>
 
                     {/* Bindu Score in House Center */}
                     <text
-                      x={center.x}
-                      y={center.y + 6}
+                      x={layout.bindu.x}
+                      y={layout.bindu.y}
                       textAnchor="middle"
                       dominantBaseline="middle"
                       className={`text-base font-extrabold font-mono select-none ${
-                        isStrong ? "fill-amber-300 font-bold" : "fill-slate-300"
+                        isStrong ? "fill-amber-300 font-bold" : "fill-slate-200"
                       }`}
                     >
                       {binduVal}
@@ -241,11 +257,11 @@ export default function AshtakavargaView() {
 
                     {/* House Label */}
                     <text
-                      x={center.x}
-                      y={center.y + 20}
+                      x={layout.label.x}
+                      y={layout.label.y}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      className="fill-slate-500 text-[8px] font-mono select-none"
+                      className="fill-slate-500 text-[8.5px] font-mono font-bold select-none"
                     >
                       H{houseNum}
                     </text>
