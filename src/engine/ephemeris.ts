@@ -205,6 +205,27 @@ export function calculateVedicEphemeris(
     karanaName = KARANA_NAMES[(karanaRaw - 1) % 7];
   }
 
+  // 12 Vedic Lunar Months (Masa)
+  const VEDIC_MASAS = [
+    { name: "Chaitra", sanskritName: "चैत्र मास", solarMasa: "Meena-Mesha Sankranti" },
+    { name: "Vaishakha", sanskritName: "वैशाख मास", solarMasa: "Mesha Sankranti" },
+    { name: "Jyeshtha", sanskritName: "ज्येष्ठ मास", solarMasa: "Vrishabha Sankranti" },
+    { name: "Ashadha", sanskritName: "आषाढ़ मास", solarMasa: "Mithuna Sankranti" },
+    { name: "Shravana", sanskritName: "श्रावण मास", solarMasa: "Karka Sankranti" },
+    { name: "Bhadrapada", sanskritName: "भाद्रपद मास", solarMasa: "Simha Sankranti" },
+    { name: "Ashwina", sanskritName: "आश्विन मास", solarMasa: "Kanya Sankranti" },
+    { name: "Kartika", sanskritName: "कार्तिक मास", solarMasa: "Tula Sankranti" },
+    { name: "Margashirsha", sanskritName: "मार्गशीर्ष मास", solarMasa: "Vrishchika Sankranti" },
+    { name: "Pausha", sanskritName: "पौष मास", solarMasa: "Dhanu Sankranti" },
+    { name: "Magha", sanskritName: "माघ मास", solarMasa: "Makara Sankranti" },
+    { name: "Phalguna", sanskritName: "फाल्गुन मास", solarMasa: "Kumbha Sankranti" },
+  ];
+
+  const sunRashiIndex = planets["Sun"]?.rashi.index ?? 0;
+  const masaIndex = (sunRashiIndex + 1) % 12;
+  const masa = VEDIC_MASAS[masaIndex];
+  const gregorianMonth = date.toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+
   return {
     utcDate: date.toISOString(),
     localDate: new Date(date.getTime() + location.timezoneOffsetHours * 3600 * 1000).toISOString(),
@@ -224,6 +245,8 @@ export function calculateVedicEphemeris(
     },
     panchanga: {
       tithi: { name: tithiName, paksha, index: tithiIndex + 1, progressPercent: tithiProgress },
+      masa,
+      gregorianMonth,
       vara,
       nakshatra: planets["Moon"].nakshatra,
       yoga: { name: yogaName, index: yogaIndex + 1 },

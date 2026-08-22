@@ -88,6 +88,8 @@ export interface EphemerisResult {
   };
   panchanga: {
     tithi: { name: string; paksha: "Shukla" | "Krishna"; index: number; progressPercent: number };
+    masa: { name: string; sanskritName: string; solarMasa: string };
+    gregorianMonth: string;
     vara: { name: string; sanskritName: string; lord: string };
     nakshatra: NakshatraInfo;
     yoga: { name: string; index: number };

@@ -124,54 +124,61 @@ export default function EntityDetailModal() {
         )}
 
         {/* Vedic Panchanga & Current Tithi Live Card */}
-        <div className="bg-gradient-to-r from-amber-950/40 via-purple-950/30 to-amber-950/40 p-3 rounded-xl border border-amber-500/30 mb-4 space-y-2">
-          <div className="flex items-center justify-between border-b border-amber-500/20 pb-1.5">
-            <span className="text-[10.5px] font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span>🌕</span>
-              <span>Current Tithi & Vedic Panchanga</span>
-            </span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-bold">
+        <div className="bg-gradient-to-r from-amber-950/40 via-purple-950/30 to-amber-950/40 p-3.5 rounded-xl border border-amber-500/30 mb-4 space-y-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-1 border-b border-amber-500/20 pb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🌕</span>
+              <div>
+                <span className="text-[11px] font-extrabold text-amber-300 uppercase tracking-wider block">
+                  Current Tithi & Vedic Panchanga
+                </span>
+                <span className="text-[10px] text-amber-400/90 font-medium">
+                  Month: <strong className="text-white">{ephemeris.panchanga.masa?.name} Masa ({ephemeris.panchanga.masa?.sanskritName})</strong> • {ephemeris.panchanga.gregorianMonth}
+                </span>
+              </div>
+            </div>
+            <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-bold border border-amber-500/30">
               {ephemeris.panchanga.tithi.paksha} Paksha
             </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono">
-            <div className="bg-slate-950/70 p-2 rounded-lg border border-slate-800">
-              <span className="text-[9px] text-slate-400 uppercase block">Current Tithi</span>
-              <span className="font-bold text-amber-300 text-xs truncate block">
+            <div className="bg-slate-950/75 p-2 rounded-lg border border-amber-500/40 shadow-inner">
+              <span className="text-[9px] text-amber-400 uppercase font-bold block">Current Tithi</span>
+              <span className="font-extrabold text-amber-300 text-xs truncate block">
                 {ephemeris.panchanga.tithi.name}
               </span>
-              <span className="text-[8px] text-slate-500 block">
+              <span className="text-[8.5px] text-slate-400 block mt-0.5">
                 {ephemeris.panchanga.tithi.progressPercent.toFixed(1)}% elapsed
               </span>
             </div>
 
-            <div className="bg-slate-950/70 p-2 rounded-lg border border-slate-800">
-              <span className="text-[9px] text-slate-400 uppercase block">Vara (Day)</span>
+            <div className="bg-slate-950/75 p-2 rounded-lg border border-slate-800">
+              <span className="text-[9px] text-slate-400 uppercase font-bold block">Vara (Day)</span>
               <span className="font-bold text-slate-200 text-xs truncate block">
                 {ephemeris.panchanga.vara.sanskritName}
               </span>
-              <span className="text-[8px] text-slate-500 block">
+              <span className="text-[8.5px] text-slate-400 block mt-0.5">
                 Lord: {ephemeris.panchanga.vara.lord}
               </span>
             </div>
 
-            <div className="bg-slate-950/70 p-2 rounded-lg border border-slate-800">
-              <span className="text-[9px] text-slate-400 uppercase block">Yoga</span>
+            <div className="bg-slate-950/75 p-2 rounded-lg border border-slate-800">
+              <span className="text-[9px] text-slate-400 uppercase font-bold block">Yoga</span>
               <span className="font-bold text-slate-200 text-xs truncate block">
                 {ephemeris.panchanga.yoga.name}
               </span>
-              <span className="text-[8px] text-slate-500 block">
+              <span className="text-[8.5px] text-slate-400 block mt-0.5">
                 #{ephemeris.panchanga.yoga.index}
               </span>
             </div>
 
-            <div className="bg-slate-950/70 p-2 rounded-lg border border-slate-800">
-              <span className="text-[9px] text-slate-400 uppercase block">Karana</span>
+            <div className="bg-slate-950/75 p-2 rounded-lg border border-slate-800">
+              <span className="text-[9px] text-slate-400 uppercase font-bold block">Karana</span>
               <span className="font-bold text-slate-200 text-xs truncate block">
                 {ephemeris.panchanga.karana.name}
               </span>
-              <span className="text-[8px] text-slate-500 block">
+              <span className="text-[8.5px] text-slate-400 block mt-0.5">
                 #{ephemeris.panchanga.karana.index}
               </span>
             </div>
