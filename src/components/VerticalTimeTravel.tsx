@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useAstroStore } from "../store/useAstroStore";
+import { POPULAR_CITIES } from "../engine/constants";
+import { GeoLocation } from "../engine/types";
 
 export default function VerticalTimeTravel() {
   const {
@@ -10,6 +12,7 @@ export default function VerticalTimeTravel() {
     playSpeed,
     location,
     setDate,
+    setLocation,
     stepTime,
     togglePlay,
     setPlaySpeed,
@@ -18,8 +21,10 @@ export default function VerticalTimeTravel() {
   const [isOpen, setIsOpen] = useState(true);
   const animRef = useRef<number | null>(null);
   const [timeMode, setTimeMode] = useState<"local" | "utc">("local");
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingTime, setIsEditingTime] = useState(false);
+  const [showCustomPlace, setShowCustomPlace] = useState(false);
 
+  // Time States
   const tzOffsetMs = location.timezoneOffsetHours * 3600 * 1000;
   const displayDate = timeMode === "local" ? new Date(currentDate.getTime() + tzOffsetMs) : currentDate;
 
@@ -29,8 +34,16 @@ export default function VerticalTimeTravel() {
   const [hour, setHour] = useState(displayDate.getUTCHours().toString().padStart(2, "0"));
   const [minute, setMinute] = useState(displayDate.getUTCMinutes().toString().padStart(2, "0"));
 
+  // Location States
+  const [placeName, setPlaceName] = useState(location.cityName);
+  const [placeCountry, setPlaceCountry] = useState(location.country || "India");
+  const [placeLat, setPlaceLat] = useState(location.latitude.toString());
+  const [placeLon, setPlaceLon] = useState(location.longitude.toString());
+  const [placeTz, setPlaceTz] = useState(location.timezoneOffsetHours.toString());
+
+  // Sync time when not explicitly editing
   useEffect(() => {
-    if (!isEditing) {
+    if (!isEditingTime) {
       const d = timeMode === "local" ? new Date(currentDate.getTime() + tzOffsetMs) : currentDate;
       setYear(d.getUTCFullYear().toString());
       setMonth((d.getUTCMonth() + 1).toString());
@@ -38,7 +51,16 @@ export default function VerticalTimeTravel() {
       setHour(d.getUTCHours().toString().padStart(2, "0"));
       setMinute(d.getUTCMinutes().toString().padStart(2, "0"));
     }
-  }, [currentDate, timeMode, tzOffsetMs, isEditing]);
+  }, [currentDate, timeMode, tzOffsetMs, isEditingTime]);
+
+  // Sync place when store location changes
+  useEffect(() => {
+    setPlaceName(location.cityName);
+    setPlaceCountry(location.country || "India");
+    setPlaceLat(location.latitude.toString());
+    setPlaceLon(location.longitude.toString());
+    setPlaceTz(location.timezoneOffsetHours.toString());
+  }, [location]);
 
   const handleApplyDateTime = () => {
     const y = parseInt(year, 10);
@@ -55,7 +77,34 @@ export default function VerticalTimeTravel() {
           : new Date(parsedUtcMs);
 
       setDate(finalDate);
-      setIsEditing(false);
+      setIsEditingTime(false);
+    }
+  };
+
+  const handleCitySelect = (cityName: string) => {
+    const found = POPULAR_CITIES.find((c) => c.cityName === cityName);
+    if (found) {
+      setLocation(found);
+      setShowCustomPlace(false);
+    }
+  };
+
+  const handleApplyCustomPlace = () => {
+    const lat = parseFloat(placeLat);
+    const lon = parseFloat(placeLon);
+    const tz = parseFloat(placeTz);
+
+    if (!isNaN(lat) && !isNaN(lon) && !isNaN(tz)) {
+      const newLoc: GeoLocation = {
+        cityName: placeName.trim() || "Custom Place",
+        country: placeCountry.trim() || "World",
+        latitude: Math.max(-90, Math.min(90, lat)),
+        longitude: Math.max(-180, Math.min(180, lon)),
+        elevation: location.elevation || 10,
+        timezoneOffsetHours: tz,
+      };
+      setLocation(newLoc);
+      setShowCustomPlace(false);
     }
   };
 
@@ -94,11 +143,11 @@ export default function VerticalTimeTravel() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          title="Open Date & Time Travel Controller"
+          title="Open Date, Time & Place Controller"
           className="glass-panel p-2.5 rounded-xl border border-amber-500/50 text-amber-300 font-extrabold text-xs shadow-2xl flex items-center gap-1.5 hover:scale-105 transition-all cursor-pointer bg-slate-950/95"
         >
           <span className="text-base">⏳</span>
-          <span className="hidden sm:inline">Time Controller</span>
+          <span className="hidden sm:inline">Time & Place</span>
         </button>
       )}
 
@@ -111,10 +160,10 @@ export default function VerticalTimeTravel() {
               <span className="text-base text-amber-400">⏳</span>
               <div>
                 <h3 className="font-extrabold text-xs text-slate-100 uppercase tracking-wider">
-                  Time Travel Deck
+                  Time & Place Deck
                 </h3>
-                <p className="text-[9px] text-slate-400 font-medium">
-                  {timeMode === "local" ? `Local (${location.cityName})` : "UTC / GMT"}
+                <p className="text-[9px] text-amber-300 font-medium truncate max-w-[150px]">
+                  📍 {location.cityName}
                 </p>
               </div>
             </div>
@@ -122,13 +171,105 @@ export default function VerticalTimeTravel() {
             <button
               onClick={() => setIsOpen(false)}
               className="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
-              title="Minimize Time Controller"
+              title="Minimize Controller"
             >
               ✕
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
+            {/* 1. Place / Location Selector Card */}
+            <div className="space-y-2 bg-slate-900/60 p-2.5 rounded-xl border border-amber-500/30">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                  <span>📍</span>
+                  <span>Observer Place</span>
+                </span>
+                <button
+                  onClick={() => setShowCustomPlace(!showCustomPlace)}
+                  className="text-[9px] text-amber-300 hover:underline font-bold"
+                >
+                  {showCustomPlace ? "Select Preset" : "+ Custom Place"}
+                </button>
+              </div>
+
+              {!showCustomPlace ? (
+                /* Preset City Dropdown */
+                <select
+                  value={location.cityName}
+                  onChange={(e) => handleCitySelect(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-1.5 text-xs text-slate-100 font-bold"
+                >
+                  {POPULAR_CITIES.map((c) => (
+                    <option key={c.cityName} value={c.cityName}>
+                      {c.cityName} ({c.country}) • UTC{c.timezoneOffsetHours >= 0 ? `+${c.timezoneOffsetHours}` : c.timezoneOffsetHours}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                /* Custom Place Input Form */
+                <div className="space-y-1.5 pt-0.5 text-xs">
+                  <div>
+                    <span className="text-[8px] text-slate-400 font-bold block mb-0.5">CITY / PLACE NAME</span>
+                    <input
+                      type="text"
+                      value={placeName}
+                      onChange={(e) => setPlaceName(e.target.value)}
+                      placeholder="e.g. Ayodhya, Varanasi..."
+                      className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-1 text-xs text-slate-100 font-bold"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-1">
+                    <div>
+                      <span className="text-[8px] text-slate-400 font-bold block mb-0.5">LAT (° N/S)</span>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={placeLat}
+                        onChange={(e) => setPlaceLat(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-1 text-xs font-mono font-bold text-slate-200"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-[8px] text-slate-400 font-bold block mb-0.5">LON (° E/W)</span>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={placeLon}
+                        onChange={(e) => setPlaceLon(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-1 text-xs font-mono font-bold text-slate-200"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-1 items-end">
+                    <div>
+                      <span className="text-[8px] text-slate-400 font-bold block mb-0.5">TIMEZONE (UTC)</span>
+                      <input
+                        type="number"
+                        step="0.5"
+                        value={placeTz}
+                        onChange={(e) => setPlaceTz(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-1 text-xs font-mono font-bold text-slate-200"
+                      />
+                    </div>
+                    <button
+                      onClick={handleApplyCustomPlace}
+                      className="py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[11px] rounded-lg transition-all shadow active:scale-95"
+                    >
+                      Save Place
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="text-[8.5px] text-slate-400 font-mono flex items-center justify-between border-t border-slate-800/80 pt-1">
+                <span>{location.latitude.toFixed(2)}°N, {location.longitude.toFixed(2)}°E</span>
+                <span className="text-amber-300">UTC{location.timezoneOffsetHours >= 0 ? `+${location.timezoneOffsetHours}` : location.timezoneOffsetHours}</span>
+              </div>
+            </div>
+
             {/* Time Mode Switch */}
             <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800 text-[10px]">
               <button
@@ -189,9 +330,9 @@ export default function VerticalTimeTravel() {
                     min="1"
                     max="31"
                     value={day}
-                    onFocus={() => setIsEditing(true)}
+                    onFocus={() => setIsEditingTime(true)}
                     onChange={(e) => {
-                      setIsEditing(true);
+                      setIsEditingTime(true);
                       setDay(e.target.value);
                     }}
                     onKeyDown={(e) => e.key === "Enter" && handleApplyDateTime()}
@@ -203,9 +344,9 @@ export default function VerticalTimeTravel() {
                   <span className="text-[8px] text-slate-500 font-bold block mb-0.5">MONTH</span>
                   <select
                     value={month}
-                    onFocus={() => setIsEditing(true)}
+                    onFocus={() => setIsEditingTime(true)}
                     onChange={(e) => {
-                      setIsEditing(true);
+                      setIsEditingTime(true);
                       setMonth(e.target.value);
                     }}
                     className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-1.5 text-xs text-slate-100 font-mono font-bold"
@@ -223,9 +364,9 @@ export default function VerticalTimeTravel() {
                   <input
                     type="number"
                     value={year}
-                    onFocus={() => setIsEditing(true)}
+                    onFocus={() => setIsEditingTime(true)}
                     onChange={(e) => {
-                      setIsEditing(true);
+                      setIsEditingTime(true);
                       setYear(e.target.value);
                     }}
                     onKeyDown={(e) => e.key === "Enter" && handleApplyDateTime()}
@@ -243,9 +384,9 @@ export default function VerticalTimeTravel() {
                     min="0"
                     max="23"
                     value={hour}
-                    onFocus={() => setIsEditing(true)}
+                    onFocus={() => setIsEditingTime(true)}
                     onChange={(e) => {
-                      setIsEditing(true);
+                      setIsEditingTime(true);
                       setHour(e.target.value);
                     }}
                     onKeyDown={(e) => e.key === "Enter" && handleApplyDateTime()}
@@ -260,9 +401,9 @@ export default function VerticalTimeTravel() {
                     min="0"
                     max="59"
                     value={minute}
-                    onFocus={() => setIsEditing(true)}
+                    onFocus={() => setIsEditingTime(true)}
                     onChange={(e) => {
-                      setIsEditing(true);
+                      setIsEditingTime(true);
                       setMinute(e.target.value);
                     }}
                     onKeyDown={(e) => e.key === "Enter" && handleApplyDateTime()}
@@ -282,7 +423,7 @@ export default function VerticalTimeTravel() {
                 <button
                   onClick={() => {
                     setDate(new Date());
-                    setIsEditing(false);
+                    setIsEditingTime(false);
                   }}
                   className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition-all shadow cursor-pointer active:scale-95"
                   title="Reset to Real-Time Now"
