@@ -5,7 +5,8 @@ import { useAstroStore } from "../store/useAstroStore";
 import { calculateBhavaBala, HouseBala } from "../engine/bhavabala";
 
 export default function BhavaBalaView() {
-  const { ephemeris, selectedEntityId, setSelectedEntityId } = useAstroStore();
+  const { ephemeris } = useAstroStore();
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -25,6 +26,12 @@ export default function BhavaBalaView() {
     return { icon: `#${rank}`, label: `${rank}th`, color: "bg-slate-800 text-slate-300" };
   };
 
+  // Max Rupas for Bar Chart scaling
+  const maxRupas = useMemo(() => {
+    const maxVal = Math.max(...bhavaBalaResult.rankedHouses.map((h) => h.totalRupas));
+    return Math.max(12, Math.ceil(maxVal + 1));
+  }, [bhavaBalaResult]);
+
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-200">
       {/* Header Banner */}
@@ -41,13 +48,41 @@ export default function BhavaBalaView() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 text-xs bg-slate-900/90 p-2 rounded-xl border border-slate-800 font-mono">
-          <div className="text-right">
-            <span className="text-slate-500 block text-[9px] uppercase font-bold">Chart Avg House Strength</span>
-            <span className="font-extrabold text-amber-400 text-sm">
-              {(bhavaBalaResult.averageStrengthRatio * 100).toFixed(0)}% (Ratio: {bhavaBalaResult.averageStrengthRatio})
-            </span>
-          </div>
+        {/* View Mode Switcher */}
+        <div className="flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs">
+          <button
+            onClick={() => setDisplayMode("bars")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${
+              displayMode === "bars"
+                ? "bg-amber-500 text-slate-950 shadow"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <span>📊</span>
+            <span>Potency Bars</span>
+          </button>
+          <button
+            onClick={() => setDisplayMode("stacked")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${
+              displayMode === "stacked"
+                ? "bg-amber-500 text-slate-950 shadow"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <span>🥞</span>
+            <span>Stacked 4-Bala</span>
+          </button>
+          <button
+            onClick={() => setDisplayMode("table")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${
+              displayMode === "table"
+                ? "bg-amber-500 text-slate-950 shadow"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <span>📋</span>
+            <span>Matrix Table</span>
+          </button>
         </div>
       </div>
 
@@ -58,7 +93,9 @@ export default function BhavaBalaView() {
             <span>🏆</span>
             <span>12 House Potency Hierarchy (भाव क्रम Ranking)</span>
           </h3>
-          <span className="text-[10px] text-slate-500 font-mono">Click any house to inspect complete mathematical sub-factors</span>
+          <span className="text-[10px] text-slate-500 font-mono">
+            Click any house to highlight on bar chart and view mathematical sub-factors
+          </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -139,88 +176,282 @@ export default function BhavaBalaView() {
         </div>
       </div>
 
-      {/* Main Grid: Master Comparison Matrix (7 cols) + Selected House Deep Dive (5 cols) */}
+      {/* Main Grid: Visual Bar Graph or Matrix Table (7 cols) + Selected House Deep Dive (5 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Master 12-House Matrix Table (7 cols) */}
-        <div className="lg:col-span-7 glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 space-y-3">
+        {/* Left Column: Interactive Bar Graph / Table View (7 cols) */}
+        <div className="lg:col-span-7 glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
             <h4 className="font-extrabold text-xs text-slate-200 uppercase tracking-wider flex items-center gap-2">
-              <span>📊</span>
-              <span>Master Bhava Bala Matrix (Values in Rupas & Virupas)</span>
+              <span>{displayMode === "table" ? "📋" : "📊"}</span>
+              <span>
+                {displayMode === "bars"
+                  ? "Bhava Potency vs Required Kendra/Panapara/Apoklima Threshold (Bar Graph)"
+                  : displayMode === "stacked"
+                  ? "Stacked 4-Bala Composition Chart (All 12 Houses)"
+                  : "Master Bhava Bala Matrix (Values in Rupas)"}
+              </span>
             </h4>
             <span className="text-[10px] text-slate-400 font-mono">1 Rupa = 60 Virupas</span>
           </div>
 
-          <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left text-xs border-collapse font-mono">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/80">
-                  <th className="p-2.5 font-bold">Bhava</th>
-                  <th className="p-2.5">Sign & Lord</th>
-                  <th className="p-2.5 text-center">Lord (R)</th>
-                  <th className="p-2.5 text-center">Dig</th>
-                  <th className="p-2.5 text-center">Drishti</th>
-                  <th className="p-2.5 text-center">Day/Nt</th>
-                  <th className="p-2.5 text-right font-bold text-amber-300">Total (R)</th>
-                  <th className="p-2.5 text-right">Req.</th>
-                  <th className="p-2.5 text-right">Ratio</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {bhavaBalaResult.rankedHouses.map((h) => {
-                  const isSelected = activeHouseNum === h.houseNum;
+          {/* BAR GRAPH VIEW 1: Direct Comparative Bars for all 12 Houses */}
+          {displayMode === "bars" && (
+            <div className="space-y-4 pt-2">
+              {/* Legend */}
+              <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-400 px-2">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded bg-emerald-500 inline-block"></span>
+                    <span>Balavan (Meets Required)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded bg-rose-500 inline-block"></span>
+                    <span>Deficient (Below Required)</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 text-amber-400 font-bold">
+                  <span className="w-3 h-0.5 bg-amber-400 inline-block border-t border-dashed border-amber-400"></span>
+                  <span>Required Threshold</span>
+                </div>
+              </div>
+
+              {/* Bar Chart Canvas for 12 Houses */}
+              <div className="h-64 flex items-end justify-between gap-1.5 sm:gap-2 px-2 pt-6 pb-2 bg-slate-900/60 rounded-xl border border-slate-800 relative">
+                {/* Horizontal Grid lines */}
+                {[0.25, 0.5, 0.75, 1.0].map((fraction) => {
+                  const rVal = (maxRupas * fraction).toFixed(1);
                   return (
-                    <tr
-                      key={h.houseNum}
-                      onClick={() => setActiveHouseNum(h.houseNum)}
-                      className={`hover:bg-slate-900/60 cursor-pointer transition-colors ${
-                        isSelected ? "bg-amber-500/15 font-bold" : ""
-                      }`}
+                    <div
+                      key={fraction}
+                      className="absolute left-0 right-0 border-b border-slate-800/60 flex items-center justify-end pr-2 text-[9px] font-mono text-slate-600 pointer-events-none"
+                      style={{ bottom: `${fraction * 82}%` }}
                     >
-                      <td className="p-2.5 font-bold text-slate-200">
-                        <span className="text-amber-400 mr-1">H{h.houseNum}</span>
-                        <span className="text-slate-300 font-normal">{h.sanskritName.split(" ")[0]}</span>
-                      </td>
-                      <td className="p-2.5 text-slate-400">
-                        {h.rashi.symbol} {h.rashi.englishName.substring(0, 3)} ({h.lordName.substring(0, 2)})
-                      </td>
-                      <td className="p-2.5 text-center text-slate-300">
-                        {(h.bhavaadhipatiBala / 60).toFixed(2)}
-                      </td>
-                      <td className="p-2.5 text-center text-slate-300">
-                        {(h.bhavaDigBala / 60).toFixed(2)}
-                      </td>
-                      <td className="p-2.5 text-center text-slate-300">
-                        {h.bhavaDrishtiBala >= 0
-                          ? `+${(h.bhavaDrishtiBala / 60).toFixed(2)}`
-                          : (h.bhavaDrishtiBala / 60).toFixed(2)}
-                      </td>
-                      <td className="p-2.5 text-center text-slate-300">
-                        {(h.bhavaDinaRatriBala / 60).toFixed(2)}
-                      </td>
-                      <td className="p-2.5 text-right font-extrabold text-amber-300">
-                        {h.totalRupas.toFixed(2)}
-                      </td>
-                      <td className="p-2.5 text-right text-slate-400">
-                        {h.requiredRupas.toFixed(1)}
-                      </td>
-                      <td className="p-2.5 text-right font-bold">
-                        <span
-                          className={`px-1.5 py-0.5 rounded text-[10px] ${
-                            h.isBalavan
-                              ? "bg-emerald-950 text-emerald-300 border border-emerald-500/50"
-                              : "bg-rose-950 text-rose-300 border border-rose-500/50"
-                          }`}
-                        >
-                          {h.strengthRatio.toFixed(2)}
-                        </span>
-                      </td>
-                    </tr>
+                      <span>{rVal} R</span>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+
+                {/* Display 12 houses in chronological H1..H12 order */}
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((hNum) => {
+                  const h = bhavaBalaResult.houses[hNum];
+                  const isSelected = activeHouseNum === h.houseNum;
+                  const barHeightPercent = Math.min(100, (h.totalRupas / maxRupas) * 100);
+                  const reqHeightPercent = Math.min(100, (h.requiredRupas / maxRupas) * 100);
+
+                  return (
+                    <button
+                      key={h.houseNum}
+                      onClick={() => setActiveHouseNum(h.houseNum)}
+                      className={`flex-1 h-full flex flex-col justify-end items-center group relative cursor-pointer focus:outline-none ${
+                        isSelected ? "scale-105" : "opacity-85 hover:opacity-100"
+                      }`}
+                    >
+                      {/* Floating Rupa value */}
+                      <span className="text-[9px] font-mono font-extrabold text-slate-200 mb-1 truncate">
+                        {h.totalRupas.toFixed(1)}
+                      </span>
+
+                      {/* Bar Container */}
+                      <div className="w-full max-w-[28px] h-[82%] flex items-end relative bg-slate-800/40 rounded-t-lg">
+                        {/* Required Threshold Line Marker */}
+                        <div
+                          className="absolute left-0 right-0 border-t-2 border-dashed border-amber-400 z-10 pointer-events-none"
+                          style={{ bottom: `${reqHeightPercent}%` }}
+                          title={`Required: ${h.requiredRupas} Rupas`}
+                        ></div>
+
+                        {/* Actual Value Bar */}
+                        <div
+                          className={`w-full rounded-t-lg transition-all duration-300 ${
+                            isSelected
+                              ? "ring-2 ring-white shadow-lg shadow-amber-500/30"
+                              : ""
+                          } ${
+                            h.isBalavan
+                              ? "bg-gradient-to-t from-emerald-600 to-teal-400"
+                              : "bg-gradient-to-t from-rose-600 to-amber-500"
+                          }`}
+                          style={{ height: `${barHeightPercent}%` }}
+                        ></div>
+                      </div>
+
+                      {/* X-Axis Label: H1..H12 */}
+                      <div className="mt-2 text-center">
+                        <span className="font-extrabold text-[10px] text-amber-400 block leading-none">
+                          H{h.houseNum}
+                        </span>
+                        <span className="text-[8px] text-slate-400 block mt-0.5 truncate">
+                          {h.rashi.symbol}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* BAR GRAPH VIEW 2: Stacked 4-Bala Composition Chart */}
+          {displayMode === "stacked" && (
+            <div className="space-y-4 pt-2">
+              {/* Stacked Legend */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10.5px] font-medium text-slate-300 p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-amber-400"></span>
+                  <span>Lord (Bhavaadhipati)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-sky-500"></span>
+                  <span>Directional (Dig)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-purple-500"></span>
+                  <span>Aspectual (Drishti)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-emerald-500"></span>
+                  <span>Day/Night Rising</span>
+                </div>
+              </div>
+
+              {/* Stacked Bars Canvas */}
+              <div className="h-64 flex items-end justify-between gap-1.5 sm:gap-2 px-2 pt-6 pb-2 bg-slate-900/60 rounded-xl border border-slate-800 relative">
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((hNum) => {
+                  const h = bhavaBalaResult.houses[hNum];
+                  const isSelected = activeHouseNum === h.houseNum;
+                  const lordR = h.bhavaadhipatiBala / 60;
+                  const digR = h.bhavaDigBala / 60;
+                  const drishtiR = Math.max(0, h.bhavaDrishtiBala / 60);
+                  const dinaRatriR = h.bhavaDinaRatriBala / 60;
+
+                  return (
+                    <button
+                      key={h.houseNum}
+                      onClick={() => setActiveHouseNum(h.houseNum)}
+                      className={`flex-1 h-full flex flex-col justify-end items-center group relative cursor-pointer focus:outline-none ${
+                        isSelected ? "scale-105" : "opacity-85 hover:opacity-100"
+                      }`}
+                    >
+                      <span className="text-[9px] font-mono font-extrabold text-amber-300 mb-1 truncate">
+                        {h.totalRupas.toFixed(1)}
+                      </span>
+
+                      {/* Stacked Bar */}
+                      <div
+                        className={`w-full max-w-[28px] h-[82%] flex flex-col justify-end rounded-t-lg overflow-hidden ${
+                          isSelected ? "ring-2 ring-white shadow-lg shadow-amber-500/30" : ""
+                        }`}
+                      >
+                        <div
+                          style={{ height: `${(dinaRatriR / maxRupas) * 100}%` }}
+                          className="bg-emerald-500 w-full"
+                          title={`Day/Night: ${dinaRatriR.toFixed(2)} R`}
+                        ></div>
+                        <div
+                          style={{ height: `${(drishtiR / maxRupas) * 100}%` }}
+                          className="bg-purple-500 w-full"
+                          title={`Drishti: ${drishtiR.toFixed(2)} R`}
+                        ></div>
+                        <div
+                          style={{ height: `${(digR / maxRupas) * 100}%` }}
+                          className="bg-sky-500 w-full"
+                          title={`Dig: ${digR.toFixed(2)} R`}
+                        ></div>
+                        <div
+                          style={{ height: `${(lordR / maxRupas) * 100}%` }}
+                          className="bg-amber-400 w-full rounded-t-sm"
+                          title={`Lord: ${lordR.toFixed(2)} R`}
+                        ></div>
+                      </div>
+
+                      <div className="mt-2 text-center">
+                        <span className="font-extrabold text-[10px] text-amber-400 block leading-none">
+                          H{h.houseNum}
+                        </span>
+                        <span className="text-[8px] text-slate-400 block mt-0.5 truncate">
+                          {h.rashi.symbol}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* BAR GRAPH VIEW 3: Detailed Matrix Table */}
+          {displayMode === "table" && (
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left text-xs border-collapse font-mono">
+                <thead>
+                  <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/80">
+                    <th className="p-2.5 font-bold">Bhava</th>
+                    <th className="p-2.5">Sign & Lord</th>
+                    <th className="p-2.5 text-center">Lord (R)</th>
+                    <th className="p-2.5 text-center">Dig</th>
+                    <th className="p-2.5 text-center">Drishti</th>
+                    <th className="p-2.5 text-center">Day/Nt</th>
+                    <th className="p-2.5 text-right font-bold text-amber-300">Total (R)</th>
+                    <th className="p-2.5 text-right">Req.</th>
+                    <th className="p-2.5 text-right">Ratio</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {bhavaBalaResult.rankedHouses.map((h) => {
+                    const isSelected = activeHouseNum === h.houseNum;
+                    return (
+                      <tr
+                        key={h.houseNum}
+                        onClick={() => setActiveHouseNum(h.houseNum)}
+                        className={`hover:bg-slate-900/60 cursor-pointer transition-colors ${
+                          isSelected ? "bg-amber-500/15 font-bold" : ""
+                        }`}
+                      >
+                        <td className="p-2.5 font-bold text-slate-200">
+                          <span className="text-amber-400 mr-1">H{h.houseNum}</span>
+                          <span className="text-slate-300 font-normal">{h.sanskritName.split(" ")[0]}</span>
+                        </td>
+                        <td className="p-2.5 text-slate-400">
+                          {h.rashi.symbol} {h.rashi.englishName.substring(0, 3)} ({h.lordName.substring(0, 2)})
+                        </td>
+                        <td className="p-2.5 text-center text-slate-300">
+                          {(h.bhavaadhipatiBala / 60).toFixed(2)}
+                        </td>
+                        <td className="p-2.5 text-center text-slate-300">
+                          {(h.bhavaDigBala / 60).toFixed(2)}
+                        </td>
+                        <td className="p-2.5 text-center text-slate-300">
+                          {h.bhavaDrishtiBala >= 0
+                            ? `+${(h.bhavaDrishtiBala / 60).toFixed(2)}`
+                            : (h.bhavaDrishtiBala / 60).toFixed(2)}
+                        </td>
+                        <td className="p-2.5 text-center text-slate-300">
+                          {(h.bhavaDinaRatriBala / 60).toFixed(2)}
+                        </td>
+                        <td className="p-2.5 text-right font-extrabold text-amber-300">
+                          {h.totalRupas.toFixed(2)}
+                        </td>
+                        <td className="p-2.5 text-right text-slate-400">
+                          {h.requiredRupas.toFixed(1)}
+                        </td>
+                        <td className="p-2.5 text-right font-bold">
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] ${
+                              h.isBalavan
+                                ? "bg-emerald-950 text-emerald-300 border border-emerald-500/50"
+                                : "bg-rose-950 text-rose-300 border border-rose-500/50"
+                            }`}
+                          >
+                            {h.strengthRatio.toFixed(2)}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Right Column: Selected House Deep Dive Breakdown (5 cols) */}
