@@ -1,10 +1,19 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Vedic Sky Tracker — Immersive Jyotish 3D Planetarium",
   description:
     "Explore historical, real-time, and future planetary positions, 27 Nakshatras, Lagna, Rahu/Ketu, Upagrahas, and 3D celestial dome.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#040714",
 };
 
 export default function RootLayout({

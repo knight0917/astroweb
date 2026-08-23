@@ -98,7 +98,7 @@ export default function BhavaBalaView() {
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 overflow-x-auto snap-scroll-x no-scrollbar gap-2.5 pb-1.5">
           {bhavaBalaResult.rankedHouses.map((h) => {
             const isSelected = activeHouseNum === h.houseNum;
             const rankBadge = getRankBadge(h.rank);
@@ -108,7 +108,7 @@ export default function BhavaBalaView() {
               <button
                 key={h.houseNum}
                 onClick={() => setActiveHouseNum(h.houseNum)}
-                className={`glass-panel p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 cursor-pointer ${
+                className={`snap-item min-w-[130px] sm:min-w-0 glass-panel p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 cursor-pointer ${
                   isSelected
                     ? "bg-slate-900/90 border-amber-400 shadow-lg shadow-amber-500/20 scale-105"
                     : "bg-slate-950/70 hover:bg-slate-900/60 border-slate-800"
@@ -385,7 +385,7 @@ export default function BhavaBalaView() {
               <table className="w-full text-left text-xs border-collapse font-mono">
                 <thead>
                   <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/80">
-                    <th className="p-2.5 font-bold">Bhava</th>
+                    <th className="p-2.5 font-bold sticky left-0 bg-slate-900/95 z-10">Bhava</th>
                     <th className="p-2.5">Sign & Lord</th>
                     <th className="p-2.5 text-center">Lord (R)</th>
                     <th className="p-2.5 text-center">Dig</th>
@@ -407,7 +407,7 @@ export default function BhavaBalaView() {
                           isSelected ? "bg-amber-500/15 font-bold" : ""
                         }`}
                       >
-                        <td className="p-2.5 font-bold text-slate-200">
+                        <td className="p-2.5 font-bold text-slate-200 sticky left-0 bg-slate-950/95 z-10 border-r border-slate-800/80">
                           <span className="text-amber-400 mr-1">H{h.houseNum}</span>
                           <span className="text-slate-300 font-normal">{h.sanskritName.split(" ")[0]}</span>
                         </td>

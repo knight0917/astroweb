@@ -1,14 +1,20 @@
-# Task: Classical Parashari Bhava Bala (12 House Strengths System)
+# Task: Full Mobile-First Responsive Architecture Overhaul
 
-- [x] Phase 1: Calculations Reference & Engine <!-- id: 1 -->
-  - [x] Create calculation documentation `docs/BHAVA_BALA_CALCULATIONS.md` <!-- id: 1.1 -->
-  - [x] Implement `src/engine/bhavabala.ts` with all 12 houses (Bhavaadhipati, Dig, Drishti, Dina-Ratri) <!-- id: 1.2 -->
-  - [x] Add unit tests in `tests/engine.test.mjs` <!-- id: 1.3 -->
+- [x] Phase 1: Global Viewport, Safe-Area & Mobile Shell <!-- id: 1 -->
+  - [x] Add mobile viewport meta & safe-area in `layout.tsx` and `globals.css` <!-- id: 1.1 -->
+  - [x] Create `src/components/MobileBottomNav.tsx` persistent mobile navigation dock <!-- id: 1.2 -->
+  - [x] Refactor `HeaderNav.tsx` with mobile sticky header + Settings Drawer <!-- id: 1.3 -->
 
-- [x] Phase 2: Interactive UI & Dashboard <!-- id: 2 -->
-  - [x] Build `src/components/BhavaBalaView.tsx` with 12-house leaderboard, master matrix, and deep dive inspector <!-- id: 2.1 -->
-  - [x] Add Bhava Bala links in `KundliChart.tsx`, `HeaderNav.tsx`, `useAstroStore.ts`, and `app/page.tsx` <!-- id: 2.2 -->
+- [x] Phase 2: Core Charts & Time Travel Touch Ergonomics <!-- id: 2 -->
+  - [x] Adapt `TimeTravelSlider.tsx` for compact touch scrubbing & datetime picker <!-- id: 2.1 -->
+  - [x] Optimize `KundliChart.tsx` SVG fluid scaling & multi-planet touch badges <!-- id: 2.2 -->
+  - [x] Optimize `ShodashavargaView.tsx` with snap-scroll 16-Varga pills & mobile tabs <!-- id: 2.3 -->
 
-- [x] Phase 3: Verification & Deployment <!-- id: 3 -->
-  - [x] Run `npm test` (All 9 test suites passing) <!-- id: 3.1 -->
-  - [x] Commit and push to GitHub repository for Vercel deployment <!-- id: 3.2 -->
+- [x] Phase 3: Strength Systems, Bar Charts & Tables <!-- id: 3 -->
+  - [x] Add horizontal snap carousels and mobile bar scaling to `ShadbalaView.tsx` <!-- id: 3.1 -->
+  - [x] Add horizontal snap carousels and mobile bar scaling to `BhavaBalaView.tsx` <!-- id: 3.2 -->
+  - [x] Add sticky first columns and touch scroll to Ashtakavarga & Numerology <!-- id: 3.3 -->
+
+- [x] Phase 4: Verification & Deployment <!-- id: 4 -->
+  - [x] Run `npm test` (All 9 test suites passing) <!-- id: 4.1 -->
+  - [x] Commit and push to GitHub repository for Vercel deployment <!-- id: 4.2 -->

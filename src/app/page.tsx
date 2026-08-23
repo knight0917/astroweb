@@ -13,6 +13,7 @@ import ShadbalaView from "../components/ShadbalaView";
 import BhavaBalaView from "../components/BhavaBalaView";
 import TimeTravelSlider from "../components/TimeTravelSlider";
 import EntityDetailModal from "../components/EntityDetailModal";
+import MobileBottomNav from "../components/MobileBottomNav";
 import { useAstroStore } from "../store/useAstroStore";
 
 // Dynamically import 3D WebGL SkyDome with SSR disabled to prevent webpack-runtime canvas errors
@@ -32,7 +33,7 @@ export default function HomePage() {
   const { viewMode } = useAstroStore();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#030712] text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#030712] text-slate-100 pb-16 md:pb-0">
       {/* Top Header & Navigation */}
       <HeaderNav />
 
@@ -131,6 +132,9 @@ export default function HomePage() {
           <span>↗</span>
         </a>
       </footer>
+
+      {/* Persistent Mobile Bottom Navigation Dock */}
+      <MobileBottomNav />
     </div>
   );
 }

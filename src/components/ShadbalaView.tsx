@@ -100,7 +100,7 @@ export default function ShadbalaView() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div className="flex md:grid md:grid-cols-7 overflow-x-auto snap-scroll-x no-scrollbar gap-2.5 pb-1.5">
           {shadbalaResult.rankedPlanets.map((p) => {
             const isSelected = activePlanetId === p.planetId;
             const rankBadge = getRankBadge(p.rank);
@@ -113,7 +113,7 @@ export default function ShadbalaView() {
                   setActivePlanetId(p.planetId);
                   setSelectedEntityId(p.planetId);
                 }}
-                className={`glass-panel p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between gap-2.5 cursor-pointer ${
+                className={`snap-item min-w-[130px] md:min-w-0 glass-panel p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 cursor-pointer ${
                   isSelected
                     ? "bg-slate-900/90 border-amber-400 shadow-lg shadow-amber-500/20 scale-105"
                     : "bg-slate-950/70 hover:bg-slate-900/60 border-slate-800"
@@ -419,7 +419,7 @@ export default function ShadbalaView() {
               <table className="w-full text-left text-xs border-collapse font-mono">
                 <thead>
                   <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/80">
-                    <th className="p-2.5 font-bold">Graha</th>
+                    <th className="p-2.5 font-bold sticky left-0 bg-slate-900/95 z-10">Graha</th>
                     <th className="p-2.5 text-center">Sthana</th>
                     <th className="p-2.5 text-center">Dig</th>
                     <th className="p-2.5 text-center">Kala</th>
@@ -445,7 +445,7 @@ export default function ShadbalaView() {
                           isSelected ? "bg-amber-500/15 font-bold" : ""
                         }`}
                       >
-                        <td className="p-2.5 font-bold text-slate-200 flex items-center gap-1.5">
+                        <td className="p-2.5 font-bold text-slate-200 flex items-center gap-1.5 sticky left-0 bg-slate-950/95 z-10 border-r border-slate-800/80">
                           <span style={{ color: p.color }}>{p.symbol}</span>
                           <span>{p.name}</span>
                         </td>

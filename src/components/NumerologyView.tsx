@@ -58,7 +58,7 @@ export default function NumerologyView() {
       </div>
 
       {/* Top 4 Core Numbers Dashboard Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* 1. Mulank (Driver / Psychic) */}
         <div
           onClick={() => setSelectedProfileNumber(report.mulank.singleDigit)}

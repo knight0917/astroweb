@@ -7,6 +7,8 @@ import { AyanamshaType, HouseSystem, NodeType, GeoLocation } from "../engine/typ
 
 export default function HeaderNav() {
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
+
   const [cityName, setCityName] = useState("");
   const [countryName, setCountryName] = useState("");
   const [latitude, setLatitude] = useState("");
@@ -34,7 +36,7 @@ export default function HeaderNav() {
     setViewMode,
   } = useAstroStore();
 
-  // Sync state when modal opens
+  // Sync state when location modal opens
   useEffect(() => {
     if (showLocationModal) {
       setCityName(location.cityName || "");
@@ -131,35 +133,34 @@ export default function HeaderNav() {
   };
 
   const formatLat = (lat: number) => {
-    return `${Math.abs(lat).toFixed(4)}° ${lat >= 0 ? "N" : "S"}`;
+    return `${Math.abs(lat).toFixed(2)}° ${lat >= 0 ? "N" : "S"}`;
   };
 
   const formatLon = (lon: number) => {
-    return `${Math.abs(lon).toFixed(4)}° ${lon >= 0 ? "E" : "W"}`;
+    return `${Math.abs(lon).toFixed(2)}° ${lon >= 0 ? "E" : "W"}`;
   };
 
   return (
-    <header className="glass-panel sticky top-0 z-50 px-4 py-3 border-b border-slate-800 shadow-xl">
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-        {/* Logo & Brand */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-300 flex items-center justify-center text-xl shadow-lg shadow-amber-500/20">
+    <header className="glass-panel sticky top-0 z-40 px-3 md:px-4 py-2.5 border-b border-slate-800 shadow-xl bg-slate-950/90 backdrop-blur-xl">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 md:gap-4">
+        {/* Left: Logo & Brand */}
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-300 flex items-center justify-center text-base md:text-lg shadow-lg shadow-amber-500/20 flex-shrink-0">
             ☸
           </div>
           <div>
-            <h1 className="font-extrabold text-base md:text-lg bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent tracking-tight">
-              VEDIC SKY TRACKER
+            <h1 className="font-extrabold text-sm md:text-base bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent tracking-tight">
+              VEDIC SKY
             </h1>
-            <p className="text-[10px] text-slate-400 font-medium">
-              Precision Jyotish Ephemeris & 3D Celestial Dome
+            <p className="text-[9px] md:text-[10px] text-slate-400 font-medium hidden sm:block">
+              Precision Jyotish Ephemeris
             </p>
           </div>
         </div>
 
-        {/* Center: View Switcher */}
-        <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs overflow-x-auto max-w-full">
+        {/* Center: Desktop Navigation Tabs (Hidden on Mobile) */}
+        <div className="hidden md:flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs overflow-x-auto max-w-full">
           {[
-            { mode: "3d" as ViewMode, label: "🪐 3D Dome" },
             { mode: "kundli-north" as ViewMode, label: "☸ Kundli" },
             { mode: "shodashavarga" as ViewMode, label: "✨ Shodashavarga" },
             { mode: "shadbala" as ViewMode, label: "⚖️ Shadbala" },
@@ -167,13 +168,13 @@ export default function HeaderNav() {
             { mode: "ashtakavarga" as ViewMode, label: "📊 Ashtakavarga" },
             { mode: "numerology" as ViewMode, label: "🔢 Numerology" },
             { mode: "tithi-birthday" as ViewMode, label: "🎂 Tithi Birthday" },
+            { mode: "3d" as ViewMode, label: "🪐 3D Dome" },
             { mode: "table" as ViewMode, label: "📋 Ephemeris" },
-            { mode: "dual" as ViewMode, label: "🔲 Dual 3D + Chart" },
           ].map((item) => (
             <button
               key={item.mode}
               onClick={() => setViewMode(item.mode)}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap cursor-pointer ${
                 viewMode === item.mode
                   ? "bg-amber-500 text-slate-950 shadow-md scale-105"
                   : "text-slate-400 hover:text-slate-200"
@@ -184,322 +185,367 @@ export default function HeaderNav() {
           ))}
         </div>
 
-        {/* Right Settings & Coordinates Controls */}
-        <div className="flex items-center gap-2 text-xs">
-          {/* Prominent Location & Coordinate Button with Direct Edit Trigger */}
+        {/* Right: Location Chip & Settings */}
+        <div className="flex items-center gap-1.5 md:gap-2 text-xs">
+          {/* Location Trigger Chip */}
           <button
             onClick={() => setShowLocationModal(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-500/50 text-slate-200 font-semibold transition-all shadow-sm group"
-            title="Click to edit City, Latitude, Longitude, and Observer Location"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-500/50 text-slate-200 font-semibold transition-all shadow-sm cursor-pointer"
+            title="Edit Observer Location & GPS"
           >
-            <span className="text-amber-400">📍</span>
+            <span className="text-amber-400 text-xs">📍</span>
             <div className="text-left">
-              <div className="font-bold flex items-center gap-1">
-                <span>{location.cityName}</span>
-                <span className="text-[10px] text-amber-400 opacity-80 group-hover:opacity-100 font-mono">
-                  [Edit]
-                </span>
-              </div>
-              <div className="text-[10px] text-slate-400 font-mono">
+              <span className="font-bold text-[11px] md:text-xs block max-w-[90px] sm:max-w-[120px] truncate">
+                {location.cityName}
+              </span>
+              <span className="text-[8.5px] text-slate-400 font-mono hidden sm:block">
                 {formatLat(location.latitude)}, {formatLon(location.longitude)}
-              </div>
+              </span>
             </div>
           </button>
 
-          {/* Ayanamsha Dropdown */}
-          <select
-            value={ayanamsha}
-            onChange={(e) => setAyanamsha(e.target.value as AyanamshaType)}
-            className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
-          >
-            <option value="Lahiri">Lahiri (Chitrapaksha)</option>
-            <option value="KP">KP (Krishnamurti)</option>
-            <option value="Raman">B.V. Raman</option>
-            <option value="Tropical">Tropical (Sayana)</option>
-          </select>
+          {/* Desktop Direct Settings Dropdowns */}
+          <div className="hidden lg:flex items-center gap-1.5">
+            <select
+              value={ayanamsha}
+              onChange={(e) => setAyanamsha(e.target.value as AyanamshaType)}
+              className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
+            >
+              <option value="Lahiri">Lahiri</option>
+              <option value="KP">KP</option>
+              <option value="Raman">Raman</option>
+              <option value="Tropical">Tropical</option>
+            </select>
 
-          {/* Node Type Selector */}
-          <select
-            value={nodeType}
-            onChange={(e) => setNodeType(e.target.value as NodeType)}
-            className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
-          >
-            <option value="Mean">Mean Node</option>
-            <option value="True">True Node</option>
-          </select>
+            <select
+              value={nodeType}
+              onChange={(e) => setNodeType(e.target.value as NodeType)}
+              className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
+            >
+              <option value="Mean">Mean Node</option>
+              <option value="True">True Node</option>
+            </select>
 
-          {/* Upagrahas Toggle Button */}
+            <button
+              onClick={() => setShowUpagrahas(!showUpagrahas)}
+              className={`px-2.5 py-1.5 rounded-lg font-bold border transition-all text-xs cursor-pointer ${
+                showUpagrahas
+                  ? "bg-purple-900/60 border-purple-500 text-purple-200 shadow"
+                  : "bg-slate-900/80 border-slate-700 text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Upagrahas
+            </button>
+          </div>
+
+          {/* Mobile Settings Gear Drawer Trigger */}
           <button
-            onClick={() => setShowUpagrahas(!showUpagrahas)}
-            className={`px-3 py-1.5 rounded-lg font-bold border transition-all ${
-              showUpagrahas
-                ? "bg-purple-900/60 border-purple-500 text-purple-200 shadow"
-                : "bg-slate-900/80 border-slate-700 text-slate-400 hover:text-slate-200"
-            }`}
+            onClick={() => setShowSettingsDrawer(true)}
+            className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-amber-400 transition-all flex items-center justify-center cursor-pointer shadow-sm"
+            title="Jyotish Configuration & Settings"
           >
-            Upagrahas
+            <span className="text-base leading-none">⚙️</span>
           </button>
-
-          {/* Modern Planets Toggle */}
-          <button
-            onClick={() => setShowModernPlanets(!showModernPlanets)}
-            className={`px-3 py-1.5 rounded-lg font-bold border transition-all ${
-              showModernPlanets
-                ? "bg-cyan-900/60 border-cyan-500 text-cyan-200 shadow"
-                : "bg-slate-900/80 border-slate-700 text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            Outer
-          </button>
-
-          {/* Prasna Tantra Direct Portal Link */}
-          <a
-            href="https://prasna-tantra-2-eqcdmsstvnm6buvdjcjfad.streamlit.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-950 via-indigo-950 to-purple-900 border border-purple-500/60 hover:border-purple-400 text-purple-200 hover:text-white font-extrabold flex items-center gap-1.5 transition-all shadow-md hover:shadow-purple-500/20 hover:scale-105 active:scale-95 group ml-1"
-            title="Open Vedic Horary Prasna Tantra Oracle in a new window"
-          >
-            <span className="text-sm animate-pulse">🔮</span>
-            <span>Prasna Tantra</span>
-            <span className="text-[10px] text-purple-400 group-hover:text-purple-200">↗</span>
-          </a>
         </div>
       </div>
 
-      {/* Interactive Location & Coordinate Manager Modal */}
-      {showLocationModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-150">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900/50">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">📍</span>
-                <div>
-                  <h3 className="text-base font-extrabold text-slate-100">
-                    Observer Place & Coordinate Editor
+      {/* Slide-out Mobile Settings Drawer Modal */}
+      {showSettingsDrawer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div
+            className="fixed inset-0"
+            onClick={() => setShowSettingsDrawer(false)}
+          ></div>
+
+          <div className="relative z-10 glass-panel bg-slate-950/98 border-l border-slate-800 w-full max-w-sm h-full p-5 overflow-y-auto space-y-5 shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-250">
+            <div className="space-y-4">
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl text-amber-400">⚙️</span>
+                  <h3 className="font-extrabold text-sm text-slate-100 uppercase tracking-wider">
+                    Jyotish Settings & Tools
                   </h3>
-                  <p className="text-[11px] text-slate-400">
-                    Type any city or enter exact Latitude, Longitude, and Timezone
-                  </p>
                 </div>
+                <button
+                  onClick={() => setShowSettingsDrawer(false)}
+                  className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Ayanamsha Setting */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300 block">
+                  Ayanamsha System (अयनांश)
+                </label>
+                <select
+                  value={ayanamsha}
+                  onChange={(e) => setAyanamsha(e.target.value as AyanamshaType)}
+                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
+                >
+                  <option value="Lahiri">Lahiri (Chitrapaksha — Standard Indian Govt)</option>
+                  <option value="KP">KP (Krishnamurti Padhdhati)</option>
+                  <option value="Raman">B.V. Raman</option>
+                  <option value="Tropical">Tropical (Sayana / Western)</option>
+                </select>
+              </div>
+
+              {/* Node Calculation Type */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300 block">
+                  Rahu / Ketu Calculation
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setNodeType("Mean")}
+                    className={`py-2 rounded-xl font-bold text-xs border transition-all cursor-pointer ${
+                      nodeType === "Mean"
+                        ? "bg-amber-500 text-slate-950 border-amber-500 shadow"
+                        : "bg-slate-900 border-slate-700 text-slate-300"
+                    }`}
+                  >
+                    Mean Node
+                  </button>
+                  <button
+                    onClick={() => setNodeType("True")}
+                    className={`py-2 rounded-xl font-bold text-xs border transition-all cursor-pointer ${
+                      nodeType === "True"
+                        ? "bg-amber-500 text-slate-950 border-amber-500 shadow"
+                        : "bg-slate-900 border-slate-700 text-slate-300"
+                    }`}
+                  >
+                    True Node
+                  </button>
+                </div>
+              </div>
+
+              {/* House System Selector */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300 block">
+                  House / Bhava System
+                </label>
+                <select
+                  value={houseSystem}
+                  onChange={(e) => setHouseSystem(e.target.value as HouseSystem)}
+                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
+                >
+                  <option value="Equal">Equal House (Equal 30° from Lagna)</option>
+                  <option value="Placidus">Placidus (KP Semi-Arc)</option>
+                  <option value="WholeSign">Whole Sign (Rashi = House)</option>
+                  <option value="Sripati">Sripati (Porphyry/Bhava Chalita)</option>
+                </select>
+              </div>
+
+              {/* Toggles */}
+              <div className="space-y-2.5 pt-2 border-t border-slate-800">
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                  <div>
+                    <span className="font-bold text-xs text-slate-200 block">Upagrahas & Mandi</span>
+                    <span className="text-[10px] text-slate-400">Dhuma, Vyatipata, Gulika, etc.</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={showUpagrahas}
+                    onChange={(e) => setShowUpagrahas(e.target.checked)}
+                    className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                  <div>
+                    <span className="font-bold text-xs text-slate-200 block">Modern Outer Planets</span>
+                    <span className="text-[10px] text-slate-400">Uranus, Neptune, Pluto</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={showModernPlanets}
+                    onChange={(e) => setShowModernPlanets(e.target.checked)}
+                    className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowSettingsDrawer(false)}
+              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/20 cursor-pointer"
+            >
+              Done & Apply Settings
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Location Modal */}
+      {showLocationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div
+            className="fixed inset-0"
+            onClick={() => setShowLocationModal(false)}
+          ></div>
+
+          <div className="relative z-10 glass-panel bg-slate-950 border border-slate-800 w-full max-w-lg rounded-2xl p-5 md:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl text-amber-400">📍</span>
+                <h3 className="font-extrabold text-base text-slate-100">
+                  Set Observer Location & Coordinates
+                </h3>
               </div>
               <button
                 onClick={() => setShowLocationModal(false)}
-                className="w-8 h-8 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold text-sm transition-colors"
+                className="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            {/* Modal Scrollable Body */}
-            <div className="p-4 overflow-y-auto space-y-4 flex-1">
-              {/* Live Search or Fast Filter */}
-              <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-700/80">
-                <label className="text-[11px] font-bold text-amber-400 block mb-1.5">
-                  🔍 SEARCH SACRED & GLOBAL CITY DATABASE
-                </label>
-                <input
-                  type="text"
-                  value={citySearch}
-                  onChange={(e) => setCitySearch(e.target.value)}
-                  placeholder="Type city name (e.g. Allahabad, Prayagraj, Varanasi, Tokyo, London)..."
-                  className="w-full bg-slate-950 border border-slate-600 focus:border-amber-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 font-medium"
-                />
+            {/* GPS Auto Detect Button */}
+            <button
+              onClick={handleDetectLocation}
+              disabled={geoLoading}
+              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-50"
+            >
+              <span>🛰️</span>
+              <span>{geoLoading ? "Acquiring GPS Fix..." : "Auto-Detect My Exact Device GPS Location"}</span>
+            </button>
 
-                {/* Filtered Dropdown Results */}
-                {citySearch.trim().length > 0 && (
-                  <div className="mt-2 max-h-32 overflow-y-auto space-y-1 pr-1 border-t border-slate-800 pt-2">
-                    {filteredCities.length === 0 ? (
-                      <div className="text-xs text-slate-500 py-1">No preset matched. You can write custom coordinates below!</div>
-                    ) : (
-                      filteredCities.map((c) => (
-                        <button
-                          key={c.cityName}
-                          type="button"
-                          onClick={() => {
-                            handleSelectCity(c);
-                            setCitySearch("");
-                          }}
-                          className="w-full text-left p-1.5 rounded-lg bg-slate-950 hover:bg-amber-500/20 border border-slate-800 hover:border-amber-500/50 flex items-center justify-between text-xs transition-colors"
-                        >
-                          <span className="font-bold text-slate-200">{c.cityName} ({c.country})</span>
-                          <span className="text-[10px] text-amber-400 font-mono">
-                            {c.latitude.toFixed(2)}° N, {c.longitude.toFixed(2)}° E
-                          </span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
+            {geoError && (
+              <div className="p-2.5 rounded-lg bg-rose-950/80 border border-rose-800 text-rose-300 text-xs font-mono">
+                {geoError}
+              </div>
+            )}
+
+            {/* Quick Popular City Search */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                Quick Select Popular Cities
+              </label>
+              <input
+                type="text"
+                value={citySearch}
+                onChange={(e) => setCitySearch(e.target.value)}
+                placeholder="Search Delhi, Varanasi, Mumbai, London, New York..."
+                className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
+              />
+
+              <div className="max-h-32 overflow-y-auto custom-scrollbar flex flex-wrap gap-1.5 p-1 bg-slate-900/50 rounded-xl border border-slate-800">
+                {filteredCities.slice(0, 12).map((c) => (
+                  <button
+                    key={c.cityName}
+                    type="button"
+                    onClick={() => handleSelectCity(c)}
+                    className="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-amber-500 hover:text-slate-950 text-slate-300 text-[11px] font-semibold transition-colors cursor-pointer"
+                  >
+                    {c.cityName} {c.country ? `(${c.country})` : ""}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Coordinates Form */}
+            <form onSubmit={handleSaveLocation} className="space-y-3 pt-2 border-t border-slate-800">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                    City / Place Name
+                  </label>
+                  <input
+                    type="text"
+                    value={cityName}
+                    onChange={(e) => setCityName(e.target.value)}
+                    required
+                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                    Country
+                  </label>
+                  <input
+                    type="text"
+                    value={countryName}
+                    onChange={(e) => setCountryName(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2"
+                  />
+                </div>
               </div>
 
-              {/* GPS Auto Detect Button */}
-              <div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                    Latitude (-90° to +90°)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    value={latitude}
+                    onChange={(e) => setLatitude(e.target.value)}
+                    required
+                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                    Longitude (-180° to +180°)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    value={longitude}
+                    onChange={(e) => setLongitude(e.target.value)}
+                    required
+                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                    Timezone Offset (Hours)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.25"
+                    value={timezoneOffset}
+                    onChange={(e) => setTimezoneOffset(e.target.value)}
+                    required
+                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                    Elevation (Meters)
+                  </label>
+                  <input
+                    type="number"
+                    value={elevation}
+                    onChange={(e) => setElevation(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3">
                 <button
                   type="button"
-                  onClick={handleDetectLocation}
-                  disabled={geoLoading}
-                  className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg transition-all active:scale-98"
+                  onClick={() => setShowLocationModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer"
                 >
-                  <span>🛰️</span>
-                  <span>{geoLoading ? "Acquiring GPS Position..." : "Use My Current Device Location (GPS)"}</span>
+                  Cancel
                 </button>
-
-                {geoError && (
-                  <div className="mt-2 p-2 rounded-lg bg-red-950/80 border border-red-800 text-red-300 text-xs font-semibold">
-                    {geoError}
-                  </div>
-                )}
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-extrabold text-xs shadow-md shadow-amber-500/20 cursor-pointer"
+                >
+                  Save Location
+                </button>
               </div>
-
-              {/* Manual Direct Input Form */}
-              <form onSubmit={handleSaveLocation} className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* City Name (Freely Editable Text) */}
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-300 block mb-1">
-                      CITY / PLACE NAME <span className="text-amber-400">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={cityName}
-                      onChange={(e) => setCityName(e.target.value)}
-                      placeholder="e.g. Allahabad (Prayagraj)"
-                      className="w-full bg-slate-900 border border-slate-700 focus:border-amber-500 rounded-lg p-2.5 text-xs text-slate-100 font-bold focus:ring-1 focus:ring-amber-500"
-                    />
-                  </div>
-
-                  {/* Country Name */}
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-300 block mb-1">
-                      COUNTRY / STATE
-                    </label>
-                    <input
-                      type="text"
-                      value={countryName}
-                      onChange={(e) => setCountryName(e.target.value)}
-                      placeholder="e.g. India"
-                      className="w-full bg-slate-900 border border-slate-700 focus:border-amber-500 rounded-lg p-2.5 text-xs text-slate-100 font-medium focus:ring-1 focus:ring-amber-500"
-                    />
-                  </div>
-                </div>
-
-                {/* Latitude & Longitude */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[11px] font-bold text-amber-300 block mb-1">
-                      LATITUDE (Degrees: -90 to +90) <span className="text-amber-400">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      required
-                      value={latitude}
-                      onChange={(e) => setLatitude(e.target.value)}
-                      placeholder="e.g. 25.4358"
-                      className="w-full bg-slate-900 border border-slate-700 focus:border-amber-500 rounded-lg p-2.5 text-xs text-amber-200 font-mono font-bold"
-                    />
-                    <span className="text-[10px] text-slate-400 block mt-0.5">
-                      Positive for North (+), Negative for South (-)
-                    </span>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-amber-300 block mb-1">
-                      LONGITUDE (Degrees: -180 to +180) <span className="text-amber-400">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      required
-                      value={longitude}
-                      onChange={(e) => setLongitude(e.target.value)}
-                      placeholder="e.g. 81.8463"
-                      className="w-full bg-slate-900 border border-slate-700 focus:border-amber-500 rounded-lg p-2.5 text-xs text-amber-200 font-mono font-bold"
-                    />
-                    <span className="text-[10px] text-slate-400 block mt-0.5">
-                      Positive for East (+), Negative for West (-)
-                    </span>
-                  </div>
-                </div>
-
-                {/* Elevation & Timezone Offset */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-300 block mb-1">
-                      ELEVATION (Meters above sea level)
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={elevation}
-                      onChange={(e) => setElevation(e.target.value)}
-                      placeholder="e.g. 98"
-                      className="w-full bg-slate-900 border border-slate-700 focus:border-amber-500 rounded-lg p-2.5 text-xs text-slate-200 font-mono"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-300 block mb-1">
-                      TIMEZONE OFFSET (Hours from UTC)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.25"
-                      value={timezoneOffset}
-                      onChange={(e) => setTimezoneOffset(e.target.value)}
-                      placeholder="e.g. +5.5 for IST"
-                      className="w-full bg-slate-900 border border-slate-700 focus:border-amber-500 rounded-lg p-2.5 text-xs text-slate-200 font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* Quick Selection Chip Presets */}
-                <div className="border-t border-slate-800/80 pt-3">
-                  <label className="text-[11px] font-bold text-slate-400 mb-2 block">
-                    QUICK CITY PRESETS:
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-36 overflow-y-auto pr-1">
-                    {POPULAR_CITIES.map((c) => (
-                      <button
-                        key={c.cityName}
-                        type="button"
-                        onClick={() => handleSelectCity(c)}
-                        className={`text-left p-2 rounded-lg text-xs transition-all border ${
-                          cityName === c.cityName
-                            ? "bg-amber-500/20 border-amber-500 text-amber-300 font-bold shadow-sm"
-                            : "bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800 hover:border-slate-700"
-                        }`}
-                      >
-                        <div className="font-bold truncate">{c.cityName}</div>
-                        <div className="text-[9px] text-slate-400 font-mono">
-                          {c.latitude.toFixed(2)}°, {c.longitude.toFixed(2)}°
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Footer Buttons */}
-                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setShowLocationModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 rounded-xl text-xs font-extrabold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/20 transition-transform active:scale-95"
-                  >
-                    Apply Coordinates & Recalculate
-                  </button>
-                </div>
-              </form>
-            </div>
+            </form>
           </div>
         </div>
       )}

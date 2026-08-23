@@ -115,8 +115,8 @@ export default function ShodashavargaView() {
         </div>
       </div>
 
-      {/* 16-Varga Quick Selector Horizontal Carousel */}
-      <div className="glass-panel p-3 rounded-2xl border border-slate-800 shadow-xl bg-slate-950/90 overflow-x-auto custom-scrollbar">
+      {/* 16-Varga Quick Selector Horizontal Carousel with Snap Scrolling */}
+      <div className="glass-panel p-2.5 sm:p-3 rounded-2xl border border-slate-800 shadow-xl bg-slate-950/90 overflow-x-auto snap-scroll-x no-scrollbar">
         <div className="flex items-center gap-2 min-w-max">
           {filteredVargas.map((v) => {
             const isSelected = selectedVarga === v.id;
@@ -124,7 +124,7 @@ export default function ShodashavargaView() {
               <button
                 key={v.id}
                 onClick={() => setSelectedVarga(v.id)}
-                className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-start gap-0.5 border ${
+                className={`snap-item px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-start gap-0.5 border cursor-pointer ${
                   isSelected
                     ? "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 border-amber-300 shadow-lg shadow-amber-500/25 scale-105"
                     : "bg-slate-900/70 hover:bg-slate-800/80 text-slate-300 border-slate-800"
@@ -150,22 +150,22 @@ export default function ShodashavargaView() {
       {/* Main Grid: Chart Canvas (Left) + Varga Deep Analysis & Table (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Interactive Varga Chart Canvas (7 cols) */}
-        <div className="lg:col-span-7 glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 flex flex-col items-center">
+        <div className="lg:col-span-7 glass-panel p-3.5 sm:p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 flex flex-col items-center">
           {/* Chart Header */}
-          <div className="w-full flex items-center justify-between mb-4">
+          <div className="w-full flex flex-wrap items-center justify-between gap-2 mb-3 sm:mb-4">
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-lg text-amber-400">☸</span>
-                <h3 className="font-extrabold text-slate-100 text-base">
+                <h3 className="font-extrabold text-slate-100 text-sm sm:text-base">
                   {vargaChart.varga.id} — {vargaChart.varga.name} ({vargaChart.varga.sanskritName})
                 </h3>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
                 Varga Lagna:{" "}
                 <span className="text-emerald-400 font-bold font-mono">
                   {vargaChart.ascendant.vargaRashi.englishName} ({vargaChart.ascendant.vargaRashi.sanskritName})
                 </span>{" "}
-                • Division Size: {vargaChart.varga.spanDegrees.toFixed(2)}°
+                • Division: {vargaChart.varga.spanDegrees.toFixed(2)}°
               </p>
             </div>
 

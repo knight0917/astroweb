@@ -96,46 +96,25 @@ export default function KundliChart() {
   };
 
   return (
-    <div className="glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl flex flex-col items-center">
+    <div className="glass-panel p-3.5 sm:p-5 rounded-2xl border border-slate-800 shadow-2xl flex flex-col items-center">
       {/* Header controls */}
-      <div className="w-full flex items-center justify-between mb-4">
+      <div className="w-full flex flex-wrap items-center justify-between gap-2.5 mb-3 sm:mb-4">
         <div>
-          <h3 className="font-bold text-slate-100 flex items-center gap-2">
+          <h3 className="font-extrabold text-sm sm:text-base text-slate-100 flex items-center gap-2">
             <span>☸</span> Traditional Kundli Chart
           </h3>
-          <p className="text-xs text-slate-400">
+          <p className="text-[11px] sm:text-xs text-slate-400">
             Lagna: <span className="text-emerald-400 font-semibold">{ephemeris.ascendant.rashi.sanskritName}</span> (
             {Math.floor(ephemeris.ascendant.rashi.degreesInSign)}°) | {ephemeris.ascendant.nakshatra.sanskritName} Pada{" "}
             {ephemeris.ascendant.nakshatra.pada}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
-          <button
-            onClick={() => setViewMode("shodashavarga")}
-            className="px-2.5 py-1 rounded-md font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-slate-950 border border-amber-500/40 transition-all flex items-center gap-1 shadow"
-          >
-            <span>✨</span>
-            <span>Shodashavarga</span>
-          </button>
-          <button
-            onClick={() => setViewMode("shadbala")}
-            className="px-2.5 py-1 rounded-md font-bold bg-purple-500/20 text-purple-300 hover:bg-purple-600 hover:text-white border border-purple-500/40 transition-all flex items-center gap-1 shadow"
-          >
-            <span>⚖️</span>
-            <span>Shadbala</span>
-          </button>
-          <button
-            onClick={() => setViewMode("bhavabala")}
-            className="px-2.5 py-1 rounded-md font-bold bg-indigo-500/20 text-indigo-300 hover:bg-indigo-600 hover:text-white border border-indigo-500/40 transition-all flex items-center gap-1 shadow"
-          >
-            <span>🏛️</span>
-            <span>Bhava Bala</span>
-          </button>
-          <div className="h-4 w-px bg-slate-800 hidden sm:block"></div>
+        {/* Chart Style Toggle */}
+        <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
           <button
             onClick={() => setChartType("north")}
-            className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
+            className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
               chartType === "north" ? "bg-amber-500 text-slate-950 shadow" : "text-slate-400 hover:text-slate-200"
             }`}
           >
@@ -143,7 +122,7 @@ export default function KundliChart() {
           </button>
           <button
             onClick={() => setChartType("south")}
-            className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
+            className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
               chartType === "south" ? "bg-amber-500 text-slate-950 shadow" : "text-slate-400 hover:text-slate-200"
             }`}
           >

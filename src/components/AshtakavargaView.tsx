@@ -136,8 +136,8 @@ export default function AshtakavargaView() {
         </div>
       </div>
 
-      {/* Navigation Tabs for 8 Grahas + SAV */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Navigation Tabs for 8 Grahas + SAV with Snap Scrolling */}
+      <div className="flex overflow-x-auto snap-scroll-x no-scrollbar items-center gap-2 pb-1.5">
         {grahaOptions.map((opt) => {
           const isSelected = selectedGraha === opt.id;
           return (
@@ -149,7 +149,7 @@ export default function AshtakavargaView() {
                 color: isSelected ? "#030712" : undefined,
                 backgroundColor: isSelected ? opt.color : undefined,
               }}
-              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all shadow-md flex items-center gap-2 cursor-pointer ${
+              className={`snap-item px-3 sm:px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all shadow-md flex items-center gap-2 cursor-pointer whitespace-nowrap ${
                 isSelected
                   ? "shadow-lg scale-105"
                   : "bg-slate-900/90 text-slate-300 border border-slate-800 hover:border-slate-600 hover:text-white"
