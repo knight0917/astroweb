@@ -312,7 +312,8 @@ function calculateKalaBala(
 
   // D. Period Lords (Vedic Sunrise Rule)
   // Local time conversion
-  const localMs = date.getTime() + 5.5 * 3600 * 1000;
+  const tzOffset = ephem.location?.timezoneOffsetHours ?? 5.5;
+  const localMs = date.getTime() + tzOffset * 3600 * 1000;
   const localDate = new Date(localMs);
   const localHour = localDate.getUTCHours() + localDate.getUTCMinutes() / 60;
 
@@ -434,7 +435,7 @@ function calculateDrikBala(planetId: ShadbalaPlanetId, ephem: EphemerisResult): 
 export function calculateShadbala(ephem: EphemerisResult): ShadbalaResult {
   const planetIds: ShadbalaPlanetId[] = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
   const planets: Record<ShadbalaPlanetId, PlanetShadbala> = {} as any;
-  const date = ephem.date || new Date();
+  const date = ephem.utcDate ? new Date(ephem.utcDate) : new Date();
   const ascLon = ephem.ascendant.siderealLongitude;
 
   planetIds.forEach((id) => {
