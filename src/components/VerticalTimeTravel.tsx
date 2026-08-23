@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { POPULAR_CITIES } from "../engine/constants";
 import { GeoLocation } from "../engine/types";
+import { PlaceAutocompleteInput } from "./PlaceAutocompleteInput";
 
 export default function VerticalTimeTravel() {
   const {
@@ -218,13 +219,17 @@ export default function VerticalTimeTravel() {
                 /* Custom Place Input Form */
                 <div className="space-y-1.5 pt-0.5 text-xs">
                   <div>
-                    <span className="text-[8px] text-slate-400 font-bold block mb-0.5">CITY / PLACE NAME</span>
-                    <input
-                      type="text"
+                    <span className="text-[8px] text-amber-400 font-bold block mb-0.5">SEARCH / TYPE ANY PLACE</span>
+                    <PlaceAutocompleteInput
                       value={placeName}
-                      onChange={(e) => setPlaceName(e.target.value)}
-                      placeholder="e.g. Ayodhya, Varanasi..."
-                      className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-1 text-xs text-slate-100 font-bold"
+                      onChange={setPlaceName}
+                      onSelectLocation={(loc) => {
+                        setPlaceName(loc.cityName);
+                        setPlaceLat(loc.latitude.toString());
+                        setPlaceLon(loc.longitude.toString());
+                        setPlaceTz(loc.timezoneOffsetHours.toString());
+                      }}
+                      placeholder="e.g. Mau, Ballia, Delhi, London..."
                     />
                   </div>
 

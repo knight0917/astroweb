@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useAstroStore, ViewMode } from "../store/useAstroStore";
 import { POPULAR_CITIES } from "../engine/constants";
 import { AyanamshaType, HouseSystem, NodeType, GeoLocation } from "../engine/types";
+import { PlaceAutocompleteInput } from "./PlaceAutocompleteInput";
 
 export default function HeaderNav() {
   const [mounted, setMounted] = useState(false);
@@ -426,28 +427,38 @@ export default function HeaderNav() {
               </div>
             )}
 
-            {/* Quick Popular City Search */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-                Quick Select Popular Cities
+            {/* Live Global Place Search & Autocomplete */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-amber-400 uppercase tracking-wider block flex items-center justify-between">
+                <span>Search Any City / Town / Village</span>
+                <span className="text-[10px] text-slate-400 font-normal">Live Global & Local Recommendations</span>
               </label>
-              <input
-                type="text"
+              <PlaceAutocompleteInput
                 value={citySearch}
-                onChange={(e) => setCitySearch(e.target.value)}
-                placeholder="Search Delhi, Varanasi, Mumbai, London, New York..."
-                className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
+                onChange={setCitySearch}
+                onSelectLocation={(loc) => {
+                  handleSelectCity(loc);
+                  setCitySearch("");
+                }}
+                placeholder="Start typing place name (e.g. Mau, Ballia, Varanasi, London, New York)..."
+                autoFocus
               />
+            </div>
 
-              <div className="max-h-32 overflow-y-auto custom-scrollbar flex flex-wrap gap-1.5 p-1 bg-slate-900/50 rounded-xl border border-slate-800">
-                {filteredCities.slice(0, 12).map((c) => (
+            {/* Quick Popular Chips */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Popular Vedic & Global Locations:
+              </span>
+              <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto custom-scrollbar p-1 bg-slate-900/60 rounded-xl border border-slate-800">
+                {POPULAR_CITIES.slice(0, 14).map((c) => (
                   <button
                     key={c.cityName}
                     type="button"
                     onClick={() => handleSelectCity(c)}
-                    className="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-amber-500 hover:text-slate-950 text-slate-300 text-[11px] font-semibold transition-colors cursor-pointer"
+                    className="px-2 py-0.5 rounded-lg bg-slate-800/80 hover:bg-amber-500 hover:text-slate-950 text-slate-300 text-[10px] font-medium transition-colors cursor-pointer"
                   >
-                    {c.cityName} {c.country ? `(${c.country})` : ""}
+                    {c.cityName}
                   </button>
                 ))}
               </div>
@@ -455,6 +466,10 @@ export default function HeaderNav() {
 
             {/* Custom Coordinates Form */}
             <form onSubmit={handleSaveLocation} className="space-y-3 pt-2 border-t border-slate-800">
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                <span>Selected Coordinates</span>
+                <span className="text-[10px] text-emerald-400 font-normal">● Auto-Calculated</span>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-bold text-slate-400 block mb-1">
