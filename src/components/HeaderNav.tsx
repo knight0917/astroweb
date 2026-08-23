@@ -161,6 +161,7 @@ export default function HeaderNav() {
           {[
             { mode: "3d" as ViewMode, label: "🪐 3D Dome" },
             { mode: "kundli-north" as ViewMode, label: "☸ Kundli" },
+            { mode: "shodashavarga" as ViewMode, label: "✨ Shodashavarga" },
             { mode: "ashtakavarga" as ViewMode, label: "📊 Ashtakavarga" },
             { mode: "numerology" as ViewMode, label: "🔢 Numerology" },
             { mode: "tithi-birthday" as ViewMode, label: "🎂 Tithi Birthday" },

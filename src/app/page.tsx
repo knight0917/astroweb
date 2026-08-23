@@ -8,6 +8,7 @@ import PositionsTable from "../components/PositionsTable";
 import AshtakavargaView from "../components/AshtakavargaView";
 import NumerologyView from "../components/NumerologyView";
 import TithiBirthdayView from "../components/TithiBirthdayView";
+import ShodashavargaView from "../components/ShodashavargaView";
 import TimeTravelSlider from "../components/TimeTravelSlider";
 import EntityDetailModal from "../components/EntityDetailModal";
 import { useAstroStore } from "../store/useAstroStore";
@@ -49,6 +50,12 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
             <KundliChart />
             <PositionsTable />
+          </div>
+        )}
+
+        {viewMode === "shodashavarga" && (
+          <div className="w-full">
+            <ShodashavargaView />
           </div>
         )}
 

@@ -194,3 +194,65 @@ test("Vedic Tithi Birthday & Tithi Pravesha Verification", async () => {
   assert.equal(result.upcomingBirthdays.length, 5, "Must compute 5 upcoming birthdays");
   assert.ok(result.vedicRituals.lifestyleRules.length > 0, "Ritual rules must be populated");
 });
+
+test("Classical Parashari Shodashavarga (16 Divisional Charts) Verification", async () => {
+  const { calculateVargaSign, calculateShodashavargaChart, VARGA_DEFINITIONS } = await import(
+    "../src/engine/shodashavarga.ts"
+  );
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 1. Verify all 16 Vargas are defined
+  const vargaKeys = Object.keys(VARGA_DEFINITIONS);
+  assert.equal(vargaKeys.length, 16, "Must define exactly 16 Parashari Shodashavargas");
+
+  // 2. Test D9 Navamsha:
+  // 0 deg Aries (Mesha, Fire, part 0) -> Aries (0)
+  assert.equal(calculateVargaSign(0.5, "D9"), 0);
+  // 3 deg 25 min Aries (part 1) -> Taurus (1)
+  assert.equal(calculateVargaSign(3.5, "D9"), 1);
+  // 0 deg Taurus (Vrishabha, Earth, part 0) -> Capricorn (9)
+  assert.equal(calculateVargaSign(30.5, "D9"), 9);
+  // 0 deg Gemini (Mithuna, Air, part 0) -> Libra (6)
+  assert.equal(calculateVargaSign(60.5, "D9"), 6);
+  // 0 deg Cancer (Karka, Water, part 0) -> Cancer (3)
+  assert.equal(calculateVargaSign(90.5, "D9"), 3);
+
+  // 3. Test D2 Hora:
+  // Odd sign (Aries, sign 0): 0-15 deg -> Sun/Leo (4), 15-30 deg -> Moon/Cancer (3)
+  assert.equal(calculateVargaSign(5, "D2"), 4);
+  assert.equal(calculateVargaSign(20, "D2"), 3);
+  // Even sign (Taurus, sign 1): 0-15 deg -> Moon/Cancer (3), 15-30 deg -> Sun/Leo (4)
+  assert.equal(calculateVargaSign(35, "D2"), 3);
+  assert.equal(calculateVargaSign(50, "D2"), 4);
+
+  // 4. Test D3 Drekkana:
+  // Aries (0): 0-10 deg -> Aries (0), 10-20 deg -> Leo (4), 20-30 deg -> Sagittarius (8)
+  assert.equal(calculateVargaSign(5, "D3"), 0);
+  assert.equal(calculateVargaSign(15, "D3"), 4);
+  assert.equal(calculateVargaSign(25, "D3"), 8);
+
+  // 5. Test D10 Dashamsha:
+  // Odd sign (Aries, sign 0): 0-3 deg -> Aries (0), 3-6 deg -> Taurus (1)...
+  assert.equal(calculateVargaSign(1.5, "D10"), 0);
+  assert.equal(calculateVargaSign(4.5, "D10"), 1);
+  // Even sign (Taurus, sign 1): starts from 9th (Taurus + 8 = Capricorn / 9)
+  assert.equal(calculateVargaSign(31.5, "D10"), 9);
+
+  // 6. Test D60 Shashtiamsha:
+  // Aries 0.25 deg -> Aries (0), Aries 0.75 deg -> Taurus (1)
+  assert.equal(calculateVargaSign(0.25, "D60"), 0);
+  assert.equal(calculateVargaSign(0.75, "D60"), 1);
+
+  // 7. Full Shodashavarga Chart Generator Verification
+  const ephem = calculateVedicEphemeris(
+    new Date("2026-08-23T12:00:00Z"),
+    { cityName: "Delhi", latitude: 28.6139, longitude: 77.209, timezoneOffsetHours: 5.5, country: "India" }
+  );
+
+  for (const vKey of vargaKeys) {
+    const vChart = calculateShodashavargaChart(ephem, vKey);
+    assert.ok(vChart.ascendant.vargaSignIndex >= 0 && vChart.ascendant.vargaSignIndex <= 11);
+    assert.ok(vChart.entities.length >= 9, "Must contain at least 9 planetary entities");
+    assert.ok(Object.keys(vChart.houseOccupants).length === 12, "Must contain all 12 houses");
+  }
+});

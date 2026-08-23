@@ -6,8 +6,14 @@ import { RASHIS } from "../engine/constants";
 
 export default function KundliChart() {
   const [chartType, setChartType] = useState<"north" | "south">("north");
-  const { ephemeris, showModernPlanets, showUpagrahas, selectedEntityId, setSelectedEntityId } =
-    useAstroStore();
+  const {
+    ephemeris,
+    showModernPlanets,
+    showUpagrahas,
+    selectedEntityId,
+    setSelectedEntityId,
+    setViewMode,
+  } = useAstroStore();
 
   const ascLon = ephemeris.ascendant.siderealLongitude;
   const ascRashiIndex = Math.floor(ascLon / 30); // 0 = Mesha, ..., 11 = Meena
@@ -104,22 +110,30 @@ export default function KundliChart() {
           </p>
         </div>
 
-        <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
+        <div className="flex flex-wrap items-center gap-1.5 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
+          <button
+            onClick={() => setViewMode("shodashavarga")}
+            className="px-2.5 py-1 rounded-md font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-slate-950 border border-amber-500/40 transition-all flex items-center gap-1 shadow"
+          >
+            <span>✨</span>
+            <span>Shodashavarga</span>
+          </button>
+          <div className="h-4 w-px bg-slate-800 hidden sm:block"></div>
           <button
             onClick={() => setChartType("north")}
-            className={`px-3 py-1 rounded-md font-semibold transition-all ${
+            className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
               chartType === "north" ? "bg-amber-500 text-slate-950 shadow" : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            North Indian (Diamond)
+            North (Diamond)
           </button>
           <button
             onClick={() => setChartType("south")}
-            className={`px-3 py-1 rounded-md font-semibold transition-all ${
+            className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
               chartType === "south" ? "bg-amber-500 text-slate-950 shadow" : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            South Indian (Box)
+            South (Box)
           </button>
         </div>
       </div>
@@ -291,6 +305,16 @@ export default function KundliChart() {
           </div>
         )}
       </div>
+
+      {/* Direct Shodashavarga 16-Charts Launcher Button */}
+      <button
+        onClick={() => setViewMode("shodashavarga")}
+        className="mt-4 w-full max-w-[460px] py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/35 hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer"
+      >
+        <span className="text-base">✨</span>
+        <span>Shodashavarga (Explore All 16 Divisional Charts D1 to D60)</span>
+        <span className="text-base">➔</span>
+      </button>
     </div>
   );
 }
