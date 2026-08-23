@@ -163,6 +163,7 @@ export default function HeaderNav() {
             { mode: "kundli-north" as ViewMode, label: "☸ Kundli" },
             { mode: "shodashavarga" as ViewMode, label: "✨ Shodashavarga" },
             { mode: "shadbala" as ViewMode, label: "⚖️ Shadbala" },
+            { mode: "bhavabala" as ViewMode, label: "🏛️ Bhava Bala" },
             { mode: "ashtakavarga" as ViewMode, label: "📊 Ashtakavarga" },
             { mode: "numerology" as ViewMode, label: "🔢 Numerology" },
             { mode: "tithi-birthday" as ViewMode, label: "🎂 Tithi Birthday" },

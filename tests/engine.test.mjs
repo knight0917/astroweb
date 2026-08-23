@@ -296,3 +296,47 @@ test("Classical Parashari Shadbala (6-Fold Planetary Strength) Verification", as
   assert.equal(shadbala.planets["Mars"].naisargikaBala, 17.14);
   assert.equal(shadbala.planets["Saturn"].naisargikaBala, 8.57);
 });
+
+test("Classical Parashari Bhava Bala (12 House Strengths) Verification", async () => {
+  const { calculateBhavaBala } = await import("../src/engine/bhavabala.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const ephem = calculateVedicEphemeris(
+    new Date("2026-08-23T12:00:00Z"),
+    { cityName: "Prayagraj", latitude: 25.4358, longitude: 81.8463, timezoneOffsetHours: 5.5, country: "India" }
+  );
+
+  const bb = calculateBhavaBala(ephem);
+
+  // 1. Verify all 12 houses exist
+  for (let h = 1; h <= 12; h++) {
+    const house = bb.houses[h];
+    assert.ok(house, `House ${h} must exist in Bhava Bala`);
+    assert.ok(house.bhavaadhipatiBala > 0, `House ${h} Lord Bala must be > 0`);
+    assert.ok(house.totalRupas > 0, `House ${h} total Rupas must be > 0`);
+    assert.ok(house.requiredRupas > 0, `House ${h} required Rupas must be > 0`);
+    assert.ok(house.strengthRatio > 0, `House ${h} ratio must be > 0`);
+    assert.ok(house.rank >= 1 && house.rank <= 12, `House ${h} rank must be between 1 and 12`);
+  }
+
+  // 2. Verify Kendra, Panapara, Apoklima required Rupas thresholds
+  assert.equal(bb.houses[1].requiredRupas, 6.0, "H1 Kendra must require 6.0 Rupas");
+  assert.equal(bb.houses[4].requiredRupas, 6.0, "H4 Kendra must require 6.0 Rupas");
+  assert.equal(bb.houses[7].requiredRupas, 6.0, "H7 Kendra must require 6.0 Rupas");
+  assert.equal(bb.houses[10].requiredRupas, 6.0, "H10 Kendra must require 6.0 Rupas");
+
+  assert.equal(bb.houses[2].requiredRupas, 5.5, "H2 Panapara must require 5.5 Rupas");
+  assert.equal(bb.houses[5].requiredRupas, 5.5, "H5 Panapara must require 5.5 Rupas");
+  assert.equal(bb.houses[8].requiredRupas, 5.5, "H8 Panapara must require 5.5 Rupas");
+  assert.equal(bb.houses[11].requiredRupas, 5.5, "H11 Panapara must require 5.5 Rupas");
+
+  assert.equal(bb.houses[3].requiredRupas, 5.0, "H3 Apoklima must require 5.0 Rupas");
+  assert.equal(bb.houses[6].requiredRupas, 5.0, "H6 Apoklima must require 5.0 Rupas");
+  assert.equal(bb.houses[9].requiredRupas, 5.0, "H9 Apoklima must require 5.0 Rupas");
+  assert.equal(bb.houses[12].requiredRupas, 5.0, "H12 Apoklima must require 5.0 Rupas");
+
+  // 3. Verify ranked array length and sorting
+  assert.equal(bb.rankedHouses.length, 12, "Ranked list must have 12 houses");
+  assert.equal(bb.rankedHouses[0].rank, 1, "First house must have rank 1");
+  assert.equal(bb.rankedHouses[11].rank, 12, "Last house must have rank 12");
+});

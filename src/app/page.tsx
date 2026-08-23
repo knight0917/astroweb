@@ -10,6 +10,7 @@ import NumerologyView from "../components/NumerologyView";
 import TithiBirthdayView from "../components/TithiBirthdayView";
 import ShodashavargaView from "../components/ShodashavargaView";
 import ShadbalaView from "../components/ShadbalaView";
+import BhavaBalaView from "../components/BhavaBalaView";
 import TimeTravelSlider from "../components/TimeTravelSlider";
 import EntityDetailModal from "../components/EntityDetailModal";
 import { useAstroStore } from "../store/useAstroStore";
@@ -63,6 +64,12 @@ export default function HomePage() {
         {viewMode === "shadbala" && (
           <div className="w-full">
             <ShadbalaView />
+          </div>
+        )}
+
+        {viewMode === "bhavabala" && (
+          <div className="w-full">
+            <BhavaBalaView />
           </div>
         )}
 
