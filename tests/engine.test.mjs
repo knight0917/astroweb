@@ -171,3 +171,26 @@ test("Vedic & Chaldean Numerology Suite Verification", async () => {
   assert.equal(report.mulank.profile.planet, "Rahu");
   assert.ok(report.mulank.profile.luckyColors.length > 0);
 });
+
+test("Vedic Tithi Birthday & Tithi Pravesha Verification", async () => {
+  const { calculateTithiBirthday } = await import("../src/engine/tithiBirthday.ts");
+
+  const birthDate = new Date("1998-05-25T12:00:00Z");
+  const refDate = new Date("2026-08-23T00:00:00Z");
+
+  const result = calculateTithiBirthday(birthDate, undefined, "Lahiri", refDate);
+
+  // Assert birth tithi details
+  assert.ok(result.birthDetails.tithiName.length > 0, "Birth Tithi name must be present");
+  assert.ok(result.birthDetails.masaName.length > 0, "Birth Masa name must be present");
+  assert.ok(result.birthDetails.tithiDeity.length > 0, "Birth Tithi Deity must be present");
+
+  // Assert next birthday
+  assert.ok(result.nextBirthday.gregorianDate.getTime() > refDate.getTime(), "Next birthday must be in future");
+  assert.ok(result.nextBirthday.daysRemaining >= 0, "Days remaining must be non-negative");
+  assert.ok(result.nextBirthday.formattedDate.length > 0, "Formatted date must be present");
+
+  // Assert 5-year upcoming birthdays list
+  assert.equal(result.upcomingBirthdays.length, 5, "Must compute 5 upcoming birthdays");
+  assert.ok(result.vedicRituals.lifestyleRules.length > 0, "Ritual rules must be populated");
+});

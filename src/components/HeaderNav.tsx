@@ -157,19 +157,20 @@ export default function HeaderNav() {
         </div>
 
         {/* Center: View Switcher */}
-        <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs">
+        <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs overflow-x-auto max-w-full">
           {[
             { mode: "3d" as ViewMode, label: "🪐 3D Dome" },
             { mode: "kundli-north" as ViewMode, label: "☸ Kundli" },
             { mode: "ashtakavarga" as ViewMode, label: "📊 Ashtakavarga" },
             { mode: "numerology" as ViewMode, label: "🔢 Numerology" },
+            { mode: "tithi-birthday" as ViewMode, label: "🎂 Tithi Birthday" },
             { mode: "table" as ViewMode, label: "📋 Ephemeris" },
             { mode: "dual" as ViewMode, label: "🔲 Dual 3D + Chart" },
           ].map((item) => (
             <button
               key={item.mode}
               onClick={() => setViewMode(item.mode)}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+              className={`px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap ${
                 viewMode === item.mode
                   ? "bg-amber-500 text-slate-950 shadow-md scale-105"
                   : "text-slate-400 hover:text-slate-200"

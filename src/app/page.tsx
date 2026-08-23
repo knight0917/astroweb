@@ -7,6 +7,7 @@ import KundliChart from "../components/KundliChart";
 import PositionsTable from "../components/PositionsTable";
 import AshtakavargaView from "../components/AshtakavargaView";
 import NumerologyView from "../components/NumerologyView";
+import TithiBirthdayView from "../components/TithiBirthdayView";
 import TimeTravelSlider from "../components/TimeTravelSlider";
 import EntityDetailModal from "../components/EntityDetailModal";
 import { useAstroStore } from "../store/useAstroStore";
@@ -60,6 +61,12 @@ export default function HomePage() {
         {viewMode === "numerology" && (
           <div className="w-full">
             <NumerologyView />
+          </div>
+        )}
+
+        {viewMode === "tithi-birthday" && (
+          <div className="w-full">
+            <TithiBirthdayView />
           </div>
         )}
 
