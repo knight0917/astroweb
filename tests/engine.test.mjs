@@ -340,3 +340,40 @@ test("Classical Parashari Bhava Bala (12 House Strengths) Verification", async (
   assert.equal(bb.rankedHouses[0].rank, 1, "First house must have rank 1");
   assert.equal(bb.rankedHouses[11].rank, 12, "Last house must have rank 12");
 });
+
+test("Classical Jaimini Chara Karakas (AK to DK) Verification", async () => {
+  const { calculateJaiminiKarakas } = await import("../src/engine/jaimini.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 25 May 1998 00:16 IST
+  const birthDate = new Date(Date.UTC(1998, 4, 24, 18, 46, 0));
+  const ephem = calculateVedicEphemeris(
+    birthDate,
+    { cityName: "Mau", latitude: 25.9416, longitude: 83.5611, timezoneOffsetHours: 5.5, country: "India" }
+  );
+
+  const jaimini = calculateJaiminiKarakas(ephem);
+
+  // 1. Verify 7 Karakas exist in order
+  assert.equal(jaimini.karakas.length, 7, "Must contain exactly 7 Chara Karakas");
+  assert.equal(jaimini.karakas[0].code, "AK");
+  assert.equal(jaimini.karakas[1].code, "AmK");
+  assert.equal(jaimini.karakas[2].code, "BK");
+  assert.equal(jaimini.karakas[3].code, "MK");
+  assert.equal(jaimini.karakas[4].code, "PK");
+  assert.equal(jaimini.karakas[5].code, "GK");
+  assert.equal(jaimini.karakas[6].code, "DK");
+
+  // 2. Degrees must be strictly descending
+  for (let i = 0; i < jaimini.karakas.length - 1; i++) {
+    assert.ok(
+      jaimini.karakas[i].degreesInSign >= jaimini.karakas[i + 1].degreesInSign,
+      `${jaimini.karakas[i].code} (${jaimini.karakas[i].degreesInSign}) must have >= degrees than ${jaimini.karakas[i + 1].code} (${jaimini.karakas[i + 1].degreesInSign})`
+    );
+  }
+
+  // 3. For 25 May 1998 00:16 IST: Jupiter (29° 49') is AK, Venus (0° 08') is DK
+  assert.equal(jaimini.atmakaraka.planetId, "Jupiter", "Jupiter must be Atmakaraka (AK)");
+  assert.equal(jaimini.darakaraka.planetId, "Venus", "Venus must be Darakaraka (DK)");
+  assert.equal(jaimini.amatyakaraka.planetId, "Moon", "Moon must be Amatyakaraka (AmK)");
+});
