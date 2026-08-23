@@ -1120,101 +1120,82 @@ export default function SkyDome() {
         <SkyScene fov={fov} showAspectRays={showAspectRays} />
       </Canvas>
 
-      {/* Top Left Indicator */}
-      <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-        <div className="glass-panel px-3 py-1.5 rounded-lg flex items-center gap-2 text-xs">
-          <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
-          <span className="font-extrabold text-slate-100">Geocentric Bhu-Mandala</span>
-          <span className="text-slate-400">| Earth Center • Graha Drishti Aspect Rays</span>
+      {/* Top Header Overlay Bar (Unified Responsive Container) */}
+      <div className="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+        {/* Left: Geocentric Bhu-Mandala Indicator */}
+        <div className="pointer-events-auto glass-panel px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 sm:gap-2 text-xs shadow-md bg-slate-950/90">
+          <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse flex-shrink-0"></span>
+          <span className="font-extrabold text-slate-100 text-[11px] sm:text-xs">Bhu-Mandala</span>
+          <span className="text-slate-400 text-[10px] hidden md:inline">| Earth Center • Graha Drishti</span>
         </div>
-      </div>
 
-      {/* Top Right Zoom Controls, Aspect Toggle & Fullscreen Button */}
-      <div className="absolute top-4 right-4 z-10 flex flex-wrap items-center gap-2">
-        {/* Toggle Aspect Rays Button */}
-        <button
-          onClick={() => setShowAspectRays(!showAspectRays)}
-          className={`glass-panel px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer ${
-            showAspectRays
-              ? "bg-amber-500/20 border-amber-500 text-amber-300"
-              : "text-slate-400 hover:text-slate-200"
-          }`}
-          title="Toggle Vedic Planetary Aspect Rays (Graha Drishti)"
-        >
-          <span>✨</span>
-          <span>{showAspectRays ? "Aspect Rays: ON" : "Aspect Rays: OFF"}</span>
-        </button>
-
-        {/* Telescope Zoom Controls */}
-        <div className="glass-panel p-1 rounded-lg flex items-center gap-1 text-xs shadow-lg">
-          <span className="text-[10px] text-amber-400 font-bold px-1.5 font-mono">
-            🔭 {zoomFactor}x
-          </span>
-
+        {/* Right: Aspect Toggle, Zoom & Fullscreen */}
+        <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2">
+          {/* Toggle Aspect Rays */}
           <button
-            onClick={() => setFov((prev) => Math.max(5, prev - 12))}
-            title="Zoom In Deep (or Scroll Up / Press +)"
-            className="w-7 h-7 rounded bg-slate-900 hover:bg-slate-800 text-amber-300 font-extrabold text-sm flex items-center justify-center transition-transform active:scale-90"
+            onClick={() => setShowAspectRays(!showAspectRays)}
+            className={`glass-panel px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-md flex items-center gap-1 cursor-pointer bg-slate-950/90 ${
+              showAspectRays
+                ? "bg-amber-500/20 border-amber-500 text-amber-300"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+            title="Toggle Vedic Planetary Aspect Rays (Graha Drishti)"
           >
-            +
+            <span>✨</span>
+            <span className="hidden sm:inline">{showAspectRays ? "Aspect Rays: ON" : "Aspect Rays: OFF"}</span>
+            <span className="sm:hidden">{showAspectRays ? "Rays: ON" : "Rays: OFF"}</span>
           </button>
 
-          <button
-            onClick={() => setFov((prev) => Math.min(95, prev + 12))}
-            title="Zoom Out (or Scroll Down / Press -)"
-            className="w-7 h-7 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 font-extrabold text-sm flex items-center justify-center transition-transform active:scale-90"
-          >
-            -
-          </button>
+          {/* Telescope Zoom Controls */}
+          <div className="glass-panel p-1 rounded-xl flex items-center gap-1 text-xs shadow-lg bg-slate-950/90">
+            <span className="text-[10px] text-amber-400 font-bold px-1 font-mono">
+              🔭 {zoomFactor}x
+            </span>
 
-          <div className="hidden sm:flex items-center gap-0.5 pl-1 border-l border-slate-800">
-            {[
-              { label: "1x", val: 65 },
-              { label: "3x", val: 22 },
-              { label: "8x", val: 8 },
-              { label: "15x", val: 4 },
-            ].map((p) => (
-              <button
-                key={p.label}
-                onClick={() => setFov(p.val)}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
-                  Math.abs(fov - p.val) < 3
-                    ? "bg-amber-500 text-slate-950 shadow"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+            <button
+              onClick={() => setFov((prev) => Math.max(5, prev - 12))}
+              title="Zoom In"
+              className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-900 hover:bg-slate-800 text-amber-300 font-extrabold text-sm flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
+            >
+              +
+            </button>
+
+            <button
+              onClick={() => setFov((prev) => Math.min(95, prev + 12))}
+              title="Zoom Out"
+              className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 font-extrabold text-sm flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
+            >
+              -
+            </button>
+
+            <button
+              onClick={() => setFov(65)}
+              title="Reset Zoom to 1x"
+              className="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-[9px] sm:text-[10px] text-slate-400 hover:text-white transition-colors cursor-pointer"
+            >
+              1x
+            </button>
           </div>
 
+          {/* Fullscreen Button */}
           <button
-            onClick={() => setFov(65)}
-            title="Reset Zoom to 1x (Press 0)"
-            className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-[10px] text-slate-400 hover:text-white transition-colors"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            className="glass-panel px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold text-slate-200 hover:text-amber-400 hover:border-amber-500/50 flex items-center gap-1 transition-all shadow-lg active:scale-95 cursor-pointer bg-slate-950/90"
           >
-            Reset
+            <span className="text-xs">{isFullscreen ? "⤓" : "⛶"}</span>
+            <span className="hidden sm:inline">{isFullscreen ? "Exit" : "Full"}</span>
           </button>
         </div>
-
-        {/* Fullscreen Button */}
-        <button
-          onClick={toggleFullscreen}
-          title={isFullscreen ? "Exit Fullscreen (Esc or F)" : "Enter Fullscreen (F)"}
-          className="glass-panel px-3 py-1.5 rounded-lg text-xs font-bold text-slate-200 hover:text-amber-400 hover:border-amber-500/50 flex items-center gap-1.5 transition-all shadow-lg active:scale-95 cursor-pointer"
-        >
-          <span className="text-sm">{isFullscreen ? "⤓" : "⛶"}</span>
-          <span>{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</span>
-        </button>
       </div>
 
       {/* Left Vertical Dock: Date & Time Travel Controller */}
-      <div className="absolute left-3 top-16 bottom-12 z-50 flex items-start pointer-events-none">
+      <div className="absolute left-3 top-14 bottom-12 z-40 flex items-start pointer-events-none">
         <VerticalTimeTravel />
       </div>
 
       {/* Right Vertical Dock: Planet Index & 3D Focus Controller */}
-      <div className="absolute right-3 top-16 bottom-12 z-50 flex items-start pointer-events-none">
+      <div className="absolute right-3 top-14 bottom-12 z-40 flex items-start pointer-events-none">
         <PlanetIndexDeck />
       </div>
 

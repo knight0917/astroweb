@@ -13,7 +13,7 @@ export default function PlanetIndexDeck() {
     showModernPlanets,
   } = useAstroStore();
 
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [filterTab, setFilterTab] = useState<"all" | "navagraha" | "upagraha">("all");
 
   if (!ephemeris) return null;
@@ -60,12 +60,12 @@ export default function PlanetIndexDeck() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          title="Open Planet Index (Click any planet to turn 3D sky dome)"
-          className="glass-panel p-2.5 rounded-xl border border-amber-500/50 text-amber-300 font-extrabold text-xs shadow-2xl flex items-center gap-1.5 hover:scale-105 transition-all cursor-pointer bg-slate-950/95"
+          title="Open Celestial Index (Click any planet to turn 3D sky dome)"
+          className="glass-panel px-3 py-2 rounded-xl border border-amber-500/50 text-amber-300 font-extrabold text-xs shadow-2xl flex items-center gap-1.5 hover:scale-105 transition-all cursor-pointer bg-slate-950/95"
         >
           <span className="text-base">🪐</span>
-          <span className="hidden sm:inline">Planets Index</span>
-          <span className="text-[10px] bg-amber-500/20 px-1 rounded text-amber-300 font-bold">
+          <span className="text-xs font-bold">Celestial Index</span>
+          <span className="text-[10px] bg-amber-500/20 px-1.5 py-0.2 rounded-full text-amber-300 font-mono font-bold">
             {planets.length + 2 + (showUpagrahas ? upagrahas.length : 0)}
           </span>
         </button>

@@ -18,7 +18,7 @@ export default function VerticalTimeTravel() {
     setPlaySpeed,
   } = useAstroStore();
 
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const animRef = useRef<number | null>(null);
   const [timeMode, setTimeMode] = useState<"local" | "utc">("local");
   const [isEditingTime, setIsEditingTime] = useState(false);
@@ -144,10 +144,10 @@ export default function VerticalTimeTravel() {
         <button
           onClick={() => setIsOpen(true)}
           title="Open Date, Time & Place Controller"
-          className="glass-panel p-2.5 rounded-xl border border-amber-500/50 text-amber-300 font-extrabold text-xs shadow-2xl flex items-center gap-1.5 hover:scale-105 transition-all cursor-pointer bg-slate-950/95"
+          className="glass-panel px-3 py-2 rounded-xl border border-amber-500/50 text-amber-300 font-extrabold text-xs shadow-2xl flex items-center gap-1.5 hover:scale-105 transition-all cursor-pointer bg-slate-950/95"
         >
           <span className="text-base">⏳</span>
-          <span className="hidden sm:inline">Time & Place</span>
+          <span className="text-xs font-bold">Time & Place</span>
         </button>
       )}
 
