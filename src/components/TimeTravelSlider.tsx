@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useAstroStore } from "../store/useAstroStore";
 
 export default function TimeTravelSlider() {
@@ -15,10 +16,15 @@ export default function TimeTravelSlider() {
     setPlaySpeed,
   } = useAstroStore();
 
+  const [mounted, setMounted] = useState(false);
   const animRef = useRef<number | null>(null);
   const [timeMode, setTimeMode] = useState<"local" | "utc">("local");
   const [isEditing, setIsEditing] = useState(false);
   const [showPickerModal, setShowPickerModal] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Local place date vs UTC date
   const tzOffsetMs = location.timezoneOffsetHours * 3600 * 1000;
@@ -394,15 +400,15 @@ export default function TimeTravelSlider() {
         </div>
       </div>
 
-      {/* Mobile Date & Time Picker Modal */}
-      {showPickerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+      {/* Mobile Date & Time Picker Modal via Portal */}
+      {mounted && showPickerModal && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
           <div
             className="fixed inset-0"
             onClick={() => setShowPickerModal(false)}
           ></div>
 
-          <div className="relative z-10 glass-panel bg-slate-950 border border-slate-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+          <div className="relative z-10 glass-panel bg-slate-950 border border-slate-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-4 max-h-[90vh] my-auto overflow-y-auto animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <span className="text-xl text-amber-400">📅</span>
@@ -517,7 +523,8 @@ export default function TimeTravelSlider() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

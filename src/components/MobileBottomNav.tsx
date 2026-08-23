@@ -1,11 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useAstroStore, ViewMode } from "../store/useAstroStore";
 
 export default function MobileBottomNav() {
   const { viewMode, setViewMode } = useAstroStore();
   const [showMoreDrawer, setShowMoreDrawer] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const PRIMARY_TABS: { mode: ViewMode; label: string; icon: string }[] = [
     { mode: "kundli-north", label: "Kundli", icon: "☸" },
@@ -27,15 +33,15 @@ export default function MobileBottomNav() {
 
   return (
     <>
-      {/* Mobile More Modules Sheet Drawer Modal */}
-      {showMoreDrawer && (
-        <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+      {/* Mobile More Modules Sheet Drawer Modal via Portal */}
+      {mounted && showMoreDrawer && createPortal(
+        <div className="fixed inset-0 z-[99999] md:hidden flex flex-col justify-end bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div
             className="fixed inset-0"
             onClick={() => setShowMoreDrawer(false)}
           ></div>
 
-          <div className="relative z-10 glass-panel bg-slate-950/95 border-t border-slate-800 rounded-t-3xl p-5 safe-bottom max-h-[80vh] overflow-y-auto space-y-4 shadow-2xl animate-in slide-in-from-bottom duration-250">
+          <div className="relative z-10 glass-panel bg-slate-950/98 border-t border-slate-800 rounded-t-3xl p-5 safe-bottom max-h-[80vh] overflow-y-auto space-y-4 shadow-2xl animate-in slide-in-from-bottom duration-250">
             {/* Header Handle */}
             <div className="flex flex-col items-center">
               <div className="w-12 h-1.5 bg-slate-700 rounded-full mb-3"></div>
@@ -46,7 +52,7 @@ export default function MobileBottomNav() {
                 </h3>
                 <button
                   onClick={() => setShowMoreDrawer(false)}
-                  className="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs"
+                  className="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs cursor-pointer"
                 >
                   ✕
                 </button>
@@ -82,7 +88,8 @@ export default function MobileBottomNav() {
               })}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Persistent Bottom Nav Dock (Mobile Only) */}

@@ -1,13 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useAstroStore } from "../store/useAstroStore";
 import { formatDMS } from "../engine/rashiNakshatra";
 
 export default function EntityDetailModal() {
   const { selectedEntityId, setSelectedEntityId, ephemeris } = useAstroStore();
+  const [mounted, setMounted] = useState(false);
 
-  if (!selectedEntityId) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!selectedEntityId || !mounted) return null;
 
   // Check if it's Ascendant, Midheaven, a Planet, or an Upagraha
   let data: any = null;
@@ -29,9 +35,9 @@ export default function EntityDetailModal() {
 
   if (!data) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="glass-panel-gold max-w-lg w-full p-6 rounded-2xl border border-amber-500/40 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+  return createPortal(
+    <div className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="glass-panel-gold max-w-lg w-full p-5 sm:p-6 rounded-2xl border border-amber-500/40 shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto max-h-[90vh] overflow-y-auto">
         {/* Modal Header */}
         <div className="flex justify-between items-start mb-4 border-b border-amber-500/20 pb-3">
           <div className="flex items-center gap-3">
@@ -56,7 +62,7 @@ export default function EntityDetailModal() {
 
           <button
             onClick={() => setSelectedEntityId(null)}
-            className="w-8 h-8 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold text-sm"
+            className="w-8 h-8 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer"
           >
             ✕
           </button>
@@ -196,12 +202,13 @@ export default function EntityDetailModal() {
         <div className="flex justify-end">
           <button
             onClick={() => setSelectedEntityId(null)}
-            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg"
+            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg cursor-pointer"
           >
             Close Inspector
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

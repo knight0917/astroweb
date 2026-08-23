@@ -1,13 +1,19 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useAstroStore, ViewMode } from "../store/useAstroStore";
 import { POPULAR_CITIES } from "../engine/constants";
 import { AyanamshaType, HouseSystem, NodeType, GeoLocation } from "../engine/types";
 
 export default function HeaderNav() {
+  const [mounted, setMounted] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [cityName, setCityName] = useState("");
   const [countryName, setCountryName] = useState("");
@@ -249,9 +255,9 @@ export default function HeaderNav() {
         </div>
       </div>
 
-      {/* Slide-out Mobile Settings Drawer Modal */}
-      {showSettingsDrawer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+      {/* Slide-out Mobile Settings Drawer Modal via Portal */}
+      {mounted && showSettingsDrawer && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-end bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div
             className="fixed inset-0"
             onClick={() => setShowSettingsDrawer(false)}
@@ -269,7 +275,7 @@ export default function HeaderNav() {
                 </div>
                 <button
                   onClick={() => setShowSettingsDrawer(false)}
-                  className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm"
+                  className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm cursor-pointer"
                 >
                   ✕
                 </button>
@@ -375,18 +381,19 @@ export default function HeaderNav() {
               Done & Apply Settings
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Location Modal */}
-      {showLocationModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+      {/* Location Modal via Portal */}
+      {mounted && showLocationModal && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
           <div
             className="fixed inset-0"
             onClick={() => setShowLocationModal(false)}
           ></div>
 
-          <div className="relative z-10 glass-panel bg-slate-950 border border-slate-800 w-full max-w-lg rounded-2xl p-5 md:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="relative z-10 glass-panel bg-slate-950 border border-slate-800 w-full max-w-lg rounded-2xl p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] my-auto overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
@@ -547,7 +554,8 @@ export default function HeaderNav() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );
