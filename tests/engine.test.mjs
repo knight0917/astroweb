@@ -256,3 +256,43 @@ test("Classical Parashari Shodashavarga (16 Divisional Charts) Verification", as
     assert.ok(Object.keys(vChart.houseOccupants).length === 12, "Must contain all 12 houses");
   }
 });
+
+test("Classical Parashari Shadbala (6-Fold Planetary Strength) Verification", async () => {
+  const { calculateShadbala } = await import("../src/engine/shadbala.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const ephem = calculateVedicEphemeris(
+    new Date("2026-08-23T12:00:00Z"),
+    { cityName: "Prayagraj", latitude: 25.4358, longitude: 81.8463, timezoneOffsetHours: 5.5, country: "India" }
+  );
+
+  const shadbala = calculateShadbala(ephem);
+
+  // 1. Verify all 7 classical grahas exist in result
+  const planetIds = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
+  for (const pId of planetIds) {
+    const p = shadbala.planets[pId];
+    assert.ok(p, `Planet ${pId} must be present in Shadbala`);
+    assert.ok(p.sthanaBala.total > 0, `${pId} Sthana Bala must be > 0`);
+    assert.ok(p.digBala >= 0 && p.digBala <= 60, `${pId} Dig Bala must be between 0 and 60`);
+    assert.ok(p.kalaBala.total > 0, `${pId} Kala Bala must be > 0`);
+    assert.ok(p.totalRupas > 0, `${pId} total Rupas must be > 0`);
+    assert.ok(p.requiredRupas > 0, `${pId} required Rupas must be > 0`);
+    assert.ok(p.strengthRatio > 0, `${pId} strength ratio must be > 0`);
+    assert.ok(p.rank >= 1 && p.rank <= 7, `${pId} rank must be between 1 and 7`);
+  }
+
+  // 2. Verify ranked list
+  assert.equal(shadbala.rankedPlanets.length, 7, "Ranked list must have 7 planets");
+  assert.equal(shadbala.rankedPlanets[0].rank, 1, "First planet must have rank 1");
+  assert.equal(shadbala.rankedPlanets[6].rank, 7, "Last planet must have rank 7");
+
+  // 3. Verify Naisargika fixed constants
+  assert.equal(shadbala.planets["Sun"].naisargikaBala, 60.0);
+  assert.equal(shadbala.planets["Moon"].naisargikaBala, 51.43);
+  assert.equal(shadbala.planets["Venus"].naisargikaBala, 42.86);
+  assert.equal(shadbala.planets["Jupiter"].naisargikaBala, 34.29);
+  assert.equal(shadbala.planets["Mercury"].naisargikaBala, 25.71);
+  assert.equal(shadbala.planets["Mars"].naisargikaBala, 17.14);
+  assert.equal(shadbala.planets["Saturn"].naisargikaBala, 8.57);
+});

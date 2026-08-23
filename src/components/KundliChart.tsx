@@ -118,6 +118,13 @@ export default function KundliChart() {
             <span>✨</span>
             <span>Shodashavarga</span>
           </button>
+          <button
+            onClick={() => setViewMode("shadbala")}
+            className="px-2.5 py-1 rounded-md font-bold bg-purple-500/20 text-purple-300 hover:bg-purple-600 hover:text-white border border-purple-500/40 transition-all flex items-center gap-1 shadow"
+          >
+            <span>⚖️</span>
+            <span>Shadbala</span>
+          </button>
           <div className="h-4 w-px bg-slate-800 hidden sm:block"></div>
           <button
             onClick={() => setChartType("north")}
@@ -306,15 +313,24 @@ export default function KundliChart() {
         )}
       </div>
 
-      {/* Direct Shodashavarga 16-Charts Launcher Button */}
-      <button
-        onClick={() => setViewMode("shodashavarga")}
-        className="mt-4 w-full max-w-[460px] py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/35 hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer"
-      >
-        <span className="text-base">✨</span>
-        <span>Shodashavarga (Explore All 16 Divisional Charts D1 to D60)</span>
-        <span className="text-base">➔</span>
-      </button>
+      {/* Twin Launchers: Shodashavarga 16-Charts & Shadbala Strength System */}
+      <div className="mt-4 w-full max-w-[460px] grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <button
+          onClick={() => setViewMode("shodashavarga")}
+          className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/35 hover:scale-[1.02] flex items-center justify-center gap-1.5 cursor-pointer"
+        >
+          <span>✨</span>
+          <span>16 Divisional Charts (D1-D60)</span>
+        </button>
+
+        <button
+          onClick={() => setViewMode("shadbala")}
+          className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/35 hover:scale-[1.02] flex items-center justify-center gap-1.5 cursor-pointer"
+        >
+          <span>⚖️</span>
+          <span>Shadbala (Planetary Strengths)</span>
+        </button>
+      </div>
     </div>
   );
 }
