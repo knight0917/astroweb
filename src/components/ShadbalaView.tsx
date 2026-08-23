@@ -429,6 +429,8 @@ export default function ShadbalaView() {
                     <th className="p-2.5 text-right font-bold text-amber-300">Total (R)</th>
                     <th className="p-2.5 text-right">Req.</th>
                     <th className="p-2.5 text-right">Ratio</th>
+                    <th className="p-2.5 text-right text-emerald-400">Ishta</th>
+                    <th className="p-2.5 text-right text-rose-400">Kashta</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
@@ -483,6 +485,12 @@ export default function ShadbalaView() {
                           >
                             {p.strengthRatio.toFixed(2)}
                           </span>
+                        </td>
+                        <td className="p-2.5 text-right text-emerald-400 font-bold">
+                          {p.ishtaPhala.toFixed(1)}
+                        </td>
+                        <td className="p-2.5 text-right text-rose-400 font-bold">
+                          {p.kashtaPhala.toFixed(1)}
                         </td>
                       </tr>
                     );
