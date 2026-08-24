@@ -4,7 +4,7 @@
  * Gochar auspiciousness, Vedha (obstruction), and 5-phase Saturn Sade Sati / Dhaiya.
  */
 
-import { EphemerisResult, PlanetData } from "./types";
+import { EphemerisResult, CelestialBodyPosition } from "./types";
 import { RASHI_NAMES } from "./constants";
 
 export interface PlanetTransitInfo {
