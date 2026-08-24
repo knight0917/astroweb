@@ -523,3 +523,41 @@ test("Real-Time Choghadiya & 24 Planetary Horas Verification", async () => {
   assert.ok(result.sunriseFormatted);
   assert.ok(result.sunsetFormatted);
 });
+
+test("Vedic AI Astrologer Chat Context Dossier Verification", async () => {
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = {
+    cityName: "Prayagraj",
+    country: "India",
+    latitude: 25.44,
+    longitude: 81.85,
+    timezoneOffsetHours: 5.5,
+  };
+
+  const natalEphemeris = calculateVedicEphemeris(
+    new Date("1999-09-17T18:32:00Z"),
+    location,
+    "Lahiri",
+    "WholeSign",
+    "Mean"
+  );
+
+  const transitEphemeris = calculateVedicEphemeris(
+    new Date("2026-08-24T00:00:00Z"),
+    location,
+    "Lahiri",
+    "WholeSign",
+    "Mean"
+  );
+
+  const dossier = buildAstroDossier(natalEphemeris, transitEphemeris, new Date("2026-08-24T00:00:00Z"));
+
+  assert.ok(dossier.includes("NATIVE'S VEDIC ASTROLOGICAL PROFILE"));
+  assert.ok(dossier.includes("Ascendant (Lagna"));
+  assert.ok(dossier.includes("Moon Sign (Janma Rashi"));
+  assert.ok(dossier.includes("VIMSHOTTARI DASHA STATUS"));
+  assert.ok(dossier.includes("SHANI SADE SATI"));
+  assert.ok(dossier.includes("PANCHANGA AT BIRTH"));
+});

@@ -91,6 +91,10 @@ const EntityDetailModal = dynamic(() => import("../components/EntityDetailModal"
   ssr: false,
 });
 
+const AstroChatbot = dynamic(() => import("../components/AstroChatbot"), {
+  ssr: false,
+});
+
 export default function HomePage() {
   const { viewMode } = useAstroStore();
 
@@ -203,6 +207,9 @@ export default function HomePage() {
 
       {/* Detail Inspector Modal on Click */}
       <EntityDetailModal />
+
+      {/* Floating Vedic AI Astrologer Chatbot */}
+      <AstroChatbot />
 
       {/* Footer */}
       <footer className="border-t border-slate-900 py-4 px-4 text-center text-xs text-slate-500 flex flex-wrap items-center justify-center gap-4">
