@@ -196,7 +196,7 @@ export default function TimeTravelSlider() {
 
     const loop = (now: number) => {
       const deltaSec = (now - lastTime) / 1000;
-      if (deltaSec >= 0.05) {
+      if (deltaSec >= 0.08) {
         const advanceHours = deltaSec * playSpeed * 24;
         const nextDate = new Date(useAstroStore.getState().currentDate.getTime() + advanceHours * 3600 * 1000);
         setDate(nextDate);

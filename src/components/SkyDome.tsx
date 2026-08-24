@@ -901,8 +901,8 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
       <ambientLight intensity={0.9} />
       <pointLight position={[0, 0, 0]} intensity={2.0} distance={120} />
 
-      {/* Star Field Background */}
-      <Stars radius={150} depth={60} count={4000} factor={4} saturation={0} fade speed={1} />
+      {/* Star Field Background (Optimized for mobile GPUs) */}
+      <Stars radius={150} depth={60} count={1200} factor={3} saturation={0} fade speed={0.5} />
 
       {/* 1. Central Earth Globe with Location Marker */}
       <CentralEarth
@@ -1099,6 +1099,7 @@ export default function SkyDome() {
     setFov((prev) => Math.min(95, Math.max(5, prev + zoomDelta)));
   };
 
+  const { isPlaying } = useAstroStore();
   const zoomFactor = (65 / fov).toFixed(1);
 
   return (
@@ -1111,10 +1112,11 @@ export default function SkyDome() {
           : "w-full h-full min-h-[520px] rounded-2xl border border-slate-800 shadow-2xl"
       }`}
     >
-      {/* 3D WebGL Canvas */}
+      {/* 3D WebGL Canvas (Optimized on-demand rendering for mobile batteries & GPUs) */}
       <Canvas
         camera={{ position: [0, 25, 45], fov: 65 }}
-        dpr={[1, 1.5]}
+        dpr={[1, 1.25]}
+        frameloop={isPlaying ? "always" : "demand"}
         performance={{ min: 0.5 }}
         gl={{
           antialias: false,
@@ -1122,6 +1124,7 @@ export default function SkyDome() {
           powerPreference: "high-performance",
           depth: true,
           stencil: false,
+          precision: "mediump",
         }}
         className="w-full h-full cursor-grab active:cursor-grabbing"
       >
