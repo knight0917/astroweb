@@ -493,6 +493,7 @@ test("Planetary Transit (Gochar) & Shani Sade Sati Verification", async () => {
   assert.ok(gochar.transits.length >= 7);
   assert.ok(gochar.sadeSati.statusTitle);
   assert.ok(gochar.sadeSati.remedies.length > 0);
+  assert.ok(gochar.sadeSati.remainingDurationFormatted, "Must compute remaining Sade Sati / Dhaiya duration");
 
   for (const t of gochar.transits) {
     assert.ok(t.transitHouseFromMoon >= 1 && t.transitHouseFromMoon <= 12);

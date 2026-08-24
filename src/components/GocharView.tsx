@@ -139,6 +139,50 @@ export default function GocharView() {
             </div>
           </div>
 
+          {/* Timing & End Dates Banner (कब तक रहेगी साढ़े साती / ढैय्या) */}
+          <div className="p-3 rounded-xl bg-slate-950/90 border border-amber-500/40 space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-amber-400 font-bold text-xs">⏳</span>
+                <span className="text-xs font-black uppercase tracking-wider text-amber-300">
+                  {gochar.sadeSati.hasSadeSati
+                    ? "Sade Sati Duration & End Date (साढ़े साती कब तक रहेगी):"
+                    : gochar.sadeSati.hasDhaiya
+                    ? "Dhaiya Duration & End Date (ढैय्या कब तक रहेगी):"
+                    : "Next Saturn Cycle Forecast (शनि प्रभाव स्थिति):"}
+                </span>
+              </div>
+              {gochar.sadeSati.remainingDurationFormatted && (
+                <span className="text-[11px] font-mono font-extrabold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  {gochar.sadeSati.remainingDurationFormatted}
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              {gochar.sadeSati.currentPhaseEndFormatted && (
+                <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                  <span className="text-slate-400">Current Phase Ends (वर्तमान चरण):</span>
+                  <span className="font-mono font-bold text-slate-100">{gochar.sadeSati.currentPhaseEndFormatted}</span>
+                </div>
+              )}
+
+              {gochar.sadeSati.totalCompletionFormatted && (
+                <div className="p-2 rounded-lg bg-slate-900/80 border border-amber-500/40 flex items-center justify-between">
+                  <span className="text-amber-300 font-bold">Total Sade Sati Ends (पूर्ण मुक्ति):</span>
+                  <span className="font-mono font-black text-amber-300">{gochar.sadeSati.totalCompletionFormatted}</span>
+                </div>
+              )}
+
+              {gochar.sadeSati.nextCycleStartFormatted && (
+                <div className="p-2 rounded-lg bg-slate-900/80 border border-emerald-500/30 flex items-center justify-between col-span-1 sm:col-span-2">
+                  <span className="text-emerald-300 font-bold">Next Sade Sati Cycle Begins (आगामी आरंभ):</span>
+                  <span className="font-mono font-black text-emerald-300">{gochar.sadeSati.nextCycleStartFormatted}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Remedies Box */}
           <div className="p-2.5 rounded-xl bg-slate-950/60 border border-blue-500/30 text-xs space-y-1">
             <span className="font-bold text-blue-300 block text-[11px]">

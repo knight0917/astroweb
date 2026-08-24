@@ -4,8 +4,10 @@
  * Gochar auspiciousness, Vedha (obstruction), and 5-phase Saturn Sade Sati / Dhaiya.
  */
 
+import * as Astronomy from "astronomy-engine";
 import { EphemerisResult, CelestialBodyPosition } from "./types";
 import { RASHI_NAMES } from "./constants";
+import { getAyanamsha } from "./ayanamsha";
 
 export interface PlanetTransitInfo {
   id: string;
@@ -48,6 +50,15 @@ export interface SadeSatiAnalysis {
   houseFromMoon: number;
   description: string;
   remedies: string[];
+  // Precise Transit Timing & End Dates ("Until When")
+  currentPhaseEndDate?: Date;
+  currentPhaseEndFormatted?: string;
+  totalCompletionDate?: Date;
+  totalCompletionFormatted?: string;
+  remainingDurationFormatted?: string;
+  nextCycleStartDate?: Date;
+  nextCycleStartFormatted?: string;
+  phaseProgressPercent?: number;
 }
 
 export interface GocharResult {
@@ -218,9 +229,46 @@ export function calculateGochar(
     description = "Saturn transiting 8th from Moon brings deep karmic tests, health discipline needs, and sudden breakthroughs if guided by righteousness.";
   }
 
+  // --- Precise Saturn Sade Sati & Dhaiya End Date Calculations ---
+  const evalDate = transitEphemeris.calculationDate || new Date();
+  const ayanType = transitEphemeris.ayanamshaType || "Lahiri";
+
+  let currentPhaseEndDate: Date | undefined;
+  let totalCompletionDate: Date | undefined;
+  let nextCycleStartDate: Date | undefined;
+  let remainingDurationFormatted: string | undefined;
+
+  const isSadeSati = ["rising", "peak", "setting"].includes(sadeSatiPhase);
+  const isDhaiya = ["kantaka_4", "ashtama_8"].includes(sadeSatiPhase);
+
+  if (isSadeSati) {
+    // Current phase ends when Saturn leaves its current Rashi
+    currentPhaseEndDate = findDateWhenSaturnLeavesRashi(evalDate, saturnTransitRashi, ayanType);
+
+    if (sadeSatiPhase === "setting") {
+      // 3rd phase is the final phase of Sade Sati
+      totalCompletionDate = currentPhaseEndDate;
+    } else {
+      // Total Sade Sati ends when Saturn exits the 2nd house from Moon (natalMoonRashi + 1)
+      const phase3Rashi = (natalMoonRashi + 1) % 12;
+      const entersPhase3 = findDateWhenSaturnEntersRashi(evalDate, phase3Rashi, ayanType);
+      totalCompletionDate = findDateWhenSaturnLeavesRashi(entersPhase3, phase3Rashi, ayanType);
+    }
+    remainingDurationFormatted = formatRemainingDuration(totalCompletionDate, evalDate);
+  } else if (isDhaiya) {
+    currentPhaseEndDate = findDateWhenSaturnLeavesRashi(evalDate, saturnTransitRashi, ayanType);
+    totalCompletionDate = currentPhaseEndDate;
+    remainingDurationFormatted = formatRemainingDuration(totalCompletionDate, evalDate);
+  } else {
+    // When will next Sade Sati begin? (Saturn enters 12th from Moon)
+    const nextSadeSatiRashi = (natalMoonRashi + 11) % 12;
+    nextCycleStartDate = findDateWhenSaturnEntersRashi(evalDate, nextSadeSatiRashi, ayanType);
+    remainingDurationFormatted = `Next cycle begins in ${formatRemainingDuration(nextCycleStartDate, evalDate).replace(" remaining", "")}`;
+  }
+
   const sadeSati: SadeSatiAnalysis = {
-    hasSadeSati: ["rising", "peak", "setting"].includes(sadeSatiPhase),
-    hasDhaiya: ["kantaka_4", "ashtama_8"].includes(sadeSatiPhase),
+    hasSadeSati: isSadeSati,
+    hasDhaiya: isDhaiya,
     phase: sadeSatiPhase,
     phaseName,
     hindiPhaseName,
@@ -232,6 +280,13 @@ export function calculateGochar(
     houseFromMoon: saturnHouseFromMoon,
     description,
     remedies,
+    currentPhaseEndDate,
+    currentPhaseEndFormatted: currentPhaseEndDate ? formatTransitDate(currentPhaseEndDate) : undefined,
+    totalCompletionDate,
+    totalCompletionFormatted: totalCompletionDate ? formatTransitDate(totalCompletionDate) : undefined,
+    remainingDurationFormatted,
+    nextCycleStartDate,
+    nextCycleStartFormatted: nextCycleStartDate ? formatTransitDate(nextCycleStartDate) : undefined,
   };
 
   const guruTransit = transits.find((t) => t.id === "Jupiter");
@@ -246,4 +301,73 @@ export function calculateGochar(
     guruGocharAuspicious: guruTransit?.isAuspicious || false,
     guruHouseFromMoon: guruTransit?.transitHouseFromMoon || 1,
   };
+}
+
+function getSaturnSiderealRashi(d: Date, ayanamshaType: any = "Lahiri"): number {
+  const t = Astronomy.MakeTime(d);
+  const pos = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Saturn, t, false));
+  const ayan = getAyanamsha(t.ut, ayanamshaType);
+  const siderealLon = (pos.elon - ayan + 360) % 360;
+  return Math.floor(siderealLon / 30);
+}
+
+function findDateWhenSaturnLeavesRashi(startDate: Date, targetRashi: number, ayanamshaType: any = "Lahiri"): Date {
+  const highDays = 365 * 4;
+  for (let i = 0; i <= highDays; i += 10) {
+    const testD = new Date(startDate.getTime() + i * 86400000);
+    if (getSaturnSiderealRashi(testD, ayanamshaType) !== targetRashi) {
+      let low = Math.max(0, i - 10);
+      let high = i;
+      while (high - low > 1) {
+        const mid = Math.floor((low + high) / 2);
+        const midD = new Date(startDate.getTime() + mid * 86400000);
+        if (getSaturnSiderealRashi(midD, ayanamshaType) !== targetRashi) high = mid;
+        else low = mid;
+      }
+      return new Date(startDate.getTime() + high * 86400000);
+    }
+  }
+  return new Date(startDate.getTime() + 900 * 86400000);
+}
+
+function findDateWhenSaturnEntersRashi(startDate: Date, targetRashi: number, ayanamshaType: any = "Lahiri"): Date {
+  const maxDays = 365 * 30;
+  for (let i = 0; i <= maxDays; i += 15) {
+    const testD = new Date(startDate.getTime() + i * 86400000);
+    if (getSaturnSiderealRashi(testD, ayanamshaType) === targetRashi) {
+      let low = Math.max(0, i - 15);
+      let high = i;
+      while (high - low > 1) {
+        const mid = Math.floor((low + high) / 2);
+        const midD = new Date(startDate.getTime() + mid * 86400000);
+        if (getSaturnSiderealRashi(midD, ayanamshaType) === targetRashi) high = mid;
+        else low = mid;
+      }
+      return new Date(startDate.getTime() + high * 86400000);
+    }
+  }
+  return new Date(startDate.getTime() + 365 * 7 * 86400000);
+}
+
+function formatRemainingDuration(targetDate: Date, fromDate: Date): string {
+  const diffMs = targetDate.getTime() - fromDate.getTime();
+  if (diffMs <= 0) return "Concluding now";
+  const diffDays = Math.floor(diffMs / 86400000);
+  const years = Math.floor(diffDays / 365.25);
+  const months = Math.floor((diffDays % 365.25) / 30.4375);
+  const days = Math.floor(diffDays % 30.4375);
+
+  const parts: string[] = [];
+  if (years > 0) parts.push(`${years} yr${years > 1 ? "s" : ""}`);
+  if (months > 0) parts.push(`${months} mo${months > 1 ? "s" : ""}`);
+  if (years === 0 && days > 0) parts.push(`${days} day${days > 1 ? "s" : ""}`);
+  return parts.length > 0 ? `${parts.join(", ")} remaining` : "Concluding shortly";
+}
+
+function formatTransitDate(d: Date): string {
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
