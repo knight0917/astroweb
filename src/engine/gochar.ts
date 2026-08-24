@@ -230,7 +230,7 @@ export function calculateGochar(
   }
 
   // --- Precise Saturn Sade Sati & Dhaiya End Date Calculations ---
-  const evalDate = transitEphemeris.calculationDate || new Date();
+  const evalDate = transitEphemeris.utcDate ? new Date(transitEphemeris.utcDate) : new Date();
   const ayanType = transitEphemeris.ayanamshaType || "Lahiri";
 
   let currentPhaseEndDate: Date | undefined;
