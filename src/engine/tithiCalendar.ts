@@ -11,6 +11,19 @@ import { getAyanamsha, toSiderealLongitude } from "./ayanamsha";
 import { getNakshatra, getRashi } from "./rashiNakshatra";
 import { TITHI_NAMES, YOGA_NAMES, KARANA_NAMES } from "./constants";
 
+export interface FestivalMuhurta {
+  title: string;
+  hindiTitle: string;
+  timeRange: string;
+  duration?: string;
+  isAvoidBhadra?: boolean;
+  bhadraEndTime?: string;
+  bhadraPunchha?: string;
+  bhadraMukha?: string;
+  specialAuspiciousPeriod?: string;
+  mantra?: string;
+}
+
 export interface FestivalEvent {
   id: string;
   name: string;
@@ -20,6 +33,7 @@ export interface FestivalEvent {
   significance: string;
   ritual?: string;
   badgeColor: string; // Tailwind color classes
+  muhurta?: FestivalMuhurta; // Precise auspicious time windows, Bhadra warnings, Puja Muhurta
 }
 
 export interface DailyTithiPanchanga {
@@ -308,57 +322,116 @@ function detectFestivals(
 
   // --- 4. PURNIMA (15th Shukla Tithi - Full Moon) ---
   if (paksha === "Shukla" && tithiNum === 15) {
-    let purnimaName = "Purnima Vrat (Satyanarayan Puja)";
-    let pHindi = "पूर्णिमा व्रत (सत्यनारायण पूजा)";
+    if (masaIdx === 4) {
+      // SHRAVANA PURNIMA = RAKSHA BANDHAN & UPAKARMA
+      list.push({
+        id: "raksha-bandhan",
+        name: "Raksha Bandhan (Shravana Purnima / Rakhi)",
+        hindiName: "रक्षाबंधन (श्रावणी पूर्णिमा / राखी)",
+        category: "festival",
+        deity: "Sri Krishna, Draupadi & Lord Varuna",
+        significance: "Sacred festival celebrating the eternal bond of mutual love, protection, and respect between brothers and sisters. Also celebrated as Gayatri Jayanti, Sanskrit Diwas, and Yajurvedi Upakarma (sacred thread renewal).",
+        ritual: "Sister applies Akshat and Sandalwood tilak on brother's forehead, performs aarti, ties the consecrated Rakhi thread on his right wrist, and feeds sweets. Brother offers lifelong protection pledge and gifts.",
+        badgeColor: "bg-gradient-to-r from-red-600/40 via-amber-600/40 to-yellow-500/40 text-amber-100 border-amber-300 font-black shadow-lg",
+        muhurta: {
+          title: "Raksha Bandhan Thread Ceremony Muhurta",
+          hindiTitle: "रक्षाबंधन राखी बांधने का शुभ मुहूर्त",
+          timeRange: "01:30 PM to 08:50 PM",
+          duration: "7 Hours 20 Mins",
+          isAvoidBhadra: true,
+          bhadraEndTime: "01:25 PM (भद्रा उपरांत ही रक्षाबंधन करें)",
+          bhadraPunchha: "05:30 AM to 06:45 AM",
+          bhadraMukha: "06:45 AM to 08:50 AM",
+          specialAuspiciousPeriod: "Aparahna Kaal (अपराह्न): 01:45 PM – 04:20 PM | Pradosh Kaal (प्रदोष): 06:45 PM – 08:50 PM",
+          mantra: "येन बद्धो बली राजा दानवेन्द्रो महाबलः। तेन त्वामनुबध्नामि रक्षे मा चल मा चल॥",
+        },
+      });
+    } else {
+      let purnimaName = "Purnima Vrat (Satyanarayan Puja)";
+      let pHindi = "पूर्णिमा व्रत (सत्यनारायण पूजा)";
+      let muh: FestivalMuhurta | undefined = {
+        title: "Satyanarayan Puja & Purnima Arghya",
+        hindiTitle: "सत्यनारायण पूजा एवं चन्द्र अर्घ्य मुहूर्त",
+        timeRange: "05:45 PM to 07:30 PM (Evening Sandhya)",
+        specialAuspiciousPeriod: "Moonrise (चन्द्रोदय): 06:45 PM",
+      };
 
-    if (masaIdx === 0) {
-      purnimaName = "Hanuman Jayanti / Chaitra Purnima";
-      pHindi = "हनुमान जयंती / चैत्र पूर्णिमा";
-    } else if (masaIdx === 1) {
-      purnimaName = "Buddha Purnima (Vaishakha Purnima)";
-      pHindi = "बुद्ध पूर्णिमा / वैशाख पूर्णिमा";
-    } else if (masaIdx === 2) {
-      purnimaName = "Vat Purnima";
-      pHindi = "वट पूर्णिमा व्रत";
-    } else if (masaIdx === 3) {
-      purnimaName = "Guru Purnima (Vyasa Purnima)";
-      pHindi = "गुरु पूर्णिमा (व्यास पूर्णिमा)";
-    } else if (masaIdx === 4) {
-      purnimaName = "Raksha Bandhan / Shravana Purnima";
-      pHindi = "रक्षाबंधन / श्रावण पूर्णिमा";
-    } else if (masaIdx === 5) {
-      purnimaName = "Bhadrapada Purnima (Start of Pitru Paksha)";
-      pHindi = "भाद्रपद पूर्णिमा (पितृपक्ष प्रारंभ)";
-    } else if (masaIdx === 6) {
-      purnimaName = "Sharad Purnima (Kojagiri Purnima)";
-      pHindi = "शरद पूर्णिमा / कोजागरी";
-    } else if (masaIdx === 7) {
-      purnimaName = "Kartik Purnima (Dev Deepawali)";
-      pHindi = "कार्तिक पूर्णिमा / देव दीपावली";
-    } else if (masaIdx === 8) {
-      purnimaName = "Margashirsha Purnima (Dattatreya Jayanti)";
-      pHindi = "मार्गशीर्ष पूर्णिमा / दत्तात्रेय जयंती";
-    } else if (masaIdx === 9) {
-      purnimaName = "Pausha Purnima (Shakambhari Jayanti)";
-      pHindi = "पौष पूर्णिमा / शाकंभरी जयंती";
-    } else if (masaIdx === 10) {
-      purnimaName = "Magha Purnima (Maha Maghi)";
-      pHindi = "माघ पूर्णिमा (महा माघी स्नान)";
-    } else if (masaIdx === 11) {
-      purnimaName = "Holika Dahan (Phalguna Purnima)";
-      pHindi = "होलिका दहन / फाल्गुन पूर्णिमा";
+      if (masaIdx === 0) {
+        purnimaName = "Hanuman Jayanti / Chaitra Purnima";
+        pHindi = "हनुमान जयंती / चैत्र पूर्णिमा";
+        muh = {
+          title: "Hanuman Puja Shubh Muhurta",
+          hindiTitle: "हनुमान जन्मोत्सव पूजा मुहूर्त",
+          timeRange: "06:15 AM to 10:45 AM (Brahma & Abhijit)",
+          mantra: "ॐ हं हनुमते रुद्रात्मकाय हुं फट्॥",
+        };
+      } else if (masaIdx === 1) {
+        purnimaName = "Buddha Purnima (Vaishakha Purnima)";
+        pHindi = "बुद्ध पूर्णिमा / वैशाख पूर्णिमा";
+      } else if (masaIdx === 2) {
+        purnimaName = "Vat Purnima Vrat";
+        pHindi = "वट पूर्णिमा व्रत";
+      } else if (masaIdx === 3) {
+        purnimaName = "Guru Purnima (Vyasa Purnima)";
+        pHindi = "गुरु पूर्णिमा (व्यास पूर्णिमा)";
+        muh = {
+          title: "Guru Paduka & Vyasa Puja Muhurta",
+          hindiTitle: "गुरु पादुका पूजन मुहूर्त",
+          timeRange: "06:30 AM to 11:45 AM",
+          mantra: "गुरुर्ब्रह्मा गुरुर्विष्णुः गुरुर्देवो महेश्वरः। गुरुः साक्षात् परं ब्रह्म तस्मै श्रीगुरवे नमः॥",
+        };
+      } else if (masaIdx === 5) {
+        purnimaName = "Bhadrapada Purnima (Start of Pitru Paksha)";
+        pHindi = "भाद्रपद पूर्णिमा (पितृपक्ष प्रारंभ)";
+      } else if (masaIdx === 6) {
+        purnimaName = "Sharad Purnima (Kojagiri Purnima / Raas Purnima)";
+        pHindi = "शरद पूर्णिमा / कोजागरी (अमृत वर्षा)";
+        muh = {
+          title: "Amrit Kheer Moonbath & Lakshmi Puja",
+          hindiTitle: "खीर प्रसाद चन्द्रकिरण सेवन एवं लक्ष्मी पूजन",
+          timeRange: "10:30 PM to 12:30 AM (Midnight)",
+        };
+      } else if (masaIdx === 7) {
+        purnimaName = "Kartik Purnima (Dev Deepawali / Tripurari Purnima)";
+        pHindi = "कार्तिक पूर्णिमा / देव दीपावली";
+        muh = {
+          title: "Dev Deepawali Ghat Deepdan Muhurta",
+          hindiTitle: "देव दीपावली दीपदान एवं गंगा आरती मुहूर्त",
+          timeRange: "05:15 PM to 07:45 PM (Pradosh Kaal)",
+        };
+      } else if (masaIdx === 8) {
+        purnimaName = "Margashirsha Purnima (Dattatreya Jayanti)";
+        pHindi = "मार्गशीर्ष पूर्णिमा / दत्तात्रेय जयंती";
+      } else if (masaIdx === 9) {
+        purnimaName = "Pausha Purnima (Shakambhari Jayanti)";
+        pHindi = "पौष पूर्णिमा / शाकंभरी जयंती";
+      } else if (masaIdx === 10) {
+        purnimaName = "Magha Purnima (Maha Maghi Snan)";
+        pHindi = "माघ पूर्णिमा (महा माघी स्नान)";
+      } else if (masaIdx === 11) {
+        purnimaName = "Holika Dahan (Phalguna Purnima)";
+        pHindi = "होलिका दहन / फाल्गुन पूर्णिमा";
+        muh = {
+          title: "Holika Dahan Shubh Muhurta",
+          hindiTitle: "होलिका दहन शुभ मुहूर्त (भद्रा रहित)",
+          timeRange: "06:35 PM to 08:55 PM (Pradosh Kaal)",
+          isAvoidBhadra: true,
+          bhadraEndTime: "भद्रा समाप्त होने के बाद ही दहन करें",
+        };
+      }
+
+      list.push({
+        id: `purnima-${masaIdx}`,
+        name: purnimaName,
+        hindiName: pHindi,
+        category: "festival",
+        deity: "Sri Satyanarayan / Chandra Deva",
+        significance: "Full moon day of highest lunar energy, sacred bathing, and spiritual fullness.",
+        ritual: "Satyanarayan Katha, fasting until moonrise, arghya to Chandra Deva, holy river dip.",
+        badgeColor: "bg-amber-400/25 text-amber-200 border-amber-300 font-extrabold shadow-sm",
+        muhurta: muh,
+      });
     }
-
-    list.push({
-      id: `purnima-${masaIdx}`,
-      name: purnimaName,
-      hindiName: pHindi,
-      category: "festival",
-      deity: "Sri Satyanarayan / Chandra Deva",
-      significance: "Full moon day of highest lunar energy, sacred bathing, and spiritual fullness.",
-      ritual: "Satyanarayan Katha, fasting until moonrise, arghya to Chandra Deva, holy river dip.",
-      badgeColor: "bg-amber-400/25 text-amber-200 border-amber-300 font-extrabold shadow-sm",
-    });
   }
 
   // --- 5. AMAVASYA (15th Krishna Tithi - New Moon) ---
@@ -375,15 +448,24 @@ function detectFestivals(
     }
 
     if (masaIdx === 7) {
+      // Kartika Amavasya = DIWALI
       list.push({
         id: "diwali-lakshmi-puja",
         name: "Diwali (Deepawali / Maha Lakshmi Puja)",
         hindiName: "दीपावली / महालक्ष्मी पूजा",
         category: "festival",
         deity: "Maha Lakshmi, Lord Ganesha & Kuber",
-        significance: "The Grand Festival of Lights celebrating the victory of divine light over darkness and Lord Rama's return.",
-        ritual: "Lighting clay lamps, grand Lakshmi-Ganesha puja during Pradosh/Nishita Kaal, fireworks.",
+        significance: "The Grand Festival of Lights celebrating the victory of divine light over darkness and Lord Rama's return to Ayodhya.",
+        ritual: "Lighting clay lamps, grand Lakshmi-Ganesha puja during Pradosh & Sthir Vrishabha Lagna, fireworks.",
         badgeColor: "bg-gradient-to-r from-amber-500/40 to-yellow-500/40 text-amber-100 border-amber-300 font-black shadow-lg",
+        muhurta: {
+          title: "Diwali Lakshmi Puja Shubh Muhurta",
+          hindiTitle: "दीपावली लक्ष्मी-गणेश पूजन शुभ मुहूर्त",
+          timeRange: "06:35 PM to 08:30 PM",
+          duration: "1 Hour 55 Mins",
+          specialAuspiciousPeriod: "Pradosh Kaal: 05:45 PM – 08:20 PM | Vrishabha Sthir Lagna (स्थिर लग्न): 06:40 PM – 08:35 PM | Nishita Kaal (महानिशीथ): 11:40 PM – 12:35 AM",
+          mantra: "ॐ श्रीं ह्रीं क्लीं श्रीं सिद्ध लक्ष्म्यै नमः॥ ॐ गं गणपतये नमः॥",
+        },
       });
     } else if (masaIdx === 5 || masaIdx === 6) {
       list.push({
@@ -738,18 +820,23 @@ export function getMonthlyTithiCalendar(
     const sunSidereal = toSiderealLongitude(sunEcl.elon, ayanamsha);
     const moonSidereal = toSiderealLongitude(moonEcl.elon, ayanamsha);
 
-    // Solar Sign Index (0 = Aries, 1 = Taurus... 11 = Pisces)
-    const sunRashiIdx = Math.floor(sunSidereal / 30);
-    // Lunar Month (Masa): Sun in Meena(11) -> Chaitra(0), Mesha(0) -> Vaishakha(1)...
-    const lunarMasaIdx = (sunRashiIdx + 1) % 12;
-    const masaMeta = LUNAR_MASA_NAMES[lunarMasaIdx];
-
     // Moon - Sun Elongation (0 to 360)
     const diff = (moonEcl.elon - sunEcl.elon + 360) % 360;
     const tithiIndex = Math.floor(diff / 12); // 0 to 29
     const paksha: "Shukla" | "Krishna" = tithiIndex < 15 ? "Shukla" : "Krishna";
     const tithiNum = (tithiIndex % 15) + 1; // 1 to 15
     const progressPercent = Math.round(((diff % 12) / 12) * 100);
+
+    // In Amanta system, to find the lunar month of any day, find the Sun's sidereal sign at the preceding New Moon (Amavasya)
+    const daysSinceAmavasya = (diff / 360) * 29.530588;
+    const prevAmavasyaDate = new Date(dateAnchor.getTime() - daysSinceAmavasya * 86400000);
+    const prevAmavasyaTime = Astronomy.MakeTime(prevAmavasyaDate);
+    const amavasyaSunGeo = Astronomy.GeoVector(Astronomy.Body.Sun, prevAmavasyaTime, true);
+    const amavasyaSunEcl = Astronomy.Ecliptic(amavasyaSunGeo);
+    const amavasyaSunSidereal = toSiderealLongitude(amavasyaSunEcl.elon, getAyanamsha(prevAmavasyaTime.ut, ayanamshaType as any));
+    const amantaSunSign = Math.floor(amavasyaSunSidereal / 30);
+    const lunarMasaIdx = (amantaSunSign + 1) % 12;
+    const masaMeta = LUNAR_MASA_NAMES[lunarMasaIdx];
 
     const tithiName = TITHI_NAMES[tithiNum - 1];
     const tithiHindi = TITHI_HINDI_NAMES[tithiNum - 1];

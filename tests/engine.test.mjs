@@ -421,4 +421,12 @@ test("Classical Vedic Tithi & Panchanga Calendar Suite Verification", async () =
     festivalIds.some((id) => id.includes("nag-panchami")),
     "Nag Panchami must be detected in Shravana Shukla Panchami"
   );
+
+  // 4. Verify Raksha Bandhan on Shravana Purnima with Muhurta & Bhadra warning
+  const rakhiFest = calAug2026.majorFestivals.find((f) => f.festival.id === "raksha-bandhan");
+  assert.ok(rakhiFest, "Raksha Bandhan must be detected on Shravana Purnima in August 2026");
+  assert.ok(rakhiFest.festival.muhurta, "Raksha Bandhan must include detailed Shubh Muhurta");
+  assert.ok(rakhiFest.festival.muhurta.timeRange, "Must have valid Muhurta time range");
+  assert.equal(rakhiFest.festival.muhurta.isAvoidBhadra, true, "Must have Bhadra prohibition warning");
+  assert.ok(rakhiFest.festival.muhurta.mantra, "Must include sacred Rakhi tying Vedic mantra");
 });

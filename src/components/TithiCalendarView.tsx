@@ -414,6 +414,34 @@ export default function TithiCalendarView() {
                     <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
                       {festival.significance}
                     </p>
+
+                    {festival.muhurta && (
+                      <div className="mt-2.5 p-2.5 rounded-xl bg-amber-950/40 border border-amber-500/50 space-y-1.5 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-extrabold text-amber-300 flex items-center gap-1">
+                            <span>⏰</span>
+                            <span>{festival.muhurta.hindiTitle || festival.muhurta.title}:</span>
+                          </span>
+                          <span className="font-black text-amber-200 font-mono bg-amber-500/20 px-2 py-0.5 rounded border border-amber-400/40">
+                            {festival.muhurta.timeRange}
+                          </span>
+                        </div>
+
+                        {festival.muhurta.isAvoidBhadra && (
+                          <div className="text-[11px] text-rose-300 font-bold flex items-center gap-1">
+                            <span>⚠️</span>
+                            <span>भद्रा काल निषेध: {festival.muhurta.bhadraEndTime}</span>
+                          </div>
+                        )}
+
+                        {festival.muhurta.specialAuspiciousPeriod && (
+                          <div className="text-[10.5px] text-slate-300">
+                            <span className="text-amber-400 font-semibold">सर्वश्रेष्ठ समय: </span>
+                            <span>{festival.muhurta.specialAuspiciousPeriod}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {festival.ritual && (
@@ -583,6 +611,50 @@ export default function TithiCalendarView() {
                         <div className="text-xs opacity-90">{f.hindiName}</div>
                         {f.deity && <div className="text-xs font-bold">Presiding Deity: {f.deity}</div>}
                         <p className="text-xs opacity-85 leading-relaxed">{f.significance}</p>
+
+                        {/* Exact Auspicious Muhurta Timing Card */}
+                        {f.muhurta && (
+                          <div className="mt-2 p-2.5 rounded-xl bg-slate-950/80 border border-amber-400/50 space-y-1.5 text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="font-extrabold text-amber-300 flex items-center gap-1.5">
+                                <span>⏰</span>
+                                <span>{f.muhurta.hindiTitle || f.muhurta.title}:</span>
+                              </span>
+                              <span className="font-black text-amber-200 font-mono bg-amber-500/20 px-2 py-0.5 rounded border border-amber-400/40">
+                                {f.muhurta.timeRange}
+                              </span>
+                            </div>
+
+                            {f.muhurta.duration && (
+                              <div className="text-[11px] text-slate-300">
+                                <span className="text-slate-400">कुल अवधि (Duration): </span>
+                                <span className="font-bold text-slate-100">{f.muhurta.duration}</span>
+                              </div>
+                            )}
+
+                            {f.muhurta.isAvoidBhadra && (
+                              <div className="text-[11px] text-rose-300 font-bold bg-rose-950/40 p-1.5 rounded-lg border border-rose-600/40 flex items-center gap-1">
+                                <span>⚠️</span>
+                                <span>भद्रा काल निषेध: {f.muhurta.bhadraEndTime}</span>
+                              </div>
+                            )}
+
+                            {f.muhurta.specialAuspiciousPeriod && (
+                              <div className="text-[11px] text-slate-300">
+                                <span className="text-amber-400 font-bold">सर्वश्रेष्ठ मुहूर्त (Best Windows): </span>
+                                <span>{f.muhurta.specialAuspiciousPeriod}</span>
+                              </div>
+                            )}
+
+                            {f.muhurta.mantra && (
+                              <div className="text-[11px] text-amber-200 bg-amber-950/30 p-2 rounded-lg border border-amber-500/30">
+                                <span className="font-bold text-amber-400 block mb-0.5">📿 रक्षा / पूजन मंत्र (Sacred Mantra):</span>
+                                <span className="font-serif italic font-semibold">{f.muhurta.mantra}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {f.ritual && (
                           <div className="text-[11px] pt-1.5 border-t border-current/20 font-medium">
                             <span className="font-bold">Vidhi / Ritual: </span>
