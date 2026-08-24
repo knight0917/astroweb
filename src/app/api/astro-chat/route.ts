@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     // System instruction grounded in authentic Brihat Parashara Hora Shastra
     const systemInstruction = `
-You are "Acharya Jyotish AI" (आचार्य ज्योतिष AI), an enlightened, highly knowledgeable, empathetic Vedic Astrologer operating on classical Brihat Parashara Hora Shastra (BPHS), Jaimini Sutras, and classical Phaladeepika principles.
+You are "Acharya Jyotish AI" (आचार्य ज्योतिष AI), an enlightened, compassionate, highly knowledgeable Vedic Astrologer operating strictly on classical Brihat Parashara Hora Shastra (BPHS), Jaimini Sutras, and classical Phaladeepika principles.
 
 Here is the native's exact computed astrological profile derived from their Date of Birth, Time, and Location:
 ${astroDossier || "No specific chart provided."}
@@ -72,59 +72,51 @@ YOUR GUIDING PRINCIPLES:
       });
     }
 
-    // Call Google Gemini 2.0 Flash / 1.5 Flash API
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    // List of model candidates in priority order
+    const candidateModels = [
+      "gemini-3.6-flash",
+      "gemini-3.5-flash",
+      "gemini-3.7-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-flash-latest"
+    ];
 
-    const geminiResponse = await fetch(geminiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents,
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        },
-      }),
-    });
+    let lastError = "";
 
-    if (!geminiResponse.ok) {
-      // If 2.0 Flash fails, fallback to 1.5 Flash
-      const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-      const fallbackResponse = await fetch(fallbackUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents,
-          generationConfig: {
-            temperature: 0.7,
-            topP: 0.95,
-            maxOutputTokens: 2048,
-          },
-        }),
-      });
+    for (const modelName of candidateModels) {
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+        const res = await fetch(geminiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents,
+            generationConfig: {
+              temperature: 0.7,
+              topP: 0.95,
+              maxOutputTokens: 2048,
+            },
+          }),
+        });
 
-      if (!fallbackResponse.ok) {
-        const errText = await fallbackResponse.text();
-        return NextResponse.json(
-          { error: "Gemini API Error", details: errText },
-          { status: fallbackResponse.status }
-        );
+        if (res.ok) {
+          const data = await res.json();
+          const replyText =
+            data.candidates?.[0]?.content?.parts?.[0]?.text ||
+            "I could not synthesize an astrological reading at this moment.";
+          return NextResponse.json({ reply: replyText, model: modelName });
+        } else {
+          lastError = await res.text();
+        }
+      } catch (err: any) {
+        lastError = err?.message || "Fetch failed";
       }
-
-      const fbData = await fallbackResponse.json();
-      const text =
-        fbData.candidates?.[0]?.content?.parts?.[0]?.text ||
-        "I could not synthesize an astrological reading at this moment.";
-      return NextResponse.json({ reply: text });
     }
 
-    const data = await geminiResponse.json();
-    const replyText =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "I could not synthesize an astrological reading at this moment.";
-
-    return NextResponse.json({ reply: replyText });
+    return NextResponse.json(
+      { error: "Gemini API Error", details: lastError },
+      { status: 500 }
+    );
   } catch (error: any) {
     console.error("Astro Chat API Error:", error);
     return NextResponse.json(
