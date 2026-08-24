@@ -1,10 +1,21 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import PwaRegister from "../components/PwaRegister";
 
 export const metadata: Metadata = {
-  title: "Vedic Sky Tracker — Immersive Jyotish 3D Planetarium",
+  title: "Vedic Sky — Precision Jyotish & Panchanga",
   description:
-    "Explore historical, real-time, and future planetary positions, 27 Nakshatras, Lagna, Rahu/Ketu, Upagrahas, and 3D celestial dome.",
+    "Precision Vedic Astrology, 3D Celestial SkyDome, Kundli, Shadbala, and Daily Tithi Calendar.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "VedicSky",
+  },
+  icons: {
+    icon: "/icons/icon.svg",
+    apple: "/icons/icon-192.svg",
+  },
 };
 
 export const viewport: Viewport = {
@@ -13,7 +24,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#040714",
+  themeColor: "#020617",
 };
 
 export default function RootLayout({
@@ -23,8 +34,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      </head>
       <body className="bg-slate-950 text-slate-100 antialiased min-h-screen selection:bg-amber-500 selection:text-slate-950">
         {children}
+        <PwaRegister />
       </body>
     </html>
   );
