@@ -12,6 +12,8 @@ interface Message {
   timestamp: Date;
 }
 
+const DEFAULT_GEMINI_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
+
 const PRESET_QUESTIONS = [
   {
     icon: "💼",
@@ -52,7 +54,6 @@ export default function AstroChatbot() {
     ayanamsha,
     houseSystem,
     nodeType,
-    currentDate,
   } = useAstroStore();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -101,6 +102,93 @@ export default function AstroChatbot() {
     }
   }, [messages, isOpen]);
 
+  // Client-Side Direct Gemini API Call with Multi-Model Fallback Cascade
+  const executeDirectGeminiCall = async (
+    allMessages: Message[],
+    dossier: string,
+    apiKey: string
+  ): Promise<string> => {
+    const systemInstruction = `
+You are "Acharya Jyotish AI" (आचार्य ज्योतिष AI), an enlightened, compassionate, highly knowledgeable Vedic Astrologer operating strictly on classical Brihat Parashara Hora Shastra (BPHS), Jaimini Sutras, and classical Phaladeepika principles.
+
+Here is the native's exact computed astrological profile derived from their Date of Birth, Time, and Location:
+${dossier || "No specific chart provided."}
+
+YOUR GUIDING PRINCIPLES:
+1. Ground every answer in the native's actual chart parameters (Lagna Lord, 10th House/Lord for Career, 7th House/Lord for Marriage, 5th/9th Houses for Fortune, current active Vimshottari Mahadasha/Antardasha, and Saturn Sade Sati status).
+2. Answer in the user's preferred language: English, Hindi (हिंदी), or friendly conversational Hinglish.
+3. Be compassionate, constructive, and uplifting. Avoid fatalism or fear-mongering; always focus on free will, righteous effort (Purushartha), and remedial actions.
+4. When relevant, provide classical Vedic remedies:
+   - Vedic Mantras (e.g., Gayatri, Maha Mrityunjaya, Shani or Guru mantras).
+   - Auspicious gemstones with cautions on when to wear.
+   - Charity (Daan) and fasting (Vrat) recommendations aligned with afflicted planets.
+   - Favorable days and colors.
+5. Format your response cleanly using markdown (bold headings, bullet points, and neat paragraphs).
+`;
+
+    const contents: any[] = [
+      {
+        role: "user",
+        parts: [{ text: systemInstruction }],
+      },
+      {
+        role: "model",
+        parts: [
+          {
+            text: "Pranam! I have thoroughly ingested your Vedic Kundli, planetary placements, current Vimshottari Dasha period, and Saturn Gochar transits. How may I guide you on your life's journey today?",
+          },
+        ],
+      },
+    ];
+
+    for (const msg of allMessages) {
+      contents.push({
+        role: msg.role === "assistant" ? "model" : "user",
+        parts: [{ text: msg.content }],
+      });
+    }
+
+    const candidateModels = [
+      "gemini-3.6-flash",
+      "gemini-3.5-flash",
+      "gemini-3.7-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-flash-latest",
+    ];
+
+    let lastError = "";
+
+    for (const modelName of candidateModels) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents,
+            generationConfig: {
+              temperature: 0.7,
+              topP: 0.95,
+              maxOutputTokens: 2048,
+            },
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) return text;
+        } else {
+          lastError = await res.text();
+        }
+      } catch (err: any) {
+        lastError = err?.message || "Network error";
+      }
+    }
+
+    throw new Error(lastError || "Could not reach Gemini AI servers");
+  };
+
   const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || inputPrompt).trim();
     if (!query || isLoading) return;
@@ -112,68 +200,83 @@ export default function AstroChatbot() {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setInputPrompt("");
     setIsLoading(true);
 
-    try {
-      const response = await fetch("/api/astro-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [...messages, userMsg].map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-          astroDossier,
-          userApiKey,
-        }),
-      });
+    const activeKey = userApiKey.trim() || DEFAULT_GEMINI_KEY;
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.error === "NO_API_KEY") {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: Date.now().toString(),
-              role: "assistant",
-              content:
-                "⚠️ **Google Gemini API Key Required**\n\nTo enable AI chat, please provide a free Gemini API key:\n1. Get your 100% free key at [Google AI Studio](https://aistudio.google.com/app/apikey).\n2. Click the **⚙️ Settings** icon in the chat header and paste your key.",
-              timestamp: new Date(),
-            },
-          ]);
-          setShowSettings(true);
-        } else {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: Date.now().toString(),
-              role: "assistant",
-              content: `⚠️ **Error generating reading:** ${data.details || data.message || "Please check your network connection or API key."}`,
-              timestamp: new Date(),
-            },
-          ]);
-        }
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now().toString(),
-            role: "assistant",
-            content: data.reply,
-            timestamp: new Date(),
-          },
-        ]);
-      }
-    } catch (err: any) {
+    if (!activeKey) {
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now().toString(),
           role: "assistant",
-          content: `⚠️ Failed to connect to astrological AI: ${err.message}`,
+          content:
+            "🔑 **Google Gemini API Key Required on this Device:**\n\nTo enable instant astrological AI answers on this device:\n1. Paste your key in the **⚙️ Settings** box at the top of the chat.\n2. Click **Save** (it will be saved on this device forever).\n\nIf you need a free key, get one at [Google AI Studio](https://aistudio.google.com/app/apikey).",
+          timestamp: new Date(),
+        },
+      ]);
+      setShowSettings(true);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // 1. Try direct client-side Gemini execution (Works on GitHub Pages & all devices seamlessly)
+      const reply = await executeDirectGeminiCall(
+        updatedMessages,
+        astroDossier,
+        activeKey
+      );
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: reply,
+          timestamp: new Date(),
+        },
+      ]);
+    } catch (err: any) {
+      // If direct call fails, try Next.js /api/astro-chat route as fallback
+      try {
+        const response = await fetch("/api/astro-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: updatedMessages.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+            astroDossier,
+            userApiKey: activeKey,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: Date.now().toString(),
+              role: "assistant",
+              content: data.reply,
+              timestamp: new Date(),
+            },
+          ]);
+          return;
+        }
+      } catch (_) {}
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: `⚠️ **Could not connect to Astrological AI:** ${err.message}\n\nPlease verify your internet connection or click **⚙️ Settings** to enter a custom Gemini API key.`,
           timestamp: new Date(),
         },
       ]);
@@ -218,7 +321,7 @@ export default function AstroChatbot() {
                     Acharya Jyotish AI
                   </h3>
                   <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    Gemini 2.0
+                    Gemini Active
                   </span>
                 </div>
                 <div className="text-[10.5px] text-slate-400 font-mono">
@@ -286,7 +389,7 @@ export default function AstroChatbot() {
               <div className="flex items-center gap-2">
                 <input
                   type="password"
-                  placeholder="Paste AI Studio API Key..."
+                  placeholder="Paste custom API Key (Optional)..."
                   value={userApiKey}
                   onChange={(e) => setUserApiKey(e.target.value)}
                   className="flex-1 bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-slate-100 font-mono"
@@ -299,7 +402,7 @@ export default function AstroChatbot() {
                 </button>
               </div>
               <p className="text-[10px] text-slate-400">
-                Key is stored securely in your local browser only.
+                A default free Gemini key is pre-configured. You only need to enter your own key if you wish to use your personal quota.
               </p>
             </div>
           )}
