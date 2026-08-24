@@ -181,6 +181,27 @@ export default function HeaderNav() {
       ],
     },
     {
+      category: "🔮 Predictive Timing & Transits (दशा एवं गोचर)",
+      items: [
+        {
+          mode: "dasha",
+          label: "Vimshottari Dasha (120 Yrs)",
+          hindiLabel: "विम्शोत्तरी दशा चक्र",
+          icon: "👑",
+          desc: "Complete Mahadasha, Antardasha & Pratyantardasha hierarchy with live active tracker",
+          badge: "120 Yrs",
+        },
+        {
+          mode: "gochar",
+          label: "Planetary Transits & Sade Sati",
+          hindiLabel: "ग्रह गोचर एवं साढ़े साती",
+          icon: "🪐",
+          desc: "Live transits over Natal Moon & Lagna, 5-phase Sade Sati & Dual Transit Chart",
+          badge: "Live",
+        },
+      ],
+    },
+    {
       category: "⚖️ Classical Strengths & Analysis (बल साधन)",
       items: [
         {
@@ -208,8 +229,16 @@ export default function HeaderNav() {
       ],
     },
     {
-      category: "📅 Panchanga, Calendar & Numerology (पञ्चाङ्ग एवं अंकशास्त्र)",
+      category: "📅 Panchanga, Calendar & Muhurta (पञ्चाङ्ग एवं मुहूर्त)",
       items: [
+        {
+          mode: "choghadiya",
+          label: "Real-Time Choghadiya & Horas",
+          hindiLabel: "चौघड़िया एवं ग्रह होरा",
+          icon: "⏱️",
+          desc: "Live Day & Night Choghadiyas, countdown timer, and 24 Planetary Horas",
+          badge: "Live",
+        },
         {
           mode: "tithi-calendar",
           label: "Vedic Tithi Calendar",

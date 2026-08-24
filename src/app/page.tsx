@@ -62,6 +62,21 @@ const AshtakavargaView = dynamic(() => import("../components/AshtakavargaView"),
   loading: () => <ModuleLoadingSkeleton title="Ashtakavarga Matrix Suite" />,
 });
 
+const DashaView = dynamic(() => import("../components/DashaView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Vimshottari Dasha Timeline (120 Yrs)" />,
+});
+
+const GocharView = dynamic(() => import("../components/GocharView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Planetary Transits & Sade Sati (Gochar)" />,
+});
+
+const ChoghadiyaHoraView = dynamic(() => import("../components/ChoghadiyaHoraView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Real-Time Choghadiya & Planetary Horas" />,
+});
+
 const NumerologyView = dynamic(() => import("../components/NumerologyView"), {
   ssr: false,
   loading: () => <ModuleLoadingSkeleton title="Vedic & Chaldean Numerology Suite" />,
@@ -100,6 +115,24 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
             <KundliChart />
             <PositionsTable />
+          </div>
+        )}
+
+        {viewMode === "dasha" && (
+          <div className="w-full">
+            <DashaView />
+          </div>
+        )}
+
+        {viewMode === "gochar" && (
+          <div className="w-full">
+            <GocharView />
+          </div>
+        )}
+
+        {viewMode === "choghadiya" && (
+          <div className="w-full">
+            <ChoghadiyaHoraView />
           </div>
         )}
 

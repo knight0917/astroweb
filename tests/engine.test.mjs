@@ -430,3 +430,95 @@ test("Classical Vedic Tithi & Panchanga Calendar Suite Verification", async () =
   assert.equal(rakhiFest.festival.muhurta.isAvoidBhadra, true, "Must have Bhadra prohibition warning");
   assert.ok(rakhiFest.festival.muhurta.mantra, "Must include sacred Rakhi tying Vedic mantra");
 });
+
+test("Classical Vimshottari Dasha (120 Years MD/AD/PD) Verification", async () => {
+  const { calculateVimshottariDasha } = await import("../src/engine/dasha.ts");
+
+  const birthDate = new Date("1998-05-25T00:16:00Z");
+  // Moon at 22.56° Aries (Bharani Nakshatra -> Venus Mahadasha at birth)
+  const moonLon = 22.56;
+
+  const result = calculateVimshottariDasha(birthDate, moonLon, new Date("2026-08-24T00:00:00Z"));
+
+  assert.equal(result.startingNakshatraName, "Bharani");
+  assert.equal(result.startingLord.name, "Venus");
+  assert.ok(result.balanceYears > 0 && result.balanceYears <= 20);
+  assert.equal(result.mahadashas.length, 9);
+
+  // Verify full 120-year span
+  const firstMD = result.mahadashas[0];
+  const lastMD = result.mahadashas[8];
+  assert.equal(firstMD.lord.name, "Venus");
+  assert.equal(firstMD.antardashas.length, 9);
+  assert.equal(firstMD.antardashas[0].pratyantardashas.length, 9);
+
+  // Verify Active Dasha in 2026
+  assert.ok(result.activeDasha, "Must identify active dasha period for current date");
+  assert.ok(result.activeDasha.mahadasha.name);
+  assert.ok(result.activeDasha.antardasha.name);
+  assert.ok(result.activeDasha.pratyantardasha.name);
+});
+
+test("Planetary Transit (Gochar) & Shani Sade Sati Verification", async () => {
+  const { calculateGochar } = await import("../src/engine/gochar.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = {
+    cityName: "Varanasi",
+    country: "India",
+    latitude: 25.3176,
+    longitude: 82.9739,
+    timezoneOffsetHours: 5.5,
+  };
+
+  const natalEphemeris = calculateVedicEphemeris(
+    new Date("1998-05-25T00:16:00Z"),
+    location,
+    "Lahiri",
+    "WholeSign",
+    "Mean"
+  );
+
+  const transitEphemeris = calculateVedicEphemeris(
+    new Date("2026-08-24T00:00:00Z"),
+    location,
+    "Lahiri",
+    "WholeSign",
+    "Mean"
+  );
+
+  const gochar = calculateGochar(natalEphemeris, transitEphemeris);
+
+  assert.equal(gochar.natalMoonRashiName, "Aries");
+  assert.ok(gochar.transits.length >= 7);
+  assert.ok(gochar.sadeSati.statusTitle);
+  assert.ok(gochar.sadeSati.remedies.length > 0);
+
+  for (const t of gochar.transits) {
+    assert.ok(t.transitHouseFromMoon >= 1 && t.transitHouseFromMoon <= 12);
+    assert.ok(["Auspicious", "Neutral", "Inauspicious"].includes(t.score));
+  }
+});
+
+test("Real-Time Choghadiya & 24 Planetary Horas Verification", async () => {
+  const { calculateChoghadiyaAndHoras } = await import("../src/engine/choghadiyaHora.ts");
+
+  const location = {
+    cityName: "Varanasi",
+    country: "India",
+    latitude: 25.3176,
+    longitude: 82.9739,
+    timezoneOffsetHours: 5.5,
+  };
+
+  const result = calculateChoghadiyaAndHoras(new Date("2026-08-24T12:00:00Z"), location);
+
+  assert.equal(result.dayChoghadiyas.length, 8);
+  assert.equal(result.nightChoghadiyas.length, 8);
+  assert.equal(result.planetaryHoras.length, 24);
+
+  assert.ok(result.activeChoghadiya);
+  assert.ok(result.activeHora);
+  assert.ok(result.sunriseFormatted);
+  assert.ok(result.sunsetFormatted);
+});
