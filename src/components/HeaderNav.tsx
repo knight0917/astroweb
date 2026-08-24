@@ -11,6 +11,7 @@ export default function HeaderNav() {
   const [mounted, setMounted] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
+  const [showMenuDrawer, setShowMenuDrawer] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -147,50 +148,177 @@ export default function HeaderNav() {
     return `${Math.abs(lon).toFixed(2)}° ${lon >= 0 ? "E" : "W"}`;
   };
 
+  const ALL_MODULES: {
+    category: string;
+    items: { mode: ViewMode; label: string; hindiLabel: string; icon: string; desc: string; badge?: string }[];
+  }[] = [
+    {
+      category: "🌟 Charts & Divisionals (कुण्डली एवं वर्ग)",
+      items: [
+        {
+          mode: "kundli-north",
+          label: "Traditional Kundli Chart",
+          hindiLabel: "जन्म कुण्डली (उत्तर व दक्षिण)",
+          icon: "☸",
+          desc: "North/South Indian charts with Jaimini Chara Karakas (AK to DK)",
+          badge: "Core",
+        },
+        {
+          mode: "shodashavarga",
+          label: "16 Vargas (Shodashavarga)",
+          hindiLabel: "षोडशवर्ग (D1 - D60)",
+          icon: "✨",
+          desc: "Complete Parashari 16 divisional charts with interactive inspect",
+          badge: "D1–D60",
+        },
+        {
+          mode: "dual",
+          label: "Dual 3D + Kundli Split View",
+          hindiLabel: "युगल दृश्य (3D + कुण्डली)",
+          icon: "🔲",
+          desc: "Side-by-side interactive 3D SkyDome and Kundli chart",
+        },
+      ],
+    },
+    {
+      category: "⚖️ Classical Strengths & Analysis (बल साधन)",
+      items: [
+        {
+          mode: "shadbala",
+          label: "Parashari Shadbala (6-Fold)",
+          hindiLabel: "षड्बल (6-अंग ग्रह बल)",
+          icon: "⚖️",
+          desc: "Sthan, Dig, Kaal, Cheshta, Naisargika, Drik & Ishta/Kashta Phala",
+          badge: "BPHS",
+        },
+        {
+          mode: "bhavabala",
+          label: "Bhava Bala (12 House Strengths)",
+          hindiLabel: "भाव बल (12 भाव शक्ति)",
+          icon: "🏛️",
+          desc: "House Lords, Dig, Drishti & Kendra required Rupas analysis",
+        },
+        {
+          mode: "ashtakavarga",
+          label: "Ashtakavarga Matrix Suite",
+          hindiLabel: "अष्टकवर्ग चक्र",
+          icon: "📊",
+          desc: "Sarvashtakavarga 337 bindus & 7 Bhinnashtakavarga score matrices",
+        },
+      ],
+    },
+    {
+      category: "📅 Panchanga, Calendar & Numerology (पञ्चाङ्ग एवं अंकशास्त्र)",
+      items: [
+        {
+          mode: "tithi-calendar",
+          label: "Vedic Tithi Calendar",
+          hindiLabel: "तिथि पञ्चाङ्ग कैलेण्डर",
+          icon: "📅",
+          desc: "Daily Sunrise Tithi, Moon phases & 50+ festival Shubh Muhurtas",
+          badge: "New",
+        },
+        {
+          mode: "tithi-birthday",
+          label: "Vedic Tithi Birthday",
+          hindiLabel: "तिथि जन्मदिन (तिथि प्रवेश)",
+          icon: "🎂",
+          desc: "Tithi Pravesha exact recurrence and prescribed birthday rituals",
+        },
+        {
+          mode: "numerology",
+          label: "Vedic & Chaldean Numerology",
+          hindiLabel: "वैदिक अंकशास्त्र",
+          icon: "🔢",
+          desc: "Mulank, Bhagyank, Name Number & Chinese Lo Shu 3x3 Grid",
+        },
+      ],
+    },
+    {
+      category: "🪐 Observatory & Ephemeris (खगोलीय वेधशाला)",
+      items: [
+        {
+          mode: "3d",
+          label: "3D Celestial WebGL Dome",
+          hindiLabel: "3D खगोलीय आकाश मण्डल",
+          icon: "🪐",
+          desc: "Real-time 3D planetary orbits, Nakshatras & sky coordinates",
+        },
+        {
+          mode: "table",
+          label: "Complete Ephemeris Table",
+          hindiLabel: "ग्रह स्थिति सारणी",
+          icon: "📋",
+          desc: "Sidereal degrees, Nakshatras, Padas, Speed & Retrograde status",
+        },
+      ],
+    },
+  ];
+
+  // Find currently active module metadata
+  const currentModule = useMemo(() => {
+    for (const group of ALL_MODULES) {
+      const match = group.items.find((i) => i.mode === viewMode);
+      if (match) return match;
+    }
+    return {
+      mode: "kundli-north" as ViewMode,
+      label: "Traditional Kundli",
+      hindiLabel: "जन्म कुण्डली",
+      icon: "☸",
+      desc: "",
+    };
+  }, [viewMode]);
+
   return (
     <header className="glass-panel sticky top-0 z-40 px-3 md:px-4 py-2.5 border-b border-slate-800 shadow-xl bg-slate-950/90 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 md:gap-4">
-        {/* Left: Logo & Brand */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-300 flex items-center justify-center text-base md:text-lg shadow-lg shadow-amber-500/20 flex-shrink-0">
-            ☸
-          </div>
-          <div>
-            <h1 className="font-extrabold text-sm md:text-base bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent tracking-tight">
-              VEDIC SKY
-            </h1>
-            <p className="text-[9px] md:text-[10px] text-slate-400 font-medium hidden sm:block">
-              Precision Jyotish Ephemeris
-            </p>
-          </div>
-        </div>
-
-        {/* Center: Desktop Navigation Tabs (Hidden on Mobile) */}
-        <div className="hidden md:flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs overflow-x-auto max-w-full">
-          {[
-            { mode: "kundli-north" as ViewMode, label: "☸ Kundli" },
-            { mode: "shodashavarga" as ViewMode, label: "✨ Shodashavarga" },
-            { mode: "shadbala" as ViewMode, label: "⚖️ Shadbala" },
-            { mode: "bhavabala" as ViewMode, label: "🏛️ Bhava Bala" },
-            { mode: "ashtakavarga" as ViewMode, label: "📊 Ashtakavarga" },
-            { mode: "numerology" as ViewMode, label: "🔢 Numerology" },
-            { mode: "tithi-birthday" as ViewMode, label: "🎂 Tithi Birthday" },
-            { mode: "tithi-calendar" as ViewMode, label: "📅 Tithi Calendar" },
-            { mode: "3d" as ViewMode, label: "🪐 3D Dome" },
-            { mode: "table" as ViewMode, label: "📋 Ephemeris" },
-          ].map((item) => (
-            <button
-              key={item.mode}
-              onClick={() => setViewMode(item.mode)}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap cursor-pointer ${
-                viewMode === item.mode
-                  ? "bg-amber-500 text-slate-950 shadow-md scale-105"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
+        {/* Left: Top Hamburger Menu Button + Logo & Active Module */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Top-Left Hamburger Button */}
+          <button
+            onClick={() => setShowMenuDrawer(true)}
+            className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 text-slate-200 hover:text-amber-400 transition-all flex items-center justify-center cursor-pointer shadow-sm group"
+            title="Open Jyotish Modules Menu"
+            aria-label="Open Navigation Menu"
+          >
+            <svg
+              className="w-5 h-5 text-slate-300 group-hover:text-amber-400 transition-colors"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              {item.label}
-            </button>
-          ))}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          {/* Logo & Brand */}
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setShowMenuDrawer(true)}>
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-300 flex items-center justify-center text-base md:text-lg shadow-lg shadow-amber-500/20 flex-shrink-0">
+              ☸
+            </div>
+            <div>
+              <h1 className="font-black text-sm md:text-base bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent tracking-tight leading-none">
+                VEDIC SKY
+              </h1>
+              <p className="text-[8.5px] md:text-[9.5px] text-slate-400 font-medium hidden sm:block mt-0.5">
+                Precision Jyotish Ephemeris
+              </p>
+            </div>
+          </div>
+
+          {/* Active Module Indicator Chip */}
+          <button
+            onClick={() => setShowMenuDrawer(true)}
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer text-xs"
+            title="Click to Switch Module"
+          >
+            <span className="text-amber-400 text-xs">{currentModule.icon}</span>
+            <span className="font-extrabold text-slate-100 text-[11px] md:text-xs">
+              {currentModule.label}
+            </span>
+            <span className="text-[9px] text-slate-500 font-bold ml-0.5">▼</span>
+          </button>
         </div>
 
         {/* Right: Location Chip & Settings */}
@@ -256,6 +384,126 @@ export default function HeaderNav() {
           </button>
         </div>
       </div>
+
+      {/* 🧭 SLIDE-OVER LEFT NAVIGATION DRAWER (via Portal) */}
+      {mounted && showMenuDrawer && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-stretch bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+          {/* Backdrop Click */}
+          <div
+            className="fixed inset-0"
+            onClick={() => setShowMenuDrawer(false)}
+          ></div>
+
+          {/* Left Drawer Panel */}
+          <div className="relative z-10 glass-panel bg-slate-950/98 border-r border-slate-800 w-full max-w-md h-full p-5 overflow-y-auto space-y-5 shadow-2xl flex flex-col justify-between animate-in slide-in-from-left duration-250 custom-scrollbar">
+            <div className="space-y-4">
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-300 flex items-center justify-center text-base shadow-lg shadow-amber-500/20">
+                    ☸
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-slate-100 uppercase tracking-wider">
+                      Vedic Sky Jyotish Modules
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      Select astrological tool or calculation suite
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowMenuDrawer(false)}
+                  className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-all cursor-pointer"
+                  title="Close Menu"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Categorized Module List */}
+              <div className="space-y-4">
+                {ALL_MODULES.map((group) => (
+                  <div key={group.category} className="space-y-1.5">
+                    <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider block px-1">
+                      {group.category}
+                    </span>
+
+                    <div className="grid grid-cols-1 gap-1.5">
+                      {group.items.map((item) => {
+                        const isActive = viewMode === item.mode;
+                        return (
+                          <button
+                            key={item.mode}
+                            onClick={() => {
+                              setViewMode(item.mode);
+                              setShowMenuDrawer(false);
+                            }}
+                            className={`w-full p-2.5 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3 group ${
+                              isActive
+                                ? "bg-amber-500/15 border-amber-400 ring-1 ring-amber-400 shadow-lg"
+                                : "bg-slate-900/60 hover:bg-slate-900 border-slate-800/80 hover:border-slate-700"
+                            }`}
+                          >
+                            <span className="text-xl mt-0.5 group-hover:scale-110 transition-transform">
+                              {item.icon}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 truncate">
+                                  <span className={`font-black text-xs truncate ${isActive ? "text-amber-300" : "text-slate-100"}`}>
+                                    {item.label}
+                                  </span>
+                                  {item.badge && (
+                                    <span className="text-[8.5px] font-extrabold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                      {item.badge}
+                                    </span>
+                                  )}
+                                </div>
+                                {isActive && (
+                                  <span className="text-[9px] font-black text-amber-400 uppercase tracking-tight">
+                                    ACTIVE
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[10px] text-amber-400/80 font-medium">
+                                {item.hindiLabel}
+                              </div>
+                              <p className="text-[10px] text-slate-400 line-clamp-1 mt-0.5">
+                                {item.desc}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Drawer Footer Settings */}
+            <div className="pt-3 border-t border-slate-800 space-y-2">
+              <div className="flex items-center justify-between text-[11px] text-slate-400">
+                <span>Current Ayanamsha:</span>
+                <span className="text-amber-300 font-bold">{ayanamsha}</span>
+              </div>
+              <button
+                onClick={() => {
+                  setShowMenuDrawer(false);
+                  setShowSettingsDrawer(true);
+                }}
+                className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>⚙️</span>
+                <span>Open Full Jyotish Settings</span>
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Slide-out Mobile Settings Drawer Modal via Portal */}
       {mounted && showSettingsDrawer && createPortal(
