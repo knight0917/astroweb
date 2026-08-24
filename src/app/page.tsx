@@ -5,29 +5,75 @@ import dynamic from "next/dynamic";
 import HeaderNav from "../components/HeaderNav";
 import KundliChart from "../components/KundliChart";
 import PositionsTable from "../components/PositionsTable";
-import AshtakavargaView from "../components/AshtakavargaView";
-import NumerologyView from "../components/NumerologyView";
-import TithiBirthdayView from "../components/TithiBirthdayView";
-import TithiCalendarView from "../components/TithiCalendarView";
-import ShodashavargaView from "../components/ShodashavargaView";
-import ShadbalaView from "../components/ShadbalaView";
-import BhavaBalaView from "../components/BhavaBalaView";
 import TimeTravelSlider from "../components/TimeTravelSlider";
-import EntityDetailModal from "../components/EntityDetailModal";
 import MobileBottomNav from "../components/MobileBottomNav";
 import { useAstroStore } from "../store/useAstroStore";
 
-// Dynamically import 3D WebGL SkyDome with SSR disabled to prevent webpack-runtime canvas errors
+// Reusable Loading Skeleton for Secondary Modules
+function ModuleLoadingSkeleton({ title }: { title: string }) {
+  return (
+    <div className="w-full min-h-[420px] rounded-3xl bg-slate-950/80 border border-slate-800/80 p-8 flex flex-col items-center justify-center gap-4 animate-pulse shadow-xl">
+      <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-xl text-amber-400">
+        ☸
+      </div>
+      <div className="space-y-1.5 text-center">
+        <h4 className="font-extrabold text-sm text-slate-200 uppercase tracking-wider">
+          Loading {title}...
+        </h4>
+        <p className="text-xs text-slate-500 font-mono">
+          Streaming high-precision computational module
+        </p>
+      </div>
+      <div className="w-36 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+        <div className="w-full h-full bg-gradient-to-r from-amber-500 to-yellow-300 animate-indeterminate"></div>
+      </div>
+    </div>
+  );
+}
+
+// Dynamically import all secondary modules with priority splitting (loads only when user switches to them)
 const SkyDome = dynamic(() => import("../components/SkyDome"), {
   ssr: false,
-  loading: () => (
-    <div className="w-full h-full min-h-[480px] rounded-2xl bg-slate-950 border border-slate-800 flex flex-col items-center justify-center gap-3 text-amber-400">
-      <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-      <span className="text-xs font-bold font-mono tracking-wider text-slate-300">
-        INITIALIZING CELESTIAL WEBGL DOME...
-      </span>
-    </div>
-  ),
+  loading: () => <ModuleLoadingSkeleton title="3D Celestial WebGL Dome" />,
+});
+
+const TithiCalendarView = dynamic(() => import("../components/TithiCalendarView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Vedic Tithi Calendar & Festival Panchanga" />,
+});
+
+const ShodashavargaView = dynamic(() => import("../components/ShodashavargaView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Shodashavarga (16 Divisional Charts)" />,
+});
+
+const ShadbalaView = dynamic(() => import("../components/ShadbalaView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Parashari Shadbala (6-Fold Planetary Strength)" />,
+});
+
+const BhavaBalaView = dynamic(() => import("../components/BhavaBalaView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Bhava Bala (12 House Strengths)" />,
+});
+
+const AshtakavargaView = dynamic(() => import("../components/AshtakavargaView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Ashtakavarga Matrix Suite" />,
+});
+
+const NumerologyView = dynamic(() => import("../components/NumerologyView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Vedic & Chaldean Numerology Suite" />,
+});
+
+const TithiBirthdayView = dynamic(() => import("../components/TithiBirthdayView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Vedic Tithi Birthday & Pravesha" />,
+});
+
+const EntityDetailModal = dynamic(() => import("../components/EntityDetailModal"), {
+  ssr: false,
 });
 
 export default function HomePage() {

@@ -22,39 +22,43 @@ export default function KundliChart() {
   const ascLon = ephemeris.ascendant.siderealLongitude;
   const ascRashiIndex = Math.floor(ascLon / 30); // 0 = Mesha, ..., 11 = Meena
 
-  // Map each house (1..12) to the list of planets in it
-  const houseOccupants: Record<
-    number,
-    { id: string; symbol: string; name: string; isRetro?: boolean; isUpagraha?: boolean; deg: number; karakaCode?: KarakaCode }[]
-  > = {};
-  for (let i = 1; i <= 12; i++) houseOccupants[i] = [];
+  // Map each house (1..12) to the list of planets in it (memoized)
+  const houseOccupants = useMemo(() => {
+    const map: Record<
+      number,
+      { id: string; symbol: string; name: string; isRetro?: boolean; isUpagraha?: boolean; deg: number; karakaCode?: KarakaCode }[]
+    > = {};
+    for (let i = 1; i <= 12; i++) map[i] = [];
 
-  // Add planets
-  Object.values(ephemeris.planets).forEach((p) => {
-    if (!showModernPlanets && p.isModernPlanet) return;
-    const karaka = jaimini.planetToKaraka[p.id];
-    houseOccupants[p.house].push({
-      id: p.id,
-      symbol: p.symbol,
-      name: p.name.substring(0, 2),
-      isRetro: p.isRetrograde,
-      deg: p.siderealLongitude % 30,
-      karakaCode: karaka?.code,
-    });
-  });
-
-  // Add Upagrahas if enabled
-  if (showUpagrahas) {
-    Object.values(ephemeris.upagrahas).forEach((u) => {
-      houseOccupants[u.house].push({
-        id: u.id,
-        symbol: "✦",
-        name: u.name.substring(0, 2),
-        isUpagraha: true,
-        deg: u.siderealLongitude % 30,
+    // Add planets
+    Object.values(ephemeris.planets).forEach((p) => {
+      if (!showModernPlanets && p.isModernPlanet) return;
+      const karaka = jaimini.planetToKaraka[p.id];
+      map[p.house].push({
+        id: p.id,
+        symbol: p.symbol,
+        name: p.name.substring(0, 2),
+        isRetro: p.isRetrograde,
+        deg: p.siderealLongitude % 30,
+        karakaCode: karaka?.code,
       });
     });
-  }
+
+    // Add Upagrahas if enabled
+    if (showUpagrahas) {
+      Object.values(ephemeris.upagrahas).forEach((u) => {
+        map[u.house].push({
+          id: u.id,
+          symbol: "✦",
+          name: u.name.substring(0, 2),
+          isUpagraha: true,
+          deg: u.siderealLongitude % 30,
+        });
+      });
+    }
+
+    return map;
+  }, [ephemeris, showModernPlanets, showUpagrahas, jaimini]);
 
   // Helper to get Rashi number (1 to 12) for a given House in North Indian chart
   const getNorthRashiNum = (houseNum: number) => {

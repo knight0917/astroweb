@@ -1114,7 +1114,15 @@ export default function SkyDome() {
       {/* 3D WebGL Canvas */}
       <Canvas
         camera={{ position: [0, 25, 45], fov: 65 }}
-        gl={{ antialias: true, alpha: false }}
+        dpr={[1, 1.5]}
+        performance={{ min: 0.5 }}
+        gl={{
+          antialias: false,
+          alpha: false,
+          powerPreference: "high-performance",
+          depth: true,
+          stencil: false,
+        }}
         className="w-full h-full cursor-grab active:cursor-grabbing"
       >
         <SkyScene fov={fov} showAspectRays={showAspectRays} />
