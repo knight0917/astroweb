@@ -175,6 +175,7 @@ export default function HeaderNav() {
             { mode: "ashtakavarga" as ViewMode, label: "📊 Ashtakavarga" },
             { mode: "numerology" as ViewMode, label: "🔢 Numerology" },
             { mode: "tithi-birthday" as ViewMode, label: "🎂 Tithi Birthday" },
+            { mode: "tithi-calendar" as ViewMode, label: "📅 Tithi Calendar" },
             { mode: "3d" as ViewMode, label: "🪐 3D Dome" },
             { mode: "table" as ViewMode, label: "📋 Ephemeris" },
           ].map((item) => (

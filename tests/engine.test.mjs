@@ -377,3 +377,48 @@ test("Classical Jaimini Chara Karakas (AK to DK) Verification", async () => {
   assert.equal(jaimini.darakaraka.planetId, "Venus", "Venus must be Darakaraka (DK)");
   assert.equal(jaimini.amatyakaraka.planetId, "Moon", "Moon must be Amatyakaraka (AmK)");
 });
+
+test("Classical Vedic Tithi & Panchanga Calendar Suite Verification", async () => {
+  const { getMonthlyTithiCalendar } = await import("../src/engine/tithiCalendar.ts");
+
+  const location = {
+    cityName: "Varanasi",
+    country: "India",
+    latitude: 25.3176,
+    longitude: 82.9739,
+    timezoneOffsetHours: 5.5,
+  };
+
+  // 1. Verify August 2026 calendar
+  const calAug2026 = getMonthlyTithiCalendar(2026, 8, location);
+  assert.equal(calAug2026.year, 2026);
+  assert.equal(calAug2026.month, 8);
+  assert.equal(calAug2026.totalDays, 31);
+  assert.equal(calAug2026.days.length, 31);
+
+  // 2. Verify all days have complete Panchanga 5 limbs
+  for (const day of calAug2026.days) {
+    assert.ok(day.dayOfMonth >= 1 && day.dayOfMonth <= 31);
+    assert.ok(day.tithi.name, "Tithi name must be present");
+    assert.ok(day.nakshatra.name, "Nakshatra name must be present");
+    assert.ok(day.yoga.name, "Yoga name must be present");
+    assert.ok(day.karana.name, "Karana name must be present");
+    assert.ok(day.tithi.moonPhaseEmoji, "Moon phase emoji must be present");
+    assert.ok(day.tithi.illuminationPercent >= 0 && day.tithi.illuminationPercent <= 100);
+  }
+
+  // 3. Verify key Vrats and Festivals in August 2026
+  assert.ok(calAug2026.ekadashiDates.length >= 2, "Must identify at least 2 Ekadashis per month");
+  assert.ok(calAug2026.pradoshDates.length >= 1, "Must identify Pradosh dates");
+  assert.ok(calAug2026.majorFestivals.length > 0, "Must detect auspicious festivals");
+
+  const festivalIds = calAug2026.majorFestivals.map((f) => f.festival.id);
+  assert.ok(
+    festivalIds.some((id) => id.includes("ekadashi")),
+    "Ekadashi vrat must be present in festivals list"
+  );
+  assert.ok(
+    festivalIds.some((id) => id.includes("nag-panchami")),
+    "Nag Panchami must be detected in Shravana Shukla Panchami"
+  );
+});

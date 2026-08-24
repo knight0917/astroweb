@@ -9,7 +9,7 @@ import {
 import { POPULAR_CITIES } from "../engine/constants";
 import { calculateVedicEphemeris } from "../engine/ephemeris";
 
-export type ViewMode = "3d" | "kundli-north" | "ashtakavarga" | "numerology" | "tithi-birthday" | "shodashavarga" | "shadbala" | "bhavabala" | "table" | "dual";
+export type ViewMode = "3d" | "kundli-north" | "ashtakavarga" | "numerology" | "tithi-birthday" | "tithi-calendar" | "shodashavarga" | "shadbala" | "bhavabala" | "table" | "dual";
 export type SkyViewType = "ecliptic" | "horizontal";
 
 interface AstroState {

@@ -8,6 +8,7 @@ import PositionsTable from "../components/PositionsTable";
 import AshtakavargaView from "../components/AshtakavargaView";
 import NumerologyView from "../components/NumerologyView";
 import TithiBirthdayView from "../components/TithiBirthdayView";
+import TithiCalendarView from "../components/TithiCalendarView";
 import ShodashavargaView from "../components/ShodashavargaView";
 import ShadbalaView from "../components/ShadbalaView";
 import BhavaBalaView from "../components/BhavaBalaView";
@@ -89,6 +90,12 @@ export default function HomePage() {
         {viewMode === "tithi-birthday" && (
           <div className="w-full">
             <TithiBirthdayView />
+          </div>
+        )}
+
+        {viewMode === "tithi-calendar" && (
+          <div className="w-full">
+            <TithiCalendarView />
           </div>
         )}
 

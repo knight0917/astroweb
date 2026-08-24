@@ -24,6 +24,7 @@ export default function MobileBottomNav() {
     { mode: "3d", label: "3D Celestial Dome", icon: "🪐", desc: "Interactive WebGL Sky & Star Dome" },
     { mode: "ashtakavarga", label: "Ashtakavarga Suite", icon: "📊", desc: "Sarva & Bhinna 8-Grid Charts" },
     { mode: "numerology", label: "Vedic Numerology", icon: "🔢", desc: "Mulank, Bhagyank & Lo Shu Grid" },
+    { mode: "tithi-calendar", label: "Tithi Calendar", icon: "📅", desc: "Daily Tithi, Moon Phases & Festivals" },
     { mode: "tithi-birthday", label: "Tithi Birthday", icon: "🎂", desc: "Tithi Pravesha & Janmadin Vidhi" },
     { mode: "table", label: "Full Ephemeris Table", icon: "📋", desc: "Sidereal Degrees & Nakshatras" },
     { mode: "dual", label: "Dual 3D + Chart", icon: "🔲", desc: "Split-Screen Dome and Kundli" },
