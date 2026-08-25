@@ -3,21 +3,9 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { calculateTithiBirthday, TithiBirthdayResult } from "../engine/tithiBirthday";
-import { POPULAR_CITIES } from "../engine/constants";
-import { GeoLocation } from "../engine/types";
 
 export default function TithiBirthdayView() {
-  const { currentDate, location, ayanamsha, setDate } = useAstroStore();
-
-  // Local Birth Input States (Default: 25 May 1998 12:00 PM)
-  const [birthYear, setBirthYear] = useState("1998");
-  const [birthMonth, setBirthMonth] = useState("5");
-  const [birthDay, setBirthDay] = useState("25");
-  const [birthHour, setBirthHour] = useState("12");
-  const [birthMinute, setBirthMinute] = useState("00");
-
-  const [selectedCityName, setSelectedCityName] = useState(location.cityName);
-  const [activeLocation, setActiveLocation] = useState<GeoLocation>(location);
+  const { currentDate, location, ayanamsha } = useAstroStore();
 
   // Live countdown ticker
   const [now, setNow] = useState(new Date());
@@ -26,45 +14,28 @@ export default function TithiBirthdayView() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleCityChange = (cityName: string) => {
-    setSelectedCityName(cityName);
-    const found = POPULAR_CITIES.find((c) => c.cityName === cityName);
-    if (found) {
-      setActiveLocation(found);
-    }
-  };
-
-  const parsedBirthDate = useMemo(() => {
-    const y = parseInt(birthYear, 10) || 1998;
-    const m = (parseInt(birthMonth, 10) || 1) - 1;
-    const d = parseInt(birthDay, 10) || 25;
-    const h = parseInt(birthHour, 10) || 12;
-    const min = parseInt(birthMinute, 10) || 0;
-
-    const tzMs = activeLocation.timezoneOffsetHours * 3600 * 1000;
-    const utcMs = Date.UTC(y, m, d, h, min, 0);
-    return new Date(utcMs - tzMs);
-  }, [birthYear, birthMonth, birthDay, birthHour, birthMinute, activeLocation]);
-
+  // Calculate Vedic Tithi Birthday directly from the global active Birth Details
   const result: TithiBirthdayResult = useMemo(() => {
-    return calculateTithiBirthday(parsedBirthDate, activeLocation, ayanamsha, now);
-  }, [parsedBirthDate, activeLocation, ayanamsha, now]);
+    return calculateTithiBirthday(currentDate, location, ayanamsha, now);
+  }, [currentDate, location, ayanamsha, now]);
 
-  const MONTH_NAMES = [
-    "Jan (1)", "Feb (2)", "Mar (3)", "Apr (4)", "May (5)", "Jun (6)",
-    "Jul (7)", "Aug (8)", "Sep (9)", "Oct (10)", "Nov (11)", "Dec (12)"
-  ];
-
-  const handleUseCurrentTrackerDate = () => {
-    const tzDate = new Date(currentDate.getTime() + location.timezoneOffsetHours * 3600 * 1000);
-    setBirthYear(tzDate.getUTCFullYear().toString());
-    setBirthMonth((tzDate.getUTCMonth() + 1).toString());
-    setBirthDay(tzDate.getUTCDate().toString());
-    setBirthHour(tzDate.getUTCHours().toString().padStart(2, "0"));
-    setBirthMinute(tzDate.getUTCMinutes().toString().padStart(2, "0"));
-    setActiveLocation(location);
-    setSelectedCityName(location.cityName);
-  };
+  // Formatted local date & time for the active birth profile
+  const tzMs = location.timezoneOffsetHours * 3600 * 1000;
+  const localBirthDate = new Date(currentDate.getTime() + tzMs);
+  const formattedBirthDate = localBirthDate.toLocaleDateString("en-US", {
+    weekday: "short",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+  const formattedBirthTime = localBirthDate.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZone: "UTC",
+  });
 
   // Countdown calculations
   const nextTargetMs = result.nextBirthday.exactMoment.getTime();
@@ -86,125 +57,88 @@ export default function TithiBirthdayView() {
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Calculate your authentic Vedic Birthday based on recurring Lunar Month (Masa), Paksha, and Tithi
+            Authentic Vedic Birthday calculated on recurring Lunar Month (Masa), Paksha, and exact Solar-Lunar Tithi angle
           </p>
         </div>
 
-        <button
-          onClick={handleUseCurrentTrackerDate}
-          className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-amber-500/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1.5 shadow"
-        >
-          <span>⏳ Use Active Tracker Date</span>
-        </button>
+        <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-300">
+          <span>✨</span>
+          <span>Synced with Active Birth Profile</span>
+        </div>
       </div>
 
-      {/* Main Grid: Left Birth Input Form, Right Hero Countdown */}
+      {/* Main Grid: Left Birth Profile Summary, Right Hero Countdown */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Birth Details Input Form (5 cols) */}
+        {/* Left Column: Active Birth Profile & Vedic Tithi Details (5 cols) */}
         <div className="lg:col-span-5 glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="font-extrabold text-sm text-slate-100 uppercase tracking-wider flex items-center gap-2">
-              <span>📅</span>
-              <span>Enter Birth Details</span>
-            </h3>
-            <span className="text-[10px] text-amber-400 font-mono font-bold">Vedic Epoch</span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">👤</span>
+              <div>
+                <h3 className="font-extrabold text-sm text-slate-100 uppercase tracking-wider">
+                  Active Birth Profile
+                </h3>
+                <p className="text-[10px] text-slate-400">
+                  Entered in the top control bar
+                </p>
+              </div>
+            </div>
+            <span className="text-[10.5px] text-amber-400 font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+              Vedic Epoch
+            </span>
           </div>
 
-          {/* Date Picker Grid */}
-          <div className="space-y-3">
-            <div>
-              <span className="text-[10px] font-bold text-slate-400 block mb-1">DATE OF BIRTH</span>
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <span className="text-[8px] text-slate-500 font-bold block mb-0.5">DAY</span>
-                  <input
-                    type="number"
-                    min="1"
-                    max="31"
-                    value={birthDay}
-                    onChange={(e) => setBirthDay(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-2 text-sm text-center text-slate-100 font-mono font-bold"
-                  />
-                </div>
-                <div>
-                  <span className="text-[8px] text-slate-500 font-bold block mb-0.5">MONTH</span>
-                  <select
-                    value={birthMonth}
-                    onChange={(e) => setBirthMonth(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-2 text-xs text-slate-100 font-bold"
-                  >
-                    {MONTH_NAMES.map((name, i) => (
-                      <option key={name} value={(i + 1).toString()}>
-                        {name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <span className="text-[8px] text-slate-500 font-bold block mb-0.5">YEAR</span>
-                  <input
-                    type="number"
-                    value={birthYear}
-                    onChange={(e) => setBirthYear(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-2 text-sm text-center text-amber-300 font-mono font-bold"
-                  />
-                </div>
+          {/* Quick Active Birth Coordinates & Time Box */}
+          <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 space-y-2.5 text-xs">
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-slate-400 flex items-center gap-1">
+                <span>📍</span>
+                <span>Birth Place:</span>
+              </span>
+              <div className="text-right">
+                <span className="font-extrabold text-slate-100 block">
+                  {location.cityName}{location.country ? `, ${location.country}` : ""}
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono block">
+                  {Math.abs(location.latitude).toFixed(2)}° {location.latitude >= 0 ? "N" : "S"},{" "}
+                  {Math.abs(location.longitude).toFixed(2)}° {location.longitude >= 0 ? "E" : "W"} (UTC
+                  {location.timezoneOffsetHours >= 0
+                    ? `+${location.timezoneOffsetHours}`
+                    : location.timezoneOffsetHours}
+                  )
+                </span>
               </div>
             </div>
 
-            {/* Time Picker */}
-            <div>
-              <span className="text-[10px] font-bold text-slate-400 block mb-1">TIME OF BIRTH (24-HOUR)</span>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <span className="text-[8px] text-slate-500 font-bold block mb-0.5">HOURS (00-23)</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max="23"
-                    value={birthHour}
-                    onChange={(e) => setBirthHour(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-2 text-sm text-center text-slate-100 font-mono font-bold"
-                  />
-                </div>
-                <div>
-                  <span className="text-[8px] text-slate-500 font-bold block mb-0.5">MINUTES (00-59)</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={birthMinute}
-                    onChange={(e) => setBirthMinute(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-2 text-sm text-center text-slate-100 font-mono font-bold"
-                  />
-                </div>
-              </div>
+            <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+              <span className="text-slate-400 flex items-center gap-1">
+                <span>📅</span>
+                <span>Birth Date:</span>
+              </span>
+              <span className="font-extrabold text-amber-300 font-mono">
+                {formattedBirthDate}
+              </span>
             </div>
 
-            {/* Place Selector */}
-            <div>
-              <span className="text-[10px] font-bold text-slate-400 block mb-1">BIRTH PLACE / CITY</span>
-              <select
-                value={selectedCityName}
-                onChange={(e) => handleCityChange(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-2 text-xs text-slate-100 font-bold"
-              >
-                {POPULAR_CITIES.map((c) => (
-                  <option key={c.cityName} value={c.cityName}>
-                    📍 {c.cityName} ({c.country}) • UTC{c.timezoneOffsetHours >= 0 ? `+${c.timezoneOffsetHours}` : c.timezoneOffsetHours}
-                  </option>
-                ))}
-              </select>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400 flex items-center gap-1">
+                <span>🕒</span>
+                <span>Birth Time:</span>
+              </span>
+              <span className="font-extrabold text-slate-200 font-mono">
+                {formattedBirthTime}
+              </span>
             </div>
           </div>
 
-          {/* Calculated Birth Tithi Details Card */}
-          <div className="pt-3 border-t border-slate-800/80 space-y-2.5">
-            <span className="text-[9px] font-extrabold text-amber-400 uppercase tracking-wider block">
-              🌙 Your Vedic Birth Tithi Details
+          {/* Calculated Vedic Birth Tithi Card */}
+          <div className="pt-2 space-y-2.5">
+            <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider block flex items-center gap-1.5">
+              <span>🌙</span>
+              <span>Your Vedic Janma Tithi Details</span>
             </span>
 
-            <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-2 text-xs">
+            <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 space-y-2.5 text-xs">
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Vedic Lunar Month:</span>
                 <span className="font-bold text-amber-300">
@@ -214,12 +148,13 @@ export default function TithiBirthdayView() {
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Paksha (Fortnight):</span>
                 <span className="font-bold text-slate-100">
-                  {result.birthDetails.paksha} Paksha ({result.birthDetails.paksha === "Shukla" ? "शुक्ल पक्ष / Waxing" : "कृष्ण पक्ष / Waning"})
+                  {result.birthDetails.paksha} Paksha (
+                  {result.birthDetails.paksha === "Shukla" ? "शुक्ल पक्ष / Waxing" : "कृष्ण पक्ष / Waning"})
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Birth Tithi:</span>
-                <span className="font-bold text-emerald-400 font-mono">
+                <span className="font-extrabold text-emerald-400 font-mono">
                   {result.birthDetails.tithiName} (Tithi #{result.birthDetails.tithiIndex})
                 </span>
               </div>
@@ -237,6 +172,10 @@ export default function TithiBirthdayView() {
               </div>
             </div>
           </div>
+
+          <p className="text-[10.5px] text-slate-500 leading-relaxed italic text-center pt-1">
+            💡 To evaluate another person's Vedic Birthday, simply change the Date, Time, or Place in the top bar.
+          </p>
         </div>
 
         {/* Right Column: Next Birthday Hero & Countdown (7 cols) */}
@@ -305,19 +244,25 @@ export default function TithiBirthdayView() {
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Tithi Starts:</span>
                 <span className="font-mono text-slate-200">
-                  {new Date(result.nextBirthday.tithiStart.getTime() + activeLocation.timezoneOffsetHours * 3600 * 1000).toLocaleString("en-US", { timeZone: "UTC" })}
+                  {new Date(
+                    result.nextBirthday.tithiStart.getTime() + location.timezoneOffsetHours * 3600 * 1000
+                  ).toLocaleString("en-US", { timeZone: "UTC" })}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Tithi Ends:</span>
                 <span className="font-mono text-slate-200">
-                  {new Date(result.nextBirthday.tithiEnd.getTime() + activeLocation.timezoneOffsetHours * 3600 * 1000).toLocaleString("en-US", { timeZone: "UTC" })}
+                  {new Date(
+                    result.nextBirthday.tithiEnd.getTime() + location.timezoneOffsetHours * 3600 * 1000
+                  ).toLocaleString("en-US", { timeZone: "UTC" })}
                 </span>
               </div>
               <div className="flex justify-between items-center pt-1 border-t border-slate-800/80">
                 <span className="text-slate-400">Exact Solar-Lunar Return Epoch:</span>
                 <span className="font-mono text-emerald-400 font-bold">
-                  {new Date(result.nextBirthday.exactMoment.getTime() + activeLocation.timezoneOffsetHours * 3600 * 1000).toLocaleString("en-US", { timeZone: "UTC" })}
+                  {new Date(
+                    result.nextBirthday.exactMoment.getTime() + location.timezoneOffsetHours * 3600 * 1000
+                  ).toLocaleString("en-US", { timeZone: "UTC" })}
                 </span>
               </div>
             </div>
@@ -342,7 +287,10 @@ export default function TithiBirthdayView() {
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
                   {result.upcomingBirthdays.map((b, idx) => (
-                    <tr key={b.year} className={`hover:bg-slate-900/50 ${idx === 0 ? "bg-amber-500/10 font-bold" : ""}`}>
+                    <tr
+                      key={b.year}
+                      className={`hover:bg-slate-900/50 ${idx === 0 ? "bg-amber-500/10 font-bold" : ""}`}
+                    >
                       <td className="p-2.5 text-amber-400 font-extrabold">{b.year}</td>
                       <td className="p-2.5 text-slate-100">{b.formattedDate}</td>
                       <td className="p-2.5 text-slate-300">
