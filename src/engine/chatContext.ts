@@ -40,24 +40,24 @@ export function buildAstroDossier(
   const d9Summary: string[] = [];
   d9Chart.entities.forEach((e) => {
     if (["Uranus", "Neptune", "Pluto"].includes(e.id)) return;
-    d9Summary.push(`${e.name}: ${e.rashiName} (House ${e.house})`);
+    d9Summary.push(`${e.name}: ${e.vargaRashi.englishName} (House ${e.house})`);
   });
 
   const d10Summary: string[] = [];
   d10Chart.entities.forEach((e) => {
     if (["Uranus", "Neptune", "Pluto"].includes(e.id)) return;
-    d10Summary.push(`${e.name}: ${e.rashiName} (House ${e.house})`);
+    d10Summary.push(`${e.name}: ${e.vargaRashi.englishName} (House ${e.house})`);
   });
 
   // 4. Shadbala Planetary Strengths
   let shadbalaSummary = "Shadbala calculated.";
   try {
     const shadbalaResult = calculateShadbala(natalEphemeris);
-    const sorted = [...shadbalaResult.planets].sort((a, b) => b.totalRupas - a.totalRupas);
+    const sorted = Object.values(shadbalaResult.planets).sort((a, b) => b.totalRupas - a.totalRupas);
     shadbalaSummary = sorted
       .map(
         (p) =>
-          `- ${p.name}: ${p.totalRupas.toFixed(2)} Rupas (${p.strengthPercentage.toFixed(0)}% req) • ${p.strengthRating}`
+          `- ${p.name}: ${p.totalRupas.toFixed(2)} Rupas (${p.percentageEfficiency.toFixed(0)}% req) • ${p.isBalavan ? "Strong (बलवान)" : "Moderate / Weak"}`
       )
       .join("\n");
   } catch (_) {}
@@ -80,7 +80,7 @@ export function buildAstroDossier(
   let ashtakavargaSummary = "";
   try {
     const av = calculateAshtakavarga(natalEphemeris);
-    ashtakavargaSummary = `SAV Points in Houses -> 1st (Tanu): ${av.sarvashtakavarga[ascRashiIdx]}, 2nd (Dhana): ${av.sarvashtakavarga[(ascRashiIdx + 1) % 12]}, 4th (Sukha): ${av.sarvashtakavarga[(ascRashiIdx + 3) % 12]}, 7th (Kalatra): ${av.sarvashtakavarga[(ascRashiIdx + 6) % 12]}, 9th (Bhagya): ${av.sarvashtakavarga[(ascRashiIdx + 8) % 12]}, 10th (Karma): ${av.sarvashtakavarga[(ascRashiIdx + 9) % 12]}, 11th (Labha): ${av.sarvashtakavarga[(ascRashiIdx + 10) % 12]}`;
+    ashtakavargaSummary = `SAV Points in Houses -> 1st (Tanu): ${av.sarvaHouseBindus[0]}, 2nd (Dhana): ${av.sarvaHouseBindus[1]}, 4th (Sukha): ${av.sarvaHouseBindus[3]}, 7th (Kalatra): ${av.sarvaHouseBindus[6]}, 9th (Bhagya): ${av.sarvaHouseBindus[8]}, 10th (Karma): ${av.sarvaHouseBindus[9]}, 11th (Labha): ${av.sarvaHouseBindus[10]}`;
   } catch (_) {}
 
   // 7. Natal Planetary Positions (D1)
@@ -112,8 +112,8 @@ export function buildAstroDossier(
 ${planetsSummary.join("\n")}
 
 #### 💎 3. DIVISIONAL CHARTS (VARGAS):
-- **D9 Navamsha (Dharma, Marriage & Potential):** Lagna in ${d9Chart.ascendant.rashiName} • Placements: ${d9Summary.join(", ")}
-- **D10 Dashamsha (Career, Profession & Power):** Lagna in ${d10Chart.ascendant.rashiName} • Placements: ${d10Summary.join(", ")}
+- **D9 Navamsha (Dharma, Marriage & Potential):** Lagna in ${d9Chart.ascendant.vargaRashi.englishName} • Placements: ${d9Summary.join(", ")}
+- **D10 Dashamsha (Career, Profession & Power):** Lagna in ${d10Chart.ascendant.vargaRashi.englishName} • Placements: ${d10Summary.join(", ")}
 
 #### ⚖️ 4. JAIMINI CHARA KARAKAS (SOUL & PURPOSE):
 ${jaiminiSummary}
