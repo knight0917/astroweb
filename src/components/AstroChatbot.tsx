@@ -242,6 +242,35 @@ export default function AstroChatbot() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Load user API key from localStorage if available
+  useEffect(() => {
+    const savedKey = localStorage.getItem("vedic_gemini_api_key");
+    if (savedKey) setUserApiKey(savedKey);
+  }, []);
+
+  const handleSaveApiKey = (key: string) => {
+    setUserApiKey(key);
+    localStorage.setItem("vedic_gemini_api_key", key);
+    setShowSettings(false);
+  };
+
+  // Compute live transit ephemeris
+  const transitEphemeris = useMemo(() => {
+    return calculateVedicEphemeris(new Date(), location, ayanamsha, houseSystem, nodeType);
+  }, [location, ayanamsha, houseSystem, nodeType]);
+
+  // Build the complete astrological dossier
+  const astroDossier = useMemo(() => {
+    return buildAstroDossier(natalEphemeris, transitEphemeris, new Date());
+  }, [natalEphemeris, transitEphemeris]);
+
+  // Auto-scroll to bottom of chat
+  useEffect(() => {
+    if (isOpen) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isOpen]);
+
   // Download consultation summary as markdown / text report
   const handleDownloadConsultationReport = () => {
     const ascRashi = natalEphemeris.ascendant.rashi.englishName;
