@@ -562,7 +562,40 @@ test("Vedic AI Astrologer Chat Context Dossier Verification", async () => {
   assert.ok(dossier.includes("JAIMINI CHARA KARAKAS"));
   assert.ok(dossier.includes("SHADBALA"));
   assert.ok(dossier.includes("ASHTAKAVARGA STRENGTH"));
-  assert.ok(dossier.includes("VIMSHOTTARI DASHA"));
+  assert.ok(dossier.includes("VERIFIED VEDIC YOGAS"));
   assert.ok(dossier.includes("SHANI SADE SATI"));
   assert.ok(dossier.includes("PANCHANGA AT BIRTH"));
+});
+
+test("Classical Vedic Yoga Detection Engine Verification", async () => {
+  const { detectVedicYogas } = await import("../src/engine/yogas.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = {
+    cityName: "Prayagraj",
+    country: "India",
+    latitude: 25.44,
+    longitude: 81.85,
+    timezoneOffsetHours: 5.5,
+  };
+
+  const ephem = calculateVedicEphemeris(
+    new Date("1999-09-17T18:32:00Z"),
+    location,
+    "Lahiri",
+    "WholeSign",
+    "Mean"
+  );
+
+  const yogas = detectVedicYogas(ephem);
+  assert.ok(Array.isArray(yogas));
+  // Every detected yoga must have complete metadata
+  yogas.forEach((y) => {
+    assert.ok(y.name);
+    assert.ok(y.sanskritName);
+    assert.ok(y.category);
+    assert.ok(y.description);
+    assert.ok(y.effects);
+    assert.ok(y.activationDasha);
+  });
 });

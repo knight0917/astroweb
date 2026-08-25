@@ -12,6 +12,7 @@ import { calculateShodashavargaChart } from "./shodashavarga";
 import { calculateShadbala } from "./shadbala";
 import { calculateAshtakavarga } from "./ashtakavarga";
 import { calculateJaiminiKarakas } from "./jaimini";
+import { detectVedicYogas } from "./yogas";
 import { RASHI_NAMES } from "./constants";
 
 export function buildAstroDossier(
@@ -96,6 +97,18 @@ export function buildAstroDossier(
     );
   });
 
+  // 8. Mathematically Verified Vedic Yogas (BPHS & Phaladeepika)
+  const detectedYogas = detectVedicYogas(natalEphemeris);
+  const yogasSummary =
+    detectedYogas.length > 0
+      ? detectedYogas
+          .map(
+            (y) =>
+              `- **${y.name} (${y.sanskritName})** [${y.category}]: ${y.description} (Activation: ${y.activationDasha})`
+          )
+          .join("\n")
+      : "- No major Pancha Mahapurusha or Raja/Dhana Yogas mathematically formed in this specific nativity. Assess results strictly via Shadbala strengths and functional house lords.";
+
   const dossier = `
 ### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER:
 - **Date & Time of Birth (UTC):** ${birthDate.toUTCString()}
@@ -111,20 +124,23 @@ export function buildAstroDossier(
 #### 🪐 2. NATAL PLANETARY POSITIONS (D1 KUNDLI HOUSES):
 ${planetsSummary.join("\n")}
 
-#### 💎 3. DIVISIONAL CHARTS (VARGAS):
+#### 📜 3. VERIFIED VEDIC YOGAS FORMED IN THIS CHART:
+${yogasSummary}
+
+#### 💎 4. DIVISIONAL CHARTS (VARGAS):
 - **D9 Navamsha (Dharma, Marriage & Potential):** Lagna in ${d9Chart.ascendant.vargaRashi.englishName} • Placements: ${d9Summary.join(", ")}
 - **D10 Dashamsha (Career, Profession & Power):** Lagna in ${d10Chart.ascendant.vargaRashi.englishName} • Placements: ${d10Summary.join(", ")}
 
-#### ⚖️ 4. JAIMINI CHARA KARAKAS (SOUL & PURPOSE):
+#### ⚖️ 5. JAIMINI CHARA KARAKAS (SOUL & PURPOSE):
 ${jaiminiSummary}
 
-#### ⚡ 5. SHADBALA (PLANETARY STRENGTHS & CAPACITY):
+#### ⚡ 6. SHADBALA (PLANETARY STRENGTHS & CAPACITY):
 ${shadbalaSummary}
 
-#### 📊 6. ASHTAKAVARGA STRENGTH (BENEFIC POINTS):
+#### 📊 7. ASHTAKAVARGA STRENGTH (BENEFIC POINTS):
 ${ashtakavargaSummary}
 
-#### 👑 7. CURRENT VIMSHOTTARI DASHA TIMELINE:
+#### 👑 8. CURRENT VIMSHOTTARI DASHA TIMELINE:
 ${
   activeDasha
     ? `- **Active Mahadasha (MD):** ${activeDasha.mahadasha.name} (${activeDasha.mahadasha.hindiName}) [${activeDasha.mdStart.toLocaleDateString()} to ${activeDasha.mdEnd.toLocaleDateString()}]
@@ -134,7 +150,7 @@ ${
     : "- Dasha calculated."
 }
 
-#### 🪐 8. SHANI SADE SATI & GOCHAR TRANSITS:
+#### 🪐 9. SHANI SADE SATI & GOCHAR TRANSITS:
 - **Sade Sati Status:** ${gochar.sadeSati.statusTitle} (${gochar.sadeSati.phaseName})
 - **Saturn Transit Position:** House ${gochar.sadeSati.houseFromMoon} from Natal Moon in ${gochar.sadeSati.saturnTransitRashi}
 - **Remaining Duration:** ${gochar.sadeSati.remainingDurationFormatted || "N/A"}
@@ -142,7 +158,7 @@ ${gochar.sadeSati.currentPhaseEndFormatted ? `- Current Phase Ends: ${gochar.sad
 ${gochar.sadeSati.totalCompletionFormatted ? `- Total Sade Sati Ends: ${gochar.sadeSati.totalCompletionFormatted}` : ""}
 ${gochar.sadeSati.nextCycleStartFormatted ? `- Next Cycle Begins: ${gochar.sadeSati.nextCycleStartFormatted}` : ""}
 
-#### 📅 9. PANCHANGA AT BIRTH:
+#### 📅 10. PANCHANGA AT BIRTH:
 - **Tithi:** ${natalEphemeris.panchanga.tithi.name} (${natalEphemeris.panchanga.tithi.paksha} Paksha)
 - **Vara (Weekday):** ${natalEphemeris.panchanga.vara.name} (Ruler: ${natalEphemeris.panchanga.vara.lord})
 - **Yoga:** ${natalEphemeris.panchanga.yoga.name}
