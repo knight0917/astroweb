@@ -4,7 +4,7 @@
  * Saravali, and Phaladeepika.
  */
 
-import { EphemerisResult, PlanetPosition } from "./types";
+import { EphemerisResult } from "./types";
 import { RASHI_NAMES } from "./constants";
 
 export interface DetectedYoga {
