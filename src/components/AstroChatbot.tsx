@@ -239,84 +239,8 @@ export default function AstroChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const [userApiKey, setUserApiKey] = useState("");
   const [showSettings, setShowSettings] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Load user API key from localStorage if available
-  useEffect(() => {
-    const savedKey = localStorage.getItem("vedic_gemini_api_key");
-    if (savedKey) setUserApiKey(savedKey);
-  }, []);
-
-  const handleSaveApiKey = (key: string) => {
-    setUserApiKey(key);
-    localStorage.setItem("vedic_gemini_api_key", key);
-    setShowSettings(false);
-  };
-
-  // Compute live transit ephemeris
-  const transitEphemeris = useMemo(() => {
-    return calculateVedicEphemeris(new Date(), location, ayanamsha, houseSystem, nodeType);
-  }, [location, ayanamsha, houseSystem, nodeType]);
-
-  // Build the complete astrological dossier
-  const astroDossier = useMemo(() => {
-    return buildAstroDossier(natalEphemeris, transitEphemeris, new Date());
-  }, [natalEphemeris, transitEphemeris]);
-
-  // Auto-scroll to bottom of chat
-  useEffect(() => {
-    if (isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, isOpen]);
-
-  // Stop speech when modal closes
-  useEffect(() => {
-    if (!isOpen && typeof window !== "undefined" && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      setSpeakingMsgId(null);
-    }
-  }, [isOpen]);
-
-  // Text-To-Speech reader
-  const handleToggleSpeech = (msgId: string, text: string) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-
-    if (isSpeaking && speakingMsgId === msgId) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      setSpeakingMsgId(null);
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-    const cleanText = text.replace(/[*#_`]/g, "");
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-
-    const voices = window.speechSynthesis.getVoices();
-    const hindiVoice = voices.find((v) => v.lang.startsWith("hi") || v.lang.startsWith("en-IN"));
-    if (hindiVoice) utterance.voice = hindiVoice;
-
-    utterance.onend = () => {
-      setIsSpeaking(false);
-      setSpeakingMsgId(null);
-    };
-
-    utterance.onerror = () => {
-      setIsSpeaking(false);
-      setSpeakingMsgId(null);
-    };
-
-    setSpeakingMsgId(msgId);
-    setIsSpeaking(true);
-    window.speechSynthesis.speak(utterance);
-  };
 
   // Download consultation summary as markdown / text report
   const handleDownloadConsultationReport = () => {
@@ -717,29 +641,18 @@ COMMUNICATION TONE & GUIDELINES:
                     {msg.content}
                   </div>
 
-                  {/* Message Action Bar (Voice TTS & Copy) for Assistant Readings */}
+                  {/* Message Action Bar (Copy) for Assistant Readings */}
                   {msg.role === "assistant" && msg.id !== "welcome" && (
-                    <div className="flex items-center justify-end gap-2 pt-2 mt-2 border-t border-slate-800/80 text-[10px]">
-                      <button
-                        onClick={() => handleToggleSpeech(msg.id, msg.content)}
-                        className={`px-2 py-0.5 rounded-lg font-bold flex items-center gap-1 transition-colors cursor-pointer ${
-                          speakingMsgId === msg.id && isSpeaking
-                            ? "bg-amber-500 text-slate-950 animate-pulse"
-                            : "bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white"
-                        }`}
-                        title="Listen to Reading (Audio TTS)"
-                      >
-                        <span>{speakingMsgId === msg.id && isSpeaking ? "⏹ Stop" : "🔊 Listen"}</span>
-                      </button>
-
+                    <div className="flex items-center justify-end pt-1.5 mt-2 border-t border-slate-800/80 text-[10px]">
                       <button
                         onClick={() => {
                           navigator.clipboard.writeText(msg.content);
                         }}
-                        className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                        className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer flex items-center gap-1"
                         title="Copy Reading Text"
                       >
-                        📋 Copy
+                        <span>📋</span>
+                        <span>Copy</span>
                       </button>
                     </div>
                   )}
