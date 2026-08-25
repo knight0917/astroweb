@@ -1,20 +1,24 @@
-# Task: Full Mobile-First Responsive Architecture Overhaul
+# Vedic Astrology AI Chatbot Pro ("Acharya Jyotish AI Pro") Development Tasks
 
-- [x] Phase 1: Global Viewport, Safe-Area & Mobile Shell <!-- id: 1 -->
-  - [x] Add mobile viewport meta & safe-area in `layout.tsx` and `globals.css` <!-- id: 1.1 -->
-  - [x] Create `src/components/MobileBottomNav.tsx` persistent mobile navigation dock <!-- id: 1.2 -->
-  - [x] Refactor `HeaderNav.tsx` with mobile sticky header + Settings Drawer <!-- id: 1.3 -->
+## Phase 1: Astrological Context & Multi-Varga Intelligence (`src/engine/chatContext.ts`)
+- [x] Integrate D9 Navamsha (Dharma/Spouse) and D10 Dashamsha (Career/Status) into the AI Astrological Dossier.
+- [x] Inject Shadbala planetary strength rankings, Ashtakavarga house scores, and Jaimini Karakas (AK, AmK, DK) into the context.
+- [x] Incorporate Jupiter and Saturn transit intersection (Double-Transit event timing principle).
 
-- [x] Phase 2: Core Charts & Time Travel Touch Ergonomics <!-- id: 2 -->
-  - [x] Adapt `TimeTravelSlider.tsx` for compact touch scrubbing & datetime picker <!-- id: 2.1 -->
-  - [x] Optimize `KundliChart.tsx` SVG fluid scaling & multi-planet touch badges <!-- id: 2.2 -->
-  - [x] Optimize `ShodashavargaView.tsx` with snap-scroll 16-Varga pills & mobile tabs <!-- id: 2.3 -->
+## Phase 2: Consultation Categories & Domain Modes (`src/components/AstroChatbot.tsx`)
+- [x] Add Consultation Topic Pills: `[💼 Career & Wealth]`, `[💍 Marriage & Compatibility]`, `[🪐 Sade Sati & Karmic Doshas]`, `[🧘 Health & Vitality]`, `[💎 Gemstone & Mantras]`, `[👶 Education & Children]`.
+- [x] Expand the Quick Question Prompt Bank with 20+ authentic classical inquiries in English and Hindi.
 
-- [x] Phase 3: Strength Systems, Bar Charts & Tables <!-- id: 3 -->
-  - [x] Add horizontal snap carousels and mobile bar scaling to `ShadbalaView.tsx` <!-- id: 3.1 -->
-  - [x] Add horizontal snap carousels and mobile bar scaling to `BhavaBalaView.tsx` <!-- id: 3.2 -->
-  - [x] Add sticky first columns and touch scroll to Ashtakavarga & Numerology <!-- id: 3.3 -->
+## Phase 3: Interactive UI, Timing Gauges & Remedy Cards
+- [x] Render visual Graha & House evidence badges inside chat responses.
+- [x] Render timing indicator pills (Favorable Period / Preparation Period / Caution Period).
+- [x] Add structured Remedy Cards with copyable daily mantra and charity checklists.
 
-- [x] Phase 4: Verification & Deployment <!-- id: 4 -->
-  - [x] Run `npm test` (All 9 test suites passing) <!-- id: 4.1 -->
-  - [x] Commit and push to GitHub repository for Vercel deployment <!-- id: 4.2 -->
+## Phase 4: Voice Speech Audio (TTS) & PDF Consultation Report
+- [x] Implement Speech Synthesis audio reader (`🔊 Listen to Acharya`).
+- [x] Add one-click PDF / Markdown Consultation Summary Export.
+
+## Phase 5: Verification & Multi-Device Testing
+- [x] Add automated test suites in `tests/engine.test.mjs`.
+- [x] Run full build verification (`npx tsc --noEmit` and `npm test`).
+- [x] Push to GitHub repository.

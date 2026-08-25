@@ -554,10 +554,15 @@ test("Vedic AI Astrologer Chat Context Dossier Verification", async () => {
 
   const dossier = buildAstroDossier(natalEphemeris, transitEphemeris, new Date("2026-08-24T00:00:00Z"));
 
-  assert.ok(dossier.includes("NATIVE'S VEDIC ASTROLOGICAL PROFILE"));
+  assert.ok(dossier.includes("NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER"));
   assert.ok(dossier.includes("Ascendant (Lagna"));
   assert.ok(dossier.includes("Moon Sign (Janma Rashi"));
-  assert.ok(dossier.includes("VIMSHOTTARI DASHA STATUS"));
+  assert.ok(dossier.includes("D9 Navamsha"));
+  assert.ok(dossier.includes("D10 Dashamsha"));
+  assert.ok(dossier.includes("JAIMINI CHARA KARAKAS"));
+  assert.ok(dossier.includes("SHADBALA"));
+  assert.ok(dossier.includes("ASHTAKAVARGA STRENGTH"));
+  assert.ok(dossier.includes("VIMSHOTTARI DASHA"));
   assert.ok(dossier.includes("SHANI SADE SATI"));
   assert.ok(dossier.includes("PANCHANGA AT BIRTH"));
 });

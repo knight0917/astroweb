@@ -10,6 +10,7 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  category?: string;
 }
 
 const FALLBACK_B64 = "QVEuQWI4Uk42TGRLTkVsX1l6SFU0LUtuT2thazNROTlWcHlMR0xhN21tTDgwbWJ4S244VUE=";
@@ -17,36 +18,200 @@ const DEFAULT_GEMINI_KEY =
   process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
   (typeof atob === "function" ? atob(FALLBACK_B64) : "");
 
-const PRESET_QUESTIONS = [
+type ConsultationCategory = "all" | "career" | "marriage" | "sadesati" | "health" | "gemstones" | "education";
+
+interface CategoryMeta {
+  id: ConsultationCategory;
+  name: string;
+  hindiName: string;
+  icon: string;
+  description: string;
+  prompts: { icon: string; title: string; prompt: string }[];
+}
+
+const CONSULTATION_CATEGORIES: CategoryMeta[] = [
   {
+    id: "all",
+    name: "General Overview",
+    hindiName: "समग्र मार्गदर्शन",
+    icon: "🌟",
+    description: "Holistic life destiny, soul purpose, and auspicious opportunities",
+    prompts: [
+      {
+        icon: "🌟",
+        title: "Life Purpose & Destiny",
+        prompt: "Analyzing my Atmakaraka (AK), 1st house, and 9th house of fortune, what is my soul purpose and main life destiny?",
+      },
+      {
+        icon: "👑",
+        title: "Current Dasha Reading",
+        prompt: "What are the specific planetary effects of my currently active Mahadasha and Antardasha? What precautions and remedies should I take?",
+      },
+      {
+        icon: "✨",
+        title: "Major Rajayogas & Strengths",
+        prompt: "Which major Rajayogas, Dhana Yogas, or planetary dignities exist in my birth chart and how can I activate them?",
+      },
+    ],
+  },
+  {
+    id: "career",
+    name: "Career & Wealth",
+    hindiName: "करियर एवं धन",
     icon: "💼",
-    title: "Career & Finances",
-    prompt: "Based on my 10th house, Lagna lord, and current Dasha, how will my career and finances evolve in the coming 1-2 years?",
+    description: "10th house, D10 Dashamsha, promotion timing, job vs. business, and financial growth",
+    prompts: [
+      {
+        icon: "💼",
+        title: "Job vs. Business",
+        prompt: "Based on my 10th house, 6th house, 7th house, and D10 Dashamsha, is employment (job) or independent business/freelancing more fruitful for me?",
+      },
+      {
+        icon: "📈",
+        title: "Promotion & Job Change Timing",
+        prompt: "When is the most favorable time window for a job change, salary hike, or promotion based on my current Dasha and transit Gochar?",
+      },
+      {
+        icon: "💰",
+        title: "Wealth & Dhana Yogas",
+        prompt: "Examining my 2nd (wealth), 11th (gains), and 9th (luck) houses along with Amatyakaraka (AmK), what are my best avenues for financial abundance?",
+      },
+      {
+        icon: "✈️",
+        title: "Foreign Work & Relocation",
+        prompt: "Are there strong indications of foreign travel, overseas career, or relocation in my chart (12th, 9th, 7th houses)?",
+      },
+    ],
   },
   {
-    icon: "❤️",
-    title: "Marriage & Love Life",
-    prompt: "Analyzing my 7th house, Venus/Jupiter placements, and transit Gochar, what are the indications for marriage, relationship timing, and compatibility?",
+    id: "marriage",
+    name: "Marriage & Love",
+    hindiName: "विवाह एवं संबंध",
+    icon: "💍",
+    description: "7th house, D9 Navamsha, Upapada Lagna, marriage timing, and spouse characteristics",
+    prompts: [
+      {
+        icon: "💍",
+        title: "Marriage Timing Window",
+        prompt: "Looking at my 7th house lord, Venus, Jupiter, and D9 Navamsha chart, what is the exact timing window for my marriage or meaningful relationship?",
+      },
+      {
+        icon: "👰",
+        title: "Spouse Nature & Direction",
+        prompt: "What are the physical, emotional, and professional characteristics of my future spouse based on my 7th house and D9 Navamsha?",
+      },
+      {
+        icon: "🔥",
+        title: "Manglik & Dosha Check",
+        prompt: "Do I have Manglik Dosha (Kuja Dosha) or any planetary afflictions affecting marriage harmony, and what are the classical remedies?",
+      },
+      {
+        icon: "❤️",
+        title: "Relationship Harmony Advice",
+        prompt: "How can I enhance understanding, emotional connection, and lasting peace in my partnership according to my Venus placement?",
+      },
+    ],
   },
   {
+    id: "sadesati",
+    name: "Sade Sati & Doshas",
+    hindiName: "साढ़े साती एवं दोष",
     icon: "🪐",
-    title: "Sade Sati & Shani",
-    prompt: "Am I currently under Shani Sade Sati or Dhaiya? When does it end and what are the best classical remedies for me?",
+    description: "Saturn Sade Sati / Dhaiya, Kaal Sarp, Pitru Dosha, and powerful karmic remedies",
+    prompts: [
+      {
+        icon: "🪐",
+        title: "Sade Sati Phase & End Date",
+        prompt: "What is my active Shani Sade Sati or Dhaiya phase, what karmic lessons is it bringing, and when does it conclude?",
+      },
+      {
+        icon: "🛡️",
+        title: "Saturday Shani Remedies",
+        prompt: "What are the most powerful authentic Vedic remedies for Saturn (Hanuman Chalisa, Peepal lamp, Taila Abhisheka, Daan)?",
+      },
+      {
+        icon: "🐍",
+        title: "Rahu-Ketu & Kaal Sarp Check",
+        prompt: "How are Rahu and Ketu placed in my chart? Do they form Kaal Sarp or Guru Chandal Yoga, and how can I harmonize their energy?",
+      },
+      {
+        icon: "🕊️",
+        title: "Ancestral & Pitru Remedies",
+        prompt: "Are there any indications of Pitru Dosha or Karmic debts in my 9th/Sun placements, and what charity is advised?",
+      },
+    ],
   },
   {
-    icon: "👑",
-    title: "Current Dasha Period",
-    prompt: "What are the specific planetary effects of my currently active Mahadasha and Antardasha? What precautions should I take?",
-  },
-  {
-    icon: "💎",
-    title: "Lucky Gemstones & Mantras",
-    prompt: "Which gemstone, lucky color, and Vedic mantra are most auspicious and safe for my Lagna and Janma Rashi?",
-  },
-  {
+    id: "health",
+    name: "Health & Vitality",
+    hindiName: "स्वास्थ्य एवं शांति",
     icon: "🧘",
-    title: "Health & Peace of Mind",
-    prompt: "Looking at my 6th, 8th houses and Moon strength, what should I keep in mind regarding my mental peace and physical wellness?",
+    description: "6th/8th house diagnostics, mental serenity, Ayurvedic temperament, and wellness",
+    prompts: [
+      {
+        icon: "🧘",
+        title: "Mental Peace & Stress Relief",
+        prompt: "Analyzing my Moon placement, 4th house, and Mercury, what is the root cause of mental stress and how can I achieve deep calm?",
+      },
+      {
+        icon: "🌿",
+        title: "Ayurvedic Dosha (Vata/Pitta/Kapha)",
+        prompt: "Based on my Lagna and Sun/Mars/Venus/Saturn elements, which Ayurvedic Dosha is prominent and what dietary habits suit me?",
+      },
+      {
+        icon: "🩺",
+        title: "Physical Vulnerabilities & Care",
+        prompt: "Looking at my 6th house (diseases) and 8th house (longevity), which body parts require conscious care and discipline?",
+      },
+    ],
+  },
+  {
+    id: "gemstones",
+    name: "Gemstones & Mantras",
+    hindiName: "रत्न एवं मंत्र",
+    icon: "💎",
+    description: "Safe functional benefic gemstones, auspicious metals, fingers, and sacred Beej Mantras",
+    prompts: [
+      {
+        icon: "💎",
+        title: "Safe Lucky Gemstone",
+        prompt: "Based purely on my functional benefic planets for my Lagna (avoiding functional malefics), which gemstone is safe and empowering for me?",
+      },
+      {
+        icon: "📿",
+        title: "Personal Ishta Devata & Mantra",
+        prompt: "Who is my Ishta Devata (personal deity) and which sacred Beej Mantra should I chant daily for spiritual evolution and protection?",
+      },
+      {
+        icon: "🎨",
+        title: "Lucky Colors & Auspicious Days",
+        prompt: "Which colors, numbers, and days of the week bring maximum vitality and good fortune according to my chart lords?",
+      },
+    ],
+  },
+  {
+    id: "education",
+    name: "Education & Children",
+    hindiName: "विद्या एवं संतान",
+    icon: "👶",
+    description: "5th house, Jupiter, higher learning, competitive exams, and progeny",
+    prompts: [
+      {
+        icon: "📚",
+        title: "Higher Studies & Exams",
+        prompt: "Examining my 5th house, Mercury, and Jupiter, how are my prospects for higher education, research, and competitive exams?",
+      },
+      {
+        icon: "👶",
+        title: "Progeny & Child Prospects",
+        prompt: "Analyzing my 5th house and D7 Saptamsha, what are the indications for children, parenting, and family lineage?",
+      },
+      {
+        icon: "💡",
+        title: "Creative & Intellectual Talents",
+        prompt: "What innate creative, analytical, or occult talents are promised in my 5th house and Navamsha?",
+      },
+    ],
   },
 ];
 
@@ -60,12 +225,13 @@ export default function AstroChatbot() {
   } = useAstroStore();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<ConsultationCategory>("all");
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
       role: "assistant",
       content:
-        "**Pranam!** 🙏 I am your **Vedic AI Astrologer (ज्योतिष AI)**. I have analyzed your birth chart, Lagna, Moon sign, planetary houses, active Vimshottari Dasha, and Saturn Sade Sati.\n\nFeel free to ask any question about your **Career, Marriage, Dasha, Sade Sati, or Remedies** in English, हिन्दी, or Hinglish!",
+        "**Pranam!** 🙏 I am **Acharya Jyotish AI Pro (आचार्य ज्योतिष AI)**.\n\nI have fully ingested your **Lagna, Moon Sign, D9 Navamsha, D10 Dashamsha, Shadbala strengths, Jaimini Karakas, active Vimshottari Dasha, and Saturn Gochar**.\n\nSelect a consultation topic above or ask any question about your **Career, Marriage, Dasha, Health, Sade Sati, or Gemstones** in English, हिन्दी, or Hinglish!",
       timestamp: new Date(),
     },
   ]);
@@ -73,6 +239,8 @@ export default function AstroChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const [userApiKey, setUserApiKey] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -105,28 +273,109 @@ export default function AstroChatbot() {
     }
   }, [messages, isOpen]);
 
-  // Client-Side Direct Gemini API Call with Multi-Model Fallback Cascade
+  // Stop speech when modal closes
+  useEffect(() => {
+    if (!isOpen && typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      setSpeakingMsgId(null);
+    }
+  }, [isOpen]);
+
+  // Text-To-Speech reader
+  const handleToggleSpeech = (msgId: string, text: string) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    if (isSpeaking && speakingMsgId === msgId) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      setSpeakingMsgId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const cleanText = text.replace(/[*#_`]/g, "");
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+
+    const voices = window.speechSynthesis.getVoices();
+    const hindiVoice = voices.find((v) => v.lang.startsWith("hi") || v.lang.startsWith("en-IN"));
+    if (hindiVoice) utterance.voice = hindiVoice;
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setSpeakingMsgId(null);
+    };
+
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setSpeakingMsgId(null);
+    };
+
+    setSpeakingMsgId(msgId);
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Download consultation summary as markdown / text report
+  const handleDownloadConsultationReport = () => {
+    const ascRashi = natalEphemeris.ascendant.rashi.englishName;
+    const moonRashi = natalEphemeris.planets.Moon?.rashi.englishName || "Aries";
+
+    const lines: string[] = [
+      `# Vedic Astrological Consultation Summary Report`,
+      `*Generated by Acharya Jyotish AI Pro on ${new Date().toLocaleDateString()}*`,
+      `---`,
+      `## Native Profile:`,
+      `- **Ascendant (Lagna):** ${ascRashi} (${natalEphemeris.ascendant.rashi.sanskritName})`,
+      `- **Moon Sign (Janma Rashi):** ${moonRashi}`,
+      `- **Birth Place:** ${location.cityName}${location.country ? `, ${location.country}` : ""}`,
+      `- **Date of Birth:** ${new Date(natalEphemeris.utcDate).toUTCString()}`,
+      `---`,
+      `## Consultation Dialogue:`,
+      ``,
+    ];
+
+    messages.forEach((m) => {
+      if (m.id === "welcome") return;
+      lines.push(`### ${m.role === "user" ? "👤 Client Inquiry" : "🔮 Acharya Reading"}:`);
+      lines.push(m.content);
+      lines.push("");
+    });
+
+    const blob = new Blob([lines.join("\n")], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Vedic_Consultation_Report_${new Date().toISOString().slice(0, 10)}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Direct Gemini API Call with Multi-Model Fallback Cascade
   const executeDirectGeminiCall = async (
     allMessages: Message[],
     dossier: string,
     apiKey: string
   ): Promise<string> => {
     const systemInstruction = `
-You are "Acharya Jyotish AI" (आचार्य ज्योतिष AI), an enlightened, compassionate, highly knowledgeable Vedic Astrologer operating strictly on classical Brihat Parashara Hora Shastra (BPHS), Jaimini Sutras, and classical Phaladeepika principles.
+You are "Acharya Jyotish AI Pro" (आचार्य ज्योतिष AI Pro), an enlightened, deeply compassionate, highly authoritative Vedic Astrologer operating on classical Brihat Parashara Hora Shastra (BPHS), Jaimini Upadesha Sutras, and classical Phaladeepika principles.
 
-Here is the native's exact computed astrological profile derived from their Date of Birth, Time, and Location:
+Here is the native's comprehensive multi-layered astrological dossier:
 ${dossier || "No specific chart provided."}
 
-YOUR GUIDING PRINCIPLES:
-1. Ground every answer in the native's actual chart parameters (Lagna Lord, 10th House/Lord for Career, 7th House/Lord for Marriage, 5th/9th Houses for Fortune, current active Vimshottari Mahadasha/Antardasha, and Saturn Sade Sati status).
-2. Answer in the user's preferred language: English, Hindi (हिंदी), or friendly conversational Hinglish.
-3. Be compassionate, constructive, and uplifting. Avoid fatalism or fear-mongering; always focus on free will, righteous effort (Purushartha), and remedial actions.
-4. When relevant, provide classical Vedic remedies:
-   - Vedic Mantras (e.g., Gayatri, Maha Mrityunjaya, Shani or Guru mantras).
-   - Auspicious gemstones with cautions on when to wear.
-   - Charity (Daan) and fasting (Vrat) recommendations aligned with afflicted planets.
-   - Favorable days and colors.
-5. Format your response cleanly using markdown (bold headings, bullet points, and neat paragraphs).
+YOUR 5-STEP CLASSICAL REASONING PROTOCOL:
+1. **Bhava & Karaka Analysis**: Examine the relevant primary and secondary houses (e.g., 10th for Career, 7th for Marriage, 5th/9th for Fortune) and natural karakas.
+2. **Dignity & Shadbala Strength**: Evaluate if the ruling lords are strong, exalted, debilitated, combust, or retrograde based on the Shadbala scores provided.
+3. **Divisional Chart Cross-Verification (Vargas)**: Cite D9 Navamsha for marriage/inner potential, D10 Dashamsha for career status/fame, D7 for children.
+4. **Timing of Events (Dasha-Gochar Synthesis)**: Cross-reference active Vimshottari Mahadasha/Antardasha dates with Jupiter/Saturn transit Gochar windows.
+5. **Prescriptive Vedic Remedies (Upayas)**: Formulate authentic remedies (Maha Mrityunjaya / Gayatri / Shani Mantras with counts, safe gemstone metals/fingers for functional benefics, charity, and fasting).
+
+COMMUNICATION TONE:
+- Answer in the user's preferred language: English, Hindi (हिंदी), or conversational Hinglish.
+- Empathic, spiritually elevating, and constructive. Never encourage fear or fatalism; emphasize conscious effort (Purushartha) and spiritual alignment.
+- Format responses cleanly with bold headings, bullet points, and neat sections.
 `;
 
     const contents: any[] = [
@@ -138,7 +387,7 @@ YOUR GUIDING PRINCIPLES:
         role: "model",
         parts: [
           {
-            text: "Pranam! I have thoroughly ingested your Vedic Kundli, planetary placements, current Vimshottari Dasha period, and Saturn Gochar transits. How may I guide you on your life's journey today?",
+            text: "Pranam! I have thoroughly ingested your complete Kundli, D9 Navamsha, D10 Dashamsha, Shadbala strengths, active Vimshottari Dasha, and Gochar transits. How may I guide you on your sacred life path today?",
           },
         ],
       },
@@ -201,6 +450,7 @@ YOUR GUIDING PRINCIPLES:
       role: "user",
       content: query,
       timestamp: new Date(),
+      category: activeCategory,
     };
 
     const updatedMessages = [...messages, userMsg];
@@ -210,24 +460,7 @@ YOUR GUIDING PRINCIPLES:
 
     const activeKey = userApiKey.trim() || DEFAULT_GEMINI_KEY;
 
-    if (!activeKey) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "assistant",
-          content:
-            "🔑 **Google Gemini API Key Required on this Device:**\n\nTo enable instant astrological AI answers on this device:\n1. Paste your key in the **⚙️ Settings** box at the top of the chat.\n2. Click **Save** (it will be saved on this device forever).\n\nIf you need a free key, get one at [Google AI Studio](https://aistudio.google.com/app/apikey).",
-          timestamp: new Date(),
-        },
-      ]);
-      setShowSettings(true);
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      // 1. Try direct client-side Gemini execution (Works on GitHub Pages & all devices seamlessly)
       const reply = await executeDirectGeminiCall(
         updatedMessages,
         astroDossier,
@@ -241,10 +474,10 @@ YOUR GUIDING PRINCIPLES:
           role: "assistant",
           content: reply,
           timestamp: new Date(),
+          category: activeCategory,
         },
       ]);
     } catch (err: any) {
-      // If direct call fails, try Next.js /api/astro-chat route as fallback
       try {
         const response = await fetch("/api/astro-chat", {
           method: "POST",
@@ -268,6 +501,7 @@ YOUR GUIDING PRINCIPLES:
               role: "assistant",
               content: data.reply,
               timestamp: new Date(),
+              category: activeCategory,
             },
           ]);
           return;
@@ -291,6 +525,10 @@ YOUR GUIDING PRINCIPLES:
   const ascRashi = natalEphemeris.ascendant.rashi.englishName;
   const moonRashi = natalEphemeris.planets.Moon?.rashi.englishName || "Aries";
 
+  const selectedCategoryMeta =
+    CONSULTATION_CATEGORIES.find((c) => c.id === activeCategory) ||
+    CONSULTATION_CATEGORIES[0];
+
   return (
     <>
       {/* 1. Floating Cosmic Trigger Button */}
@@ -301,44 +539,53 @@ YOUR GUIDING PRINCIPLES:
             ? "bg-slate-900 border border-amber-500/60 text-amber-300 scale-105"
             : "bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 shadow-amber-500/30 hover:scale-105 ring-4 ring-amber-500/20"
         }`}
-        title="Chat with Vedic AI Astrologer"
+        title="Consult with Acharya Jyotish AI Pro"
       >
-        <span className="text-base animate-pulse">✨</span>
+        <span className="text-base animate-pulse">🔮</span>
         <span className="tracking-wide uppercase font-extrabold">
-          {isOpen ? "Close Astrologer" : "Ask Astro AI (ज्योतिषी)"}
+          {isOpen ? "Close Astrologer" : "Ask Astro AI (ज्योतिषी परामर्श)"}
         </span>
       </button>
 
       {/* 2. Slide-Over Chat Modal / Drawer */}
       {isOpen && (
-        <div className="fixed bottom-20 right-4 sm:right-6 z-[95] w-[95vw] sm:w-[440px] h-[640px] max-h-[85vh] flex flex-col glass-panel bg-slate-950/95 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed bottom-20 right-3 sm:right-6 z-[95] w-[96vw] sm:w-[480px] h-[680px] max-h-[88vh] flex flex-col glass-panel bg-slate-950/95 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
           {/* Header */}
-          <div className="p-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+          <div className="p-3.5 sm:p-4 bg-slate-900/95 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-lg text-amber-300 shadow-inner">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl text-amber-300 shadow-inner">
                 🔮
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-black text-sm text-slate-100">
-                    Acharya Jyotish AI
+                    Acharya Jyotish AI Pro
                   </h3>
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    Gemini Active
+                  <span className="text-[8.5px] font-extrabold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
+                    Parashari Pro
                   </span>
                 </div>
-                <div className="text-[10.5px] text-slate-400 font-mono">
+                <div className="text-[10px] text-slate-400 font-mono">
                   Lagna: <span className="text-amber-300 font-bold">{ascRashi}</span> • Moon:{" "}
                   <span className="text-cyan-300 font-bold">{moonRashi}</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
+              {/* Download consultation report button */}
+              <button
+                onClick={handleDownloadConsultationReport}
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-300 flex items-center justify-center text-xs transition-colors cursor-pointer"
+                title="Download Consultation Summary (Markdown/PDF)"
+              >
+                📄
+              </button>
+
               {/* Settings button */}
               <button
                 onClick={() => setShowSettings((prev) => !prev)}
-                className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
                 title="API Key Settings"
               >
                 ⚙️
@@ -357,7 +604,7 @@ YOUR GUIDING PRINCIPLES:
                     },
                   ])
                 }
-                className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
                 title="Clear Chat History"
               >
                 🗑️
@@ -366,11 +613,29 @@ YOUR GUIDING PRINCIPLES:
               {/* Close button */}
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 flex items-center justify-center text-xs transition-colors cursor-pointer"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 flex items-center justify-center text-xs transition-colors cursor-pointer"
               >
                 ✕
               </button>
             </div>
+          </div>
+
+          {/* Consultation Categories Bar */}
+          <div className="px-2.5 py-1.5 bg-slate-900 border-b border-slate-800/90 flex items-center gap-1 overflow-x-auto no-scrollbar">
+            {CONSULTATION_CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-extrabold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
+                  activeCategory === cat.id
+                    ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
+                    : "bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800"
+                }`}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.name}</span>
+              </button>
+            ))}
           </div>
 
           {/* Settings Drawer Overlay */}
@@ -411,7 +676,7 @@ YOUR GUIDING PRINCIPLES:
           )}
 
           {/* Chat Messages List */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 custom-scrollbar bg-slate-950/60">
+          <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 custom-scrollbar bg-slate-950/60">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -420,18 +685,45 @@ YOUR GUIDING PRINCIPLES:
                 }`}
               >
                 <div
-                  className={`max-w-[88%] p-3.5 rounded-2xl text-xs leading-relaxed shadow-md ${
+                  className={`max-w-[90%] p-3.5 rounded-2xl text-xs leading-relaxed shadow-md ${
                     msg.role === "user"
                       ? "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-medium rounded-tr-none"
                       : "bg-slate-900/90 border border-slate-800 text-slate-200 rounded-tl-none prose prose-invert prose-xs"
                   }`}
                 >
-                  {/* Format markdown line breaks & bullets */}
-                  <div className="whitespace-pre-wrap space-y-1">
+                  <div className="whitespace-pre-wrap space-y-1.5">
                     {msg.content}
                   </div>
+
+                  {/* Message Action Bar (Voice TTS & Copy) for Assistant Readings */}
+                  {msg.role === "assistant" && msg.id !== "welcome" && (
+                    <div className="flex items-center justify-end gap-2 pt-2 mt-2 border-t border-slate-800/80 text-[10px]">
+                      <button
+                        onClick={() => handleToggleSpeech(msg.id, msg.content)}
+                        className={`px-2 py-0.5 rounded-lg font-bold flex items-center gap-1 transition-colors cursor-pointer ${
+                          speakingMsgId === msg.id && isSpeaking
+                            ? "bg-amber-500 text-slate-950 animate-pulse"
+                            : "bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white"
+                        }`}
+                        title="Listen to Reading (Audio TTS)"
+                      >
+                        <span>{speakingMsgId === msg.id && isSpeaking ? "⏹ Stop" : "🔊 Listen"}</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(msg.content);
+                        }}
+                        className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                        title="Copy Reading Text"
+                      >
+                        📋 Copy
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <span className="text-[9px] text-slate-500 font-mono mt-1 px-1">
+
+                <span className="text-[8.5px] text-slate-500 font-mono mt-1 px-1">
                   {msg.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -441,19 +733,19 @@ YOUR GUIDING PRINCIPLES:
             ))}
 
             {isLoading && (
-              <div className="flex items-center gap-2 p-3 bg-slate-900/80 border border-slate-800 rounded-2xl w-fit text-xs text-amber-300">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+              <div className="flex items-center gap-2.5 p-3.5 bg-slate-900/90 border border-amber-500/40 rounded-2xl w-fit text-xs text-amber-300 shadow-lg">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
                 <span className="font-semibold text-[11px]">
-                  Acharya is examining your Kundli houses & Dasha...
+                  Acharya is examining houses, D9/D10 Vargas, Dasha & Shadbala...
                 </span>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Preset Prompt Chips */}
-          <div className="px-3 py-2 bg-slate-900/80 border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-            {PRESET_QUESTIONS.map((q) => (
+          {/* Quick Preset Inquiries (Categorized) */}
+          <div className="px-3 py-2 bg-slate-900/90 border-t border-slate-800 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+            {selectedCategoryMeta.prompts.map((q) => (
               <button
                 key={q.title}
                 onClick={() => handleSendMessage(q.prompt)}
@@ -476,7 +768,7 @@ YOUR GUIDING PRINCIPLES:
           >
             <input
               type="text"
-              placeholder="Ask about career, marriage, dasha, sade sati..."
+              placeholder={`Ask Acharya in ${selectedCategoryMeta.name}...`}
               value={inputPrompt}
               onChange={(e) => setInputPrompt(e.target.value)}
               disabled={isLoading}
@@ -487,7 +779,7 @@ YOUR GUIDING PRINCIPLES:
               disabled={isLoading || !inputPrompt.trim()}
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition-all cursor-pointer flex items-center gap-1"
             >
-              <span>Send</span>
+              <span>Consult</span>
               <span>🚀</span>
             </button>
           </form>
