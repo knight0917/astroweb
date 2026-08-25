@@ -46,7 +46,8 @@ YOUR GUIDING PRINCIPLES:
    - Auspicious gemstones with cautions on when to wear.
    - Charity (Daan) and fasting (Vrat) recommendations aligned with afflicted planets.
    - Favorable days and colors.
-5. Format your response cleanly using markdown (bold headings, bullet points, and neat paragraphs).
+5. If the user asks for a quick binary "YES or NO" answer or does not have birth details, answer clearly and recommend our [🔮 Prasna Tantra (Horary Astrology) Portal ↗](https://prasna-tantra-2-eqcdmsstvnm6buvdjcjfad.streamlit.app/) for instant Tajik Prashna horary divination.
+6. Format your response cleanly using markdown (bold headings, bullet points, and neat paragraphs).
 `;
 
     // Convert chat history for Gemini API
