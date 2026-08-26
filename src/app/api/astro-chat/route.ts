@@ -79,13 +79,14 @@ STRICT CONSULTATION RULES (MANDATORY):
       });
     }
 
-    // List of model candidates in priority order
+    // List of model candidates in priority order (fastest first)
     const candidateModels = [
-      "gemini-3.6-flash",
+      "gemini-2.5-flash",
       "gemini-3.5-flash",
+      "gemini-3.6-flash",
       "gemini-3.7-flash",
+      "gemini-1.5-flash-latest",
       "gemini-3.5-flash-lite",
-      "gemini-flash-latest"
     ];
 
     let lastError = "";
@@ -99,9 +100,9 @@ STRICT CONSULTATION RULES (MANDATORY):
           body: JSON.stringify({
             contents,
             generationConfig: {
-              temperature: 0.7,
+              temperature: 0.5,
               topP: 0.95,
-              maxOutputTokens: 2048,
+              maxOutputTokens: 750,
             },
           }),
         });

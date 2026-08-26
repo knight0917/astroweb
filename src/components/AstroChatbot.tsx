@@ -306,11 +306,15 @@ export default function AstroChatbot() {
     URL.revokeObjectURL(url);
   };
 
-  // Direct Gemini API Call with Multi-Model Fallback Cascade
-  const executeDirectGeminiCall = async (
+  // Session-level query cache for instantaneous 0ms responses on repeat questions
+  const queryCache = useRef<Map<string, string>>(new Map());
+
+  // Direct Gemini API Call with Real-Time SSE Token Streaming & Speed Fallback
+  const executeStreamingGeminiCall = async (
     allMessages: Message[],
     dossier: string,
-    apiKey: string
+    apiKey: string,
+    onChunk: (text: string) => void
   ): Promise<string> => {
     const systemInstruction = `
 You are a trusted, deeply insightful Vedic Astrological Consultant speaking directly to a real client.
@@ -351,6 +355,7 @@ STRICT CONSULTATION RULES (MANDATORY):
     ];
 
     for (const msg of allMessages) {
+      if (!msg.content.trim()) continue;
       contents.push({
         role: msg.role === "assistant" ? "model" : "user",
         parts: [{ text: msg.content }],
@@ -358,36 +363,85 @@ STRICT CONSULTATION RULES (MANDATORY):
     }
 
     const candidateModels = [
-      "gemini-3.6-flash",
+      "gemini-2.5-flash",
       "gemini-3.5-flash",
+      "gemini-3.6-flash",
       "gemini-3.7-flash",
+      "gemini-1.5-flash-latest",
       "gemini-3.5-flash-lite",
-      "gemini-flash-latest",
     ];
 
     let lastError = "";
 
     for (const modelName of candidateModels) {
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-        const res = await fetch(url, {
+        const streamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${apiKey}`;
+        const res = await fetch(streamUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             contents,
             generationConfig: {
-              temperature: 0.7,
+              temperature: 0.5,
               topP: 0.95,
-              maxOutputTokens: 2048,
+              maxOutputTokens: 750,
             },
           }),
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) return text;
+        if (res.ok && res.body) {
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let fullText = "";
+          let buffer = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || "";
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (trimmed.startsWith("data: ")) {
+                try {
+                  const json = JSON.parse(trimmed.slice(6));
+                  const chunk = json.candidates?.[0]?.content?.parts?.[0]?.text;
+                  if (chunk) {
+                    fullText += chunk;
+                    onChunk(fullText);
+                  }
+                } catch (_) {}
+              }
+            }
+          }
+
+          if (fullText.trim()) return fullText;
         } else {
+          // Direct fallback if SSE unsupported
+          const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+          const directRes = await fetch(fallbackUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents,
+              generationConfig: {
+                temperature: 0.5,
+                topP: 0.95,
+                maxOutputTokens: 750,
+              },
+            }),
+          });
+          if (directRes.ok) {
+            const data = await directRes.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) {
+              onChunk(text);
+              return text;
+            }
+          }
           lastError = await res.text();
         }
       } catch (err: any) {
@@ -413,27 +467,51 @@ STRICT CONSULTATION RULES (MANDATORY):
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInputPrompt("");
+
+    const cacheKey = `${currentDate.getTime()}_${query.toLowerCase().trim()}`;
+    if (queryCache.current.has(cacheKey)) {
+      const cachedReply = queryCache.current.get(cacheKey)!;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: cachedReply,
+          timestamp: new Date(),
+          category: activeCategory,
+        },
+      ]);
+      return;
+    }
+
+    const assistantMsgId = (Date.now() + 1).toString();
+    // Add placeholder assistant message for real-time streaming
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: assistantMsgId,
+        role: "assistant",
+        content: "",
+        timestamp: new Date(),
+        category: activeCategory,
+      },
+    ]);
     setIsLoading(true);
 
     const activeKey = userApiKey.trim() || DEFAULT_GEMINI_KEY;
 
     try {
-      const reply = await executeDirectGeminiCall(
+      const reply = await executeStreamingGeminiCall(
         updatedMessages,
         astroDossier,
-        activeKey
+        activeKey,
+        (streamText) => {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === assistantMsgId ? { ...m, content: streamText } : m))
+          );
+        }
       );
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: reply,
-          timestamp: new Date(),
-          category: activeCategory,
-        },
-      ]);
+      queryCache.current.set(cacheKey, reply);
     } catch (err: any) {
       try {
         const response = await fetch("/api/astro-chat", {
@@ -451,29 +529,24 @@ STRICT CONSULTATION RULES (MANDATORY):
 
         if (response.ok) {
           const data = await response.json();
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: Date.now().toString(),
-              role: "assistant",
-              content: data.reply,
-              timestamp: new Date(),
-              category: activeCategory,
-            },
-          ]);
+          setMessages((prev) =>
+            prev.map((m) => (m.id === assistantMsgId ? { ...m, content: data.reply } : m))
+          );
+          queryCache.current.set(cacheKey, data.reply);
           return;
         }
       } catch (_) {}
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: `⚠️ **Could not connect to Astrological AI:** ${err.message}\n\nPlease verify your internet connection or click **⚙️ Settings** to enter a custom Gemini API key.`,
-          timestamp: new Date(),
-        },
-      ]);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantMsgId
+            ? {
+                ...m,
+                content: `⚠️ **Could not connect to Astrological AI:** ${err.message}\n\nPlease verify your internet connection or click **⚙️ Settings** to enter a custom Gemini API key.`,
+              }
+            : m
+        )
+      );
     } finally {
       setIsLoading(false);
     }
@@ -673,19 +746,43 @@ STRICT CONSULTATION RULES (MANDATORY):
                     {msg.content}
                   </div>
 
-                  {/* Message Action Bar (Copy) for Assistant Readings */}
-                  {msg.role === "assistant" && msg.id !== "welcome" && (
-                    <div className="flex items-center justify-end pt-1.5 mt-2 border-t border-slate-800/80 text-[10px]">
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(msg.content);
-                        }}
-                        className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer flex items-center gap-1"
-                        title="Copy Reading Text"
-                      >
-                        <span>📋</span>
-                        <span>Copy</span>
-                      </button>
+                  {/* Message Action Bar (Copy & Quick Follow-ups) */}
+                  {msg.role === "assistant" && msg.id !== "welcome" && msg.content && (
+                    <div className="pt-2 mt-2 border-t border-slate-800/80 space-y-2">
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-[9.5px] font-bold text-amber-400/80 uppercase tracking-wider">
+                          Quick Follow-Up:
+                        </span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(msg.content);
+                          }}
+                          className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer flex items-center gap-1"
+                          title="Copy Reading Text"
+                        >
+                          <span>📋</span>
+                          <span>Copy</span>
+                        </button>
+                      </div>
+
+                      {/* 1-Tap Quick Action Follow-Up Chips */}
+                      <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                        {[
+                          { icon: "⏳", label: "When will this activate?", prompt: "When will this timing activate based on my current Dasha and transits?" },
+                          { icon: "📿", label: "Simple Mantra Remedy", prompt: "What is the most effective daily mantra or simple remedy for this?" },
+                          { icon: "💼", label: "Career & Wealth impact", prompt: "How does this specifically impact my career and financial growth?" },
+                        ].map((chip) => (
+                          <button
+                            key={chip.label}
+                            onClick={() => handleSendMessage(chip.prompt)}
+                            disabled={isLoading}
+                            className="px-2 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700/70 hover:border-amber-500/50 text-[10px] text-slate-300 hover:text-amber-300 font-medium transition-all cursor-pointer flex items-center gap-1"
+                          >
+                            <span>{chip.icon}</span>
+                            <span>{chip.label}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
