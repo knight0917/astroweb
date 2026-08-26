@@ -63,16 +63,25 @@ export default function ShodashavargaView() {
               className={`${badgeStyle} rounded-md font-extrabold flex items-center gap-0.5 transition-all hover:scale-110 shadow-sm cursor-pointer ${
                 isSelected
                   ? "bg-amber-400 text-slate-950 ring-2 ring-white scale-105"
+                  : p.dignity === "Exalted"
+                  ? "bg-emerald-950/90 text-emerald-300 border-2 border-emerald-400 shadow-emerald-500/20"
+                  : p.dignity === "Debilitated"
+                  ? "bg-rose-950/90 text-rose-300 border-2 border-rose-500/80 shadow-rose-500/20"
+                  : p.dignity === "Own Sign" || p.dignity === "Moolatrikona"
+                  ? "bg-amber-950/90 text-amber-300 border border-amber-400/80"
                   : p.isVargottama
-                  ? "bg-emerald-950/90 text-emerald-300 border-2 border-emerald-500 shadow-emerald-500/20"
+                  ? "bg-cyan-950/90 text-cyan-300 border border-cyan-400 shadow-cyan-500/20"
                   : p.isUpagraha
                   ? "bg-purple-950/90 text-purple-200 border border-purple-600/60 hover:border-purple-400"
                   : "bg-slate-800/95 text-amber-200 border border-slate-700 hover:border-amber-400/60"
               }`}
             >
               <span>{p.name.substring(0, 2)}</span>
-              {p.isVargottama && <span className="text-[8px] text-emerald-400 font-black">★</span>}
-              {p.isRetro && <span className="text-[8px] text-red-400 font-extrabold">R</span>}
+              {p.dignity === "Exalted" && <span className="text-[8px] text-emerald-400 font-black" title="Exalted (उच्च)">▲</span>}
+              {p.dignity === "Debilitated" && <span className="text-[8px] text-rose-400 font-black" title="Debilitated (नीच)">▼</span>}
+              {p.isVargottama && <span className="text-[8px] text-cyan-400 font-black" title="Vargottama (वर्गोत्तम)">★</span>}
+              {p.isRetro && <span className="text-[8px] text-purple-400 font-extrabold" title="Retrograde (वक्री)">R</span>}
+              {p.isCombust && <span className="text-[8px] text-orange-400 font-bold" title="Combust (अस्त)">🔥</span>}
               <span className="text-[8px] opacity-75 font-mono">{Math.floor(p.natalDegrees)}°</span>
             </button>
           );
@@ -190,9 +199,9 @@ export default function ShodashavargaView() {
             </div>
           </div>
 
-          {/* Vargottama Banner */}
-          {vargaChart.vargottamaPlanets.length > 0 && (
-            <div className="w-full mb-3 p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/50 flex items-center justify-between text-xs">
+          {/* Vargottama Banner for D2..D60 */}
+          {vargaChart.varga.id !== "D1" && vargaChart.vargottamaPlanets.length > 0 && (
+            <div className="w-full mb-3 p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/50 flex flex-wrap items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-2 text-emerald-300">
                 <span className="text-base">🌟</span>
                 <span className="font-bold">Vargottama Grahas in {vargaChart.varga.id}:</span>
@@ -200,8 +209,46 @@ export default function ShodashavargaView() {
                   {vargaChart.vargottamaPlanets.join(", ")}
                 </span>
               </div>
-              <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-900/60 px-2 py-0.5 rounded-md">
-                Maximum Parashari Strength
+              <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-900/60 px-2 py-0.5 rounded-md border border-emerald-500/40">
+                Parashari Strength (वर्गोत्तम)
+              </span>
+            </div>
+          )}
+
+          {/* D1 Key Planetary Dignities Banner */}
+          {vargaChart.varga.id === "D1" && (
+            <div className="w-full mb-3 p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/40 flex flex-wrap items-center justify-between gap-2 text-xs shadow-inner">
+              <div className="flex flex-wrap items-center gap-2 text-slate-200">
+                <span className="text-amber-400 font-extrabold flex items-center gap-1">
+                  <span>👑</span>
+                  <span>D1 Dignities & Avasthas:</span>
+                </span>
+                <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10.5px]">
+                  {vargaChart.entities
+                    .filter((e) => !e.isUpagraha && (e.dignity === "Exalted" || e.dignity === "Debilitated" || e.dignity === "Own Sign" || e.dignity === "Moolatrikona" || e.isRetro || e.isCombust))
+                    .map((e) => (
+                      <span
+                        key={e.id}
+                        className={`px-2 py-0.5 rounded-md font-bold border text-[10px] flex items-center gap-1 ${
+                          e.dignity === "Exalted"
+                            ? "bg-emerald-950/90 text-emerald-300 border-emerald-500"
+                            : e.dignity === "Debilitated"
+                            ? "bg-rose-950/90 text-rose-300 border-rose-500"
+                            : e.dignity === "Own Sign" || e.dignity === "Moolatrikona"
+                            ? "bg-amber-950/90 text-amber-300 border-amber-500/80"
+                            : "bg-slate-800 text-slate-300 border-slate-700"
+                        }`}
+                      >
+                        <span>{e.name}:</span>
+                        <span>{e.dignity}</span>
+                        {e.isRetro && <span className="text-purple-400 font-black">[R]</span>}
+                        {e.isCombust && <span className="text-orange-400 font-black">🔥</span>}
+                      </span>
+                    ))}
+                </div>
+              </div>
+              <span className="text-[10px] text-amber-400 font-semibold bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-500/30">
+                Rashi Chakra (D1)
               </span>
             </div>
           )}
@@ -439,13 +486,40 @@ export default function ShodashavargaView() {
                         </td>
                         <td className="p-2 text-center text-slate-300 font-bold">H{e.house}</td>
                         <td className="p-2 text-right">
-                          {e.isVargottama ? (
-                            <span className="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-500/60 text-emerald-300 font-bold text-[9px]">
-                              Vargottama
-                            </span>
-                          ) : (
-                            <span className="text-slate-500 text-[10px]">—</span>
-                          )}
+                          <div className="flex flex-wrap items-center justify-end gap-1">
+                            {e.statusBadges.map((badge, bIdx) => {
+                              let badgeColor = "bg-slate-800 text-slate-400 border-slate-700";
+                              if (badge.type === "exalted") {
+                                badgeColor = "bg-emerald-950/90 text-emerald-300 border-emerald-500 shadow-sm";
+                              } else if (badge.type === "debilitated") {
+                                badgeColor = "bg-rose-950/90 text-rose-300 border-rose-500 shadow-sm";
+                              } else if (badge.type === "own" || badge.type === "moolatrikona") {
+                                badgeColor = "bg-amber-950/90 text-amber-300 border-amber-500/80 shadow-sm";
+                              } else if (badge.type === "vargottama") {
+                                badgeColor = "bg-cyan-950/90 text-cyan-300 border-cyan-400 shadow-sm font-black";
+                              } else if (badge.type === "combust") {
+                                badgeColor = "bg-orange-950/90 text-orange-300 border-orange-500/80";
+                              } else if (badge.type === "retro") {
+                                badgeColor = "bg-purple-950/90 text-purple-300 border-purple-500/80 font-black";
+                              } else if (badge.type === "friend") {
+                                badgeColor = "bg-teal-950/60 text-teal-300 border-teal-600/40";
+                              } else if (badge.type === "enemy") {
+                                badgeColor = "bg-red-950/50 text-red-300 border-red-700/40";
+                              } else if (badge.type === "neutral") {
+                                badgeColor = "bg-slate-900/60 text-slate-400 border-slate-800";
+                              }
+
+                              return (
+                                <span
+                                  key={bIdx}
+                                  className={`px-1.5 py-0.5 rounded border text-[9px] font-bold tracking-tight ${badgeColor}`}
+                                  title={badge.hindiLabel}
+                                >
+                                  {badge.label}
+                                </span>
+                              );
+                            })}
+                          </div>
                         </td>
                       </tr>
                     );

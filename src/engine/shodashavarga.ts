@@ -351,6 +351,154 @@ export function calculateVargaSign(longitude: number, vargaId: VargaId): number 
   }
 }
 
+// Classical Dignity Definitions (BPHS)
+const EXALTATION_SIGNS: Record<string, number> = {
+  Sun: 0, // Aries
+  Moon: 1, // Taurus
+  Mars: 9, // Capricorn
+  Mercury: 5, // Virgo
+  Jupiter: 3, // Cancer
+  Venus: 11, // Pisces
+  Saturn: 6, // Libra
+  Rahu: 1, // Taurus (also Gemini in some traditions)
+  Ketu: 7, // Scorpio (also Sagittarius in some traditions)
+};
+
+const DEBILITATION_SIGNS: Record<string, number> = {
+  Sun: 6, // Libra
+  Moon: 7, // Scorpio
+  Mars: 3, // Cancer
+  Mercury: 11, // Pisces
+  Jupiter: 9, // Capricorn
+  Venus: 5, // Virgo
+  Saturn: 0, // Aries
+  Rahu: 7, // Scorpio
+  Ketu: 1, // Taurus
+};
+
+const OWN_SIGNS: Record<string, number[]> = {
+  Sun: [4], // Leo
+  Moon: [3], // Cancer
+  Mars: [0, 7], // Aries, Scorpio
+  Mercury: [2, 5], // Gemini, Virgo
+  Jupiter: [8, 11], // Sagittarius, Pisces
+  Venus: [1, 6], // Taurus, Libra
+  Saturn: [9, 10], // Capricorn, Aquarius
+  Rahu: [10], // Aquarius
+  Ketu: [7], // Scorpio
+};
+
+const MOOLATRIKONA_SIGNS: Record<string, number> = {
+  Sun: 4, // Leo
+  Moon: 1, // Taurus
+  Mars: 0, // Aries
+  Mercury: 5, // Virgo
+  Jupiter: 8, // Sagittarius
+  Venus: 6, // Libra
+  Saturn: 10, // Aquarius
+};
+
+const NATURAL_FRIENDS: Record<string, { friends: string[]; enemies: string[] }> = {
+  Sun: { friends: ["Moon", "Mars", "Jupiter"], enemies: ["Venus", "Saturn"] },
+  Moon: { friends: ["Sun", "Mercury"], enemies: [] },
+  Mars: { friends: ["Sun", "Moon", "Jupiter"], enemies: ["Mercury"] },
+  Mercury: { friends: ["Sun", "Venus"], enemies: ["Moon"] },
+  Jupiter: { friends: ["Sun", "Moon", "Mars"], enemies: ["Mercury", "Venus"] },
+  Venus: { friends: ["Mercury", "Saturn"], enemies: ["Sun", "Moon"] },
+  Saturn: { friends: ["Mercury", "Venus"], enemies: ["Sun", "Moon", "Mars"] },
+  Rahu: { friends: ["Venus", "Saturn", "Mercury"], enemies: ["Sun", "Moon", "Mars"] },
+  Ketu: { friends: ["Mars", "Venus", "Jupiter"], enemies: ["Sun", "Moon"] },
+};
+
+const SIGN_LORDS = [
+  "Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury",
+  "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter",
+];
+
+const COMBUSTION_ORBS: Record<string, { direct: number; retro: number }> = {
+  Moon: { direct: 12, retro: 12 },
+  Mars: { direct: 17, retro: 17 },
+  Mercury: { direct: 14, retro: 12 },
+  Jupiter: { direct: 11, retro: 11 },
+  Venus: { direct: 10, retro: 8 },
+  Saturn: { direct: 15, retro: 15 },
+};
+
+export function isPlanetCombust(
+  planetId: string,
+  planetLon: number,
+  sunLon: number,
+  isRetro: boolean = false
+): boolean {
+  const orbDef = COMBUSTION_ORBS[planetId];
+  if (!orbDef) return false;
+  const maxOrb = isRetro ? orbDef.retro : orbDef.direct;
+  let diff = Math.abs(planetLon - sunLon) % 360;
+  if (diff > 180) diff = 360 - diff;
+  return diff <= maxOrb;
+}
+
+export type PlanetaryDignityType =
+  | "Exalted"
+  | "Debilitated"
+  | "Moolatrikona"
+  | "Own Sign"
+  | "Friend"
+  | "Neutral"
+  | "Enemy";
+
+export function getVargaPlanetaryDignity(
+  planetId: string,
+  signIndex: number
+): { dignity: PlanetaryDignityType; dignityHindi: string } {
+  if (EXALTATION_SIGNS[planetId] === signIndex) {
+    return { dignity: "Exalted", dignityHindi: "उच्च (Uchcha)" };
+  }
+  if (DEBILITATION_SIGNS[planetId] === signIndex) {
+    return { dignity: "Debilitated", dignityHindi: "नीच (Neecha)" };
+  }
+  if (MOOLATRIKONA_SIGNS[planetId] === signIndex) {
+    return { dignity: "Moolatrikona", dignityHindi: "मूलत्रिकोण" };
+  }
+  if (OWN_SIGNS[planetId]?.includes(signIndex)) {
+    return { dignity: "Own Sign", dignityHindi: "स्वक्षेत्र (Own Sign)" };
+  }
+
+  const signLord = SIGN_LORDS[signIndex];
+  if (!signLord || signLord === planetId) {
+    return { dignity: "Own Sign", dignityHindi: "स्वक्षेत्र" };
+  }
+
+  const rel = NATURAL_FRIENDS[planetId];
+  if (rel) {
+    if (rel.friends.includes(signLord)) {
+      return { dignity: "Friend", dignityHindi: "मित्र (Friend)" };
+    }
+    if (rel.enemies.includes(signLord)) {
+      return { dignity: "Enemy", dignityHindi: "शत्रु (Enemy)" };
+    }
+  }
+
+  return { dignity: "Neutral", dignityHindi: "सम (Neutral)" };
+}
+
+export interface EntityStatusBadge {
+  label: string;
+  hindiLabel?: string;
+  type:
+    | "exalted"
+    | "debilitated"
+    | "own"
+    | "moolatrikona"
+    | "vargottama"
+    | "combust"
+    | "retro"
+    | "friend"
+    | "enemy"
+    | "neutral"
+    | "upagraha";
+}
+
 export interface VargaEntityPosition {
   id: string;
   name: string;
@@ -359,9 +507,13 @@ export interface VargaEntityPosition {
   vargaSignIndex: number;
   vargaRashi: typeof RASHIS[0];
   house: number; // 1..12 from Varga Ascendant
-  isVargottama: boolean; // Same sign in this Varga as D1 Rashi
+  isVargottama: boolean; // Same sign in this Varga as D1 Rashi (only true when vargaId !== D1)
   isRetro?: boolean;
+  isCombust?: boolean;
   isUpagraha?: boolean;
+  dignity?: PlanetaryDignityType;
+  dignityHindi?: string;
+  statusBadges: EntityStatusBadge[];
   natalDegrees: number;
 }
 
@@ -378,7 +530,7 @@ export interface VargaChartResult {
 }
 
 /**
- * Calculates complete Divisional Chart (Ascendant, Planets, Upagrahas, House Map, Vargottama)
+ * Calculates complete Divisional Chart (Ascendant, Planets, Upagrahas, House Map, Dignities, Vargottama)
  */
 export function calculateShodashavargaChart(
   ephemeris: EphemerisResult,
@@ -396,6 +548,7 @@ export function calculateShodashavargaChart(
   // 2. Map all entities
   const entities: VargaEntityPosition[] = [];
   const vargottamaPlanets: string[] = [];
+  const sunLon = ephemeris.planets.Sun?.siderealLongitude || 0;
 
   // Navagrahas & Planets
   Object.values(ephemeris.planets).forEach((p) => {
@@ -404,10 +557,48 @@ export function calculateShodashavargaChart(
     const natalSign = Math.floor(p.siderealLongitude / 30);
     const vargaSign = calculateVargaSign(p.siderealLongitude, vargaId);
     const house = ((vargaSign - ascVargaSign + 12) % 12) + 1;
-    const isVargottama = vargaSign === natalSign;
+
+    // Classical rule: Vargottama applies only in divisional charts (D2..D60, esp D9) when matching D1
+    const isVargottama = vargaId !== "D1" && vargaSign === natalSign;
+    const isCombust = p.id !== "Sun" && isPlanetCombust(p.id, p.siderealLongitude, sunLon, !!p.isRetrograde);
+    const { dignity, dignityHindi } = getVargaPlanetaryDignity(p.id, vargaSign);
 
     if (isVargottama && !p.isModernPlanet && p.id !== "Rahu" && p.id !== "Ketu") {
       vargottamaPlanets.push(p.name);
+    }
+
+    const statusBadges: EntityStatusBadge[] = [];
+
+    // Dignity badge
+    if (dignity === "Exalted") {
+      statusBadges.push({ label: "Exalted", hindiLabel: "उच्च", type: "exalted" });
+    } else if (dignity === "Debilitated") {
+      statusBadges.push({ label: "Debilitated", hindiLabel: "नीच", type: "debilitated" });
+    } else if (dignity === "Moolatrikona") {
+      statusBadges.push({ label: "Moolatrikona", hindiLabel: "मूलत्रिकोण", type: "moolatrikona" });
+    } else if (dignity === "Own Sign") {
+      statusBadges.push({ label: "Own Sign", hindiLabel: "स्वक्षेत्र", type: "own" });
+    } else if (dignity === "Friend") {
+      statusBadges.push({ label: "Friend", hindiLabel: "मित्र", type: "friend" });
+    } else if (dignity === "Enemy") {
+      statusBadges.push({ label: "Enemy", hindiLabel: "शत्रु", type: "enemy" });
+    } else {
+      statusBadges.push({ label: "Neutral", hindiLabel: "सम", type: "neutral" });
+    }
+
+    // Vargottama badge (only when in D2..D60 and in same sign as D1)
+    if (isVargottama) {
+      statusBadges.push({ label: "Vargottama", hindiLabel: "वर्गोत्तम", type: "vargottama" });
+    }
+
+    // Retrograde badge
+    if (p.isRetrograde) {
+      statusBadges.push({ label: "Retro", hindiLabel: "वक्री", type: "retro" });
+    }
+
+    // Combust badge
+    if (isCombust) {
+      statusBadges.push({ label: "Combust", hindiLabel: "अस्त", type: "combust" });
     }
 
     entities.push({
@@ -420,6 +611,10 @@ export function calculateShodashavargaChart(
       house,
       isVargottama,
       isRetro: p.isRetrograde,
+      isCombust,
+      dignity,
+      dignityHindi,
+      statusBadges,
       natalDegrees: p.siderealLongitude % 30,
     });
   });
@@ -430,7 +625,14 @@ export function calculateShodashavargaChart(
       const natalSign = Math.floor(u.siderealLongitude / 30);
       const vargaSign = calculateVargaSign(u.siderealLongitude, vargaId);
       const house = ((vargaSign - ascVargaSign + 12) % 12) + 1;
-      const isVargottama = vargaSign === natalSign;
+      const isVargottama = vargaId !== "D1" && vargaSign === natalSign;
+
+      const statusBadges: EntityStatusBadge[] = [
+        { label: "Upagraha", hindiLabel: "उपग्रह", type: "upagraha" },
+      ];
+      if (isVargottama) {
+        statusBadges.push({ label: "Vargottama", hindiLabel: "वर्गोत्तम", type: "vargottama" });
+      }
 
       entities.push({
         id: u.id,
@@ -442,6 +644,7 @@ export function calculateShodashavargaChart(
         house,
         isVargottama,
         isUpagraha: true,
+        statusBadges,
         natalDegrees: u.siderealLongitude % 30,
       });
     });
