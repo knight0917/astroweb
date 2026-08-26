@@ -217,6 +217,7 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
 
 export default function AstroChatbot() {
   const {
+    currentDate,
     ephemeris: natalEphemeris,
     location,
     ayanamsha,
