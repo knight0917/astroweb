@@ -81,12 +81,10 @@ STRICT CONSULTATION RULES (MANDATORY):
 
     // List of model candidates in priority order (fastest first)
     const candidateModels = [
-      "gemini-2.5-flash",
-      "gemini-3.5-flash",
       "gemini-3.6-flash",
-      "gemini-3.7-flash",
-      "gemini-1.5-flash-latest",
-      "gemini-3.5-flash-lite",
+      "gemini-3.5-flash",
+      "gemini-flash-latest",
+      "gemini-3.1-flash-lite",
     ];
 
     let lastError = "";
@@ -102,7 +100,7 @@ STRICT CONSULTATION RULES (MANDATORY):
             generationConfig: {
               temperature: 0.5,
               topP: 0.95,
-              maxOutputTokens: 750,
+              maxOutputTokens: 4096,
             },
           }),
         });
