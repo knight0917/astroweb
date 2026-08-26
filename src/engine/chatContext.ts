@@ -111,6 +111,7 @@ export function buildAstroDossier(
 
   const dossier = `
 ### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER:
+- **Current Real-Time Consultation Date:** ${evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} (Year: ${evaluationDate.getFullYear()})
 - **Date & Time of Birth (UTC):** ${birthDate.toUTCString()}
 - **Birth Location:** ${location.cityName}${location.country ? `, ${location.country}` : ""} (Lat: ${location.latitude.toFixed(2)}°, Lon: ${location.longitude.toFixed(2)}°)
 - **Ayanamsha Model:** ${natalEphemeris.ayanamshaType} (${natalEphemeris.ayanamshaValue.toFixed(3)}°)
