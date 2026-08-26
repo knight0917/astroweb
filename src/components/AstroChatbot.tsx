@@ -232,7 +232,7 @@ export default function AstroChatbot() {
       id: "welcome",
       role: "assistant",
       content:
-        "**Pranam!** 🙏 I am **Acharya Jyotish AI Pro (आचार्य ज्योतिष AI)**.\n\nI have fully ingested your **Lagna, Moon Sign, D9 Navamsha, D10 Dashamsha, Shadbala strengths, Jaimini Karakas, active Vimshottari Dasha, and Saturn Gochar**.\n\nAsk any question about your **Career, Marriage, Dasha, Health, Sade Sati, or Gemstones** in English, हिन्दी, or Hinglish!\n\n---\n🔮 **Need an immediate YES or NO answer right now?**\nIf you want an answer in **YES or NO only** for an urgent inquiry without needing birth time, visit our [🔮 Prasna Tantra (Horary Astrology) Portal ↗](https://prasna-tantra-2-eqcdmsstvnm6buvdjcjfad.streamlit.app/) for instant Tajik Prashna divination!",
+        "**Pranam!** 🙏 I am **Acharya Jyotish AI Pro (आचार्य ज्योतिष AI)**.\n\nI have fully ingested your **Lagna, Moon Sign, D9 Navamsha, D10 Dashamsha, Shadbala strengths, Jaimini Karakas, active Vimshottari Dasha, and Saturn Gochar**.\n\nAsk any question about your **Career, Marriage, Dasha, Health, Sade Sati, or Gemstones** in English, हिन्दी, or Hinglish!",
       timestamp: new Date(),
     },
   ]);
@@ -653,26 +653,7 @@ STRICT CONSULTATION RULES (MANDATORY):
             </div>
           </div>
 
-          {/* 🔮 Prasna Tantra (Horary Astrology) Portal Banner */}
-          <div className="px-3 py-1.5 bg-gradient-to-r from-purple-950/70 via-slate-900 to-indigo-950/70 border-b border-purple-500/30 flex items-center justify-between">
-            <a
-              href="https://prasna-tantra-2-eqcdmsstvnm6buvdjcjfad.streamlit.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-between w-full group py-0.5"
-            >
-              <div className="flex items-center gap-1.5 overflow-hidden">
-                <span className="text-sm group-hover:scale-110 transition-transform">🔮</span>
-                <span className="text-[10.5px] font-bold text-purple-200 group-hover:text-purple-100 truncate">
-                  Want an answer in <span className="underline decoration-purple-400 font-extrabold text-amber-300">YES or NO only</span>? Try Prasna Tantra Portal
-                </span>
-              </div>
-              <span className="text-purple-300 font-extrabold text-[10.5px] group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 flex-shrink-0 ml-1.5">
-                <span>Launch</span>
-                <span>↗</span>
-              </span>
-            </a>
-          </div>
+
 
           {/* Consultation Categories Bar */}
           <div className="px-2.5 py-1.5 bg-slate-900 border-b border-slate-800/90 flex items-center gap-1 overflow-x-auto no-scrollbar">
