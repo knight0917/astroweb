@@ -96,7 +96,11 @@ const AstroChatbot = dynamic(() => import("../components/AstroChatbot"), {
 });
 
 export default function HomePage() {
-  const { viewMode } = useAstroStore();
+  const { viewMode, initFromStorage } = useAstroStore();
+
+  React.useEffect(() => {
+    initFromStorage();
+  }, [initFromStorage]);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#030712] text-slate-100 pb-16 md:pb-0">

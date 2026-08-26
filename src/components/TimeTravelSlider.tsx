@@ -18,6 +18,12 @@ export default function TimeTravelSlider() {
     stepTime,
     togglePlay,
     setPlaySpeed,
+    savedProfiles,
+    activeProfileName,
+    saveProfile,
+    loadProfile,
+    deleteProfile,
+    resetToLiveTransit,
   } = useAstroStore();
 
   const [mounted, setMounted] = useState(false);
@@ -26,6 +32,10 @@ export default function TimeTravelSlider() {
   const [isEditing, setIsEditing] = useState(false);
   const [showPickerModal, setShowPickerModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showProfilesDropdown, setShowProfilesDropdown] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [newProfileName, setNewProfileName] = useState("");
+  const [saveToast, setSaveToast] = useState("");
 
   // Location Modal form state
   const [cityName, setCityName] = useState(location.cityName || "");
@@ -243,7 +253,122 @@ export default function TimeTravelSlider() {
             <span className="text-[9px] text-slate-500 font-bold ml-0.5">▼</span>
           </button>
 
-          {/* 2. Mobile Direct Date & Place Picker Trigger */}
+          {/* 2. Saved Charts & Profiles Switcher Dropdown */}
+          <div className="relative flex-shrink-0">
+            <button
+              onClick={() => setShowProfilesDropdown((prev) => !prev)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-400 text-slate-200 font-semibold transition-all shadow-sm cursor-pointer group"
+              title="Saved Birth Charts & Profiles"
+            >
+              <span className="text-amber-400 text-xs">👤</span>
+              <div className="text-left hidden sm:block">
+                <span className="font-extrabold text-[11px] block max-w-[100px] truncate text-slate-100 group-hover:text-amber-300">
+                  {activeProfileName || (savedProfiles.length > 0 ? `Saved (${savedProfiles.length})` : "Save Chart")}
+                </span>
+              </div>
+              <span className="text-[9px] text-slate-500 font-bold ml-0.5">▼</span>
+            </button>
+
+            {/* Dropdown Menu */}
+            {showProfilesDropdown && (
+              <div className="absolute top-full left-0 mt-1.5 w-64 sm:w-72 bg-slate-950 border border-slate-700 rounded-2xl shadow-2xl p-2.5 z-[9999] space-y-2 animate-in fade-in zoom-in-95 duration-150">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                  <span className="text-[10.5px] font-black text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                    <span>🌟</span>
+                    <span>Saved Birth Charts</span>
+                  </span>
+                  <button
+                    onClick={() => setShowProfilesDropdown(false)}
+                    className="w-5 h-5 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-[10px]"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Profiles List */}
+                <div className="max-h-48 overflow-y-auto space-y-1 custom-scrollbar">
+                  {savedProfiles.length === 0 ? (
+                    <div className="p-3 text-center text-slate-400 text-[11px] leading-relaxed">
+                      No saved profiles yet on this device. Save your birth chart below for instant 1-click loading!
+                    </div>
+                  ) : (
+                    savedProfiles.map((p) => {
+                      const pDate = new Date(p.dateIso);
+                      const isCurrent = activeProfileName === p.name;
+                      return (
+                        <div
+                          key={p.id}
+                          className={`p-2 rounded-xl border flex items-center justify-between gap-2 transition-all ${
+                            isCurrent
+                              ? "bg-amber-500/20 border-amber-400/60"
+                              : "bg-slate-900/80 border-slate-800 hover:border-slate-700"
+                          }`}
+                        >
+                          <div
+                            onClick={() => {
+                              loadProfile(p);
+                              setShowProfilesDropdown(false);
+                            }}
+                            className="flex-1 cursor-pointer"
+                          >
+                            <div className="font-black text-xs text-slate-100 flex items-center gap-1">
+                              <span>{p.name}</span>
+                              {p.isDefault && (
+                                <span className="text-[8.5px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                                  Default
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-slate-400 mt-0.5">
+                              {pDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })} • {p.location.cityName}
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteProfile(p.id);
+                            }}
+                            className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 text-xs transition-colors cursor-pointer"
+                            title="Delete Profile"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Actions: Save Current as Profile */}
+                <div className="pt-1.5 border-t border-slate-800 space-y-1.5">
+                  <button
+                    onClick={() => {
+                      setShowSaveModal(true);
+                      setShowProfilesDropdown(false);
+                    }}
+                    className="w-full py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <span>💾</span>
+                    <span>Save Current Chart as Profile</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      resetToLiveTransit();
+                      setShowProfilesDropdown(false);
+                    }}
+                    className="w-full py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <span>🔴</span>
+                    <span>Reset to Live Transit (Now)</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 3. Mobile Direct Date & Place Picker Trigger */}
           <button
             onClick={() => setShowPickerModal(true)}
             className="md:hidden px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-md shadow-amber-500/20 flex items-center gap-1 cursor-pointer"
@@ -252,7 +377,7 @@ export default function TimeTravelSlider() {
             <span>Set Date & Time</span>
           </button>
 
-          {/* 3. Desktop Inline Date & Time Inputs (Hidden on Mobile) */}
+          {/* 4. Desktop Inline Date & Time Inputs (Hidden on Mobile) */}
           <div className="hidden md:flex flex-wrap items-center gap-1.5 bg-slate-950/90 p-1.5 rounded-xl border border-slate-700/80 shadow-inner">
             {/* Day */}
             <div className="flex flex-col items-center">
@@ -655,7 +780,29 @@ export default function TimeTravelSlider() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            {/* Quick Save as Default Profile */}
+            <div className="pt-2 border-t border-slate-800 space-y-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  handleApplyDateTime();
+                  const prof = saveProfile("My Birth Chart", true);
+                  setSaveToast(`✅ Saved "${prof.name}" as Default on this device!`);
+                  setTimeout(() => setSaveToast(""), 3500);
+                }}
+                className="w-full py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-300 font-extrabold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow"
+              >
+                <span>💾</span>
+                <span>Save as Default Birth Chart</span>
+              </button>
+              {saveToast && (
+                <div className="text-center text-[11px] font-bold text-emerald-400 animate-in fade-in">
+                  {saveToast}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-1">
               <button
                 type="button"
                 onClick={() => setShowPickerModal(false)}
@@ -822,6 +969,66 @@ export default function TimeTravelSlider() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Save Profile Name Dialog Modal via Portal */}
+      {mounted && showSaveModal && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+          <div className="fixed inset-0" onClick={() => setShowSaveModal(false)}></div>
+          <div className="relative z-10 glass-panel bg-slate-950 border border-slate-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-3.5 my-auto animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+              <h3 className="font-extrabold text-sm text-slate-100 flex items-center gap-1.5">
+                <span>💾</span>
+                <span>Save Birth Chart Profile</span>
+              </h3>
+              <button
+                onClick={() => setShowSaveModal(false)}
+                className="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-300 block">
+                Profile / Person Name:
+              </label>
+              <input
+                type="text"
+                value={newProfileName}
+                onChange={(e) => setNewProfileName(e.target.value)}
+                placeholder="e.g. My Birth Chart, Ravi, Spouse, Child..."
+                className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl p-2.5 text-xs text-slate-100 font-bold focus:outline-none"
+              />
+              <div className="p-2 rounded-xl bg-slate-900/70 border border-slate-800 text-[10.5px] text-slate-400 space-y-0.5">
+                <div>Date: <span className="text-amber-300 font-bold">{displayDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })} @ {hour}:{minute}</span></div>
+                <div>City: <span className="text-amber-300 font-bold">{location.cityName} ({location.country || "India"})</span></div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setShowSaveModal(false)}
+                className="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  saveProfile(newProfileName || "My Birth Chart", true);
+                  setShowSaveModal(false);
+                  setNewProfileName("");
+                }}
+                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 cursor-pointer"
+              >
+                Save Chart
+              </button>
+            </div>
           </div>
         </div>,
         document.body
