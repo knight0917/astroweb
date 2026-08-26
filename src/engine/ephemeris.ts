@@ -221,8 +221,10 @@ export function calculateVedicEphemeris(
     { name: "Phalguna", sanskritName: "फाल्गुन मास", solarMasa: "Kumbha Sankranti" },
   ];
 
-  const sunRashiIndex = planets["Sun"]?.rashi.index ?? 0;
-  const masaIndex = (sunRashiIndex + 1) % 12;
+  // Classical Amanta Lunar Month: Determined by the Sun's sidereal sign at the preceding Amavasya (New Moon)
+  const sunAtAmavasya = (sunLon - (moonSunDiff / 12.368) + 360) % 360;
+  const amavasyaSunSign = Math.floor(sunAtAmavasya / 30);
+  const masaIndex = (amavasyaSunSign + 1) % 12;
   const masa = VEDIC_MASAS[masaIndex];
   const gregorianMonth = date.toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
 
