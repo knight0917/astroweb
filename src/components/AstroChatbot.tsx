@@ -565,22 +565,24 @@ STRICT CONSULTATION RULES (MANDATORY):
       {/* 1. Floating Cosmic Trigger Button */}
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`fixed bottom-5 right-5 z-[90] flex items-center gap-2.5 px-4 py-3 rounded-full font-black text-xs shadow-2xl transition-all duration-300 cursor-pointer active:scale-95 ${
+        className={`fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-[90] flex items-center justify-center sm:gap-2.5 w-12 h-12 sm:w-auto sm:h-auto p-0 sm:px-4 sm:py-3 rounded-full font-black text-xs shadow-2xl transition-all duration-300 cursor-pointer active:scale-95 ${
           isOpen
-            ? "bg-slate-900 border border-amber-500/60 text-amber-300 scale-105"
-            : "bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 shadow-amber-500/30 hover:scale-105 ring-4 ring-amber-500/20"
+            ? "bg-slate-900 border-2 border-amber-500/80 text-amber-300 scale-105 shadow-amber-500/20"
+            : "bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 shadow-amber-500/40 hover:scale-105 ring-4 ring-amber-500/20"
         }`}
         title="Consult with Acharya Jyotish AI Pro"
       >
-        <span className="text-base animate-pulse">🔮</span>
-        <span className="tracking-wide uppercase font-extrabold">
+        <span className="text-xl sm:text-base animate-pulse">
+          {isOpen ? "✕" : "🔮"}
+        </span>
+        <span className="tracking-wide uppercase font-extrabold hidden sm:inline">
           {isOpen ? "Close Astrologer" : "Ask Astro AI (ज्योतिषी परामर्श)"}
         </span>
       </button>
 
       {/* 2. Slide-Over Chat Modal / Drawer */}
       {isOpen && (
-        <div className="fixed bottom-20 right-3 sm:right-6 z-[95] w-[96vw] sm:w-[480px] h-[680px] max-h-[88vh] flex flex-col glass-panel bg-slate-950/95 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed bottom-20 right-2 left-2 sm:left-auto sm:right-6 z-[95] sm:w-[480px] h-[680px] max-h-[84vh] flex flex-col glass-panel bg-slate-950/95 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
           {/* Header */}
           <div className="p-3.5 sm:p-4 bg-slate-900/95 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
