@@ -79,7 +79,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   showConstellations: true,
   viewMode: "kundli-north",
   skyViewType: "ecliptic",
-  selectedEntityId: "Moon",
+  selectedEntityId: null,
   ephemeris: calculateVedicEphemeris(
     initialDate,
     initialLocation,

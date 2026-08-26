@@ -59,8 +59,14 @@ export default function PwaRegister() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      // Show install prompt toast once if not already installed
-      setShowInstallPrompt(true);
+      // Only show install prompt once per device if not dismissed or installed
+      if (typeof window !== "undefined") {
+        const isDismissed = localStorage.getItem("vedic_pwa_dismissed");
+        const isInstalled = localStorage.getItem("vedic_pwa_installed");
+        if (!isDismissed && !isInstalled) {
+          setShowInstallPrompt(true);
+        }
+      }
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -76,12 +82,24 @@ export default function PwaRegister() {
     }
   };
 
+  const handleDismissInstall = () => {
+    setShowInstallPrompt(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("vedic_pwa_dismissed", "true");
+    }
+  };
+
   const handleInstall = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const choiceResult = await deferredPrompt.userChoice;
       if (choiceResult.outcome === "accepted") {
         setShowInstallPrompt(false);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("vedic_pwa_installed", "true");
+        }
+      } else {
+        handleDismissInstall();
       }
       setDeferredPrompt(null);
     }
@@ -134,7 +152,7 @@ export default function PwaRegister() {
               Install
             </button>
             <button
-              onClick={() => setShowInstallPrompt(false)}
+              onClick={handleDismissInstall}
               className="w-6 h-6 rounded-full text-slate-400 hover:text-white flex items-center justify-center text-xs cursor-pointer"
             >
               ✕
