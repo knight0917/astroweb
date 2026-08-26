@@ -190,6 +190,11 @@ test("Vedic Tithi Birthday & Tithi Pravesha Verification", async () => {
   assert.ok(result.nextBirthday.daysRemaining >= 0, "Days remaining must be non-negative");
   assert.ok(result.nextBirthday.formattedDate.length > 0, "Formatted date must be present");
 
+  // Assert last birthday and past birthdays archive
+  assert.ok(result.lastBirthday, "Last birthday must be calculated");
+  assert.ok(result.lastBirthday.isPast, "Last birthday isPast must be true");
+  assert.ok(result.pastBirthdays.length > 0, "Must compute past birthdays");
+
   // Assert 5-year upcoming birthdays list
   assert.equal(result.upcomingBirthdays.length, 5, "Must compute 5 upcoming birthdays");
   assert.ok(result.vedicRituals.lifestyleRules.length > 0, "Ritual rules must be populated");

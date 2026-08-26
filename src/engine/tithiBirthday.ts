@@ -17,6 +17,7 @@ export interface NextTithiOccurrence {
   dayOfWeek: string;
   daysRemaining: number;
   hoursRemaining: number;
+  isPast: boolean;
   masaName: string;
   paksha: "Shukla" | "Krishna";
   tithiName: string;
@@ -37,7 +38,9 @@ export interface TithiBirthdayResult {
     moonSunAngleAtBirth: number;
   };
   nextBirthday: NextTithiOccurrence;
+  lastBirthday: NextTithiOccurrence;
   upcomingBirthdays: NextTithiOccurrence[];
+  pastBirthdays: NextTithiOccurrence[];
   vedicRituals: {
     deityWorship: string;
     recommendedMantra: string;
@@ -140,6 +143,78 @@ function findExactAngleTimestamp(
   return new Date((low + high) / 2);
 }
 
+/**
+ * Finds the exact Tithi Pravesha birthday occurrence for any specific target year (Past or Future)
+ */
+export function findTithiOccurrenceInYear(
+  birthDate: Date,
+  targetYear: number,
+  location: GeoLocation = DEFAULT_LOCATION,
+  ayanamsha: AyanamshaType = "Lahiri",
+  refDate: Date = new Date()
+): NextTithiOccurrence | null {
+  const birthInfo = getTithiForDate(birthDate, location, ayanamsha);
+  const birthTithiIdx = birthInfo.tithiIndex;
+  const birthMasaName = birthInfo.masa.name;
+  const birthAngle = birthInfo.moonSunDiff;
+
+  // Approximate solar month window around the birth date's month
+  const birthMonth = birthDate.getUTCMonth(); // 0..11
+  const windowCenter = new Date(Date.UTC(targetYear, birthMonth, 15, 0, 0, 0));
+
+  // Scan a 70-day window (-35 to +35 days) around the solar anniversary
+  for (let dayOffset = -35; dayOffset <= 35; dayOffset++) {
+    const scanDate = new Date(windowCenter.getTime() + dayOffset * 24 * 3600 * 1000);
+    const dayInfo = getTithiForDate(scanDate, location, ayanamsha);
+
+    // Match exact Lunar Masa and Tithi Index (e.g. Shravana Shukla Navami)
+    if (dayInfo.masa.name === birthMasaName && dayInfo.tithiIndex === birthTithiIdx) {
+      const ONE_DAY_MS = 24 * 3600 * 1000;
+      const scanStart = new Date(scanDate.getTime() - ONE_DAY_MS);
+      const scanEnd = new Date(scanDate.getTime() + ONE_DAY_MS);
+
+      const targetStartAngle = birthTithiIdx * 12;
+      const targetEndAngle = ((birthTithiIdx + 1) * 12) % 360;
+
+      const tithiStart = findExactAngleTimestamp(scanStart, scanDate, targetStartAngle, location, ayanamsha);
+      const tithiEnd = findExactAngleTimestamp(scanDate, scanEnd, targetEndAngle, location, ayanamsha);
+      const exactMoment = findExactAngleTimestamp(tithiStart, tithiEnd, birthAngle, location, ayanamsha);
+
+      const isPast = exactMoment.getTime() < refDate.getTime();
+      const msDiff = Math.abs(exactMoment.getTime() - refDate.getTime());
+      const daysRemaining = Math.floor(msDiff / (1000 * 60 * 60 * 24));
+      const hoursRemaining = Math.floor((msDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+      const tzDate = new Date(exactMoment.getTime() + location.timezoneOffsetHours * 3600 * 1000);
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+      return {
+        year: targetYear,
+        gregorianDate: exactMoment,
+        tithiStart,
+        tithiEnd,
+        exactMoment,
+        formattedDate: tzDate.toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          timeZone: "UTC",
+        }),
+        dayOfWeek: dayNames[tzDate.getUTCDay()],
+        daysRemaining,
+        hoursRemaining,
+        isPast,
+        masaName: dayInfo.masa.name,
+        paksha: dayInfo.paksha,
+        tithiName: dayInfo.tithiName,
+      };
+    }
+  }
+
+  return null;
+}
+
 export function calculateTithiBirthday(
   birthDate: Date,
   location: GeoLocation = DEFAULT_LOCATION,
@@ -148,89 +223,69 @@ export function calculateTithiBirthday(
 ): TithiBirthdayResult {
   const birthInfo = getTithiForDate(birthDate, location, ayanamsha);
   const birthTithiIdx = birthInfo.tithiIndex;
-  const birthSunSign = birthInfo.sunSign;
   const birthAngle = birthInfo.moonSunDiff;
 
   const tithiMeta = TITHI_DEITIES[birthTithiIdx] || TITHI_DEITIES[0];
 
   const upcoming: NextTithiOccurrence[] = [];
+  const past: NextTithiOccurrence[] = [];
   const refYear = refDate.getFullYear();
 
-  // Scan targeted windows across the next 6 years
-  for (let targetYear = refYear; targetYear <= refYear + 6 && upcoming.length < 5; targetYear++) {
-    // Sun enters birth sign approx around the same month each year
-    // Approximate date when Sun enters birthSunSign
-    const approxMonth = (birthSunSign + 3) % 12; // Mesha(0) ~ April(3), Vrishabha(1) ~ May(4)...
-    const windowStart = new Date(Date.UTC(targetYear, approxMonth, 10, 0, 0, 0));
-
-    // Scan 35 days around the solar ingress window
-    for (let dayOffset = -5; dayOffset <= 35; dayOffset++) {
-      const scanDate = new Date(windowStart.getTime() + dayOffset * 24 * 3600 * 1000);
-      const dayInfo = getTithiForDate(scanDate, location, ayanamsha);
-
-      if (dayInfo.sunSign === birthSunSign && dayInfo.tithiIndex === birthTithiIdx) {
-        const ONE_DAY_MS = 24 * 3600 * 1000;
-        const scanStart = new Date(scanDate.getTime() - ONE_DAY_MS);
-        const scanEnd = new Date(scanDate.getTime() + ONE_DAY_MS);
-
-        const targetStartAngle = birthTithiIdx * 12;
-        const targetEndAngle = ((birthTithiIdx + 1) * 12) % 360;
-
-        const tithiStart = findExactAngleTimestamp(scanStart, scanDate, targetStartAngle, location, ayanamsha);
-        const tithiEnd = findExactAngleTimestamp(scanDate, scanEnd, targetEndAngle, location, ayanamsha);
-        const exactMoment = findExactAngleTimestamp(tithiStart, tithiEnd, birthAngle, location, ayanamsha);
-
-        if (tithiEnd.getTime() > refDate.getTime()) {
-          const msRemaining = Math.max(0, exactMoment.getTime() - refDate.getTime());
-          const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24));
-          const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-          const tzDate = new Date(exactMoment.getTime() + location.timezoneOffsetHours * 3600 * 1000);
-          const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-          // Avoid duplicate entries for same year
-          if (!upcoming.some((u) => u.year === tzDate.getUTCFullYear())) {
-            upcoming.push({
-              year: tzDate.getUTCFullYear(),
-              gregorianDate: exactMoment,
-              tithiStart,
-              tithiEnd,
-              exactMoment,
-              formattedDate: tzDate.toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                timeZone: "UTC",
-              }),
-              dayOfWeek: dayNames[tzDate.getUTCDay()],
-              daysRemaining,
-              hoursRemaining,
-              masaName: dayInfo.masa.name,
-              paksha: dayInfo.paksha,
-              tithiName: dayInfo.tithiName,
-            });
-          }
-          break; // Found for this year, move to next year
-        }
+  // Scan future years (refYear to refYear + 7)
+  for (let targetYear = refYear; targetYear <= refYear + 7 && upcoming.length < 5; targetYear++) {
+    const occ = findTithiOccurrenceInYear(birthDate, targetYear, location, ayanamsha, refDate);
+    if (occ) {
+      if (occ.tithiEnd.getTime() >= refDate.getTime()) {
+        upcoming.push(occ);
       }
     }
   }
 
-  const nextBirthday = upcoming[0] || {
-    year: refDate.getFullYear() + 1,
-    gregorianDate: new Date(),
-    tithiStart: new Date(),
-    tithiEnd: new Date(),
-    exactMoment: new Date(),
-    formattedDate: "Upcoming...",
-    dayOfWeek: "Sunday",
-    daysRemaining: 0,
-    hoursRemaining: 0,
-    masaName: birthInfo.masa.name,
-    paksha: birthInfo.paksha,
-    tithiName: birthInfo.tithiName,
-  };
+  // Scan past years (refYear to refYear - 6)
+  for (let targetYear = refYear; targetYear >= refYear - 6 && past.length < 5; targetYear--) {
+    const occ = findTithiOccurrenceInYear(birthDate, targetYear, location, ayanamsha, refDate);
+    if (occ) {
+      if (occ.tithiEnd.getTime() < refDate.getTime()) {
+        past.push(occ);
+      }
+    }
+  }
+
+  const nextBirthday =
+    upcoming[0] ||
+    findTithiOccurrenceInYear(birthDate, refYear + 1, location, ayanamsha, refDate) || {
+      year: refYear + 1,
+      gregorianDate: new Date(),
+      tithiStart: new Date(),
+      tithiEnd: new Date(),
+      exactMoment: new Date(),
+      formattedDate: "Upcoming...",
+      dayOfWeek: "Sunday",
+      daysRemaining: 0,
+      hoursRemaining: 0,
+      isPast: false,
+      masaName: birthInfo.masa.name,
+      paksha: birthInfo.paksha,
+      tithiName: birthInfo.tithiName,
+    };
+
+  const lastBirthday =
+    past[0] ||
+    findTithiOccurrenceInYear(birthDate, refYear - 1, location, ayanamsha, refDate) || {
+      year: refYear - 1,
+      gregorianDate: new Date(),
+      tithiStart: new Date(),
+      tithiEnd: new Date(),
+      exactMoment: new Date(),
+      formattedDate: "Past Occurrence...",
+      dayOfWeek: "Sunday",
+      daysRemaining: 0,
+      hoursRemaining: 0,
+      isPast: true,
+      masaName: birthInfo.masa.name,
+      paksha: birthInfo.paksha,
+      tithiName: birthInfo.tithiName,
+    };
 
   return {
     birthDetails: {
@@ -250,7 +305,9 @@ export function calculateTithiBirthday(
       moonSunAngleAtBirth: parseFloat(birthAngle.toFixed(2)),
     },
     nextBirthday,
+    lastBirthday,
     upcomingBirthdays: upcoming,
+    pastBirthdays: past,
     vedicRituals: {
       deityWorship: `Worship of ${tithiMeta.deity} (Presiding Deity of ${birthInfo.tithiName}) and your Ishta Devata.`,
       recommendedMantra: `Maha Mrityunjaya Mantra & Gayatri Mantra (108 recitations for Ayushya and Tejas).`,
