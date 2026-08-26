@@ -276,6 +276,7 @@ export default function TithiCalendarView() {
                   <div
                     key={day.dayOfMonth}
                     onClick={() => setSelectedDay(day)}
+                    title={`${day.dateString}: ${day.lunarMonth.hindiName} (${day.lunarMonth.name} Masa) - ${day.tithi.paksha} ${day.tithi.name} • Nakshatra: ${day.nakshatra.name}`}
                     className={`min-h-[112px] p-1.5 flex flex-col justify-between transition-all cursor-pointer relative group ${
                       isSelected
                         ? "bg-amber-500/20 ring-2 ring-inset ring-amber-400 z-10"
@@ -473,10 +474,12 @@ export default function TithiCalendarView() {
                     <h3 className="font-black text-base sm:text-lg text-slate-100">
                       {selectedDay.date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
                     </h3>
-                    <div className="text-xs text-amber-400 font-semibold flex items-center gap-2">
+                    <div className="text-xs text-amber-400 font-semibold flex items-center gap-2 mt-0.5">
                       <span>{selectedDay.sanskritVara}</span>
                       <span>•</span>
-                      <span>{selectedDay.lunarMonth.hindiName} मास ({selectedDay.lunarMonth.name} Masa)</span>
+                      <span className="text-slate-300">
+                        {selectedDay.tithi.paksha} Paksha ({selectedDay.tithi.pakshaHindi})
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -487,6 +490,30 @@ export default function TithiCalendarView() {
                 >
                   ✕
                 </button>
+              </div>
+
+              {/* Prominent Vedic Lunar Month Highlight Banner */}
+              <div className="bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/5 p-3.5 rounded-2xl border border-amber-500/30 flex items-center justify-between flex-wrap gap-2 shadow-inner">
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 block flex items-center gap-1.5">
+                    <span>🌙</span>
+                    <span>Vedic Lunar Month (वैदिक चन्द्र मास):</span>
+                  </span>
+                  <div className="text-base font-black text-amber-200 mt-0.5 flex items-center gap-2">
+                    <span>{selectedDay.lunarMonth.hindiName} मास ({selectedDay.lunarMonth.name} Masa)</span>
+                    <span className="text-[10.5px] px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-extrabold shadow">
+                      {selectedDay.tithi.paksha === "Shukla" ? "शुक्ल पक्ष / Waxing" : "कृष्ण पक्ष / Waning"}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">
+                    ☀️ Solar Transit:
+                  </span>
+                  <span className="text-xs font-mono font-bold text-slate-200">
+                    {selectedDay.lunarMonth.solarMasa}
+                  </span>
+                </div>
               </div>
 
               {/* Day Panchanga 5 Limbs (पञ्चाङ्ग) Grid */}
@@ -553,15 +580,17 @@ export default function TithiCalendarView() {
                   </div>
                 </div>
 
-                {/* Solar Sign */}
+                {/* 6. Lunar & Solar Masa Card */}
                 <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
                   <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">
-                    Solar Masa (सौर मास)
+                    Lunar Masa (चन्द्र मास)
                   </span>
-                  <div className="font-black text-slate-100 text-sm mt-0.5">
-                    {selectedDay.lunarMonth.solarMasa}
+                  <div className="font-black text-amber-300 text-sm mt-0.5">
+                    {selectedDay.lunarMonth.hindiName} ({selectedDay.lunarMonth.name})
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-1">Sun Sidereal Sign</div>
+                  <div className="text-[10px] text-slate-400 mt-1 truncate">
+                    ☀️ {selectedDay.lunarMonth.solarMasa}
+                  </div>
                 </div>
               </div>
 
