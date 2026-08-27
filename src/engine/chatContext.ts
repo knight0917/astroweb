@@ -22,6 +22,7 @@ import { calculateBadhakaAvasthas } from "./badhakaAvasthas";
 import { evaluateBhriguNadi } from "./bhriguNadi";
 import { evaluateKarmaRebirth } from "./karmaRebirth";
 import { calculateDoubleTransit } from "./doubleTransit";
+import { evaluateMarriageTiming } from "./marriageTiming";
 import { RASHI_NAMES } from "./constants";
 
 export function buildAstroDossier(
@@ -295,6 +296,20 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 16. K.N. Rao Timing of Marriage Suite
+  let marriageSummary = "";
+  try {
+    const mt = evaluateMarriageTiming(natalEphemeris, transitEphemeris, evaluationDate);
+    marriageSummary = [
+      "- **Composite Marital Readiness:** **" + mt.compositeReadinessPercent + "%** (" + mt.masterTimingVerdict + ")",
+      "- **Tier 1 (Natal Marital Band):** " + mt.promise.maritalBand + " (" + mt.promise.sanskritBand + ") • 7th House: " + mt.promise.seventhHouseSign + " (Lord: " + mt.promise.seventhLord + " in H" + mt.promise.seventhLordHouseInD1 + ") • " + mt.promise.venusStatus,
+      "- **Navamsha (D9) & Upapada (UL):** D9 Lagna in " + mt.promise.d9LagnaSign + " (D9 7th Lord: " + mt.promise.d9SeventhLord + ") • Upapada Lagna (UL) in " + mt.promise.upapadaSign,
+      "- **Tier 2 (Dual Dasha Convergence):** " + (mt.dualDasha.isDualConvergenceActive ? "🌟 YES (Vimshottari " + mt.dualDasha.activeVimshottariMD + "/" + mt.dualDasha.activeVimshottariAD + " + Chara " + mt.dualDasha.activeCharaMD + "/" + mt.dualDasha.activeCharaAD + ")" : "Single/Dormant Dasha Window") + " -> " + mt.dualDasha.timingWindowVerdict,
+      "- **Tier 3 (Double Transit Trigger):** " + (mt.doubleTransit.isDoubleTransitFulfilled ? "⚡ FULFILLED (Saturn & Jupiter simultaneously sanction marital axis)" : "Pending dual transit aspect on 1-7 axis"),
+      "- **Remedial Guidance:** " + mt.remedialGuidance,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -376,6 +391,9 @@ export function buildAstroDossier(
     "",
     "#### ⚡ 17. K.N. RAO DOUBLE TRANSIT (DTP) & PAC-DARES REAL-TIME TIMING:",
     dtpSummary,
+    "",
+    "#### 💍 18. K.N. RAO TIMING OF MARRIAGE (3-TIER PREDICTIVE FILTER):",
+    marriageSummary,
   ];
 
   return lines.filter(Boolean).join("\n");

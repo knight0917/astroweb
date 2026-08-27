@@ -7,10 +7,11 @@ import BhavaJudgementDeck from "./BhavaJudgementDeck";
 import BhriguNadiDeck from "./BhriguNadiDeck";
 import KarmaRebirthDeck from "./KarmaRebirthDeck";
 import DoubleTransitDeck from "./DoubleTransitDeck";
+import MarriageTimingDeck from "./MarriageTimingDeck";
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -123,6 +124,16 @@ export default function BhavaBalaView() {
           >
             <span>⚡ Double Transit & PAC-DARES</span>
           </button>
+          <button
+            onClick={() => setDisplayMode("marriage")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              displayMode === "marriage"
+                ? "bg-rose-600 text-white shadow"
+                : "text-rose-300 hover:text-white bg-rose-950/30 border border-rose-800/40"
+            }`}
+          >
+            <span>💍 Timing of Marriage (K.N. Rao)</span>
+          </button>
         </div>
       </div>
 
@@ -146,8 +157,13 @@ export default function BhavaBalaView() {
         <DoubleTransitDeck />
       )}
 
+      {/* K.N. Rao Timing of Marriage (Vivaha Kala) View */}
+      {displayMode === "marriage" && (
+        <MarriageTimingDeck />
+      )}
+
       {/* Hero House Leaderboard (1st to 12th Rank Cards) */}
-      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && (
+      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && (
         <>
         <div className="space-y-3">
         <div className="flex items-center justify-between">

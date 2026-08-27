@@ -1096,3 +1096,43 @@ test("Classical K.N. Rao Double Transit & PAC-DARES Engine Verification", async 
   assert.ok(result.masterTimingSummary.length > 20);
 });
 
+test("Classical K.N. Rao Timing of Marriage Engine Verification", async () => {
+  const { evaluateMarriageTiming } = await import("../src/engine/marriageTiming.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date("2026-08-27T00:00:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateMarriageTiming(natalEphem, transitEphem, new Date("2026-08-27T00:00:00Z"));
+
+  // 1. Tier 1: Natal Promise
+  assert.ok(result.promise);
+  assert.ok(["Early Marriage (18-24)", "Normal / Timely (25-29)", "Delayed Marriage (30-38+)", "Complex / Karmic Trials"].includes(result.promise.maritalBand));
+  assert.ok(result.promise.sanskritBand);
+  assert.ok(result.promise.seventhHouseSign);
+  assert.ok(result.promise.seventhLord);
+  assert.ok(result.promise.d9LagnaSign);
+  assert.ok(result.promise.upapadaSign);
+  assert.ok(result.promise.promiseScorePercent >= 0 && result.promise.promiseScorePercent <= 100);
+
+  // 2. Tier 2: Dual Dasha Convergence
+  assert.ok(result.dualDasha);
+  assert.ok(result.dualDasha.activeVimshottariMD);
+  assert.ok(result.dualDasha.activeCharaMD);
+  assert.ok(typeof result.dualDasha.isDualConvergenceActive === "boolean");
+  assert.ok(result.dualDasha.dashaConvergenceScorePercent >= 0 && result.dualDasha.dashaConvergenceScorePercent <= 100);
+  assert.ok(result.dualDasha.timingWindowVerdict);
+
+  // 3. Tier 3: Double Transit
+  assert.ok(result.doubleTransit);
+  assert.ok(typeof result.doubleTransit.isDoubleTransitFulfilled === "boolean");
+  assert.ok(result.doubleTransit.transitScorePercent >= 0 && result.doubleTransit.transitScorePercent <= 100);
+  assert.ok(result.doubleTransit.transitVerdict);
+
+  // 4. Composite Readiness
+  assert.ok(result.compositeReadinessPercent >= 0 && result.compositeReadinessPercent <= 100);
+  assert.ok(result.masterTimingVerdict.length > 15);
+  assert.ok(result.remedialGuidance.length > 15);
+});
+
