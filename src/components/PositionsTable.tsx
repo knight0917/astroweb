@@ -5,6 +5,7 @@ import { useAstroStore } from "../store/useAstroStore";
 import { formatDMS } from "../engine/rashiNakshatra";
 import { evaluatePanchadaMaitri } from "../engine/panchadaMaitri";
 import { calculateIshtaKashta } from "../engine/ishtaKashta";
+import { calculateBadhakaAvasthas } from "../engine/badhakaAvasthas";
 
 export default function PositionsTable() {
   const [activeTab, setActiveTab] = useState<"planets" | "upagrahas" | "panchanga">("planets");
@@ -25,6 +26,7 @@ export default function PositionsTable() {
   // Classical B.V. Raman Calculations
   const panchadaReport = useMemo(() => evaluatePanchadaMaitri(ephemeris), [ephemeris]);
   const ishtaKashtaReport = useMemo(() => calculateIshtaKashta(ephemeris), [ephemeris]);
+  const badhakaAvasthas = useMemo(() => calculateBadhakaAvasthas(ephemeris), [ephemeris]);
 
   return (
     <div className="glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl flex flex-col h-full">
@@ -83,6 +85,7 @@ export default function PositionsTable() {
                 <th className="py-2.5 px-3">House</th>
                 <th className="py-2.5 px-3">Pancha-da Maitri</th>
                 <th className="py-2.5 px-3">Ishta / Kashta (Res %)</th>
+                <th className="py-2.5 px-3">Avastha & Badhaka</th>
                 <th className="py-2.5 px-3">Motion</th>
               </tr>
             </thead>
@@ -116,6 +119,7 @@ export default function PositionsTable() {
                 <td className="py-2 px-3 font-bold text-emerald-400">H1</td>
                 <td className="py-2 px-3 text-slate-500">—</td>
                 <td className="py-2 px-3 text-slate-500">—</td>
+                <td className="py-2 px-3 text-slate-500">—</td>
                 <td className="py-2 px-3 text-slate-400">—</td>
               </tr>
 
@@ -124,6 +128,7 @@ export default function PositionsTable() {
                 const isSelected = selectedEntityId === p.id;
                 const pm = panchadaReport.planets[p.id];
                 const ik = ishtaKashtaReport.planets[p.id];
+                const av = badhakaAvasthas.avasthas[p.id];
 
                 return (
                   <tr
@@ -183,6 +188,29 @@ export default function PositionsTable() {
                           <div className="text-[9px] text-slate-400 font-mono">
                             Res: <span className="text-amber-300">{ik.residentialPercent}%</span>
                           </div>
+                        </div>
+                      ) : (
+                        <span className="text-slate-500">—</span>
+                      )}
+                    </td>
+
+                    {/* Avastha & Badhaka */}
+                    <td className="py-2 px-3">
+                      {av ? (
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${av.badgeColor}`}>
+                              {av.baladiAvastha.split(" ")[0]} ({av.baladiPotencyPercent}%)
+                            </span>
+                            {av.isBadhakesh && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-950 text-rose-300 border border-rose-700">
+                                BADHAK
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[9px] text-slate-400 font-mono">
+                            {av.jagradadiAvastha.split(" ")[0]} ({av.effectivePotencyPercent}% pot)
+                          </span>
                         </div>
                       ) : (
                         <span className="text-slate-500">—</span>

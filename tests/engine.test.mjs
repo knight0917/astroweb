@@ -891,3 +891,33 @@ test("Classical 12 Bhavas Tripartite Judgement Engine Verification", async () =>
   }
 });
 
+test("Classical Badhaka Sthana & Planetary Avasthas Engine Verification", async () => {
+  const { calculateBadhakaAvasthas } = await import("../src/engine/badhakaAvasthas.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const ephem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const result = calculateBadhakaAvasthas(ephem, ["Sun", "Saturn"]);
+
+  // 1. Badhaka Sthana checks
+  assert.ok(result.badhaka);
+  assert.ok(["Movable", "Fixed", "Dual"].includes(result.badhaka.modality));
+  assert.ok([11, 9, 7].includes(result.badhaka.badhakaHouseNumber));
+  assert.ok(result.badhaka.badhakadhipati);
+  assert.ok(result.badhaka.classicalSignificance);
+  assert.ok(result.badhaka.remedialAdvice);
+
+  // 2. Avasthas checks
+  const planets = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];
+  planets.forEach((p) => {
+    const report = result.avasthas[p];
+    assert.ok(report, `Report must exist for ${p}`);
+    assert.ok(["Bala (Infant)", "Kumara (Youth)", "Yuva (Adult)", "Vriddha (Old)", "Mrita (Deceased)"].includes(report.baladiAvastha));
+    assert.ok([0, 10, 25, 50, 100].includes(report.baladiPotencyPercent));
+    assert.ok(["Jagrata (Awake)", "Swapna (Dreaming)", "Sushupti (Deep Sleep)"].includes(report.jagradadiAvastha));
+    assert.ok(report.effectivePotencyPercent >= 0 && report.effectivePotencyPercent <= 100);
+    assert.ok(report.description);
+    assert.ok(report.badgeColor);
+  });
+});
+

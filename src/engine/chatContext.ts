@@ -1,7 +1,8 @@
 /**
  * Professional Vedic AI Chat Context Synthesizer ("Acharya Jyotish AI Pro")
  * Calibrated with B.V. Raman's 300 Important Combinations, Astrology for Beginners,
- * Bhava and Graha Balas (1996), How to Judge a Horoscope (Vols 1 & 2), and Classical Parashari Jyotish.
+ * Bhava and Graha Balas (1996), How to Judge a Horoscope (Vols 1 & 2),
+ * A Textbook of Scientific Hindu Astrology, and Classical Parashari Jyotish.
  */
 
 import { EphemerisResult } from "./types";
@@ -16,6 +17,7 @@ import { mapYogaActivationTimeline } from "./yogaActivation";
 import { evaluatePanchadaMaitri } from "./panchadaMaitri";
 import { calculateIshtaKashta } from "./ishtaKashta";
 import { evaluate12BhavasJudgement } from "./bhavaJudgement";
+import { calculateBadhakaAvasthas } from "./badhakaAvasthas";
 import { RASHI_NAMES } from "./constants";
 
 export function buildAstroDossier(
@@ -33,6 +35,9 @@ export function buildAstroDossier(
   // 1. Dasha Calculation
   const dasha = calculateVimshottariDasha(birthDate, moonLon, evaluationDate);
   const activeDasha = dasha.activeDasha;
+  const activeDashaLords = activeDasha
+    ? [activeDasha.mahadasha.name, activeDasha.antardasha.name, activeDasha.pratyantardasha.name]
+    : [];
 
   // 2. Gochar & Sade Sati
   const gochar = calculateGochar(natalEphemeris, transitEphemeris);
@@ -183,6 +188,25 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 12. Badhaka Sthana & Planetary Avasthas (Scientific Hindu Astrology)
+  let badhakaAvasthasSummary = "";
+  try {
+    const ba = calculateBadhakaAvasthas(natalEphemeris, activeDashaLords);
+    const avasthaList = Object.values(ba.avasthas)
+      .map((a) => "- **" + a.planet + ":** " + a.baladiAvastha + " (Vitality: " + a.baladiPotencyPercent + "%) & " + a.jagradadiAvastha + " (Alertness: " + a.jagradadiPotencyPercent + "%) -> Effective Potency: **" + a.effectivePotencyPercent + "%**" + (a.isBadhakesh ? " ⚠️ [BADHAKESH]" : ""))
+      .join("\n");
+
+    badhakaAvasthasSummary = [
+      "- **Lagna Modality:** " + ba.badhaka.modality + " Ascendant (" + ba.badhaka.ascendantSignName + ")",
+      "- **Badhaka Sthana (Obstruction House):** **House " + ba.badhaka.badhakaHouseNumber + "** in " + ba.badhaka.badhakaSignName + " (Ruled by: **" + ba.badhaka.badhakadhipati + "**)",
+      "- **Badhakesh House Location:** Situated in House " + ba.badhaka.badhakeshHouse,
+      "- **Active Dasha Status of Badhakesh:** " + (ba.badhaka.isBadhakeshActiveInDasha ? "⚠️ YES (Currently Running - navigate with strategic patience)" : "Dormant / Inactive in current running periods"),
+      "- **Guidance:** " + ba.badhaka.remedialAdvice,
+      "- **Planetary Avasthas Breakdown (Baladi & Jagradadi):**",
+      avasthaList,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -226,20 +250,23 @@ export function buildAstroDossier(
     "#### 🏛️ 7. 12 BHAVAS TRIPARTITE JUDGEMENT (RAMAN HOW TO JUDGE A HOROSCOPE):",
     bhavaJudgementSummary,
     "",
-    "#### 💎 8. DIVISIONAL CHARTS (VARGAS):",
+    "#### 🛡️ 8. BADHAKA STHANA & PLANETARY AVASTHAS (SCIENTIFIC HINDU ASTROLOGY):",
+    badhakaAvasthasSummary,
+    "",
+    "#### 💎 9. DIVISIONAL CHARTS (VARGAS):",
     "- **D9 Navamsha (Dharma, Marriage & Potential):** Lagna in " + d9Chart.ascendant.vargaRashi.englishName + " • Placements: " + d9Summary.join(", "),
     "- **D10 Dashamsha (Career, Profession & Power):** Lagna in " + d10Chart.ascendant.vargaRashi.englishName + " • Placements: " + d10Summary.join(", "),
     "",
-    "#### ⚖️ 9. JAIMINI CHARA KARAKAS (SOUL & PURPOSE):",
+    "#### ⚖️ 10. JAIMINI CHARA KARAKAS (SOUL & PURPOSE):",
     jaiminiSummary,
     "",
-    "#### ⚡ 10. SHADBALA (PLANETARY STRENGTHS & CAPACITY):",
+    "#### ⚡ 11. SHADBALA (PLANETARY STRENGTHS & CAPACITY):",
     shadbalaSummary,
     "",
-    "#### 📊 11. ASHTAKAVARGA STRENGTH (BENEFIC POINTS):",
+    "#### 📊 12. ASHTAKAVARGA STRENGTH (BENEFIC POINTS):",
     ashtakavargaSummary,
     "",
-    "#### 🪐 12. SHANI SADE SATI & GOCHAR TRANSITS:",
+    "#### 🪐 13. SHANI SADE SATI & GOCHAR TRANSITS:",
     "- **Sade Sati Status:** " + gochar.sadeSati.statusTitle + " (" + gochar.sadeSati.phaseName + ")",
     "- **Saturn Transit Position:** House " + gochar.sadeSati.houseFromMoon + " from Natal Moon in " + gochar.sadeSati.saturnTransitRashi,
     "- **Remaining Duration:** " + (gochar.sadeSati.remainingDurationFormatted || "N/A"),
@@ -247,7 +274,7 @@ export function buildAstroDossier(
     gochar.sadeSati.totalCompletionFormatted ? "- Total Sade Sati Ends: " + gochar.sadeSati.totalCompletionFormatted : "",
     gochar.sadeSati.nextCycleStartFormatted ? "- Next Cycle Begins: " + gochar.sadeSati.nextCycleStartFormatted : "",
     "",
-    "#### 📅 13. PANCHANGA AT BIRTH:",
+    "#### 📅 14. PANCHANGA AT BIRTH:",
     "- **Tithi:** " + natalEphemeris.panchanga.tithi.name + " (" + natalEphemeris.panchanga.tithi.paksha + " Paksha)",
     "- **Vara (Weekday):** " + natalEphemeris.panchanga.vara.name + " (Ruler: " + natalEphemeris.panchanga.vara.lord + ")",
     "- **Yoga:** " + natalEphemeris.panchanga.yoga.name,
