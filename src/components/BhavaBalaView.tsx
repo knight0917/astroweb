@@ -4,10 +4,11 @@ import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { calculateBhavaBala, HouseBala } from "../engine/bhavabala";
 import BhavaJudgementDeck from "./BhavaJudgementDeck";
+import BhriguNadiDeck from "./BhriguNadiDeck";
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -90,6 +91,16 @@ export default function BhavaBalaView() {
           >
             <span>🏛️ Raman 12 Bhavas Judgement</span>
           </button>
+          <button
+            onClick={() => setDisplayMode("bhrigu")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              displayMode === "bhrigu"
+                ? "bg-amber-600 text-slate-950 shadow"
+                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
+            }`}
+          >
+            <span>📜 Bhrigu Nadi & BSP</span>
+          </button>
         </div>
       </div>
 
@@ -98,8 +109,13 @@ export default function BhavaBalaView() {
         <BhavaJudgementDeck />
       )}
 
+      {/* Bhrigu Nandi Nadi & BSP Suite View */}
+      {displayMode === "bhrigu" && (
+        <BhriguNadiDeck />
+      )}
+
       {/* Hero House Leaderboard (1st to 12th Rank Cards) */}
-      {displayMode !== "judgement" && (
+      {displayMode !== "judgement" && displayMode !== "bhrigu" && (
         <>
         <div className="space-y-3">
         <div className="flex items-center justify-between">

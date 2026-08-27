@@ -921,3 +921,47 @@ test("Classical Badhaka Sthana & Planetary Avasthas Engine Verification", async 
   });
 });
 
+test("Classical Bhrigu Nandi Nadi & Bhrigu Saral Paddhati (BSP) Engine Verification", async () => {
+  const { evaluateBhriguNadi } = await import("../src/engine/bhriguNadi.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const ephem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const result = evaluateBhriguNadi(ephem, new Date("2026-08-27T00:00:00Z"));
+
+  // 1. Age & 12-Year Cycle checks
+  assert.ok(result.runningAge > 0);
+  assert.strictEqual(result.runningAge, 31); // Born Oct 1995 -> in 31st year in Aug 2026
+  assert.ok(result.currentYearBsp);
+  assert.strictEqual(result.currentYearBsp.cycleHouseNumber, 7); // ((31-1)%12)+1 = 7
+
+  // 2. 4 Directional Quadrant clusters
+  assert.ok(result.directionalClusters.East);
+  assert.ok(result.directionalClusters.South);
+  assert.ok(result.directionalClusters.West);
+  assert.ok(result.directionalClusters.North);
+  assert.strictEqual(result.directionalClusters.East.element, "Agni");
+  assert.strictEqual(result.directionalClusters.South.element, "Prithvi");
+  assert.strictEqual(result.directionalClusters.West.element, "Vayu");
+  assert.strictEqual(result.directionalClusters.North.element, "Jala");
+
+  // 3. Jiva (Jupiter) & Karma (Saturn) Linkages
+  assert.ok(result.jivaProfile);
+  assert.strictEqual(result.jivaProfile.representedPlanet, "Jupiter");
+  assert.ok(result.jivaProfile.occupiedSign);
+  assert.ok(result.jivaProfile.synthesisVerdict.length > 10);
+
+  assert.ok(result.karmaProfile);
+  assert.strictEqual(result.karmaProfile.representedPlanet, "Saturn");
+  assert.ok(result.karmaProfile.occupiedSign);
+  assert.ok(result.karmaProfile.synthesisVerdict.length > 10);
+
+  // 4. BSP Activations array
+  assert.ok(result.activeBspActivations.length >= 10);
+  result.activeBspActivations.forEach((b) => {
+    assert.ok(b.ageYear >= 1);
+    assert.ok(b.cycleHouseNumber >= 1 && b.cycleHouseNumber <= 12);
+    assert.ok(b.cycleHouseTheme);
+  });
+});
+
