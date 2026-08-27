@@ -859,3 +859,35 @@ test("Classical Ishta Phala, Kashta Phala & Residential Strength Verification", 
   });
 });
 
+test("Classical 12 Bhavas Tripartite Judgement Engine Verification", async () => {
+  const { evaluate12BhavasJudgement } = await import("../src/engine/bhavaJudgement.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const ephem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const result = evaluate12BhavasJudgement(ephem);
+
+  assert.ok(result.strongestHouse);
+  assert.ok(result.weakestHouse);
+  assert.ok(result.averageScore >= 0 && result.averageScore <= 100);
+
+  for (let h = 1; h <= 12; h++) {
+    const bhava = result.bhavas[h];
+    assert.ok(bhava, `Bhava ${h} must exist in judgement report`);
+    assert.strictEqual(bhava.houseNumber, h);
+    assert.ok(bhava.name);
+    assert.ok(bhava.sanskritName);
+    assert.ok(bhava.domain);
+    assert.ok(bhava.signLord);
+    assert.ok(bhava.primaryKaraka);
+    assert.ok(bhava.bhavaScore >= 0 && bhava.bhavaScore <= 100);
+    assert.ok(bhava.lordScore >= 0 && bhava.lordScore <= 100);
+    assert.ok(bhava.karakaScore >= 0 && bhava.karakaScore <= 100);
+    assert.ok(bhava.compositeScore >= 0 && bhava.compositeScore <= 100);
+    assert.ok(bhava.qualityBadge);
+    assert.ok(bhava.lordPlacementEffect.length > 10);
+    assert.ok(bhava.classicalVerdict.length > 10);
+    assert.ok(bhava.remedialAdvice.length > 10);
+  }
+});
+

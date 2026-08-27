@@ -1,7 +1,7 @@
 /**
  * Professional Vedic AI Chat Context Synthesizer ("Acharya Jyotish AI Pro")
  * Calibrated with B.V. Raman's 300 Important Combinations, Astrology for Beginners,
- * Bhava and Graha Balas (1996), and Classical Parashari Jyotish.
+ * Bhava and Graha Balas (1996), How to Judge a Horoscope (Vols 1 & 2), and Classical Parashari Jyotish.
  */
 
 import { EphemerisResult } from "./types";
@@ -15,6 +15,7 @@ import { evaluateRamanYogas } from "./ramanYogas";
 import { mapYogaActivationTimeline } from "./yogaActivation";
 import { evaluatePanchadaMaitri } from "./panchadaMaitri";
 import { calculateIshtaKashta } from "./ishtaKashta";
+import { evaluate12BhavasJudgement } from "./bhavaJudgement";
 import { RASHI_NAMES } from "./constants";
 
 export function buildAstroDossier(
@@ -163,6 +164,25 @@ export function buildAstroDossier(
       ].join("\n")
     : "- Dasha calculated.";
 
+  // 11. 12 Bhavas Tripartite Judgement (How to Judge a Horoscope)
+  let bhavaJudgementSummary = "";
+  try {
+    const bj = evaluate12BhavasJudgement(natalEphemeris);
+    const top3 = Object.values(bj.bhavas).sort((a, b) => b.compositeScore - a.compositeScore).slice(0, 3);
+    const bottom2 = Object.values(bj.bhavas).sort((a, b) => a.compositeScore - b.compositeScore).slice(0, 2);
+
+    const top3Str = top3.map((b) => "- **House " + b.houseNumber + " (" + b.sanskritName + "):** " + b.compositeScore + "% • [" + b.qualityBadge + "] -> " + b.domain).join("\n");
+    const bottom2Str = bottom2.map((b) => "- **House " + b.houseNumber + " (" + b.sanskritName + "):** " + b.compositeScore + "% • [" + b.qualityBadge + "] -> " + b.domain + " (Advice: " + b.remedialAdvice + ")").join("\n");
+
+    bhavaJudgementSummary = [
+      "- **Overall Chart Average House Index:** " + bj.averageScore + "%",
+      "- **Top Flourishing Houses (Supreme Support):**",
+      top3Str,
+      "- **Challenged / Sensitive Houses (Require Remedial Focus):**",
+      bottom2Str,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -203,20 +223,23 @@ export function buildAstroDossier(
     "#### 👑 6. CURRENT VIMSHOTTARI DASHA TIMELINE:",
     activeDashaSection,
     "",
-    "#### 💎 7. DIVISIONAL CHARTS (VARGAS):",
+    "#### 🏛️ 7. 12 BHAVAS TRIPARTITE JUDGEMENT (RAMAN HOW TO JUDGE A HOROSCOPE):",
+    bhavaJudgementSummary,
+    "",
+    "#### 💎 8. DIVISIONAL CHARTS (VARGAS):",
     "- **D9 Navamsha (Dharma, Marriage & Potential):** Lagna in " + d9Chart.ascendant.vargaRashi.englishName + " • Placements: " + d9Summary.join(", "),
     "- **D10 Dashamsha (Career, Profession & Power):** Lagna in " + d10Chart.ascendant.vargaRashi.englishName + " • Placements: " + d10Summary.join(", "),
     "",
-    "#### ⚖️ 8. JAIMINI CHARA KARAKAS (SOUL & PURPOSE):",
+    "#### ⚖️ 9. JAIMINI CHARA KARAKAS (SOUL & PURPOSE):",
     jaiminiSummary,
     "",
-    "#### ⚡ 9. SHADBALA (PLANETARY STRENGTHS & CAPACITY):",
+    "#### ⚡ 10. SHADBALA (PLANETARY STRENGTHS & CAPACITY):",
     shadbalaSummary,
     "",
-    "#### 📊 10. ASHTAKAVARGA STRENGTH (BENEFIC POINTS):",
+    "#### 📊 11. ASHTAKAVARGA STRENGTH (BENEFIC POINTS):",
     ashtakavargaSummary,
     "",
-    "#### 🪐 11. SHANI SADE SATI & GOCHAR TRANSITS:",
+    "#### 🪐 12. SHANI SADE SATI & GOCHAR TRANSITS:",
     "- **Sade Sati Status:** " + gochar.sadeSati.statusTitle + " (" + gochar.sadeSati.phaseName + ")",
     "- **Saturn Transit Position:** House " + gochar.sadeSati.houseFromMoon + " from Natal Moon in " + gochar.sadeSati.saturnTransitRashi,
     "- **Remaining Duration:** " + (gochar.sadeSati.remainingDurationFormatted || "N/A"),
@@ -224,7 +247,7 @@ export function buildAstroDossier(
     gochar.sadeSati.totalCompletionFormatted ? "- Total Sade Sati Ends: " + gochar.sadeSati.totalCompletionFormatted : "",
     gochar.sadeSati.nextCycleStartFormatted ? "- Next Cycle Begins: " + gochar.sadeSati.nextCycleStartFormatted : "",
     "",
-    "#### 📅 12. PANCHANGA AT BIRTH:",
+    "#### 📅 13. PANCHANGA AT BIRTH:",
     "- **Tithi:** " + natalEphemeris.panchanga.tithi.name + " (" + natalEphemeris.panchanga.tithi.paksha + " Paksha)",
     "- **Vara (Weekday):** " + natalEphemeris.panchanga.vara.name + " (Ruler: " + natalEphemeris.panchanga.vara.lord + ")",
     "- **Yoga:** " + natalEphemeris.panchanga.yoga.name,

@@ -3,10 +3,11 @@
 import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { calculateBhavaBala, HouseBala } from "../engine/bhavabala";
+import BhavaJudgementDeck from "./BhavaJudgementDeck";
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -79,11 +80,28 @@ export default function BhavaBalaView() {
           >
             <span>Detailed Table</span>
           </button>
+          <button
+            onClick={() => setDisplayMode("judgement")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              displayMode === "judgement"
+                ? "bg-purple-600 text-white shadow"
+                : "text-purple-300 hover:text-white bg-purple-950/30 border border-purple-800/40"
+            }`}
+          >
+            <span>🏛️ Raman 12 Bhavas Judgement</span>
+          </button>
         </div>
       </div>
 
+      {/* Raman 12 Bhavas Judgement Deck View */}
+      {displayMode === "judgement" && (
+        <BhavaJudgementDeck />
+      )}
+
       {/* Hero House Leaderboard (1st to 12th Rank Cards) */}
-      <div className="space-y-3">
+      {displayMode !== "judgement" && (
+        <>
+        <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold text-xs text-slate-200 uppercase tracking-wider flex items-center gap-2">
             <span>🏆</span>
@@ -536,6 +554,8 @@ export default function BhavaBalaView() {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }
