@@ -8,10 +8,11 @@ import BhriguNadiDeck from "./BhriguNadiDeck";
 import KarmaRebirthDeck from "./KarmaRebirthDeck";
 import DoubleTransitDeck from "./DoubleTransitDeck";
 import MarriageTimingDeck from "./MarriageTimingDeck";
+import KnRaoTechniquesDeck from "./KnRaoTechniquesDeck";
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -134,6 +135,16 @@ export default function BhavaBalaView() {
           >
             <span>💍 Timing of Marriage (K.N. Rao)</span>
           </button>
+          <button
+            onClick={() => setDisplayMode("techniques")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              displayMode === "techniques"
+                ? "bg-amber-600 text-slate-950 shadow"
+                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
+            }`}
+          >
+            <span>🌟 Advanced Rao Techniques</span>
+          </button>
         </div>
       </div>
 
@@ -162,8 +173,13 @@ export default function BhavaBalaView() {
         <MarriageTimingDeck />
       )}
 
+      {/* K.N. Rao Advanced Predictive Techniques View */}
+      {displayMode === "techniques" && (
+        <KnRaoTechniquesDeck />
+      )}
+
       {/* Hero House Leaderboard (1st to 12th Rank Cards) */}
-      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && (
+      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && (
         <>
         <div className="space-y-3">
         <div className="flex items-center justify-between">

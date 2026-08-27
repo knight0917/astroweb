@@ -23,6 +23,7 @@ import { evaluateBhriguNadi } from "./bhriguNadi";
 import { evaluateKarmaRebirth } from "./karmaRebirth";
 import { calculateDoubleTransit } from "./doubleTransit";
 import { evaluateMarriageTiming } from "./marriageTiming";
+import { evaluateKnRaoTechniques } from "./knRaoTechniques";
 import { RASHI_NAMES } from "./constants";
 
 export function buildAstroDossier(
@@ -310,6 +311,19 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 17. K.N. Rao Advanced Predictive Techniques
+  let techniquesSummary = "";
+  try {
+    const tech = evaluateKnRaoTechniques(natalEphemeris);
+    techniquesSummary = [
+      "- **Saturn-Venus Paradox Vector:** " + tech.saturnVenusParadox.mutualRelationshipD1 + " (" + tech.saturnVenusParadox.saturnDignity + " / " + tech.saturnVenusParadox.venusDignity + ") -> " + tech.saturnVenusParadox.dashaPeriodEffect,
+      "- **Beeja Sphuta (Male Virility Point):** " + tech.beejaSphuta.signName + " (" + tech.beejaSphuta.degreeInSign + ") • Navamsha: " + tech.beejaSphuta.navamshaSignName + " • [" + tech.beejaSphuta.fertilityRating + "] -> " + tech.beejaSphuta.classicalInterpretation,
+      "- **Kshetra Sphuta (Female Fecundity Point):** " + tech.kshetraSphuta.signName + " (" + tech.kshetraSphuta.degreeInSign + ") • Navamsha: " + tech.kshetraSphuta.navamshaSignName + " • [" + tech.kshetraSphuta.fertilityRating + "] -> " + tech.kshetraSphuta.classicalInterpretation,
+      "- **D7 Progeny & D10 Career Synchronization:** D7 Lagna in " + tech.crossVarga.d7SaptamshaLagna + " • D10 Lagna in " + tech.crossVarga.d10DashamshaLagna + " (" + tech.crossVarga.d10Synthesis + ")",
+      "- **Master Predictive Verdict:** " + tech.masterPredictiveSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -394,6 +408,9 @@ export function buildAstroDossier(
     "",
     "#### 💍 18. K.N. RAO TIMING OF MARRIAGE (3-TIER PREDICTIVE FILTER):",
     marriageSummary,
+    "",
+    "#### 🌟 19. K.N. RAO ADVANCED PREDICTIVE TECHNIQUES (SATURN-VENUS & SPHUTAS):",
+    techniquesSummary,
   ];
 
   return lines.filter(Boolean).join("\n");

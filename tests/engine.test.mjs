@@ -1136,3 +1136,53 @@ test("Classical K.N. Rao Timing of Marriage Engine Verification", async () => {
   assert.ok(result.remedialGuidance.length > 15);
 });
 
+test("Classical K.N. Rao Advanced Predictive Techniques Engine Verification", async () => {
+  const { evaluateKnRaoTechniques } = await import("../src/engine/knRaoTechniques.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateKnRaoTechniques(natalEphem);
+
+  // 1. Saturn-Venus Paradox
+  assert.ok(result.saturnVenusParadox);
+  assert.ok(result.saturnVenusParadox.mutualRelationshipD1);
+  assert.ok(result.saturnVenusParadox.mutualRelationshipD10);
+  assert.ok(result.saturnVenusParadox.saturnDignity);
+  assert.ok(result.saturnVenusParadox.venusDignity);
+  assert.ok(typeof result.saturnVenusParadox.isParadoxicalReversalActive === "boolean");
+  assert.ok(result.saturnVenusParadox.dashaPeriodEffect.length > 10);
+  assert.ok(result.saturnVenusParadox.classicalVerdict.length > 10);
+
+  // 2. Beeja Sphuta (Male)
+  assert.ok(result.beejaSphuta);
+  assert.ok(result.beejaSphuta.longitude >= 0 && result.beejaSphuta.longitude < 360);
+  assert.ok(result.beejaSphuta.signName);
+  assert.ok(result.beejaSphuta.navamshaSignName);
+  assert.ok(typeof result.beejaSphuta.isSignOdd === "boolean");
+  assert.ok(typeof result.beejaSphuta.isNavamshaOdd === "boolean");
+  assert.ok(result.beejaSphuta.scorePercent >= 0 && result.beejaSphuta.scorePercent <= 100);
+  assert.ok(result.beejaSphuta.classicalInterpretation.length > 15);
+
+  // 3. Kshetra Sphuta (Female)
+  assert.ok(result.kshetraSphuta);
+  assert.ok(result.kshetraSphuta.longitude >= 0 && result.kshetraSphuta.longitude < 360);
+  assert.ok(result.kshetraSphuta.signName);
+  assert.ok(result.kshetraSphuta.navamshaSignName);
+  assert.ok(typeof result.kshetraSphuta.isSignOdd === "boolean");
+  assert.ok(typeof result.kshetraSphuta.isNavamshaOdd === "boolean");
+  assert.ok(result.kshetraSphuta.scorePercent >= 0 && result.kshetraSphuta.scorePercent <= 100);
+  assert.ok(result.kshetraSphuta.classicalInterpretation.length > 15);
+
+  // 4. Cross-Vargas
+  assert.ok(result.crossVarga);
+  assert.ok(result.crossVarga.d7SaptamshaLagna);
+  assert.ok(result.crossVarga.d7FifthHouseSign);
+  assert.ok(result.crossVarga.d10DashamshaLagna);
+  assert.ok(result.crossVarga.d10TenthHouseSign);
+
+  // 5. Master synthesis
+  assert.ok(result.masterPredictiveSynthesis.length > 20);
+});
+
