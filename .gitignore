@@ -33,3 +33,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Astrology reference books & raw media (do NOT upload to Git)
+/books/
+/reference_books/
+/raw_books/
+/library/
+*.pdf
+*.epub
+*.mobi
+*.azw3
+*.djvu
+*.doc
+*.docx
+*.cbz
+*.cbr
