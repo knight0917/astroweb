@@ -429,8 +429,8 @@ export default function TimeTravelSlider() {
           </div>
         </div>
 
-        {/* RIGHT SECTION: Live Display + Live Now + Time Format Toggles */}
-        <div className="flex items-center gap-2.5 flex-shrink-0">
+        {/* RIGHT SECTION: Live Display + Live Now + Time Format Toggles (Always anchored to the right) */}
+        <div className="ml-auto flex items-center gap-2.5 flex-shrink-0">
           {/* Quick "LIVE NOW" button */}
           <button
             onClick={() => {
