@@ -7,6 +7,7 @@ import { calculateMatchmaking, CompatibilityResult, KootaScore } from "../engine
 import { POPULAR_CITIES } from "../engine/constants";
 import { EXTENDED_LOCAL_PLACES } from "../engine/geocoding";
 import { GeoLocation } from "../engine/types";
+import MatchmakingChartsDeck from "./MatchmakingChartsDeck";
 
 function formatUtcToLocalIso(utcDate: Date, tzOffsetHours: number = 5.5): string {
   const localMs = utcDate.getTime() + tzOffsetHours * 3600 * 1000;
@@ -519,6 +520,14 @@ export default function MatchmakingView() {
           </div>
         </div>
       </div>
+
+      {/* Visual D1 & D9 Charts for Groom & Bride */}
+      <MatchmakingChartsDeck
+        boyEphem={boyEphem}
+        girlEphem={girlEphem}
+        boyName={boyName}
+        girlName={girlName}
+      />
 
       {/* 8 Kootas Detailed Table */}
       <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-slate-950/80 shadow-2xl space-y-4">
