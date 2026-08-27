@@ -1,8 +1,9 @@
-/**
+﻿/**
  * Professional Vedic AI Chat Context Synthesizer ("Acharya Jyotish AI Pro")
+ * Calibrated with B.V. Raman's 300 Important Combinations, BPHS, and Classical Parashari Jyotish.
  * Assembles a comprehensive, multi-layered classical astrological dossier of the native
  * combining D1 Rashi, D9 Navamsha, D10 Dashamsha, Shadbala, Jaimini Karakas,
- * Ashtakavarga, Vimshottari Dasha, and Gochar transits.
+ * Ashtakavarga, Raman 300 Yogas with Potency & Bhanga, Vimshottari Dasha, and Gochar transits.
  */
 
 import { EphemerisResult } from "./types";
@@ -12,7 +13,8 @@ import { calculateShodashavargaChart } from "./shodashavarga";
 import { calculateShadbala } from "./shadbala";
 import { calculateAshtakavarga } from "./ashtakavarga";
 import { calculateJaiminiKarakas } from "./jaimini";
-import { detectVedicYogas } from "./yogas";
+import { evaluateRamanYogas } from "./ramanYogas";
+import { mapYogaActivationTimeline } from "./yogaActivation";
 import { RASHI_NAMES } from "./constants";
 
 export function buildAstroDossier(
@@ -41,13 +43,13 @@ export function buildAstroDossier(
   const d9Summary: string[] = [];
   d9Chart.entities.forEach((e) => {
     if (["Uranus", "Neptune", "Pluto"].includes(e.id)) return;
-    d9Summary.push(`${e.name}: ${e.vargaRashi.englishName} (House ${e.house})`);
+    d9Summary.push(e.name + ": " + e.vargaRashi.englishName + " (H" + e.house + ")");
   });
 
   const d10Summary: string[] = [];
   d10Chart.entities.forEach((e) => {
     if (["Uranus", "Neptune", "Pluto"].includes(e.id)) return;
-    d10Summary.push(`${e.name}: ${e.vargaRashi.englishName} (House ${e.house})`);
+    d10Summary.push(e.name + ": " + e.vargaRashi.englishName + " (H" + e.house + ")");
   });
 
   // 4. Shadbala Planetary Strengths
@@ -58,7 +60,7 @@ export function buildAstroDossier(
     shadbalaSummary = sorted
       .map(
         (p) =>
-          `- ${p.name}: ${p.totalRupas.toFixed(2)} Rupas (${p.percentageEfficiency.toFixed(0)}% req) • ${p.isBalavan ? "Strong (बलवान)" : "Moderate / Weak"}`
+          "- " + p.name + ": " + p.totalRupas.toFixed(2) + " Rupas (" + p.percentageEfficiency.toFixed(0) + "% req) • " + (p.isBalavan ? "Strong (बलवान)" : "Moderate / Weak")
       )
       .join("\n");
   } catch (_) {}
@@ -97,59 +99,93 @@ export function buildAstroDossier(
     );
   });
 
-  // 8. Mathematically Verified Vedic Yogas (BPHS & Phaladeepika)
-  const detectedYogas = detectVedicYogas(natalEphemeris);
-  const yogasSummary =
-    detectedYogas.length > 0
-      ? detectedYogas
-          .map(
-            (y) =>
-              `- **${y.name} (${y.sanskritName})** [${y.category}]: ${y.description} (Activation: ${y.activationDasha})`
-          )
-          .join("\n")
-      : "- No major Pancha Mahapurusha or Raja/Dhana Yogas mathematically formed in this specific nativity. Assess results strictly via Shadbala strengths and functional house lords.";
+  // 8. B.V. Raman 300 Yogas with Potency & Bhanga Analysis
+  const ramanAnalysis = evaluateRamanYogas(natalEphemeris);
+  const yogaActivation = mapYogaActivationTimeline(ramanAnalysis.yogas, dasha);
+
+  const activeYogasFormatted = yogaActivation.currentlyActive.length > 0
+    ? yogaActivation.currentlyActive
+        .map((r) => `- **${r.yoga.name} (${r.yoga.sanskritName})** [Potency: ${r.yoga.potencyPercent}%] -> ${r.timingDescription} | Effects: ${r.yoga.practicalEffects}`)
+        .join("\n")
+    : "- No high-potency event yogas active in this specific sub-period. Results unfold via general Dasha lordship significations.";
+
+  const lifelongYogasFormatted = yogaActivation.lifelongYogas.length > 0
+    ? yogaActivation.lifelongYogas
+        .map((r) => `- **${r.yoga.name} (${r.yoga.sanskritName})** -> ${r.yoga.classicalDescription} | Lifelong Trait: ${r.yoga.practicalEffects}`)
+        .join("\n")
+    : "- Standard constitutional distribution.";
+
+  const upcomingYogasFormatted = yogaActivation.upcomingYogas.slice(0, 4).length > 0
+    ? yogaActivation.upcomingYogas.slice(0, 4)
+        .map((r) => `- **${r.yoga.name}** [Potency: ${r.yoga.potencyPercent}%] -> ${r.timingDescription}`)
+        .join("\n")
+    : "- All major yogas have completed primary cycles or remain dormant.";
+
+  const cancelledYogasFormatted = yogaActivation.cancelledYogas.length > 0
+    ? yogaActivation.cancelledYogas
+        .map((r) => `- **${r.yoga.name}**: ${r.timingDescription}`)
+        .join("\n")
+    : "- No cancelled or corrupt combinations detected.";
+
+  // Functional Roles formatted
+  const functionalRolesFormatted = Object.entries(ramanAnalysis.functionalRoles)
+    .map(([graha, role]) => `- **${graha}:** ${role}`)
+    .join("\n");
 
   const dossier = `
-### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER:
+### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):
 - **Current Real-Time Consultation Date:** ${evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} (Year: ${evaluationDate.getFullYear()})
 - **Date & Time of Birth (UTC):** ${birthDate.toUTCString()}
 - **Birth Location:** ${location.cityName}${location.country ? `, ${location.country}` : ""} (Lat: ${location.latitude.toFixed(2)}°, Lon: ${location.longitude.toFixed(2)}°)
 - **Ayanamsha Model:** ${natalEphemeris.ayanamshaType} (${natalEphemeris.ayanamshaValue.toFixed(3)}°)
 
-#### 🌟 1. CORE LAGNA & GRAHAS:
+#### 🌟 1. CORE LAGNA & FUNCTIONAL ROLES:
 - **Ascendant (Lagna / लग्न):** ${ascRashi.englishName} (${ascRashi.sanskritName}) at ${(ascLon % 30).toFixed(2)}° • Ruling Lord: ${ascRashi.lord}
 - **Moon Sign (Janma Rashi / चन्द्र राशि):** ${RASHI_NAMES[Math.floor(moonLon / 30)].englishName} (${RASHI_NAMES[Math.floor(moonLon / 30)].sanskritName}) • Lord: ${RASHI_NAMES[Math.floor(moonLon / 30)].lord}
 - **Moon Nakshatra:** ${natalEphemeris.planets.Moon?.nakshatra.sanskritName} Pada ${natalEphemeris.planets.Moon?.nakshatra.pada} (Deity: ${natalEphemeris.planets.Moon?.nakshatra.deity}, Lord: ${natalEphemeris.planets.Moon?.nakshatra.lord})
 - **Sun Sign (Surya Rashi):** ${RASHI_NAMES[Math.floor(natalEphemeris.planets.Sun?.siderealLongitude / 30)].englishName} (${RASHI_NAMES[Math.floor(natalEphemeris.planets.Sun?.siderealLongitude / 30)].sanskritName})
+- **Functional Lordship Matrix for this Lagna:**
+${functionalRolesFormatted}
 
 #### 🪐 2. NATAL PLANETARY POSITIONS (D1 KUNDLI HOUSES):
 ${planetsSummary.join("\n")}
 
-#### 📜 3. VERIFIED VEDIC YOGAS FORMED IN THIS CHART:
-${yogasSummary}
+#### 📜 3. B.V. RAMAN 300 YOGAS & ACTIVATION TIMELINE:
+- **Currently Active Yogas in Running Dasha (${activeDasha ? activeDasha.mahadasha.name + "/" + activeDasha.antardasha.name : "N/A"}):**
+${activeYogasFormatted}
 
-#### 💎 4. DIVISIONAL CHARTS (VARGAS):
-- **D9 Navamsha (Dharma, Marriage & Potential):** Lagna in ${d9Chart.ascendant.vargaRashi.englishName} • Placements: ${d9Summary.join(", ")}
-- **D10 Dashamsha (Career, Profession & Power):** Lagna in ${d10Chart.ascendant.vargaRashi.englishName} • Placements: ${d10Summary.join(", ")}
+- **Lifelong Constitutional & Archetypal Yogas:**
+${lifelongYogasFormatted}
 
-#### ⚖️ 5. JAIMINI CHARA KARAKAS (SOUL & PURPOSE):
-${jaiminiSummary}
+- **Upcoming Yogas (Scheduled in Next Dasha Periods):**
+${upcomingYogasFormatted}
 
-#### ⚡ 6. SHADBALA (PLANETARY STRENGTHS & CAPACITY):
-${shadbalaSummary}
+- **Cancelled Yogas / Neutralized Doshas (Bhanga Status):**
+${cancelledYogasFormatted}
 
-#### 📊 7. ASHTAKAVARGA STRENGTH (BENEFIC POINTS):
-${ashtakavargaSummary}
-
-#### 👑 8. CURRENT VIMSHOTTARI DASHA TIMELINE:
+#### 👑 4. CURRENT VIMSHOTTARI DASHA TIMELINE:
 ${
   activeDasha
     ? `- **Active Mahadasha (MD):** ${activeDasha.mahadasha.name} (${activeDasha.mahadasha.hindiName}) [${activeDasha.mdStart.toLocaleDateString()} to ${activeDasha.mdEnd.toLocaleDateString()}]
 - **Active Antardasha (AD):** ${activeDasha.antardasha.name} (${activeDasha.antardasha.hindiName}) [${activeDasha.adStart.toLocaleDateString()} to ${activeDasha.adEnd.toLocaleDateString()}]
 - **Active Pratyantardasha (PD):** ${activeDasha.pratyantardasha.name} (${activeDasha.pratyantardasha.hindiName}) [${activeDasha.pdStart.toLocaleDateString()} to ${activeDasha.pdEnd.toLocaleDateString()}]
-- **Dasha Progress:** ${activeDasha.percentageCompleteMD}% of MD and ${activeDasha.percentageCompleteAD}% of AD completed.`
+- **Dasha Progress:** ${activeDasha.percentageCompleteMD}% of MD and ${activeDasha.percentageCompleteAD}% of AD completed.
+- **Dominant Operational Theme:** ${yogaActivation.dominantLifeTheme}`
     : "- Dasha calculated."
 }
+
+#### 💎 5. DIVISIONAL CHARTS (VARGAS):
+- **D9 Navamsha (Dharma, Marriage & Potential):** Lagna in ${d9Chart.ascendant.vargaRashi.englishName} • Placements: ${d9Summary.join(", ")}
+- **D10 Dashamsha (Career, Profession & Power):** Lagna in ${d10Chart.ascendant.vargaRashi.englishName} • Placements: ${d10Summary.join(", ")}
+
+#### ⚖️ 6. JAIMINI CHARA KARAKAS (SOUL & PURPOSE):
+${jaiminiSummary}
+
+#### ⚡ 7. SHADBALA (PLANETARY STRENGTHS & CAPACITY):
+${shadbalaSummary}
+
+#### 📊 8. ASHTAKAVARGA STRENGTH (BENEFIC POINTS):
+${ashtakavargaSummary}
 
 #### 🪐 9. SHANI SADE SATI & GOCHAR TRANSITS:
 - **Sade Sati Status:** ${gochar.sadeSati.statusTitle} (${gochar.sadeSati.phaseName})

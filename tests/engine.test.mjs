@@ -710,7 +710,7 @@ test("Vedic AI Astrologer Chat Context Dossier Verification", async () => {
   assert.ok(dossier.includes("JAIMINI CHARA KARAKAS"));
   assert.ok(dossier.includes("SHADBALA"));
   assert.ok(dossier.includes("ASHTAKAVARGA STRENGTH"));
-  assert.ok(dossier.includes("VERIFIED VEDIC YOGAS"));
+  assert.ok(dossier.includes("B.V. RAMAN 300 YOGAS"));
   assert.ok(dossier.includes("SHANI SADE SATI"));
   assert.ok(dossier.includes("PANCHANGA AT BIRTH"));
 });
@@ -737,7 +737,6 @@ test("Classical Vedic Yoga Detection Engine Verification", async () => {
 
   const yogas = detectVedicYogas(ephem);
   assert.ok(Array.isArray(yogas));
-  // Every detected yoga must have complete metadata
   yogas.forEach((y) => {
     assert.ok(y.name);
     assert.ok(y.sanskritName);
@@ -747,3 +746,57 @@ test("Classical Vedic Yoga Detection Engine Verification", async () => {
     assert.ok(y.activationDasha);
   });
 });
+
+test("Classical B.V. Raman 300 Yogas Engine & Dasha Activation Verification", async () => {
+  const { evaluateRamanYogas } = await import("../src/engine/ramanYogas.ts");
+  const { mapYogaActivationTimeline } = await import("../src/engine/yogaActivation.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const { calculateVimshottariDasha } = await import("../src/engine/dasha.ts");
+
+  const location = {
+    cityName: "Varanasi",
+    country: "India",
+    latitude: 25.3176,
+    longitude: 82.9739,
+    timezoneOffsetHours: 5.5,
+  };
+
+  const birthDate = new Date("1995-10-15T06:30:00Z");
+  const ephem = calculateVedicEphemeris(birthDate, location, "Lahiri", "WholeSign", "Mean");
+
+  const ramanResult = evaluateRamanYogas(ephem);
+
+  // 1. Structural evaluation
+  assert.ok(ramanResult.totalFormed > 0, "Must detect yogas in chart");
+  assert.ok(ramanResult.yogas.length === ramanResult.totalFormed);
+  assert.ok(ramanResult.functionalRoles["Mars"]);
+  assert.ok(ramanResult.functionalRoles["Jupiter"]);
+  assert.ok(ramanResult.functionalRoles["Saturn"]);
+
+  // 2. Every yoga must contain classical definitions, potency %, and activation lords
+  ramanResult.yogas.forEach((y) => {
+    assert.ok(y.id);
+    assert.ok(y.name);
+    assert.ok(y.sanskritName);
+    assert.ok(y.category);
+    assert.ok(y.potencyPercent >= 0 && y.potencyPercent <= 100, `Potency % (${y.potencyPercent}) must be 0-100`);
+    assert.ok(Array.isArray(y.participatingGrahas));
+    assert.ok(Array.isArray(y.housesInvolved));
+    assert.ok(Array.isArray(y.activationDashaLords));
+    assert.ok(y.classicalDescription);
+    assert.ok(y.practicalEffects);
+  });
+
+  // 3. Verify Dasha-Gochar activation mapping
+  const moonLon = ephem.planets.Moon?.siderealLongitude || 0;
+  const dasha = calculateVimshottariDasha(birthDate, moonLon, new Date("2026-08-27T00:00:00Z"));
+  const timeline = mapYogaActivationTimeline(ramanResult.yogas, dasha);
+
+  assert.ok(Array.isArray(timeline.currentlyActive));
+  assert.ok(Array.isArray(timeline.lifelongYogas));
+  assert.ok(Array.isArray(timeline.upcomingYogas));
+  assert.ok(Array.isArray(timeline.dormantYogas));
+  assert.ok(Array.isArray(timeline.cancelledYogas));
+  assert.ok(timeline.dominantLifeTheme.length > 10);
+});
+
