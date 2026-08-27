@@ -556,3 +556,131 @@ export function calculateJaiminiRashiDrishti(signIndex: number): RashiDrishtiRes
     aspectedSigns: aspectedSignIndices.map((idx) => RASHI_NAMES[idx]),
   };
 }
+
+// ----------------------------------------------------------------------
+// JAIMINI ARGALA & VIRODHARGALA (INTERVENTION & OBSTRUCTION)
+// ----------------------------------------------------------------------
+
+export interface ArgalaItem {
+  type: "Primary (2nd)" | "Primary (4th)" | "Primary (11th)" | "Secondary (5th)";
+  argalaHouse: number;
+  argalaSignIndex: number;
+  argalaSignName: string;
+  argalaPlanets: string[];
+
+  virodhaHouse: number;
+  virodhaSignIndex: number;
+  virodhaSignName: string;
+  virodhaPlanets: string[];
+
+  isUnobstructed: boolean;
+  isShubhaArgala: boolean;
+  isPapaArgala: boolean;
+  statusSummary: string;
+}
+
+export interface ArgalaReport {
+  targetSignIndex: number;
+  targetSignName: string;
+  targetType: string;
+  argalas: ArgalaItem[];
+  unobstructedShubhaCount: number;
+  unobstructedPapaCount: number;
+  overallVerdict: string;
+}
+
+export function calculateArgala(
+  ephem: EphemerisResult,
+  targetSignIndex: number,
+  targetType: string = "Rashi"
+): ArgalaReport {
+  const BENEFICS = ["Jupiter", "Venus", "Mercury", "Moon"];
+  const MALEFICS = ["Sun", "Mars", "Saturn", "Rahu", "Ketu"];
+
+  const planetsBySign: Record<number, string[]> = {};
+  for (let i = 0; i < 12; i++) planetsBySign[i] = [];
+
+  Object.values(ephem.planets).forEach((p) => {
+    if (p.isModernPlanet) return;
+    const s = Math.floor(p.siderealLongitude / 30);
+    planetsBySign[s].push(p.name);
+  });
+
+  const ARGALA_PAIRS: {
+    type: ArgalaItem["type"];
+    argHouse: number;
+    virHouse: number;
+  }[] = [
+    { type: "Primary (2nd)", argHouse: 2, virHouse: 12 },
+    { type: "Primary (4th)", argHouse: 4, virHouse: 10 },
+    { type: "Primary (11th)", argHouse: 11, virHouse: 3 },
+    { type: "Secondary (5th)", argHouse: 5, virHouse: 9 },
+  ];
+
+  const argalaItems: ArgalaItem[] = [];
+  let unobstructedShubhaCount = 0;
+  let unobstructedPapaCount = 0;
+
+  ARGALA_PAIRS.forEach((pair) => {
+    const argSignIdx = (targetSignIndex + pair.argHouse - 1) % 12;
+    const virSignIdx = (targetSignIndex + pair.virHouse - 1) % 12;
+
+    const argPlanets = planetsBySign[argSignIdx] || [];
+    const virPlanets = planetsBySign[virSignIdx] || [];
+
+    // Argala exists if there are planets in the Argala sign
+    const hasArgala = argPlanets.length > 0;
+    // Obstruction occurs if number of planets in Virodha >= planets in Argala
+    const isObstructed = hasArgala && virPlanets.length >= argPlanets.length;
+    const isUnobstructed = hasArgala && !isObstructed;
+
+    const hasBenefic = argPlanets.some((p) => BENEFICS.includes(p));
+    const hasMalefic = argPlanets.some((p) => MALEFICS.includes(p));
+
+    if (isUnobstructed) {
+      if (hasBenefic) unobstructedShubhaCount++;
+      if (hasMalefic) unobstructedPapaCount++;
+    }
+
+    let statusSummary = "";
+    if (!hasArgala) {
+      statusSummary = "No active planetary intervention (Vacant Argala house).";
+    } else if (isObstructed) {
+      statusSummary = `Intervention from [${argPlanets.join(", ")}] in ${pair.argHouse}th is obstructed/neutralized by [${virPlanets.join(", ")}] in ${pair.virHouse}th.`;
+    } else {
+      statusSummary = `Active unobstructed ${hasBenefic ? "Shubha" : "Papa"} Argala from [${argPlanets.join(", ")}] in ${pair.argHouse}th house.`;
+    }
+
+    argalaItems.push({
+      type: pair.type,
+      argalaHouse: pair.argHouse,
+      argalaSignIndex: argSignIdx,
+      argalaSignName: RASHI_NAMES[argSignIdx].englishName,
+      argalaPlanets: argPlanets,
+      virodhaHouse: pair.virHouse,
+      virodhaSignIndex: virSignIdx,
+      virodhaSignName: RASHI_NAMES[virSignIdx].englishName,
+      virodhaPlanets: virPlanets,
+      isUnobstructed,
+      isShubhaArgala: hasBenefic,
+      isPapaArgala: hasMalefic,
+      statusSummary,
+    });
+  });
+
+  const overallVerdict = unobstructedShubhaCount > unobstructedPapaCount
+    ? "Predominantly auspicious Shubha Argala support unlocks effortless material manifestation and divine favor."
+    : unobstructedPapaCount > unobstructedShubhaCount
+    ? "Papa Argala dominance indicates intense catalytic pressure, requiring strategic discipline to overcome hurdles."
+    : "Balanced Argala dynamics; life matters unfold through standard cyclic effort.";
+
+  return {
+    targetSignIndex,
+    targetSignName: RASHI_NAMES[targetSignIndex].englishName,
+    targetType,
+    argalas: argalaItems,
+    unobstructedShubhaCount,
+    unobstructedPapaCount,
+    overallVerdict,
+  };
+}

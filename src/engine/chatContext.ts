@@ -12,7 +12,7 @@ import { calculateGochar } from "./gochar";
 import { calculateShodashavargaChart } from "./shodashavarga";
 import { calculateShadbala } from "./shadbala";
 import { calculateAshtakavarga } from "./ashtakavarga";
-import { calculateJaiminiKarakas } from "./jaimini";
+import { calculateJaiminiKarakas, calculateArudhaPadas, analyzeKarakamsha, calculateArgala } from "./jaimini";
 import { evaluateRamanYogas } from "./ramanYogas";
 import { mapYogaActivationTimeline } from "./yogaActivation";
 import { evaluatePanchadaMaitri } from "./panchadaMaitri";
@@ -94,18 +94,33 @@ export function buildAstroDossier(
       .join("\n");
   } catch (_) {}
 
-  // 7. Jaimini Chara Karakas
+  // 7. Jaimini Chara Karakas, Arudhas, Karakamsha & Argala
   let jaiminiSummary = "";
   try {
     const jaimini = calculateJaiminiKarakas(natalEphemeris);
+    const padas = calculateArudhaPadas(natalEphemeris);
+    const kl = analyzeKarakamsha(natalEphemeris);
+    const alPada = padas[0]; // AL
+    const ulPada = padas[11]; // UL
+    const a7Pada = padas[6]; // A7
+    const a10Pada = padas[9]; // A10
+
+    const lagnaArgala = calculateArgala(natalEphemeris, ascRashiIdx, "Lagna");
+    const alArgala = calculateArgala(natalEphemeris, alPada.padaSignIndex, "Arudha Lagna");
+
     jaiminiSummary = [
       "- **Atmakaraka (AK - Soul & Destiny):** " + jaimini.atmakaraka.planetName + " in " + jaimini.atmakaraka.rashi.englishName + " (" + jaimini.atmakaraka.formattedDegrees + ")",
       "- **Amatyakaraka (AmK - Career & Livelihood):** " + jaimini.amatyakaraka.planetName + " in " + jaimini.amatyakaraka.rashi.englishName + " (" + jaimini.amatyakaraka.formattedDegrees + ")",
       "- **Darakaraka (DK - Spouse & Partnerships):** " + jaimini.darakaraka.planetName + " in " + jaimini.darakaraka.rashi.englishName + " (" + jaimini.darakaraka.formattedDegrees + ")",
-      "- **Bhratrikaraka (BK - Siblings & Guru):** " + jaimini.bhratrikaraka.planetName,
-      "- **Matrikaraka (MK - Mother & Property):** " + jaimini.matrikaraka.planetName,
-      "- **Putrakaraka (PK - Children & Intelligence):** " + jaimini.putrakaraka.planetName,
-      "- **Gnatikaraka (GK - Obstacles & Competitions):** " + jaimini.gnatikaraka.planetName,
+      "- **Bhratrikaraka (BK - Siblings & Guru):** " + jaimini.bhratrikaraka.planetName + " | **Matrikaraka (MK - Mother/Land):** " + jaimini.matrikaraka.planetName,
+      "- **Putrakaraka (PK - Intellect/Children):** " + jaimini.putrakaraka.planetName + " | **Gnatikaraka (GK - Competitors):** " + jaimini.gnatikaraka.planetName,
+      "- **Arudha Lagna (AL - Public Image & Reputation):** " + alPada.padaSign.englishName + " (House " + alPada.padaHouse + " in D1)",
+      "- **Upapada Lagna (UL - Marriage & In-laws):** " + ulPada.padaSign.englishName + " (House " + ulPada.padaHouse + " in D1)",
+      "- **Dara Pada (A7 - Partnerships):** " + a7Pada.padaSign.englishName + " | **Rajya Pada (A10 - Authority):** " + a10Pada.padaSign.englishName,
+      "- **Karakamsha (KL in D9):** " + kl.karakamshaRashi.englishName + " • **Ishta Devata:** " + kl.ishtaDevata.deity + " (via " + kl.ishtaDevata.graha + ")",
+      "- **Moksha Indicator (12th from KL):** " + kl.twelfthFromKarakamsha.spiritualSignification,
+      "- **Argala on Lagna:** " + lagnaArgala.unobstructedShubhaCount + " Shubha / " + lagnaArgala.unobstructedPapaCount + " Papa (" + lagnaArgala.overallVerdict + ")",
+      "- **Argala on Arudha Lagna (AL):** " + alArgala.unobstructedShubhaCount + " Shubha / " + alArgala.unobstructedPapaCount + " Papa",
     ].join("\n");
   } catch (_) {}
 

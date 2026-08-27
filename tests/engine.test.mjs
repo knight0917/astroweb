@@ -965,3 +965,39 @@ test("Classical Bhrigu Nandi Nadi & Bhrigu Saral Paddhati (BSP) Engine Verificat
   });
 });
 
+test("Classical Jaimini Argala & Virodhargala Engine Verification", async () => {
+  const { calculateArgala, calculateJaiminiKarakas, calculateArudhaPadas } = await import("../src/engine/jaimini.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const ephem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const ascSign = Math.floor(ephem.ascendant.siderealLongitude / 30);
+  const lagnaArgala = calculateArgala(ephem, ascSign, "Lagna");
+
+  assert.ok(lagnaArgala);
+  assert.strictEqual(lagnaArgala.targetSignIndex, ascSign);
+  assert.ok(lagnaArgala.argalas.length === 4); // 2nd, 4th, 11th, 5th
+  assert.ok(lagnaArgala.overallVerdict);
+
+  // Check specific Argala properties
+  lagnaArgala.argalas.forEach((item) => {
+    assert.ok(["Primary (2nd)", "Primary (4th)", "Primary (11th)", "Secondary (5th)"].includes(item.type));
+    assert.ok(item.argalaHouse);
+    assert.ok(item.argalaSignName);
+    assert.ok(item.virodhaHouse);
+    assert.ok(item.virodhaSignName);
+    assert.ok(typeof item.isUnobstructed === "boolean");
+    assert.ok(typeof item.isShubhaArgala === "boolean");
+    assert.ok(typeof item.isPapaArgala === "boolean");
+    assert.ok(item.statusSummary.length > 5);
+  });
+
+  // Test Argala on Arudha Lagna (AL)
+  const padas = calculateArudhaPadas(ephem);
+  const alSign = padas[0].padaSignIndex;
+  const alArgala = calculateArgala(ephem, alSign, "Arudha Lagna");
+  assert.ok(alArgala);
+  assert.strictEqual(alArgala.targetSignIndex, alSign);
+});
+

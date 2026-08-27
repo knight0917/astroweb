@@ -9,12 +9,16 @@ import {
   calculateJaiminiCharaDasha,
   calculateJaiminiRashiDrishti,
   ArudhaPada,
+  calculateArgala,
+  ArgalaReport,
 } from "../engine/jaimini";
 import { RASHI_NAMES } from "../engine/constants";
 
 export default function JaiminiView() {
   const { ephemeris, currentDate } = useAstroStore();
-  const [activeTab, setActiveTab] = useState<"karakas" | "arudha" | "karakamsha" | "charaDasha" | "rashiDrishti">("karakas");
+  const [activeTab, setActiveTab] = useState<"karakas" | "arudha" | "karakamsha" | "charaDasha" | "rashiDrishti" | "argala">("karakas");
+  const [argalaTargetMode, setArgalaTargetMode] = useState<"lagna" | "al" | "ul" | "custom">("lagna");
+  const [customArgalaSignIdx, setCustomArgalaSignIdx] = useState<number>(0);
   const [selectedPada, setSelectedPada] = useState<ArudhaPada | null>(null);
   const [inspectedSignIdx, setInspectedSignIdx] = useState<number>(0);
 
@@ -26,6 +30,24 @@ export default function JaiminiView() {
     [currentDate, ephemeris]
   );
   const rashiDrishti = useMemo(() => calculateJaiminiRashiDrishti(inspectedSignIdx), [inspectedSignIdx]);
+  const argalaTargetSignIdx = useMemo(() => {
+    if (argalaTargetMode === "lagna") return Math.floor(ephemeris.ascendant.siderealLongitude / 30);
+    if (argalaTargetMode === "al") return arudhaPadas[0]?.padaSignIndex || 0;
+    if (argalaTargetMode === "ul") return arudhaPadas[11]?.padaSignIndex || 0;
+    return customArgalaSignIdx;
+  }, [argalaTargetMode, ephemeris, arudhaPadas, customArgalaSignIdx]);
+
+  const argalaTargetLabel = useMemo(() => {
+    if (argalaTargetMode === "lagna") return "Lagna (Ascendant)";
+    if (argalaTargetMode === "al") return "Arudha Lagna (AL - Public Status)";
+    if (argalaTargetMode === "ul") return "Upapada Lagna (UL - Marriage)";
+    return `Sign #${customArgalaSignIdx + 1}`;
+  }, [argalaTargetMode, customArgalaSignIdx]);
+
+  const argalaReport: ArgalaReport = useMemo(() => {
+    return calculateArgala(ephemeris, argalaTargetSignIdx, argalaTargetLabel);
+  }, [ephemeris, argalaTargetSignIdx, argalaTargetLabel]);
+
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-200">
@@ -50,6 +72,7 @@ export default function JaiminiView() {
             { id: "karakamsha", label: "Karakamsha & Ishta" },
             { id: "charaDasha", label: "Chara Dasha" },
             { id: "rashiDrishti", label: "Rashi Drishti" },
+            { id: "argala", label: "Argala & Virodha" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -545,6 +568,174 @@ export default function JaiminiView() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. ARGALA & VIRODHARGALA TAB */}
+      {activeTab === "argala" && (
+        <div className="flex flex-col gap-6">
+          {/* Top Target Selector Card */}
+          <div className="glass-panel p-5 rounded-2xl border border-slate-800 bg-slate-950/80 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🚪</span>
+                <h3 className="text-base font-bold text-slate-100">
+                  Jaimini Argala & Virodhargala (अर्गला एवं विरोधाsub-system)
+                </h3>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                Cosmic intervention (2nd, 4th, 11th, 5th) and obstruction mechanics on your chosen reference point.
+              </p>
+            </div>
+
+            {/* Target Mode Buttons */}
+            <div className="flex flex-wrap items-center gap-1.5 bg-slate-900 p-1.5 rounded-xl border border-slate-800 text-xs font-semibold">
+              <button
+                onClick={() => setArgalaTargetMode("lagna")}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  argalaTargetMode === "lagna"
+                    ? "bg-amber-500 text-slate-950 font-bold shadow"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Lagna
+              </button>
+              <button
+                onClick={() => setArgalaTargetMode("al")}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  argalaTargetMode === "al"
+                    ? "bg-amber-500 text-slate-950 font-bold shadow"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Arudha Lagna (AL)
+              </button>
+              <button
+                onClick={() => setArgalaTargetMode("ul")}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  argalaTargetMode === "ul"
+                    ? "bg-amber-500 text-slate-950 font-bold shadow"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Upapada (UL)
+              </button>
+              <button
+                onClick={() => setArgalaTargetMode("custom")}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  argalaTargetMode === "custom"
+                    ? "bg-amber-500 text-slate-950 font-bold shadow"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Custom Rashi
+              </button>
+            </div>
+          </div>
+
+          {/* Custom Rashi Selector if mode is custom */}
+          {argalaTargetMode === "custom" && (
+            <div className="flex flex-wrap gap-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+              {RASHI_NAMES.map((r, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCustomArgalaSignIdx(idx)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    customArgalaSignIdx === idx
+                      ? "bg-amber-500 text-slate-950"
+                      : "bg-slate-950/60 text-slate-400 border border-slate-800 hover:text-slate-200"
+                  }`}
+                >
+                  {r.symbol} {r.englishName}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Target Summary Banner */}
+          <div className="bg-gradient-to-r from-amber-950/30 via-slate-900 to-slate-950 p-4 rounded-2xl border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">
+                Target Reference: {argalaReport.targetType}
+              </span>
+              <h4 className="text-lg font-black text-slate-100">
+                Sign: {argalaReport.targetSignName} (#{argalaReport.targetSignIndex + 1})
+              </h4>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-700">
+                ● {argalaReport.unobstructedShubhaCount} Shubha Argala
+              </span>
+              <span className="px-3 py-1 rounded-lg text-xs font-bold bg-rose-950 text-rose-300 border border-rose-700">
+                ▲ {argalaReport.unobstructedPapaCount} Papa Argala
+              </span>
+            </div>
+          </div>
+
+          {/* 4 Argala Pair Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {argalaReport.argalas.map((item, idx) => (
+              <div
+                key={idx}
+                className={`p-4 rounded-2xl border flex flex-col justify-between gap-3 ${
+                  item.isUnobstructed
+                    ? item.isShubhaArgala
+                      ? "bg-emerald-950/20 border-emerald-500/40"
+                      : "bg-rose-950/20 border-rose-500/40"
+                    : "bg-slate-900/60 border-slate-800"
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
+                    <span className="text-xs font-bold text-amber-400">{item.type}</span>
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                        item.isUnobstructed
+                          ? item.isShubhaArgala
+                            ? "bg-emerald-950 text-emerald-300 border-emerald-600"
+                            : "bg-rose-950 text-rose-300 border-rose-600"
+                          : "bg-slate-900 text-slate-400 border-slate-700"
+                      }`}
+                    >
+                      {item.isUnobstructed ? "UNOBSTRUCTED" : "OBSTRUCTED / VACANT"}
+                    </span>
+                  </div>
+
+                  {/* Argala vs Virodha details */}
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                      <div className="text-[10px] text-slate-400 font-bold uppercase">
+                        Intervention ({item.argalaHouse}th House)
+                      </div>
+                      <div className="text-xs font-semibold text-slate-200 mt-0.5">{item.argalaSignName}</div>
+                      <div className="text-xs font-bold text-amber-300 mt-1">
+                        {item.argalaPlanets.length > 0 ? item.argalaPlanets.join(", ") : "Vacant"}
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                      <div className="text-[10px] text-slate-400 font-bold uppercase">
+                        Obstruction ({item.virodhaHouse}th House)
+                      </div>
+                      <div className="text-xs font-semibold text-slate-200 mt-0.5">{item.virodhaSignName}</div>
+                      <div className="text-xs font-bold text-rose-300 mt-1">
+                        {item.virodhaPlanets.length > 0 ? item.virodhaPlanets.join(", ") : "None"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-300 bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60">
+                  {item.statusSummary}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Verdict Box */}
+          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
+            <strong className="text-amber-400">Classical Jaimini Synthesis:</strong> {argalaReport.overallVerdict}
           </div>
         </div>
       )}
