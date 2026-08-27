@@ -24,6 +24,8 @@ export default function TimeTravelSlider() {
     loadProfile,
     deleteProfile,
     resetToLiveTransit,
+    gender,
+    setGender,
   } = useAstroStore();
 
   const [mounted, setMounted] = useState(false);
@@ -286,6 +288,22 @@ export default function TimeTravelSlider() {
               <polyline points="7 3 7 8 15 8" />
             </svg>
             <span className="font-bold hidden xs:inline sm:inline">Save Chart</span>
+          </button>
+
+          {/* 3.5 Gender Selector Button (Male ♂ / Female ♀) */}
+          <button
+            onClick={() => setGender(gender === "male" ? "female" : "male")}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm cursor-pointer flex-shrink-0 ${
+              gender === "female"
+                ? "bg-pink-950/70 hover:bg-pink-900/80 border-pink-500/50 text-pink-300 shadow-pink-950/30"
+                : "bg-sky-950/70 hover:bg-sky-900/80 border-sky-500/50 text-sky-300 shadow-sky-950/30"
+            }`}
+            title={`Active Native Gender: ${gender === "female" ? "Female (स्त्री)" : "Male (पुरुष)"} — Click to switch`}
+          >
+            <span className="text-sm font-black">{gender === "female" ? "♀" : "♂"}</span>
+            <span className="hidden sm:inline font-bold">
+              {gender === "female" ? "Female (स्त्री)" : "Male (पुरुष)"}
+            </span>
           </button>
 
           {/* 4. Mobile Direct Date & Place Picker Trigger */}

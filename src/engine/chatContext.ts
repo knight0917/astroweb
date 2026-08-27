@@ -33,7 +33,8 @@ import { RASHI_NAMES } from "./constants";
 export function buildAstroDossier(
   natalEphemeris: EphemerisResult,
   transitEphemeris: EphemerisResult,
-  evaluationDate: Date = new Date()
+  evaluationDate: Date = new Date(),
+  gender: "male" | "female" = "male"
 ): string {
   const birthDate = new Date(natalEphemeris.utcDate);
   const location = natalEphemeris.location;
@@ -403,6 +404,8 @@ export function buildAstroDossier(
     "- **Ayanamsha Model:** " + natalEphemeris.ayanamshaType + " (" + natalEphemeris.ayanamshaValue.toFixed(3) + "°)",
     "",
     "#### 🌟 1. CORE LAGNA & FUNCTIONAL ROLES:",
+    "- **Native Gender (लिंग):** " + (gender === "female" ? "Female (स्त्री) ♀" : "Male (पुरुष) ♂"),
+    "- **Gender Interpretive Directive:** " + (gender === "female" ? "Apply classical Stree Jataka principles (BPHS Ch. 80 / Varahamihira Ch. 22). When interpreting marriage, relationships, and spouse, treat Jupiter (Guru), 7th Lord, and 8th House (Mangalya Sthana / marital longevity) as primary indicators for husband. For progeny and motherhood, evaluate Kshetra Sphuta and 5th/9th houses." : "When interpreting marriage, relationships, and spouse, treat Venus (Shukra), 7th Lord, and Upapada Lagna (UL) as primary indicators for wife. For progeny and virility, evaluate Beeja Sphuta and 5th/9th houses."),
     "- **Ascendant (Lagna / लग्न):** " + ascRashi.englishName + " (" + ascRashi.sanskritName + ") at " + (ascLon % 30).toFixed(2) + "° • Ruling Lord: " + ascRashi.lord,
     "- **Moon Sign (Janma Rashi / चन्द्र राशि):** " + RASHI_NAMES[Math.floor(moonLon / 30)].englishName + " (" + RASHI_NAMES[Math.floor(moonLon / 30)].sanskritName + ") • Lord: " + RASHI_NAMES[Math.floor(moonLon / 30)].lord,
     "- **Moon Nakshatra:** " + (natalEphemeris.planets.Moon?.nakshatra.sanskritName || "") + " Pada " + (natalEphemeris.planets.Moon?.nakshatra.pada || 1) + " (Deity: " + (natalEphemeris.planets.Moon?.nakshatra.deity || "") + ", Lord: " + (natalEphemeris.planets.Moon?.nakshatra.lord || "") + ")",

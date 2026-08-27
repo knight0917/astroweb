@@ -223,6 +223,7 @@ export default function AstroChatbot() {
     ayanamsha,
     houseSystem,
     nodeType,
+    gender,
   } = useAstroStore();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -260,10 +261,10 @@ export default function AstroChatbot() {
     return calculateVedicEphemeris(new Date(), location, ayanamsha, houseSystem, nodeType);
   }, [location, ayanamsha, houseSystem, nodeType]);
 
-  // Build the complete astrological dossier
+  // Build the complete astrological dossier with native gender
   const astroDossier = useMemo(() => {
-    return buildAstroDossier(natalEphemeris, transitEphemeris, new Date());
-  }, [natalEphemeris, transitEphemeris]);
+    return buildAstroDossier(natalEphemeris, transitEphemeris, new Date(), gender);
+  }, [natalEphemeris, transitEphemeris, gender]);
 
   // Auto-scroll to bottom of chat
   useEffect(() => {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { calculateVedicEphemeris } from "../engine/ephemeris";
 import { calculateMatchmaking, CompatibilityResult, KootaScore } from "../engine/matchmaking";
@@ -9,26 +9,75 @@ import { EXTENDED_LOCAL_PLACES } from "../engine/geocoding";
 import { GeoLocation } from "../engine/types";
 
 export default function MatchmakingView() {
-  const { ayanamsha, houseSystem, nodeType, savedProfiles } = useAstroStore();
+  const {
+    currentDate,
+    location: activeLocation,
+    ayanamsha,
+    houseSystem,
+    nodeType,
+    savedProfiles,
+    gender,
+    activeProfileName,
+  } = useAstroStore();
 
-  const [boyName, setBoyName] = useState("Groom (वर)");
-  const [boyDate, setBoyDate] = useState("1998-05-25T00:16");
-  const [boyCity, setBoyCity] = useState<GeoLocation>(POPULAR_CITIES[0]);
-  const [boyCitySearch, setBoyCitySearch] = useState("");
+  const activeIso = useMemo(() => {
+    // Format local ISO datetime string for datetime-local input
+    const tzOffsetMs = (activeLocation.timezoneOffsetHours || 5.5) * 3600 * 1000;
+    const localDate = new Date(currentDate.getTime() + tzOffsetMs);
+    return localDate.toISOString().slice(0, 16);
+  }, [currentDate, activeLocation]);
+
+  const [boyName, setBoyName] = useState(
+    gender === "male" ? activeProfileName || "My Chart (वर ♂)" : "Groom (वर)"
+  );
+  const [boyDate, setBoyDate] = useState(
+    gender === "male" ? activeIso : "1998-05-25T00:16"
+  );
+  const [boyCity, setBoyCity] = useState<GeoLocation>(
+    gender === "male" ? activeLocation : POPULAR_CITIES[0]
+  );
+  const [boyCitySearch, setBoyCitySearch] = useState(
+    gender === "male" ? activeLocation.cityName : ""
+  );
   const [showBoyCityDropdown, setShowBoyCityDropdown] = useState(false);
 
-  const [girlName, setGirlName] = useState("Bride (कन्या)");
-  const [girlDate, setGirlDate] = useState("2000-07-04T19:07");
-  const [girlCity, setGirlCity] = useState<GeoLocation>({
-    cityName: "Vasai (Mumbai)",
-    country: "India",
-    latitude: 19.3919,
-    longitude: 72.8397,
-    elevation: 11,
-    timezoneOffsetHours: 5.5,
-  });
-  const [girlCitySearch, setGirlCitySearch] = useState("");
+  const [girlName, setGirlName] = useState(
+    gender === "female" ? activeProfileName || "My Chart (कन्या ♀)" : "Bride (कन्या)"
+  );
+  const [girlDate, setGirlDate] = useState(
+    gender === "female" ? activeIso : "2000-07-04T19:07"
+  );
+  const [girlCity, setGirlCity] = useState<GeoLocation>(
+    gender === "female"
+      ? activeLocation
+      : {
+          cityName: "Vasai (Mumbai)",
+          country: "India",
+          latitude: 19.3919,
+          longitude: 72.8397,
+          elevation: 11,
+          timezoneOffsetHours: 5.5,
+        }
+  );
+  const [girlCitySearch, setGirlCitySearch] = useState(
+    gender === "female" ? activeLocation.cityName : ""
+  );
   const [showGirlCityDropdown, setShowGirlCityDropdown] = useState(false);
+
+  // Auto-sync active chart whenever gender or active profile changes
+  useEffect(() => {
+    if (gender === "male") {
+      setBoyName(activeProfileName || "My Chart (वर ♂)");
+      setBoyDate(activeIso);
+      setBoyCity(activeLocation);
+      setBoyCitySearch(activeLocation.cityName);
+    } else {
+      setGirlName(activeProfileName || "My Chart (कन्या ♀)");
+      setGirlDate(activeIso);
+      setGirlCity(activeLocation);
+      setGirlCitySearch(activeLocation.cityName);
+    }
+  }, [gender, activeProfileName, activeIso, activeLocation]);
 
   const allPlaces = useMemo(() => {
     const list = [...EXTENDED_LOCAL_PLACES];
@@ -91,10 +140,26 @@ export default function MatchmakingView() {
       setBoyName(p.name);
       setBoyDate(isoString);
       setBoyCity(p.location);
+      setBoyCitySearch(p.location.cityName);
     } else {
       setGirlName(p.name);
       setGirlDate(isoString);
       setGirlCity(p.location);
+      setGirlCitySearch(p.location.cityName);
+    }
+  };
+
+  const handleSyncActiveTo = (target: "boy" | "girl") => {
+    if (target === "boy") {
+      setBoyName(activeProfileName || "My Active Chart (वर ♂)");
+      setBoyDate(activeIso);
+      setBoyCity(activeLocation);
+      setBoyCitySearch(activeLocation.cityName);
+    } else {
+      setGirlName(activeProfileName || "My Active Chart (कन्या ♀)");
+      setGirlDate(activeIso);
+      setGirlCity(activeLocation);
+      setGirlCitySearch(activeLocation.cityName);
     }
   };
 
@@ -113,7 +178,7 @@ export default function MatchmakingView() {
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Muhurta Chintamani & Jataka Parijata • Ashtakoota 36-Guna Scoring, Exact Dual Birthplace Geocoding & Manglik Dosha
+            Muhurta Chintamani & Jataka Parijata • Ashtakoota 36-Guna Scoring, Dual Birthplace Geocoding & Gender-Aware Auto-Sync
           </p>
         </div>
 
@@ -139,22 +204,42 @@ export default function MatchmakingView() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Groom Profile */}
         <div className="glass-panel p-5 rounded-2xl border border-sky-500/30 bg-slate-950/70 shadow-2xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-            <h3 className="font-bold text-sm text-sky-400 uppercase tracking-wider">
-              Groom Profile (वर विवरण)
-            </h3>
-            {savedProfiles.length > 0 && (
-              <select
-                onChange={(e) => handleLoadProfile(e.target.value, "boy")}
-                className="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg px-2 py-1"
-                defaultValue=""
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-sm text-sky-400 uppercase tracking-wider flex items-center gap-1">
+                <span>♂</span>
+                <span>Groom Profile (वर विवरण)</span>
+              </h3>
+              {gender === "male" && (
+                <span className="text-[10px] bg-sky-950 text-sky-300 border border-sky-600/50 px-1.5 py-0.5 rounded-full font-bold">
+                  Primary Native
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleSyncActiveTo("boy")}
+                className="px-2 py-1 bg-sky-950/60 hover:bg-sky-900/80 text-sky-300 text-[11px] font-bold rounded-lg border border-sky-700/60 transition-colors"
+                title="Sync current active chart from top bar into Groom profile"
               >
-                <option value="" disabled>Load Saved Profile</option>
-                {savedProfiles.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            )}
+                📥 Sync My Chart
+              </button>
+
+              {savedProfiles.length > 0 && (
+                <select
+                  onChange={(e) => handleLoadProfile(e.target.value, "boy")}
+                  className="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg px-2 py-1"
+                  defaultValue=""
+                >
+                  <option value="" disabled>Saved Profiles</option>
+                  {savedProfiles.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
@@ -256,22 +341,42 @@ export default function MatchmakingView() {
 
         {/* Bride Profile */}
         <div className="glass-panel p-5 rounded-2xl border border-pink-500/30 bg-slate-950/70 shadow-2xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-            <h3 className="font-bold text-sm text-pink-400 uppercase tracking-wider">
-              Bride Profile (कन्या विवरण)
-            </h3>
-            {savedProfiles.length > 0 && (
-              <select
-                onChange={(e) => handleLoadProfile(e.target.value, "girl")}
-                className="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg px-2 py-1"
-                defaultValue=""
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-sm text-pink-400 uppercase tracking-wider flex items-center gap-1">
+                <span>♀</span>
+                <span>Bride Profile (कन्या विवरण)</span>
+              </h3>
+              {gender === "female" && (
+                <span className="text-[10px] bg-pink-950 text-pink-300 border border-pink-600/50 px-1.5 py-0.5 rounded-full font-bold">
+                  Primary Native
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleSyncActiveTo("girl")}
+                className="px-2 py-1 bg-pink-950/60 hover:bg-pink-900/80 text-pink-300 text-[11px] font-bold rounded-lg border border-pink-700/60 transition-colors"
+                title="Sync current active chart from top bar into Bride profile"
               >
-                <option value="" disabled>Load Saved Profile</option>
-                {savedProfiles.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            )}
+                📥 Sync My Chart
+              </button>
+
+              {savedProfiles.length > 0 && (
+                <select
+                  onChange={(e) => handleLoadProfile(e.target.value, "girl")}
+                  className="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg px-2 py-1"
+                  defaultValue=""
+                >
+                  <option value="" disabled>Saved Profiles</option>
+                  {savedProfiles.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">

@@ -36,6 +36,7 @@ export interface BirthProfile {
   dateIso: string;
   location: GeoLocation;
   ayanamsha: AyanamshaType;
+  gender?: "male" | "female";
   isDefault?: boolean;
   savedAt: number;
 }
@@ -60,7 +61,13 @@ function saveProfilesToStorage(profiles: BirthProfile[]) {
   } catch (_) {}
 }
 
-function saveActiveChartToStorage(date: Date, location: GeoLocation, ayanamsha: AyanamshaType, profileName?: string | null) {
+function saveActiveChartToStorage(
+  date: Date,
+  location: GeoLocation,
+  ayanamsha: AyanamshaType,
+  profileName?: string | null,
+  gender: "male" | "female" = "male"
+) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(
@@ -70,6 +77,7 @@ function saveActiveChartToStorage(date: Date, location: GeoLocation, ayanamsha: 
         location,
         ayanamsha,
         profileName: profileName || null,
+        gender,
       })
     );
   } catch (_) {}
@@ -83,6 +91,7 @@ interface AstroState {
   ayanamsha: AyanamshaType;
   houseSystem: HouseSystem;
   nodeType: NodeType;
+  gender: "male" | "female";
   showModernPlanets: boolean;
   showUpagrahas: boolean;
   showConstellations: boolean;
@@ -102,6 +111,7 @@ interface AstroState {
   setAyanamsha: (type: AyanamshaType) => void;
   setHouseSystem: (sys: HouseSystem) => void;
   setNodeType: (node: NodeType) => void;
+  setGender: (gender: "male" | "female") => void;
   togglePlay: () => void;
   setPlaySpeed: (speed: number) => void;
   setShowModernPlanets: (show: boolean) => void;
@@ -113,7 +123,7 @@ interface AstroState {
   recompute: () => void;
 
   // Saved Profile Methods
-  saveProfile: (name: string, isDefault?: boolean) => BirthProfile;
+  saveProfile: (name: string, isDefault?: boolean, gender?: "male" | "female") => BirthProfile;
   loadProfile: (profile: BirthProfile) => void;
   deleteProfile: (profileId: string) => void;
   resetToLiveTransit: () => void;
@@ -134,6 +144,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   ayanamsha: defaultAyanamsha,
   houseSystem: defaultHouseSystem,
   nodeType: defaultNodeType,
+  gender: "male",
   showModernPlanets: false,
   showUpagrahas: true,
   showConstellations: true,
@@ -151,8 +162,8 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   ),
 
   setDate: (date) => {
-    const { location, ayanamsha, houseSystem, nodeType, activeProfileName } = get();
-    saveActiveChartToStorage(date, location, ayanamsha, activeProfileName);
+    const { location, ayanamsha, houseSystem, nodeType, activeProfileName, gender } = get();
+    saveActiveChartToStorage(date, location, ayanamsha, activeProfileName, gender);
     set({
       currentDate: date,
       ephemeris: calculateVedicEphemeris(date, location, ayanamsha, houseSystem, nodeType),
@@ -183,12 +194,13 @@ export const useAstroStore = create<AstroState>((set, get) => ({
         d.setFullYear(d.getFullYear() + amount * 100);
         break;
     }
+
     setDate(d);
   },
 
   setLocation: (loc) => {
-    const { currentDate, ayanamsha, houseSystem, nodeType, activeProfileName } = get();
-    saveActiveChartToStorage(currentDate, loc, ayanamsha, activeProfileName);
+    const { currentDate, ayanamsha, houseSystem, nodeType, activeProfileName, gender } = get();
+    saveActiveChartToStorage(currentDate, loc, ayanamsha, activeProfileName, gender);
     set({
       location: loc,
       ephemeris: calculateVedicEphemeris(currentDate, loc, ayanamsha, houseSystem, nodeType),
@@ -196,8 +208,8 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   },
 
   setAyanamsha: (type) => {
-    const { currentDate, location, houseSystem, nodeType, activeProfileName } = get();
-    saveActiveChartToStorage(currentDate, location, type, activeProfileName);
+    const { currentDate, location, houseSystem, nodeType, activeProfileName, gender } = get();
+    saveActiveChartToStorage(currentDate, location, type, activeProfileName, gender);
     set({
       ayanamsha: type,
       ephemeris: calculateVedicEphemeris(currentDate, location, type, houseSystem, nodeType),
@@ -220,6 +232,12 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     });
   },
 
+  setGender: (g) => {
+    const { currentDate, location, ayanamsha, activeProfileName } = get();
+    saveActiveChartToStorage(currentDate, location, ayanamsha, activeProfileName, g);
+    set({ gender: g });
+  },
+
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
   setPlaySpeed: (speed) => set({ playSpeed: speed }),
   setShowModernPlanets: (show) => set({ showModernPlanets: show }),
@@ -236,29 +254,34 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     });
   },
 
-  // Saved Profile Methods
-  saveProfile: (name, isDefault = true) => {
-    const { currentDate, location, ayanamsha, savedProfiles } = get();
-    const cleanName = name.trim() || "My Birth Chart";
+  saveProfile: (name, isDefault = false, profGender) => {
+    const { currentDate, location, ayanamsha, savedProfiles, gender } = get();
+    const cleanName = name.trim() || "Saved Birth Chart";
+    const chosenGender = profGender || gender;
 
-    let updatedList = savedProfiles.map((p) => (isDefault ? { ...p, isDefault: false } : p));
     const newProfile: BirthProfile = {
-      id: Date.now().toString(),
+      id: "profile_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6),
       name: cleanName,
       dateIso: currentDate.toISOString(),
-      location,
+      location: { ...location },
       ayanamsha,
+      gender: chosenGender,
       isDefault,
       savedAt: Date.now(),
     };
 
+    let updatedList = isDefault
+      ? savedProfiles.map((p) => ({ ...p, isDefault: false }))
+      : [...savedProfiles];
+
     updatedList = [newProfile, ...updatedList];
     saveProfilesToStorage(updatedList);
-    saveActiveChartToStorage(currentDate, location, ayanamsha, cleanName);
+    saveActiveChartToStorage(currentDate, location, ayanamsha, cleanName, chosenGender);
 
     set({
       savedProfiles: updatedList,
       activeProfileName: cleanName,
+      gender: chosenGender,
     });
 
     return newProfile;
@@ -269,14 +292,16 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     const date = new Date(profile.dateIso);
     const loc = profile.location;
     const aya = profile.ayanamsha || "Lahiri";
+    const profGender = profile.gender || "male";
 
-    saveActiveChartToStorage(date, loc, aya, profile.name);
+    saveActiveChartToStorage(date, loc, aya, profile.name, profGender);
 
     set({
       currentDate: date,
       location: loc,
       ayanamsha: aya,
       activeProfileName: profile.name,
+      gender: profGender,
       ephemeris: calculateVedicEphemeris(date, loc, aya, houseSystem, nodeType),
     });
   },
@@ -308,6 +333,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
       let targetLoc: GeoLocation = defaultLocation;
       let targetAya: AyanamshaType = defaultAyanamsha;
       let targetProfileName: string | null = null;
+      let targetGender: "male" | "female" = "male";
 
       if (rawActive) {
         const parsed = JSON.parse(rawActive);
@@ -315,6 +341,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
         if (parsed.location) targetLoc = parsed.location;
         if (parsed.ayanamsha) targetAya = parsed.ayanamsha;
         if (parsed.profileName) targetProfileName = parsed.profileName;
+        if (parsed.gender) targetGender = parsed.gender;
       } else {
         const defaultProf = profiles.find((p) => p.isDefault) || profiles[0];
         if (defaultProf) {
@@ -322,6 +349,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
           targetLoc = defaultProf.location;
           targetAya = defaultProf.ayanamsha || "Lahiri";
           targetProfileName = defaultProf.name;
+          if (defaultProf.gender) targetGender = defaultProf.gender;
         }
       }
 
@@ -332,6 +360,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
         location: targetLoc,
         ayanamsha: targetAya,
         activeProfileName: targetProfileName,
+        gender: targetGender,
         ephemeris: calculateVedicEphemeris(targetDate, targetLoc, targetAya, houseSystem, nodeType),
       });
     } catch (_) {}
