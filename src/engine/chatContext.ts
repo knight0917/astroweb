@@ -21,6 +21,7 @@ import { evaluate12BhavasJudgement } from "./bhavaJudgement";
 import { calculateBadhakaAvasthas } from "./badhakaAvasthas";
 import { evaluateBhriguNadi } from "./bhriguNadi";
 import { evaluateKarmaRebirth } from "./karmaRebirth";
+import { calculateDoubleTransit } from "./doubleTransit";
 import { RASHI_NAMES } from "./constants";
 
 export function buildAstroDossier(
@@ -271,6 +272,29 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 15. K.N. Rao Double Transit (DTP) & PAC-DARES
+  let dtpSummary = "";
+  try {
+    const dtp = calculateDoubleTransit(natalEphemeris, transitEphemeris);
+    const milestonesStr = Object.values(dtp.milestones)
+      .map((m) => "- " + m.icon + " **" + m.name + ":** [" + (m.isDtpFulfilled ? "⚡ DTP ACTIVE - " + m.readinessScorePercent + "%" : "Dormant / " + m.readinessScorePercent + "%") + "] -> " + m.classicalVerdict)
+      .join("\n");
+
+    const pacDaresStr = dtp.pacDares
+      .map((v) => "- **" + v.category + " (" + v.scorePercent + "%):** " + v.verdict)
+      .join("\n");
+
+    dtpSummary = [
+      "- **Double Transit Overview:** " + dtp.masterTimingSummary,
+      "- **Saturn Transit Position:** " + dtp.transitAspects.transitSaturnSignName + " (House #" + dtp.transitAspects.transitSaturnHouseFromLagna + " from Lagna)",
+      "- **Jupiter Transit Position:** " + dtp.transitAspects.transitJupiterSignName + " (House #" + dtp.transitAspects.transitJupiterHouseFromLagna + " from Lagna)",
+      "- **4 Major Life Milestone Readiness Status:**",
+      milestonesStr,
+      "- **PAC-DARES Diagnostic Summary:**",
+      pacDaresStr,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -349,6 +373,9 @@ export function buildAstroDossier(
     "",
     "#### ☸️ 16. K.N. RAO KARMA, REBIRTH & PURVA PUNYA DOSSIER:",
     karmaSummary,
+    "",
+    "#### ⚡ 17. K.N. RAO DOUBLE TRANSIT (DTP) & PAC-DARES REAL-TIME TIMING:",
+    dtpSummary,
   ];
 
   return lines.filter(Boolean).join("\n");

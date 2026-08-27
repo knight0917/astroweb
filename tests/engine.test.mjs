@@ -1049,3 +1049,50 @@ test("Classical K.N. Rao Karma, Rebirth & Purva Punya Engine Verification", asyn
   assert.ok(result.masterKarmicSynthesis.length > 20);
 });
 
+test("Classical K.N. Rao Double Transit & PAC-DARES Engine Verification", async () => {
+  const { calculateDoubleTransit } = await import("../src/engine/doubleTransit.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date("2026-08-27T00:00:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = calculateDoubleTransit(natalEphem, transitEphem);
+
+  // 1. Transit Aspects Radar
+  assert.ok(result.transitAspects);
+  assert.ok(result.transitAspects.transitSaturnSignName);
+  assert.strictEqual(result.transitAspects.transitSaturnAspectedSigns.length, 4); // 1, 3, 7, 10
+  assert.ok(result.transitAspects.transitJupiterSignName);
+  assert.strictEqual(result.transitAspects.transitJupiterAspectedSigns.length, 4); // 1, 5, 7, 9
+
+  // 2. 4 Major Milestones
+  assert.ok(result.milestones.marriage);
+  assert.ok(result.milestones.childbirth);
+  assert.ok(result.milestones.career);
+  assert.ok(result.milestones.property);
+
+  ["marriage", "childbirth", "career", "property"].forEach((k) => {
+    const m = result.milestones[k];
+    assert.ok(typeof m.isDtpFulfilled === "boolean");
+    assert.ok(m.readinessScorePercent >= 0 && m.readinessScorePercent <= 100);
+    assert.ok(m.saturnTriggerDetails.length > 5);
+    assert.ok(m.jupiterTriggerDetails.length > 5);
+    assert.ok(m.classicalVerdict.length > 5);
+    assert.ok(m.targetHouses.length > 0);
+  });
+
+  // 3. PAC-DARES Framework
+  assert.ok(result.pacDares.length === 5);
+  result.pacDares.forEach((v) => {
+    assert.ok(v.category);
+    assert.ok(v.sanskritTitle);
+    assert.ok(v.scorePercent >= 0 && v.scorePercent <= 100);
+    assert.ok(v.pacSynthesis.length > 10);
+    assert.ok(v.verdict.length > 10);
+  });
+
+  // 4. Master timing summary
+  assert.ok(result.masterTimingSummary.length > 20);
+});
+

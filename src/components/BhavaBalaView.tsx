@@ -6,10 +6,11 @@ import { calculateBhavaBala, HouseBala } from "../engine/bhavabala";
 import BhavaJudgementDeck from "./BhavaJudgementDeck";
 import BhriguNadiDeck from "./BhriguNadiDeck";
 import KarmaRebirthDeck from "./KarmaRebirthDeck";
+import DoubleTransitDeck from "./DoubleTransitDeck";
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -112,6 +113,16 @@ export default function BhavaBalaView() {
           >
             <span>☸️ Karma & Rebirth (K.N. Rao)</span>
           </button>
+          <button
+            onClick={() => setDisplayMode("dtp")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              displayMode === "dtp"
+                ? "bg-purple-600 text-white shadow"
+                : "text-purple-300 hover:text-white bg-purple-950/30 border border-purple-800/40"
+            }`}
+          >
+            <span>⚡ Double Transit & PAC-DARES</span>
+          </button>
         </div>
       </div>
 
@@ -130,8 +141,13 @@ export default function BhavaBalaView() {
         <KarmaRebirthDeck />
       )}
 
+      {/* K.N. Rao Double Transit (DTP) & PAC-DARES View */}
+      {displayMode === "dtp" && (
+        <DoubleTransitDeck />
+      )}
+
       {/* Hero House Leaderboard (1st to 12th Rank Cards) */}
-      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && (
+      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && (
         <>
         <div className="space-y-3">
         <div className="flex items-center justify-between">
