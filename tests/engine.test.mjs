@@ -800,3 +800,62 @@ test("Classical B.V. Raman 300 Yogas Engine & Dasha Activation Verification", as
   assert.ok(timeline.dominantLifeTheme.length > 10);
 });
 
+test("Classical Pancha-da Maitri (5-Fold Compound Relationship) Verification", async () => {
+  const { evaluatePanchadaMaitri, getNaturalRelationship, getTemporalRelationship, getCompoundRelationship } = await import("../src/engine/panchadaMaitri.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 1. Classical Matrix Test
+  assert.strictEqual(getNaturalRelationship("Sun", "Moon"), "Friend");
+  assert.strictEqual(getNaturalRelationship("Sun", "Saturn"), "Enemy");
+  assert.strictEqual(getNaturalRelationship("Sun", "Mercury"), "Neutral");
+
+  // Tatkalika: H2 is friend, H7 is enemy
+  assert.strictEqual(getTemporalRelationship(1, 2), "Friend");
+  assert.strictEqual(getTemporalRelationship(1, 7), "Enemy");
+
+  // Compound rules
+  assert.strictEqual(getCompoundRelationship("Friend", "Friend").relation, "Adhi Mitra");
+  assert.strictEqual(getCompoundRelationship("Neutral", "Friend").relation, "Mitra");
+  assert.strictEqual(getCompoundRelationship("Friend", "Enemy").relation, "Sama");
+  assert.strictEqual(getCompoundRelationship("Neutral", "Enemy").relation, "Shatru");
+  assert.strictEqual(getCompoundRelationship("Enemy", "Enemy").relation, "Adhi Shatru");
+
+  // 2. Full Chart Evaluation
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const ephem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const report = evaluatePanchadaMaitri(ephem);
+
+  ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"].forEach((p) => {
+    const score = report.planets[p];
+    assert.ok(score, `Score must exist for ${p}`);
+    assert.ok(["Adhi Mitra", "Mitra", "Sama", "Shatru", "Adhi Shatru"].includes(score.compoundRelation));
+    assert.ok(score.scorePercent >= 0 && score.scorePercent <= 100);
+    assert.ok(score.sanskritName);
+    assert.ok(score.dispositor);
+  });
+});
+
+test("Classical Ishta Phala, Kashta Phala & Residential Strength Verification", async () => {
+  const { calculateIshtaKashta } = await import("../src/engine/ishtaKashta.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const ephem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const result = calculateIshtaKashta(ephem);
+
+  assert.ok(result.highestIshtaPlanet);
+  assert.ok(result.highestKashtaPlanet);
+  assert.ok(result.averageIshta > 0);
+  assert.ok(result.averageKashta > 0);
+
+  ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"].forEach((p) => {
+    const report = result.planets[p];
+    assert.ok(report, `Report must exist for ${p}`);
+    assert.ok(report.ishtaPhala >= 0 && report.ishtaPhala <= 60, `Ishta Phala (${report.ishtaPhala}) must be between 0 and 60`);
+    assert.ok(report.kashtaPhala >= 0 && report.kashtaPhala <= 60, `Kashta Phala (${report.kashtaPhala}) must be between 0 and 60`);
+    assert.ok(report.residentialPercent >= 0 && report.residentialPercent <= 100, `Residential % (${report.residentialPercent}) must be 0-100%`);
+    assert.ok(report.netBeneficRatio >= 0.0 && report.netBeneficRatio <= 1.0);
+    assert.ok(report.qualityBadge);
+  });
+});
+

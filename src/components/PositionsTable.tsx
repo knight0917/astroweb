@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { formatDMS } from "../engine/rashiNakshatra";
+import { evaluatePanchadaMaitri } from "../engine/panchadaMaitri";
+import { calculateIshtaKashta } from "../engine/ishtaKashta";
 
 export default function PositionsTable() {
   const [activeTab, setActiveTab] = useState<"planets" | "upagrahas" | "panchanga">("planets");
@@ -19,6 +21,10 @@ export default function PositionsTable() {
   });
 
   const upagrahaList = Object.values(ephemeris.upagrahas);
+
+  // Classical B.V. Raman Calculations
+  const panchadaReport = useMemo(() => evaluatePanchadaMaitri(ephemeris), [ephemeris]);
+  const ishtaKashtaReport = useMemo(() => calculateIshtaKashta(ephemeris), [ephemeris]);
 
   return (
     <div className="glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl flex flex-col h-full">
@@ -75,6 +81,8 @@ export default function PositionsTable() {
                 <th className="py-2.5 px-3">Rashi</th>
                 <th className="py-2.5 px-3">Nakshatra (Pada)</th>
                 <th className="py-2.5 px-3">House</th>
+                <th className="py-2.5 px-3">Pancha-da Maitri</th>
+                <th className="py-2.5 px-3">Ishta / Kashta (Res %)</th>
                 <th className="py-2.5 px-3">Motion</th>
               </tr>
             </thead>
@@ -106,12 +114,17 @@ export default function PositionsTable() {
                   <div className="text-[10px] text-slate-400 font-mono">{ephemeris.ascendant.nakshatra.animal}</div>
                 </td>
                 <td className="py-2 px-3 font-bold text-emerald-400">H1</td>
+                <td className="py-2 px-3 text-slate-500">—</td>
+                <td className="py-2 px-3 text-slate-500">—</td>
                 <td className="py-2 px-3 text-slate-400">—</td>
               </tr>
 
               {/* Planets */}
               {planetList.map((p) => {
                 const isSelected = selectedEntityId === p.id;
+                const pm = panchadaReport.planets[p.id];
+                const ik = ishtaKashtaReport.planets[p.id];
+
                 return (
                   <tr
                     key={p.id}
@@ -143,6 +156,39 @@ export default function PositionsTable() {
                       <div className="text-[10px] text-slate-400 font-mono">{p.nakshatra.animal}</div>
                     </td>
                     <td className="py-2 px-3 font-bold text-slate-300">H{p.house}</td>
+                    
+                    {/* Pancha-da Maitri Badge */}
+                    <td className="py-2 px-3">
+                      {pm ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border inline-block w-max ${pm.badgeColor}`}>
+                            {pm.compoundRelation} ({pm.sanskritName})
+                          </span>
+                          <span className="text-[9px] text-slate-400">w/ {pm.dispositor}</span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-500">—</span>
+                      )}
+                    </td>
+
+                    {/* Ishta / Kashta & Res % */}
+                    <td className="py-2 px-3">
+                      {ik ? (
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1.5 text-[11px]">
+                            <span className="text-emerald-400 font-semibold">I:{ik.ishtaPhala}</span>
+                            <span className="text-slate-600">/</span>
+                            <span className="text-rose-400 font-semibold">K:{ik.kashtaPhala}</span>
+                          </div>
+                          <div className="text-[9px] text-slate-400 font-mono">
+                            Res: <span className="text-amber-300">{ik.residentialPercent}%</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-slate-500">—</span>
+                      )}
+                    </td>
+
                     <td className="py-2 px-3">
                       {p.isRetrograde ? (
                         <span className="px-1.5 py-0.5 rounded bg-red-950 text-red-400 border border-red-800 text-[10px] font-bold">
