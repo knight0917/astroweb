@@ -27,6 +27,7 @@ import { evaluateKnRaoTechniques } from "./knRaoTechniques";
 import { evaluateEducationStream } from "./educationStream";
 import { evaluateMultiDashaSystems } from "./dashaSystems";
 import { evaluateBphsCore } from "./bphsCore";
+import { evaluateBrihatJataka } from "./brihatJataka";
 import { RASHI_NAMES } from "./constants";
 
 export function buildAstroDossier(
@@ -380,6 +381,20 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 21. Acharya Varahamihira Brihat Jataka
+  let bjSummary = "";
+  try {
+    const bj = evaluateBrihatJataka(natalEphemeris);
+    bjSummary = [
+      "- **Karma Jeeva Vocational Sutra (B.J. Ch. 10):** Primary Artha Dispositor: **" + bj.karmaJeeva.navamshaDispositor + "** (D9 Ruler of H10 Lord " + bj.karmaJeeva.tenthLordFromLagna + " in " + bj.karmaJeeva.tenthLordNavamshaSign + ")",
+      "- **Classical Wealth Title:** " + bj.karmaJeeva.sanskritTradeTitle,
+      "- **Recommended Modern Sectors:** " + bj.karmaJeeva.recommendedIndustries.slice(0, 3).join(", ") + " • High-Yield Roles: " + bj.karmaJeeva.modernCareerAlignments.slice(0, 2).join(", "),
+      "- **36 Drekkanas (Decanate Archetypes):** Lagna: " + bj.drekkanas.lagnaDrekkana.archetype + " (" + bj.drekkanas.lagnaDrekkana.icon + ") • Moon: " + bj.drekkanas.moonDrekkana.archetype + " (" + bj.drekkanas.moonDrekkana.icon + ") • Sun: " + bj.drekkanas.sunDrekkana.archetype + " (" + bj.drekkanas.sunDrekkana.icon + ")",
+      "- **32 Nabhasa Yogas (B.J. Ch. 12):** **" + bj.nabhasaYoga.activeYogaName + "** (" + bj.nabhasaYoga.sanskritName + " - " + bj.nabhasaYoga.yogaCategory + ") • " + bj.nabhasaYoga.lifelongPhala,
+      "- **Master Varahamihira Synthesis:** " + bj.masterVarahamihiraSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -476,6 +491,9 @@ export function buildAstroDossier(
     "",
     "#### 📜 22. PRIMORDIAL PARASHARI BPHS CORE DOSSIER:",
     bphsSummary,
+    "",
+    "#### 👑 23. ACHARYA VARAHAMIHIRA BRIHAT JATAKA DOSSIER:",
+    bjSummary,
   ];
 
   return lines.filter(Boolean).join("\n");

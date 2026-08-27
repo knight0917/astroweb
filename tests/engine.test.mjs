@@ -1332,3 +1332,43 @@ test("Classical Brihat Parashara Hora Shastra (BPHS) Core Engine Verification", 
   assert.ok(result.masterBphsSynthesis.length > 25);
 });
 
+test("Classical Varahamihira Brihat Jataka Engine Verification", async () => {
+  const { evaluateBrihatJataka } = await import("../src/engine/brihatJataka.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateBrihatJataka(natalEphem);
+
+  // 1. Karma Jeeva
+  assert.ok(result.karmaJeeva.tenthHouseFromLagnaSign);
+  assert.ok(result.karmaJeeva.tenthLordFromLagna);
+  assert.ok(result.karmaJeeva.tenthLordNavamshaSign);
+  assert.ok(result.karmaJeeva.navamshaDispositor);
+  assert.ok(result.karmaJeeva.sanskritTradeTitle.length > 5);
+  assert.ok(result.karmaJeeva.classicalSourceOfWealth.length > 10);
+  assert.ok(result.karmaJeeva.modernCareerAlignments.length > 0);
+  assert.ok(result.karmaJeeva.recommendedIndustries.length > 0);
+  assert.ok(result.karmaJeeva.varahamihiraDictum.length > 20);
+
+  // 2. 36 Drekkanas
+  assert.ok(result.drekkanas.lagnaDrekkana.archetype);
+  assert.ok(result.drekkanas.lagnaDrekkana.icon);
+  assert.ok(result.drekkanas.lagnaDrekkana.decanateNumber >= 1 && result.drekkanas.lagnaDrekkana.decanateNumber <= 3);
+  assert.ok(result.drekkanas.moonDrekkana.archetype);
+  assert.ok(result.drekkanas.sunDrekkana.archetype);
+
+  // 3. 32 Nabhasa Yogas
+  assert.ok(result.nabhasaYoga.activeYogaName);
+  assert.ok(result.nabhasaYoga.sanskritName);
+  assert.ok(result.nabhasaYoga.yogaCategory);
+  assert.ok(result.nabhasaYoga.occupiedSignsCount >= 1 && result.nabhasaYoga.occupiedSignsCount <= 7);
+  assert.ok(result.nabhasaYoga.lifelongPhala.length > 15);
+
+  // 4. Gateways & Master Synthesis
+  assert.ok(result.nishekaInsight.length > 15);
+  assert.ok(result.niryanaInsight.length > 15);
+  assert.ok(result.masterVarahamihiraSynthesis.length > 25);
+});
+
