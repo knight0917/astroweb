@@ -127,8 +127,8 @@ export default function HomePage() {
       {/* Top Header & Navigation */}
       <HeaderNav />
 
-      {/* Main Content Workspace */}
-      <main className={`flex-1 w-full mx-auto p-2 md:p-4 flex flex-col gap-4 ${viewMode === "3d" ? "max-w-[1800px]" : "max-w-7xl"}`}>
+      {/* Main Content Workspace - Full Width Layout */}
+      <main className="flex-1 w-full px-2 sm:px-4 md:px-6 py-2 md:py-3 flex flex-col gap-3 md:gap-4">
         {/* Time Travel Control Deck (Shown for 2D charts/tables; 3D view has its own Left Dock) */}
         {viewMode !== "3d" && <TimeTravelSlider />}
 

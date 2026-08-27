@@ -314,8 +314,8 @@ export default function HeaderNav() {
   }, [viewMode]);
 
   return (
-    <header className="glass-panel sticky top-0 z-40 px-3 md:px-4 py-2.5 border-b border-slate-800 shadow-xl bg-slate-950/90 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 md:gap-4">
+    <header className="glass-panel sticky top-0 z-40 px-2 sm:px-4 md:px-6 py-2.5 border-b border-slate-800 shadow-xl bg-slate-950/90 backdrop-blur-xl">
+      <div className="w-full flex items-center justify-between gap-2 md:gap-4">
         {/* Left: Top Hamburger Menu Button + Logo & Active Module */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Top-Left Hamburger Button */}
