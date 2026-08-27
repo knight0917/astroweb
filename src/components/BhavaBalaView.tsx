@@ -10,10 +10,11 @@ import DoubleTransitDeck from "./DoubleTransitDeck";
 import MarriageTimingDeck from "./MarriageTimingDeck";
 import KnRaoTechniquesDeck from "./KnRaoTechniquesDeck";
 import EducationStreamDeck from "./EducationStreamDeck";
+import DashaSystemsDeck from "./DashaSystemsDeck";
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -156,6 +157,16 @@ export default function BhavaBalaView() {
           >
             <span>🎓 Planets & Education (K.N. Rao)</span>
           </button>
+          <button
+            onClick={() => setDisplayMode("dashas")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              displayMode === "dashas"
+                ? "bg-purple-600 text-white shadow"
+                : "text-purple-300 hover:text-white bg-purple-950/30 border border-purple-800/40"
+            }`}
+          >
+            <span>⏳ Multi-Dasha & Yogini (Classical)</span>
+          </button>
         </div>
       </div>
 
@@ -194,8 +205,13 @@ export default function BhavaBalaView() {
         <EducationStreamDeck />
       )}
 
+      {/* Parashari Multi-Dasha & Yogini Dasha View */}
+      {displayMode === "dashas" && (
+        <DashaSystemsDeck />
+      )}
+
       {/* Hero House Leaderboard (1st to 12th Rank Cards) */}
-      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && (
+      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && displayMode !== "dashas" && (
         <>
         <div className="space-y-3">
         <div className="flex items-center justify-between">

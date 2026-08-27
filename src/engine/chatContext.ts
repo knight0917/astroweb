@@ -25,6 +25,7 @@ import { calculateDoubleTransit } from "./doubleTransit";
 import { evaluateMarriageTiming } from "./marriageTiming";
 import { evaluateKnRaoTechniques } from "./knRaoTechniques";
 import { evaluateEducationStream } from "./educationStream";
+import { evaluateMultiDashaSystems } from "./dashaSystems";
 import { RASHI_NAMES } from "./constants";
 
 export function buildAstroDossier(
@@ -343,6 +344,23 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 19. Parashari Multi-Dasha & Yogini Dasha
+  let multiDashaSummary = "";
+  try {
+    const multiDasha = evaluateMultiDashaSystems(natalEphemeris, evaluationDate);
+    const eligibleCond = multiDasha.conditionalEligibilities
+      .filter((c) => c.isEligible)
+      .map((c) => c.name)
+      .join(", ") || "Standard Vimshottari & Yogini active";
+
+    multiDashaSummary = [
+      "- **Active Yogini Dasha (36-Year Cycle):** **" + multiDasha.activeYogini.mahadasha.name + " (" + multiDasha.activeYogini.mahadasha.lord + ")** / **" + multiDasha.activeYogini.antardasha.name + " (" + multiDasha.activeYogini.antardasha.lord + ")**",
+      "- **Yogini Influence:** " + multiDasha.activeYogini.interpretation,
+      "- **Conditional Dasha Eligibility:** " + multiDasha.activeConditionalCount + " Active Systems (" + eligibleCond + ")",
+      "- **Multi-Dasha Triangulation:** " + multiDasha.multiDashaTriangulation.triangulationVerdict + " (Concurrence: " + multiDasha.multiDashaTriangulation.concurrenceScorePercent + "%)",
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -433,6 +451,9 @@ export function buildAstroDossier(
     "",
     "#### 🎓 20. K.N. RAO & NAVAL SINGH PLANETS & EDUCATION DOSSIER:",
     educationSummary,
+    "",
+    "#### ⏳ 21. CLASSICAL MULTI-DASHA & YOGINI DASHA DOSSIER:",
+    multiDashaSummary,
   ];
 
   return lines.filter(Boolean).join("\n");

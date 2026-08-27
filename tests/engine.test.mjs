@@ -1232,3 +1232,45 @@ test("Classical K.N. Rao & Naval Singh Planets and Education Engine Verification
   assert.ok(result.masterAcademicGuidance.length > 20);
 });
 
+test("Classical Multi-Dasha & Yogini Dasha Engine Verification", async () => {
+  const { evaluateMultiDashaSystems, calculateYoginiDasha } = await import("../src/engine/dashaSystems.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateMultiDashaSystems(natalEphem, new Date("2026-08-27T00:00:00Z"));
+
+  // 1. Yogini Timeline
+  assert.ok(result.yoginiTimeline.length >= 24); // 3 complete 36y cycles
+  result.yoginiTimeline.forEach((md) => {
+    assert.ok(md.yogini.name);
+    assert.ok(md.yogini.lord);
+    assert.ok(md.durationYears > 0);
+    assert.strictEqual(md.antardashas.length, 8);
+  });
+
+  // 2. Active Yogini
+  assert.ok(result.activeYogini.mahadasha.name);
+  assert.ok(result.activeYogini.mahadasha.lord);
+  assert.ok(result.activeYogini.antardasha.name);
+  assert.ok(result.activeYogini.antardasha.lord);
+  assert.ok(result.activeYogini.interpretation.length > 20);
+
+  // 3. Conditional Eligibilities
+  assert.strictEqual(result.conditionalEligibilities.length, 6);
+  result.conditionalEligibilities.forEach((c) => {
+    assert.ok(c.id);
+    assert.ok(c.name);
+    assert.ok(typeof c.isEligible === "boolean");
+    assert.ok(c.conditionText.length > 10);
+    assert.ok(c.evaluationReason.length > 10);
+  });
+
+  // 4. Multi-Dasha Triangulation
+  assert.ok(result.multiDashaTriangulation.vimshottariMD);
+  assert.ok(result.multiDashaTriangulation.yoginiMD);
+  assert.ok(result.multiDashaTriangulation.concurrenceScorePercent >= 50);
+  assert.ok(result.multiDashaTriangulation.triangulationVerdict.length > 20);
+});
+
