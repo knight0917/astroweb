@@ -8,6 +8,28 @@ import { POPULAR_CITIES } from "../engine/constants";
 import { EXTENDED_LOCAL_PLACES } from "../engine/geocoding";
 import { GeoLocation } from "../engine/types";
 
+function formatUtcToLocalIso(utcDate: Date, tzOffsetHours: number = 5.5): string {
+  const localMs = utcDate.getTime() + tzOffsetHours * 3600 * 1000;
+  const d = new Date(localMs);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const h = String(d.getUTCHours()).padStart(2, "0");
+  const min = String(d.getUTCMinutes()).padStart(2, "0");
+  return `${y}-${m}-${day}T${h}:${min}`;
+}
+
+function parseLocalTimeToUtc(isoString: string, tzOffsetHours: number = 5.5): Date {
+  if (!isoString) return new Date();
+  const [datePart, timePart] = isoString.split("T");
+  if (!datePart || !timePart) return new Date(isoString);
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hour, minute] = timePart.split(":").map(Number);
+  if (isNaN(year) || isNaN(month) || isNaN(day)) return new Date(isoString);
+  const utcMs = Date.UTC(year, month - 1, day, hour || 0, minute || 0, 0) - tzOffsetHours * 3600 * 1000;
+  return new Date(utcMs);
+}
+
 export default function MatchmakingView() {
   const {
     currentDate,
@@ -21,23 +43,29 @@ export default function MatchmakingView() {
   } = useAstroStore();
 
   const activeIso = useMemo(() => {
-    // Format local ISO datetime string for datetime-local input
-    const tzOffsetMs = (activeLocation.timezoneOffsetHours || 5.5) * 3600 * 1000;
-    const localDate = new Date(currentDate.getTime() + tzOffsetMs);
-    return localDate.toISOString().slice(0, 16);
+    return formatUtcToLocalIso(currentDate, activeLocation.timezoneOffsetHours || 5.5);
   }, [currentDate, activeLocation]);
 
   const [boyName, setBoyName] = useState(
     gender === "male" ? activeProfileName || "My Chart (वर ♂)" : "Groom (वर)"
   );
   const [boyDate, setBoyDate] = useState(
-    gender === "male" ? activeIso : "1998-05-25T00:16"
+    gender === "male" ? activeIso : "1998-09-05T21:29"
   );
   const [boyCity, setBoyCity] = useState<GeoLocation>(
-    gender === "male" ? activeLocation : POPULAR_CITIES[0]
+    gender === "male"
+      ? activeLocation
+      : {
+          cityName: "Bhuj",
+          country: "India",
+          latitude: 23.254,
+          longitude: 69.6693,
+          elevation: 106,
+          timezoneOffsetHours: 5.5,
+        }
   );
   const [boyCitySearch, setBoyCitySearch] = useState(
-    gender === "male" ? activeLocation.cityName : ""
+    gender === "male" ? activeLocation.cityName : "Bhuj"
   );
   const [showBoyCityDropdown, setShowBoyCityDropdown] = useState(false);
 
@@ -60,7 +88,7 @@ export default function MatchmakingView() {
         }
   );
   const [girlCitySearch, setGirlCitySearch] = useState(
-    gender === "female" ? activeLocation.cityName : ""
+    gender === "female" ? activeLocation.cityName : "Vasai (Mumbai)"
   );
   const [showGirlCityDropdown, setShowGirlCityDropdown] = useState(false);
 
@@ -93,6 +121,18 @@ export default function MatchmakingView() {
         displayName: "Vasai (Mumbai), Maharashtra, India",
       });
     }
+    if (!list.some((p) => p.cityName.toLowerCase() === "bhuj")) {
+      list.unshift({
+        cityName: "Bhuj",
+        country: "India",
+        state: "Gujarat",
+        latitude: 23.254,
+        longitude: 69.6693,
+        elevation: 106,
+        timezoneOffsetHours: 5.5,
+        displayName: "Bhuj, Gujarat, India",
+      });
+    }
     return list;
   }, []);
 
@@ -118,13 +158,14 @@ export default function MatchmakingView() {
     ).slice(0, 15);
   }, [girlCitySearch, allPlaces]);
 
+  // Robust calculation using timezone-independent local-to-UTC resolution
   const boyEphem = useMemo(() => {
-    const d = new Date(boyDate);
+    const d = parseLocalTimeToUtc(boyDate, boyCity.timezoneOffsetHours || 5.5);
     return calculateVedicEphemeris(d, boyCity, ayanamsha, houseSystem, nodeType);
   }, [boyDate, boyCity, ayanamsha, houseSystem, nodeType]);
 
   const girlEphem = useMemo(() => {
-    const d = new Date(girlDate);
+    const d = parseLocalTimeToUtc(girlDate, girlCity.timezoneOffsetHours || 5.5);
     return calculateVedicEphemeris(d, girlCity, ayanamsha, houseSystem, nodeType);
   }, [girlDate, girlCity, ayanamsha, houseSystem, nodeType]);
 
@@ -135,7 +176,9 @@ export default function MatchmakingView() {
   const handleLoadProfile = (profileId: string, target: "boy" | "girl") => {
     const p = savedProfiles.find((x) => x.id === profileId);
     if (!p) return;
-    const isoString = new Date(p.dateIso).toISOString().slice(0, 16);
+    const pDate = new Date(p.dateIso);
+    const pTz = p.location.timezoneOffsetHours || 5.5;
+    const isoString = formatUtcToLocalIso(pDate, pTz);
     if (target === "boy") {
       setBoyName(p.name);
       setBoyDate(isoString);
@@ -221,7 +264,7 @@ export default function MatchmakingView() {
               <button
                 type="button"
                 onClick={() => handleSyncActiveTo("boy")}
-                className="px-2 py-1 bg-sky-950/60 hover:bg-sky-900/80 text-sky-300 text-[11px] font-bold rounded-lg border border-sky-700/60 transition-colors"
+                className="px-2 py-1 bg-sky-950/60 hover:bg-sky-900/80 text-sky-300 text-[11px] font-bold rounded-lg border border-sky-700/60 transition-colors cursor-pointer"
                 title="Sync current active chart from top bar into Groom profile"
               >
                 📥 Sync My Chart
@@ -230,7 +273,7 @@ export default function MatchmakingView() {
               {savedProfiles.length > 0 && (
                 <select
                   onChange={(e) => handleLoadProfile(e.target.value, "boy")}
-                  className="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg px-2 py-1"
+                  className="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg px-2 py-1 cursor-pointer"
                   defaultValue=""
                 >
                   <option value="" disabled>Saved Profiles</option>
@@ -274,7 +317,7 @@ export default function MatchmakingView() {
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Search city (e.g. Mumbai, Varanasi, Delhi)..."
+                placeholder="Search city (e.g. Bhuj, Mumbai, Varanasi)..."
                 value={boyCitySearch}
                 onChange={(e) => {
                   setBoyCitySearch(e.target.value);
@@ -286,7 +329,7 @@ export default function MatchmakingView() {
               <button
                 type="button"
                 onClick={() => setShowBoyCityDropdown(!showBoyCityDropdown)}
-                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold border border-slate-700"
+                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold border border-slate-700 cursor-pointer"
               >
                 {showBoyCityDropdown ? "Close" : "Select"}
               </button>
@@ -304,7 +347,7 @@ export default function MatchmakingView() {
                       setBoyCitySearch(c.cityName);
                       setShowBoyCityDropdown(false);
                     }}
-                    className="w-full text-left p-2 rounded-lg hover:bg-sky-950/40 transition-colors flex items-center justify-between text-xs text-slate-200"
+                    className="w-full text-left p-2 rounded-lg hover:bg-sky-950/40 transition-colors flex items-center justify-between text-xs text-slate-200 cursor-pointer"
                   >
                     <span className="font-bold">{c.displayName || c.cityName}</span>
                     <span className="text-[10px] text-slate-400 font-mono">
@@ -358,7 +401,7 @@ export default function MatchmakingView() {
               <button
                 type="button"
                 onClick={() => handleSyncActiveTo("girl")}
-                className="px-2 py-1 bg-pink-950/60 hover:bg-pink-900/80 text-pink-300 text-[11px] font-bold rounded-lg border border-pink-700/60 transition-colors"
+                className="px-2 py-1 bg-pink-950/60 hover:bg-pink-900/80 text-pink-300 text-[11px] font-bold rounded-lg border border-pink-700/60 transition-colors cursor-pointer"
                 title="Sync current active chart from top bar into Bride profile"
               >
                 📥 Sync My Chart
@@ -367,7 +410,7 @@ export default function MatchmakingView() {
               {savedProfiles.length > 0 && (
                 <select
                   onChange={(e) => handleLoadProfile(e.target.value, "girl")}
-                  className="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg px-2 py-1"
+                  className="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg px-2 py-1 cursor-pointer"
                   defaultValue=""
                 >
                   <option value="" disabled>Saved Profiles</option>
@@ -423,7 +466,7 @@ export default function MatchmakingView() {
               <button
                 type="button"
                 onClick={() => setShowGirlCityDropdown(!showGirlCityDropdown)}
-                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold border border-slate-700"
+                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold border border-slate-700 cursor-pointer"
               >
                 {showGirlCityDropdown ? "Close" : "Select"}
               </button>
@@ -441,7 +484,7 @@ export default function MatchmakingView() {
                       setGirlCitySearch(c.cityName);
                       setShowGirlCityDropdown(false);
                     }}
-                    className="w-full text-left p-2 rounded-lg hover:bg-pink-950/40 transition-colors flex items-center justify-between text-xs text-slate-200"
+                    className="w-full text-left p-2 rounded-lg hover:bg-pink-950/40 transition-colors flex items-center justify-between text-xs text-slate-200 cursor-pointer"
                   >
                     <span className="font-bold">{c.displayName || c.cityName}</span>
                     <span className="text-[10px] text-slate-400 font-mono">
