@@ -5,10 +5,11 @@ import { useAstroStore } from "../store/useAstroStore";
 import { calculateBhavaBala, HouseBala } from "../engine/bhavabala";
 import BhavaJudgementDeck from "./BhavaJudgementDeck";
 import BhriguNadiDeck from "./BhriguNadiDeck";
+import KarmaRebirthDeck from "./KarmaRebirthDeck";
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -101,6 +102,16 @@ export default function BhavaBalaView() {
           >
             <span>📜 Bhrigu Nadi & BSP</span>
           </button>
+          <button
+            onClick={() => setDisplayMode("karma")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              displayMode === "karma"
+                ? "bg-emerald-600 text-slate-950 shadow"
+                : "text-emerald-300 hover:text-white bg-emerald-950/30 border border-emerald-800/40"
+            }`}
+          >
+            <span>☸️ Karma & Rebirth (K.N. Rao)</span>
+          </button>
         </div>
       </div>
 
@@ -114,8 +125,13 @@ export default function BhavaBalaView() {
         <BhriguNadiDeck />
       )}
 
+      {/* K.N. Rao Karma, Rebirth & Purva Punya View */}
+      {displayMode === "karma" && (
+        <KarmaRebirthDeck />
+      )}
+
       {/* Hero House Leaderboard (1st to 12th Rank Cards) */}
-      {displayMode !== "judgement" && displayMode !== "bhrigu" && (
+      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && (
         <>
         <div className="space-y-3">
         <div className="flex items-center justify-between">

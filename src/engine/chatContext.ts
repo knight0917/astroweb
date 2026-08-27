@@ -20,6 +20,7 @@ import { calculateIshtaKashta } from "./ishtaKashta";
 import { evaluate12BhavasJudgement } from "./bhavaJudgement";
 import { calculateBadhakaAvasthas } from "./badhakaAvasthas";
 import { evaluateBhriguNadi } from "./bhriguNadi";
+import { evaluateKarmaRebirth } from "./karmaRebirth";
 import { RASHI_NAMES } from "./constants";
 
 export function buildAstroDossier(
@@ -250,6 +251,26 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 14. K.N. Rao Karma & Rebirth Intelligence
+  let karmaSummary = "";
+  try {
+    const kr = evaluateKarmaRebirth(natalEphemeris);
+    const vakriStr = kr.retrogradeContracts.length > 0
+      ? kr.retrogradeContracts.map((c) => "- **" + c.planet + " (Retrograde in " + c.sign + "):** " + c.unfinishedLesson + " (Remedy: " + c.karmicResolution + ")").join("\n")
+      : "- No retrograde physical planets; forward karmic momentum.";
+
+    karmaSummary = [
+      "- **Loka of Origin (Soul Descent):** **" + kr.lokaOfDescent.lokaName + "** (" + kr.lokaOfDescent.sanskritLoka + ") via " + kr.lokaOfDescent.strongerLuminary + " in " + kr.lokaOfDescent.d3Lord + "'s D3 ray.",
+      "- **Soul Heritage:** " + kr.lokaOfDescent.spiritualHeritage,
+      "- **22nd Dreshkona (Kharesh / Past Vulnerability):** " + kr.kharesh.twentySecondDreshkonaSignName + " (Ruled by: **" + kr.kharesh.khareshLord + "** in House " + kr.kharesh.khareshHouseInD1 + ") -> " + kr.kharesh.vulnerabilityTheme,
+      "- **Purva Punya Capacity (5th/9th Merit Index):** **" + kr.purvaPunya.purvaPunyaScore + "%** (" + kr.purvaPunya.pastSadhanaMerits + ")",
+      "- **Rinanubandhana (Past Karmic Debts):** " + kr.purvaPunya.rinanubandhanaChildrenDebts,
+      "- **Rahu-Ketu Karmic Axis:** Ketu in " + kr.rahuKetuAxis.ketuSign + " (H" + kr.rahuKetuAxis.ketuHouse + " - Past Mastery) -> Rahu in " + kr.rahuKetuAxis.rahuSign + " (H" + kr.rahuKetuAxis.rahuHouse + " - Future Frontier: " + kr.rahuKetuAxis.rahuFutureFrontier + ")",
+      "- **Retrograde Unfinished Soul Contracts:**",
+      vakriStr,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -325,6 +346,9 @@ export function buildAstroDossier(
     "- **Vara (Weekday):** " + natalEphemeris.panchanga.vara.name + " (Ruler: " + natalEphemeris.panchanga.vara.lord + ")",
     "- **Yoga:** " + natalEphemeris.panchanga.yoga.name,
     "- **Karana:** " + natalEphemeris.panchanga.karana.name,
+    "",
+    "#### ☸️ 16. K.N. RAO KARMA, REBIRTH & PURVA PUNYA DOSSIER:",
+    karmaSummary,
   ];
 
   return lines.filter(Boolean).join("\n");

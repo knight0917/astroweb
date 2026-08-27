@@ -1001,3 +1001,51 @@ test("Classical Jaimini Argala & Virodhargala Engine Verification", async () => 
   assert.strictEqual(alArgala.targetSignIndex, alSign);
 });
 
+test("Classical K.N. Rao Karma, Rebirth & Purva Punya Engine Verification", async () => {
+  const { evaluateKarmaRebirth } = await import("../src/engine/karmaRebirth.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const ephem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateKarmaRebirth(ephem);
+
+  // 1. Quad-Karma Spectrum
+  assert.ok(result.quadKarma);
+  assert.ok(result.quadKarma.sanchita.sanskritName);
+  assert.ok(result.quadKarma.prarabdha.sanskritName);
+  assert.ok(result.quadKarma.kriyamana.scorePercent > 0);
+  assert.ok(result.quadKarma.agama.scorePercent > 0);
+
+  // 2. Loka of Descent
+  assert.ok(result.lokaOfDescent);
+  assert.ok(["Sun", "Moon"].includes(result.lokaOfDescent.strongerLuminary));
+  assert.ok(result.lokaOfDescent.lokaName.length > 5);
+  assert.ok(result.lokaOfDescent.sanskritLoka.length > 3);
+  assert.ok(result.lokaOfDescent.realmDescription);
+  assert.ok(result.lokaOfDescent.spiritualHeritage);
+
+  // 3. 22nd Dreshkona (Kharesh)
+  assert.ok(result.kharesh);
+  assert.ok(result.kharesh.twentySecondDreshkonaSignName);
+  assert.ok(result.kharesh.khareshLord);
+  assert.ok(result.kharesh.khareshHouseInD1 >= 1 && result.kharesh.khareshHouseInD1 <= 12);
+  assert.ok(result.kharesh.vulnerabilityTheme);
+  assert.ok(result.kharesh.remedialAdvice);
+
+  // 4. Purva Punya & Bhagya
+  assert.ok(result.purvaPunya);
+  assert.ok(result.purvaPunya.purvaPunyaScore >= 0 && result.purvaPunya.purvaPunyaScore <= 100);
+  assert.ok(result.purvaPunya.pastSadhanaMerits);
+  assert.ok(result.purvaPunya.rinanubandhanaChildrenDebts);
+  assert.ok(result.purvaPunya.guruDharmaArmor);
+
+  // 5. Rahu-Ketu Axis
+  assert.ok(result.rahuKetuAxis);
+  assert.ok(result.rahuKetuAxis.ketuPastMastery);
+  assert.ok(result.rahuKetuAxis.rahuFutureFrontier);
+
+  // 6. Master synthesis
+  assert.ok(result.masterKarmicSynthesis.length > 20);
+});
+
