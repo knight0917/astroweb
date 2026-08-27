@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { calculateVedicEphemeris } from "../engine/ephemeris";
 import { calculateMatchmaking, CompatibilityResult, KootaScore } from "../engine/matchmaking";
 import { POPULAR_CITIES } from "../engine/constants";
+import { EXTENDED_LOCAL_PLACES } from "../engine/geocoding";
 import { GeoLocation } from "../engine/types";
 
 export default function MatchmakingView() {
@@ -13,10 +14,60 @@ export default function MatchmakingView() {
   const [boyName, setBoyName] = useState("Groom (वर)");
   const [boyDate, setBoyDate] = useState("1998-05-25T00:16");
   const [boyCity, setBoyCity] = useState<GeoLocation>(POPULAR_CITIES[0]);
+  const [boyCitySearch, setBoyCitySearch] = useState("");
+  const [showBoyCityDropdown, setShowBoyCityDropdown] = useState(false);
 
   const [girlName, setGirlName] = useState("Bride (कन्या)");
-  const [girlDate, setGirlDate] = useState("2000-09-14T14:30");
-  const [girlCity, setGirlCity] = useState<GeoLocation>(POPULAR_CITIES[1]);
+  const [girlDate, setGirlDate] = useState("2000-07-04T19:07");
+  const [girlCity, setGirlCity] = useState<GeoLocation>({
+    cityName: "Vasai (Mumbai)",
+    country: "India",
+    latitude: 19.3919,
+    longitude: 72.8397,
+    elevation: 11,
+    timezoneOffsetHours: 5.5,
+  });
+  const [girlCitySearch, setGirlCitySearch] = useState("");
+  const [showGirlCityDropdown, setShowGirlCityDropdown] = useState(false);
+
+  const allPlaces = useMemo(() => {
+    const list = [...EXTENDED_LOCAL_PLACES];
+    if (!list.some((p) => p.cityName.toLowerCase() === "vasai")) {
+      list.unshift({
+        cityName: "Vasai (Mumbai)",
+        country: "India",
+        state: "Maharashtra",
+        latitude: 19.3919,
+        longitude: 72.8397,
+        elevation: 11,
+        timezoneOffsetHours: 5.5,
+        displayName: "Vasai (Mumbai), Maharashtra, India",
+      });
+    }
+    return list;
+  }, []);
+
+  const filteredBoyCities = useMemo(() => {
+    if (!boyCitySearch.trim()) return allPlaces.slice(0, 10);
+    const q = boyCitySearch.toLowerCase();
+    return allPlaces.filter(
+      (c) =>
+        c.cityName.toLowerCase().includes(q) ||
+        (c.displayName && c.displayName.toLowerCase().includes(q)) ||
+        (c.country && c.country.toLowerCase().includes(q))
+    ).slice(0, 15);
+  }, [boyCitySearch, allPlaces]);
+
+  const filteredGirlCities = useMemo(() => {
+    if (!girlCitySearch.trim()) return allPlaces.slice(0, 10);
+    const q = girlCitySearch.toLowerCase();
+    return allPlaces.filter(
+      (c) =>
+        c.cityName.toLowerCase().includes(q) ||
+        (c.displayName && c.displayName.toLowerCase().includes(q)) ||
+        (c.country && c.country.toLowerCase().includes(q))
+    ).slice(0, 15);
+  }, [girlCitySearch, allPlaces]);
 
   const boyEphem = useMemo(() => {
     const d = new Date(boyDate);
@@ -62,7 +113,7 @@ export default function MatchmakingView() {
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Muhurta Chintamani & Jataka Parijata • Ashtakoota 36-Guna Scoring, Nadi/Bhakoot Cancellations & Manglik Dosha
+            Muhurta Chintamani & Jataka Parijata • Ashtakoota 36-Guna Scoring, Exact Dual Birthplace Geocoding & Manglik Dosha
           </p>
         </div>
 
@@ -117,7 +168,7 @@ export default function MatchmakingView() {
               />
             </div>
             <div>
-              <label className="text-slate-400 block mb-1 font-bold">Date & Time</label>
+              <label className="text-slate-400 block mb-1 font-bold">Date & Time (Local)</label>
               <input
                 type="datetime-local"
                 value={boyDate}
@@ -127,15 +178,78 @@ export default function MatchmakingView() {
             </div>
           </div>
 
-          {/* Groom Moon & Nakshatra Summary */}
-          <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between text-xs font-mono">
-            <div>
-              <span className="text-slate-400 block text-[10px]">Moon Sign (चन्द्र राशि)</span>
-              <span className="font-bold text-slate-200">{boyEphem.planets.Moon.rashi.englishName} ({boyEphem.planets.Moon.rashi.sanskritName})</span>
+          {/* Groom Birthplace Geocoding Selector */}
+          <div className="relative text-xs">
+            <label className="text-slate-400 block mb-1 font-bold flex justify-between">
+              <span>Birth Place (जन्म स्थान)</span>
+              <span className="text-sky-400 font-mono text-[10px]">
+                {boyCity.cityName} ({boyCity.latitude.toFixed(2)}°N, {boyCity.longitude.toFixed(2)}°E, TZ: +{boyCity.timezoneOffsetHours}h)
+              </span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Search city (e.g. Mumbai, Varanasi, Delhi)..."
+                value={boyCitySearch}
+                onChange={(e) => {
+                  setBoyCitySearch(e.target.value);
+                  setShowBoyCityDropdown(true);
+                }}
+                onFocus={() => setShowBoyCityDropdown(true)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-slate-100 font-medium"
+              />
+              <button
+                type="button"
+                onClick={() => setShowBoyCityDropdown(!showBoyCityDropdown)}
+                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold border border-slate-700"
+              >
+                {showBoyCityDropdown ? "Close" : "Select"}
+              </button>
             </div>
-            <div className="text-right">
-              <span className="text-slate-400 block text-[10px]">Nakshatra (नक्षत्र व पद)</span>
-              <span className="font-bold text-amber-400">{boyEphem.planets.Moon.nakshatra.sanskritName} (Pada {boyEphem.planets.Moon.nakshatra.pada})</span>
+
+            {/* City Dropdown */}
+            {showBoyCityDropdown && (
+              <div className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl bg-slate-900 border border-sky-500/40 shadow-2xl p-1.5 space-y-1 divide-y divide-slate-800/60">
+                {filteredBoyCities.map((c, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setBoyCity(c);
+                      setBoyCitySearch(c.cityName);
+                      setShowBoyCityDropdown(false);
+                    }}
+                    className="w-full text-left p-2 rounded-lg hover:bg-sky-950/40 transition-colors flex items-center justify-between text-xs text-slate-200"
+                  >
+                    <span className="font-bold">{c.displayName || c.cityName}</span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {c.latitude.toFixed(2)}°N, {c.longitude.toFixed(2)}°E
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Groom Planetary Diagnostic */}
+          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+            <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
+              <span className="text-slate-400 block text-[10px]">Ascendant (लग्न)</span>
+              <span className="font-bold text-sky-300">
+                {boyEphem.ascendant.rashi.englishName} ({boyEphem.ascendant.rashi.sanskritName})
+              </span>
+              <span className="block text-[10px] text-slate-400">
+                {(boyEphem.ascendant.siderealLongitude % 30).toFixed(2)}° • {boyEphem.ascendant.nakshatra.sanskritName}
+              </span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
+              <span className="text-slate-400 block text-[10px]">Moon (चन्द्र)</span>
+              <span className="font-bold text-amber-300">
+                {boyEphem.planets.Moon.rashi.englishName} ({boyEphem.planets.Moon.rashi.sanskritName})
+              </span>
+              <span className="block text-[10px] text-slate-400">
+                {boyEphem.planets.Moon.nakshatra.sanskritName} (Pada {boyEphem.planets.Moon.nakshatra.pada})
+              </span>
             </div>
           </div>
         </div>
@@ -171,7 +285,7 @@ export default function MatchmakingView() {
               />
             </div>
             <div>
-              <label className="text-slate-400 block mb-1 font-bold">Date & Time</label>
+              <label className="text-slate-400 block mb-1 font-bold">Date & Time (Local)</label>
               <input
                 type="datetime-local"
                 value={girlDate}
@@ -181,15 +295,78 @@ export default function MatchmakingView() {
             </div>
           </div>
 
-          {/* Bride Moon & Nakshatra Summary */}
-          <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between text-xs font-mono">
-            <div>
-              <span className="text-slate-400 block text-[10px]">Moon Sign (चन्द्र राशि)</span>
-              <span className="font-bold text-slate-200">{girlEphem.planets.Moon.rashi.englishName} ({girlEphem.planets.Moon.rashi.sanskritName})</span>
+          {/* Bride Birthplace Geocoding Selector */}
+          <div className="relative text-xs">
+            <label className="text-slate-400 block mb-1 font-bold flex justify-between">
+              <span>Birth Place (जन्म स्थान)</span>
+              <span className="text-pink-400 font-mono text-[10px]">
+                {girlCity.cityName} ({girlCity.latitude.toFixed(2)}°N, {girlCity.longitude.toFixed(2)}°E, TZ: +{girlCity.timezoneOffsetHours}h)
+              </span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Search city (e.g. Vasai, Mumbai, Pune, Delhi)..."
+                value={girlCitySearch}
+                onChange={(e) => {
+                  setGirlCitySearch(e.target.value);
+                  setShowGirlCityDropdown(true);
+                }}
+                onFocus={() => setShowGirlCityDropdown(true)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-slate-100 font-medium"
+              />
+              <button
+                type="button"
+                onClick={() => setShowGirlCityDropdown(!showGirlCityDropdown)}
+                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold border border-slate-700"
+              >
+                {showGirlCityDropdown ? "Close" : "Select"}
+              </button>
             </div>
-            <div className="text-right">
-              <span className="text-slate-400 block text-[10px]">Nakshatra (नक्षत्र व पद)</span>
-              <span className="font-bold text-amber-400">{girlEphem.planets.Moon.nakshatra.sanskritName} (Pada {girlEphem.planets.Moon.nakshatra.pada})</span>
+
+            {/* City Dropdown */}
+            {showGirlCityDropdown && (
+              <div className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl bg-slate-900 border border-pink-500/40 shadow-2xl p-1.5 space-y-1 divide-y divide-slate-800/60">
+                {filteredGirlCities.map((c, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setGirlCity(c);
+                      setGirlCitySearch(c.cityName);
+                      setShowGirlCityDropdown(false);
+                    }}
+                    className="w-full text-left p-2 rounded-lg hover:bg-pink-950/40 transition-colors flex items-center justify-between text-xs text-slate-200"
+                  >
+                    <span className="font-bold">{c.displayName || c.cityName}</span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {c.latitude.toFixed(2)}°N, {c.longitude.toFixed(2)}°E
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Bride Planetary Diagnostic */}
+          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+            <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
+              <span className="text-slate-400 block text-[10px]">Ascendant (लग्न)</span>
+              <span className="font-bold text-pink-300">
+                {girlEphem.ascendant.rashi.englishName} ({girlEphem.ascendant.rashi.sanskritName})
+              </span>
+              <span className="block text-[10px] text-slate-400">
+                {(girlEphem.ascendant.siderealLongitude % 30).toFixed(2)}° • {girlEphem.ascendant.nakshatra.sanskritName}
+              </span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
+              <span className="text-slate-400 block text-[10px]">Moon (चन्द्र)</span>
+              <span className="font-bold text-amber-300">
+                {girlEphem.planets.Moon.rashi.englishName} ({girlEphem.planets.Moon.rashi.sanskritName})
+              </span>
+              <span className="block text-[10px] text-slate-400">
+                {girlEphem.planets.Moon.nakshatra.sanskritName} (Pada {girlEphem.planets.Moon.nakshatra.pada})
+              </span>
             </div>
           </div>
         </div>
@@ -218,119 +395,115 @@ export default function MatchmakingView() {
                 <tr key={k.name} className="hover:bg-slate-900/50 transition-colors">
                   <td className="p-3 font-bold text-slate-200">
                     <div>{k.name}</div>
-                    <div className="text-[10px] text-slate-400 font-normal">{k.sanskritName}</div>
+                    <div className="text-[10px] text-slate-500 font-sans">{k.sanskritName}</div>
                   </td>
                   <td className="p-3 text-slate-400">{k.maxScore}</td>
-                  <td className="p-3 font-bold text-amber-400">
-                    <span className={`px-2 py-0.5 rounded text-xs ${
-                      k.obtainedScore === k.maxScore
-                        ? "bg-emerald-950 text-emerald-300 border border-emerald-500/50"
-                        : k.obtainedScore > 0
-                        ? "bg-amber-950 text-amber-300 border border-amber-500/50"
-                        : "bg-rose-950 text-rose-300 border border-rose-500/50"
-                    }`}>
+                  <td className="p-3 font-bold">
+                    <span
+                      className={`px-2 py-0.5 rounded ${
+                        k.obtainedScore === k.maxScore
+                          ? "bg-emerald-950/60 text-emerald-300 border border-emerald-800/50"
+                          : k.obtainedScore === 0
+                          ? "bg-rose-950/60 text-rose-300 border border-rose-800/50"
+                          : "bg-amber-950/60 text-amber-300 border border-amber-800/50"
+                      }`}
+                    >
                       {k.obtainedScore}
                     </span>
                   </td>
-                  <td className="p-3 text-slate-300">{k.boyAttribute}</td>
-                  <td className="p-3 text-slate-300">{k.girlAttribute}</td>
-                  <td className="p-3 text-[11px] text-slate-300 max-w-sm">
+                  <td className="p-3 text-sky-300">{k.boyAttribute}</td>
+                  <td className="p-3 text-pink-300">{k.girlAttribute}</td>
+                  <td className="p-3 text-slate-300 font-sans text-[11px] leading-relaxed">
                     {k.description}
-                    {k.isCancelled && (
-                      <span className="block text-[10px] text-emerald-400 font-bold mt-0.5">
-                        {k.cancellationReason || "Classical Cancellation Applied"}
-                      </span>
-                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr className="border-t border-slate-700 bg-slate-900/90 text-sm font-bold">
+                <td className="p-3 text-slate-200">Total Compatibility Points</td>
+                <td className="p-3 text-slate-400">36</td>
+                <td className="p-3 text-amber-400 text-base">{matchResult.totalScore}</td>
+                <td colSpan={3} className="p-3 text-right">
+                  <span
+                    className={`px-3 py-1 rounded-xl text-xs uppercase font-black ${
+                      matchResult.totalScore >= 18
+                        ? "bg-emerald-950 text-emerald-300 border-emerald-500"
+                        : "bg-rose-950 text-rose-300 border-rose-500"
+                    }`}
+                  >
+                    {matchResult.verdict}
+                  </span>
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>
 
-      {/* Manglik / Kuja Dosha Evaluation */}
+      {/* Manglik & Special Dosha Analysis */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Groom Manglik */}
+        {/* Manglik Assessment */}
         <div className="glass-panel p-5 rounded-2xl border border-slate-800 bg-slate-950/80 shadow-2xl space-y-3">
-          <div className="flex items-center justify-between">
-            <h4 className="font-bold text-xs text-sky-400 uppercase tracking-wider">
-              Groom Kuja / Manglik Check
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+              Manglik Dosha & Bhanga Analysis (माङ्गलिक विचार)
             </h4>
             <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                matchResult.boyManglik.isManglik
-                  ? "bg-rose-950 text-rose-300 border border-rose-500"
-                  : "bg-emerald-950 text-emerald-300 border border-emerald-500"
+              className={`text-xs px-2 py-0.5 rounded font-bold border ${
+                matchResult.manglikCompatibility.isCompatible
+                  ? "bg-emerald-950 text-emerald-300 border-emerald-700"
+                  : "bg-rose-950 text-rose-300 border-rose-700"
               }`}
             >
-              {matchResult.boyManglik.isManglik ? `Manglik (${matchResult.boyManglik.severity})` : "Non-Manglik"}
+              {matchResult.manglikCompatibility.isCompatible ? "✓ Harmonious Match" : "⚠️ Dosha Caution"}
             </span>
           </div>
-          <div className="space-y-1.5 text-xs text-slate-300">
-            <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800/80">
-              Mars in House #{matchResult.boyManglik.marsHouseFromLagna} from Lagna, #{matchResult.boyManglik.marsHouseFromMoon} from Moon, #{matchResult.boyManglik.marsHouseFromVenus} from Venus.
+
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
+              <span className="text-slate-400 block text-[10px]">Groom Manglik Status</span>
+              <span className="font-bold text-slate-200 block mt-0.5">
+                {matchResult.boyManglik.isManglik ? "Manglik (माङ्गलिक)" : "Non-Manglik (अमाङ्गलिक)"}
+              </span>
+              <span className="text-[10px] text-slate-400 block mt-1">
+                Mars in House #{matchResult.boyManglik.marsHouseFromLagna} (Severity: {matchResult.boyManglik.severity})
+              </span>
             </div>
-            {matchResult.boyManglik.isCancelled && (
-              <div className="p-2 rounded-lg bg-emerald-950/50 border border-emerald-800/60 text-emerald-300 font-medium">
-                Cancellation: {matchResult.boyManglik.cancellationReasons.join(", ")}
-              </div>
-            )}
+
+            <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
+              <span className="text-slate-400 block text-[10px]">Bride Manglik Status</span>
+              <span className="font-bold text-slate-200 block mt-0.5">
+                {matchResult.girlManglik.isManglik ? "Manglik (माङ्गलिक)" : "Non-Manglik (अमाङ्गलिक)"}
+              </span>
+              <span className="text-[10px] text-slate-400 block mt-1">
+                Mars in House #{matchResult.girlManglik.marsHouseFromLagna} (Severity: {matchResult.girlManglik.severity})
+              </span>
+            </div>
           </div>
+
+          <p className="text-xs text-slate-300 leading-relaxed bg-slate-900/80 p-2.5 rounded-xl border border-slate-800/80 font-sans">
+            {matchResult.manglikCompatibility.description}
+          </p>
         </div>
 
-        {/* Bride Manglik */}
-        <div className="glass-panel p-5 rounded-2xl border border-slate-800 bg-slate-950/80 shadow-2xl space-y-3">
-          <div className="flex items-center justify-between">
-            <h4 className="font-bold text-xs text-pink-400 uppercase tracking-wider">
-              Bride Kuja / Manglik Check
-            </h4>
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                matchResult.girlManglik.isManglik
-                  ? "bg-rose-950 text-rose-300 border border-rose-500"
-                  : "bg-emerald-950 text-emerald-300 border border-emerald-500"
-              }`}
-            >
-              {matchResult.girlManglik.isManglik ? `Manglik (${matchResult.girlManglik.severity})` : "Non-Manglik"}
-            </span>
-          </div>
-          <div className="space-y-1.5 text-xs text-slate-300">
-            <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800/80">
-              Mars in House #{matchResult.girlManglik.marsHouseFromLagna} from Lagna, #{matchResult.girlManglik.marsHouseFromMoon} from Moon, #{matchResult.girlManglik.marsHouseFromVenus} from Venus.
-            </div>
-            {matchResult.girlManglik.isCancelled && (
-              <div className="p-2 rounded-lg bg-emerald-950/50 border border-emerald-800/60 text-emerald-300 font-medium">
-                Cancellation: {matchResult.girlManglik.cancellationReasons.join(", ")}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Final Compatibility Verdict Banner */}
-      <div className="glass-panel p-6 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-950/30 via-slate-950 to-slate-950 shadow-2xl space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* Final Synthesized Verdict */}
+        <div className="glass-panel p-5 rounded-2xl border border-slate-800 bg-slate-950/80 shadow-2xl space-y-3 flex flex-col justify-between">
           <div>
-            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
-              FINAL ASTROLOGICAL VERDICT (मिलान निर्णय)
-            </span>
-            <h3 className="text-2xl font-black text-slate-100 mt-1">
-              {matchResult.verdict}
-            </h3>
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <h4 className="text-xs font-bold text-purple-400 uppercase tracking-wider">
+                Classical Shastric Recommendation (शास्त्रसम्मत निष्कर्ष)
+              </h4>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed mt-2.5 font-sans">
+              {matchResult.verdictDescription}
+            </p>
           </div>
 
-          <div className="text-right">
-            <span className="text-xs text-slate-400 block font-mono">Total Compatibility:</span>
-            <span className="text-xl font-black text-amber-300 font-mono">
-              {matchResult.totalScore} / 36 ({Math.round(matchResult.percentage)}%)
-            </span>
+          <div className="bg-purple-950/30 p-3 rounded-xl border border-purple-500/30 text-xs text-purple-200 font-sans">
+            <strong>Authentic Vedic Rule:</strong> When both charts have verified coordinates, the Moon Nakshatras and Lagna axes establish the foundational energetic harmony required for lifelong matrimonial bliss.
           </div>
         </div>
-
-        <p className="text-xs text-slate-300 leading-relaxed border-t border-slate-800 pt-3">
-          {matchResult.verdictDescription} • {matchResult.manglikCompatibility.description}
-        </p>
       </div>
     </div>
   );
