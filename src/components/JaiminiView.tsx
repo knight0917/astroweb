@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
@@ -33,8 +33,7 @@ export default function JaiminiView() {
       <div className="glass-panel p-4 md:p-6 rounded-2xl border border-slate-800 shadow-2xl flex flex-wrap items-center justify-between gap-4 bg-slate-950/80">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-2xl text-amber-400">🏛️</span>
-            <h2 className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
+            <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
               Classical Jaimini Astrology Suite (महर्षि जैमिनी ज्योतिष)
             </h2>
           </div>
@@ -46,22 +45,21 @@ export default function JaiminiView() {
         {/* Tab Switcher */}
         <div className="flex flex-wrap items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs">
           {[
-            { id: "karakas", label: "7 Chara Karakas", icon: "🌟" },
-            { id: "arudha", label: "12 Arudha Padas", icon: "🌀" },
-            { id: "karakamsha", label: "Karakamsha & Ishta", icon: "☸️" },
-            { id: "charaDasha", label: "Chara Dasha", icon: "⏳" },
-            { id: "rashiDrishti", label: "Rashi Drishti", icon: "👁️" },
+            { id: "karakas", label: "7 Chara Karakas" },
+            { id: "arudha", label: "12 Arudha Padas" },
+            { id: "karakamsha", label: "Karakamsha & Ishta" },
+            { id: "charaDasha", label: "Chara Dasha" },
+            { id: "rashiDrishti", label: "Rashi Drishti" },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                 activeTab === tab.id
                   ? "bg-amber-500 text-slate-950 shadow"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              <span>{tab.icon}</span>
               <span>{tab.label}</span>
             </button>
           ))}

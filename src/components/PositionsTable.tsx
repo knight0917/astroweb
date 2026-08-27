@@ -27,33 +27,33 @@ export default function PositionsTable() {
         <div className="flex gap-2">
           <button
             onClick={() => setActiveTab("planets")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeTab === "planets"
                 ? "bg-amber-500 text-slate-950 shadow"
                 : "text-slate-400 hover:text-slate-200 bg-slate-900/50"
             }`}
           >
-            🪐 Navagrahas & Planets ({planetList.length})
+            Navagrahas & Planets ({planetList.length})
           </button>
           <button
             onClick={() => setActiveTab("upagrahas")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeTab === "upagrahas"
                 ? "bg-purple-600 text-white shadow"
                 : "text-slate-400 hover:text-slate-200 bg-slate-900/50"
             }`}
           >
-            ✦ Upagrahas & Special Points ({upagrahaList.length})
+            Upagrahas & Special Points ({upagrahaList.length})
           </button>
           <button
             onClick={() => setActiveTab("panchanga")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeTab === "panchanga"
                 ? "bg-emerald-600 text-white shadow"
                 : "text-slate-400 hover:text-slate-200 bg-slate-900/50"
             }`}
           >
-            ☸ Daily Panchanga
+            Daily Panchanga
           </button>
         </div>
 

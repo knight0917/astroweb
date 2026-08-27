@@ -38,8 +38,7 @@ export default function BhavaBalaView() {
       <div className="glass-panel p-4 md:p-6 rounded-2xl border border-slate-800 shadow-2xl flex flex-wrap items-center justify-between gap-4 bg-slate-950/80">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-2xl text-amber-400">🏛️</span>
-            <h2 className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
+            <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
               Classical Parashari Bhava Bala (भावबल — 12 House Strengths System)
             </h2>
           </div>
@@ -52,36 +51,33 @@ export default function BhavaBalaView() {
         <div className="flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs">
           <button
             onClick={() => setDisplayMode("bars")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
               displayMode === "bars"
                 ? "bg-amber-500 text-slate-950 shadow"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <span>📊</span>
             <span>Potency Bars</span>
           </button>
           <button
             onClick={() => setDisplayMode("stacked")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
               displayMode === "stacked"
                 ? "bg-amber-500 text-slate-950 shadow"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <span>🥞</span>
-            <span>Stacked 4-Bala</span>
+            <span>Component Breakdown</span>
           </button>
           <button
             onClick={() => setDisplayMode("table")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
               displayMode === "table"
                 ? "bg-amber-500 text-slate-950 shadow"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <span>📋</span>
-            <span>Matrix Table</span>
+            <span>Detailed Table</span>
           </button>
         </div>
       </div>

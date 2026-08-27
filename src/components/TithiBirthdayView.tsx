@@ -141,9 +141,8 @@ export default function TithiBirthdayView() {
             </div>
 
             <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
-              <span className="text-slate-400 flex items-center gap-1">
-                <span>📅</span>
-                <span>Birth Date:</span>
+              <span className="text-slate-400">
+                Birth Date:
               </span>
               <span className="font-extrabold text-amber-300 font-mono">
                 {formattedBirthDate}
@@ -151,9 +150,8 @@ export default function TithiBirthdayView() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-slate-400 flex items-center gap-1">
-                <span>🕒</span>
-                <span>Birth Time:</span>
+              <span className="text-slate-400">
+                Birth Time:
               </span>
               <span className="font-extrabold text-slate-200 font-mono">
                 {formattedBirthTime}
@@ -417,32 +415,31 @@ export default function TithiBirthdayView() {
           {/* Multi-Year Vedic Birthday Table with Upcoming / Past Tabs */}
           <div className="glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 space-y-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <h4 className="font-extrabold text-xs text-slate-200 uppercase tracking-wider flex items-center gap-2">
-                <span>📅</span>
-                <span>Vedic Birthday Calendar Archive</span>
+              <h4 className="font-bold text-xs text-slate-200 uppercase tracking-wider">
+                Vedic Birthday Calendar Archive
               </h4>
 
               {/* Tabs: Upcoming vs Past */}
               <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
                 <button
                   onClick={() => setActiveTab("upcoming")}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition ${
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
                     activeTab === "upcoming"
                       ? "bg-amber-500 text-slate-950 shadow"
                       : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  📅 Upcoming (5 Yrs)
+                  Upcoming (5 Yrs)
                 </button>
                 <button
                   onClick={() => setActiveTab("past")}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition ${
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
                     activeTab === "past"
                       ? "bg-indigo-600 text-white shadow"
                       : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  🕰️ Past Archive (5 Yrs)
+                  Past Archive (5 Yrs)
                 </button>
               </div>
             </div>

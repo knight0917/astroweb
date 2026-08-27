@@ -22,11 +22,10 @@ export default function PrashnaView() {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-200">
       {/* Header Banner */}
-      <div className="glass-panel p-4 md:p-6 rounded-2xl border border-purple-500/40 shadow-2xl flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-purple-950/40 via-slate-950 to-slate-950">
+      <div className="glass-panel p-4 md:p-6 rounded-2xl border border-slate-800 shadow-2xl flex flex-wrap items-center justify-between gap-4 bg-slate-950/80">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-2xl text-purple-400">🔮</span>
-            <h2 className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-purple-300 via-pink-300 to-amber-300 bg-clip-text text-transparent">
+            <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-300 via-pink-300 to-amber-300 bg-clip-text text-transparent">
               Instant Tajik Prashna (Horary / प्रश्न तन्त्र)
             </h2>
           </div>
@@ -58,9 +57,8 @@ export default function PrashnaView() {
       {/* Topic Selection Grid */}
       <div className="glass-panel p-5 rounded-2xl border border-slate-800 bg-slate-950/80 shadow-2xl space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="font-extrabold text-sm text-slate-200 uppercase tracking-wider flex items-center gap-2">
-            <span>🎯</span>
-            <span>Select Query / Question Intent (प्रश्न विषय)</span>
+          <h3 className="font-bold text-xs text-slate-200 uppercase tracking-wider">
+            Select Query / Question Intent (प्रश्न विषय)
           </h3>
 
           <div className="flex items-center gap-2 text-xs">
@@ -90,7 +88,7 @@ export default function PrashnaView() {
                     : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
                 }`}
               >
-                <div className="font-extrabold text-xs text-slate-200 line-clamp-1">{t.title}</div>
+                <div className="font-bold text-xs text-slate-200 line-clamp-1">{t.title}</div>
                 <div className="text-[10px] text-purple-300 font-mono mt-0.5">{t.sanskritTitle}</div>
                 <span className="inline-block text-[9px] bg-slate-800 px-1.5 py-0.2 rounded text-slate-400 mt-1 font-mono">
                   House #{t.karyaHouse}
@@ -109,10 +107,9 @@ export default function PrashnaView() {
             <span className="text-xs font-bold text-sky-400 uppercase tracking-wider">
               1st House (पृच्छक / Querent)
             </span>
-            <span className="text-xl">👤</span>
           </div>
           <div>
-            <h4 className="text-xl font-black text-slate-100">{prashnaResult.lagnesha}</h4>
+            <h4 className="text-xl font-bold text-slate-100">{prashnaResult.lagnesha}</h4>
             <p className="text-xs text-slate-400 font-mono">
               Lagna: {prashnaResult.lagnaSign} ({prashnaResult.lagnaDegree})
             </p>
@@ -128,10 +125,9 @@ export default function PrashnaView() {
             <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
               {prashnaResult.karyaHouse}th House (कार्येश / Objective)
             </span>
-            <span className="text-xl">🏆</span>
           </div>
           <div>
-            <h4 className="text-xl font-black text-slate-100">{prashnaResult.karyesha}</h4>
+            <h4 className="text-xl font-bold text-slate-100">{prashnaResult.karyesha}</h4>
             <p className="text-xs text-slate-400 font-mono">
               Target Matter: {prashnaResult.topic.title}
             </p>
@@ -147,10 +143,9 @@ export default function PrashnaView() {
             <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">
               Tajik Aspect & Orb (दृष्टि एवं दीप्तांश)
             </span>
-            <span className="text-xl">📐</span>
           </div>
           <div>
-            <h4 className="text-lg font-black text-purple-300">{prashnaResult.applyingAspect.aspectType}</h4>
+            <h4 className="text-lg font-bold text-purple-300">{prashnaResult.applyingAspect.aspectType}</h4>
             <p className="text-xs text-slate-400 font-mono">
               Orb: {prashnaResult.applyingAspect.orbDegrees}° (Max Allowed: {prashnaResult.applyingAspect.maxAllowedOrb}°)
             </p>
@@ -172,9 +167,8 @@ export default function PrashnaView() {
 
       {/* Detected Tajika Yogas */}
       <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-slate-950/80 shadow-2xl space-y-4">
-        <h3 className="text-sm font-extrabold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-          <span>📜</span>
-          <span>16 Classical Tajika Yogas Formation (ताजिक योग विश्लेषण)</span>
+        <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
+          16 Classical Tajika Yogas Formation (ताजिक योग विश्लेषण)
         </h3>
 
         {prashnaResult.detectedYogas.length > 0 ? (
@@ -186,7 +180,7 @@ export default function PrashnaView() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-extrabold text-sm text-purple-300">{y.name}</h4>
+                    <h4 className="font-bold text-sm text-purple-300">{y.name}</h4>
                     <span className="text-[10px] text-slate-400 font-mono">{y.sanskritName}</span>
                   </div>
                   <span
@@ -217,14 +211,14 @@ export default function PrashnaView() {
             <span className="text-xs font-bold text-purple-400 uppercase tracking-widest block">
               FINAL TAJIK PRASHNA VERDICT (प्रश्न निर्णय)
             </span>
-            <h3 className="text-3xl font-black text-amber-300 mt-1">
+            <h3 className="text-2xl font-bold text-amber-300 mt-1">
               {prashnaResult.verdict}
             </h3>
           </div>
 
           <div className="text-right">
             <span className="text-xs text-slate-400 block font-mono">Timing Prediction:</span>
-            <span className="text-sm font-extrabold text-emerald-300 font-mono">
+            <span className="text-sm font-bold text-emerald-300 font-mono">
               {prashnaResult.timingPrediction}
             </span>
           </div>
@@ -237,7 +231,7 @@ export default function PrashnaView() {
         <div className="flex flex-wrap items-center justify-between pt-2 text-xs text-slate-400 font-mono">
           <span>Moon: {prashnaResult.moonSign} ({prashnaResult.moonNakshatra})</span>
           {prashnaResult.isMoonVoidOfCourse && (
-            <span className="text-amber-400">⚠️ Moon Void of Course (&gt;28° in sign)</span>
+            <span className="text-amber-400 font-semibold">Moon Void of Course (&gt;28° in sign)</span>
           )}
         </div>
       </div>

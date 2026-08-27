@@ -36,8 +36,7 @@ export default function NumerologyView() {
       <div className="glass-panel p-4 md:p-6 rounded-2xl border border-slate-800 shadow-2xl flex flex-wrap items-center justify-between gap-4 bg-slate-950/80">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-2xl text-amber-400">🔢</span>
-            <h2 className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
+            <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
               Vedic Sankhya Shastra & Chaldean Numerology
             </h2>
           </div>

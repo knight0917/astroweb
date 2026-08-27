@@ -74,9 +74,8 @@ export default function TithiCalendarView() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-2xl text-amber-400">📅</span>
             <div>
-              <h2 className="text-base sm:text-lg font-black bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent uppercase tracking-wider">
+              <h2 className="text-base sm:text-lg font-bold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent uppercase tracking-wider">
                 Vedic Tithi & Panchanga Calendar (तिथि पञ्चाङ्ग कैलेण्डर)
               </h2>
               <p className="text-[11px] text-slate-400">
@@ -170,7 +169,6 @@ export default function TithiCalendarView() {
         </div>
 
         <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-900/60 border border-slate-800">
-          <span className="text-xl text-amber-400">👑</span>
           <div>
             <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Ekadashi Fasts (एकादशी)</span>
             <span className="font-extrabold text-amber-400">
@@ -180,7 +178,6 @@ export default function TithiCalendarView() {
         </div>
 
         <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-900/60 border border-slate-800">
-          <span className="text-xl text-cyan-400">🔱</span>
           <div>
             <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Pradosh Vrats (प्रदोष)</span>
             <span className="font-extrabold text-cyan-300">
@@ -197,9 +194,9 @@ export default function TithiCalendarView() {
           <span className="text-[11px] font-bold text-slate-400 mr-1 hidden sm:inline">Filter:</span>
           {[
             { id: "all", label: `All Days (${calendarData.totalDays})` },
-            { id: "festivals", label: `🎉 Festivals (${calendarData.majorFestivals.length})` },
-            { id: "vrats", label: `🧘 Vrats & Fasts` },
-            { id: "purnima_amavasya", label: `🌕 Moon Phases` },
+            { id: "festivals", label: `Festivals (${calendarData.majorFestivals.length})` },
+            { id: "vrats", label: `Vrats & Fasts` },
+            { id: "purnima_amavasya", label: `Moon Phases` },
           ].map((f) => (
             <button
               key={f.id}
@@ -223,7 +220,6 @@ export default function TithiCalendarView() {
               viewTab === "grid" ? "bg-amber-500 text-slate-950 shadow" : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <span>📅</span>
             <span>Grid View</span>
           </button>
           <button
@@ -232,7 +228,6 @@ export default function TithiCalendarView() {
               viewTab === "list" ? "bg-amber-500 text-slate-950 shadow" : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <span>📜</span>
             <span>Festivals List</span>
           </button>
         </div>

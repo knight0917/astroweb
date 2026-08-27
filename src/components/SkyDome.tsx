@@ -1213,7 +1213,7 @@ export default function SkyDome() {
       {/* Bottom Hint Banner */}
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none hidden md:block">
         <div className="text-[10.5px] text-slate-400 glass-panel px-3 py-1 rounded-full shadow-lg border border-slate-800/80 backdrop-blur-md">
-          ⏳ Left: Time Controller • 🪐 Right: Planet Index (Click to Rotate 3D View) • 🌍 Center: Bhu-Mandala
+          Left: Time Controller • Right: Planet Index (Click to Rotate 3D View) • Center: Bhu-Mandala
         </div>
       </div>
     </div>

@@ -238,12 +238,15 @@ export default function TimeTravelSlider() {
           {/* 1. Location / Place Enter Button */}
           <button
             onClick={() => setShowLocationModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-700/80 hover:border-amber-400 text-slate-200 font-semibold transition-all shadow-sm cursor-pointer group flex-shrink-0"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-700/80 hover:border-amber-400 text-slate-200 font-semibold transition-all shadow-sm cursor-pointer group flex-shrink-0"
             title="Edit Place & Observer Location (GPS)"
           >
-            <span className="text-amber-400 text-xs group-hover:scale-110 transition-transform">📍</span>
+            <svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
             <div className="text-left">
-              <span className="font-extrabold text-[11px] md:text-xs block max-w-[110px] sm:max-w-[140px] truncate text-slate-100 group-hover:text-amber-300 transition-colors">
+              <span className="font-bold text-[11px] md:text-xs block max-w-[110px] sm:max-w-[140px] truncate text-slate-100 group-hover:text-amber-300 transition-colors">
                 {location.cityName}
               </span>
               <span className="text-[8.5px] text-slate-400 font-mono hidden sm:block">
@@ -259,9 +262,12 @@ export default function TimeTravelSlider() {
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-400 text-slate-200 font-semibold transition-all shadow-sm cursor-pointer group flex-shrink-0"
             title="Saved Birth Charts & Profiles"
           >
-            <span className="text-amber-400 text-xs">👤</span>
+            <svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
             <div className="text-left hidden sm:block">
-              <span className="font-extrabold text-[11px] block max-w-[100px] truncate text-slate-100 group-hover:text-amber-300">
+              <span className="font-bold text-[11px] block max-w-[100px] truncate text-slate-100 group-hover:text-amber-300">
                 {activeProfileName || (savedProfiles.length > 0 ? `Saved (${savedProfiles.length})` : "Saved Charts")}
               </span>
             </div>
@@ -271,19 +277,28 @@ export default function TimeTravelSlider() {
           {/* 3. Direct 1-Click "Save Chart" Button (Visible on Mobile & Desktop) */}
           <button
             onClick={() => setShowSaveModal(true)}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-300 font-bold text-xs shadow-sm transition-all cursor-pointer flex-shrink-0"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold text-xs shadow-sm transition-all cursor-pointer flex-shrink-0"
             title="Save Current Birth Details as a Profile"
           >
-            <span>💾</span>
-            <span className="font-extrabold hidden xs:inline sm:inline">Save Chart</span>
+            <svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+            <span className="font-bold hidden xs:inline sm:inline">Save Chart</span>
           </button>
 
           {/* 4. Mobile Direct Date & Place Picker Trigger */}
           <button
             onClick={() => setShowPickerModal(true)}
-            className="md:hidden px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-md shadow-amber-500/20 flex items-center gap-1 cursor-pointer flex-shrink-0"
+            className="md:hidden px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md flex items-center gap-1.5 cursor-pointer flex-shrink-0"
           >
-            <span>📅</span>
+            <svg className="w-3.5 h-3.5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
             <span>Set Date & Time</span>
           </button>
 
@@ -403,10 +418,10 @@ export default function TimeTravelSlider() {
               setIsEditing(false);
               setDate(new Date());
             }}
-            className="px-2.5 md:px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-extrabold text-xs rounded-xl shadow transition-transform active:scale-95 cursor-pointer flex items-center gap-1"
+            className="px-2.5 md:px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl shadow transition-transform active:scale-95 cursor-pointer flex items-center gap-1.5"
             title="Snap to current live moment"
           >
-            <span>🔴</span>
+            <span className="w-2 h-2 rounded-full bg-slate-950 inline-block animate-pulse" />
             <span className="hidden sm:inline">LIVE NOW</span>
             <span className="sm:hidden">NOW</span>
           </button>
@@ -414,7 +429,10 @@ export default function TimeTravelSlider() {
           {/* Formatted Date/Time Banner with Hourglass */}
           <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 p-2 rounded-xl">
             <div className="p-1 rounded-lg bg-amber-500/10 text-amber-400 text-sm">
-              ⏳
+              <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
             </div>
             <div>
               <div className="flex items-center gap-1.5">
@@ -441,7 +459,7 @@ export default function TimeTravelSlider() {
                 </div>
               </div>
 
-              <div className="text-xs md:text-sm font-extrabold text-slate-100 font-mono flex items-center gap-1.5 mt-0.5">
+              <div className="text-xs md:text-sm font-bold text-slate-100 font-mono flex items-center gap-1.5 mt-0.5">
                 <span>
                   {displayDate.toLocaleDateString("en-US", {
                     weekday: "short",
@@ -474,11 +492,11 @@ export default function TimeTravelSlider() {
             onClick={togglePlay}
             className={`px-3 md:px-4 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer flex-shrink-0 ${
               isPlaying
-                ? "bg-red-500 hover:bg-red-400 text-white"
+                ? "bg-rose-600 hover:bg-rose-500 text-white"
                 : "bg-amber-500 hover:bg-amber-400 text-slate-950"
             }`}
           >
-            <span>{isPlaying ? "⏸ PAUSE" : "▶ PLAY"}</span>
+            <span>{isPlaying ? "PAUSE" : "PLAY"}</span>
           </button>
 
           {/* Speed selector */}
@@ -577,8 +595,13 @@ export default function TimeTravelSlider() {
           <div className="relative z-10 glass-panel bg-slate-950 border border-slate-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-4 max-h-[90vh] my-auto overflow-y-auto animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <span className="text-xl text-amber-400">📅</span>
-                <h3 className="font-extrabold text-sm text-slate-100 uppercase tracking-wider">
+                <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                <h3 className="font-bold text-sm text-slate-100 uppercase tracking-wider">
                   Set Date, Time & Place
                 </h3>
               </div>

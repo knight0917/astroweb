@@ -150,16 +150,15 @@ export default function HeaderNav() {
 
   const ALL_MODULES: {
     category: string;
-    items: { mode: ViewMode; label: string; hindiLabel: string; icon: string; desc: string; badge?: string }[];
+    items: { mode: ViewMode; label: string; hindiLabel: string; desc: string; badge?: string }[];
   }[] = [
     {
-      category: "🌟 Charts & Divisionals (कुण्डली एवं वर्ग)",
+      category: "Charts & Divisionals (कुण्डली एवं वर्ग)",
       items: [
         {
           mode: "kundli-north",
           label: "Traditional Kundli Chart",
           hindiLabel: "जन्म कुण्डली (उत्तर व दक्षिण)",
-          icon: "☸",
           desc: "North/South Indian charts with Jaimini Chara Karakas (AK to DK)",
           badge: "Core",
         },
@@ -167,7 +166,6 @@ export default function HeaderNav() {
           mode: "shodashavarga",
           label: "16 Vargas (Shodashavarga)",
           hindiLabel: "षोडशवर्ग (D1 - D60)",
-          icon: "✨",
           desc: "Complete Parashari 16 divisional charts with interactive inspect",
           badge: "D1–D60",
         },
@@ -175,14 +173,12 @@ export default function HeaderNav() {
           mode: "dual",
           label: "Dual 3D + Kundli Split View",
           hindiLabel: "युगल दृश्य (3D + कुण्डली)",
-          icon: "🔲",
           desc: "Side-by-side interactive 3D SkyDome and Kundli chart",
         },
         {
           mode: "jaimini",
           label: "Jaimini Astrology Suite",
           hindiLabel: "जैमिनी ज्योतिष (कारकांश व आरूढ़)",
-          icon: "🏛️",
           desc: "7 Chara Karakas, 12 Arudha Padas (AL/UL), Karakamsha & Chara Dasha",
           badge: "Jaimini",
         },
@@ -190,20 +186,18 @@ export default function HeaderNav() {
           mode: "matchmaking",
           label: "Kundli Milan (36 Gunas)",
           hindiLabel: "अष्टकूट ३६ गुण मिलान",
-          icon: "💑",
           desc: "Ashtakoota compatibility, Nadi/Bhakoot cancellation & Manglik check",
           badge: "36 Gunas",
         },
       ],
     },
     {
-      category: "🔮 Predictive Timing & Transits (दशा एवं गोचर)",
+      category: "Predictive Timing & Transits (दशा एवं गोचर)",
       items: [
         {
           mode: "dasha",
           label: "Vimshottari Dasha (120 Yrs)",
           hindiLabel: "विम्शोत्तरी दशा चक्र",
-          icon: "👑",
           desc: "Complete Mahadasha, Antardasha & Pratyantardasha hierarchy with live active tracker",
           badge: "120 Yrs",
         },
@@ -211,7 +205,6 @@ export default function HeaderNav() {
           mode: "gochar",
           label: "Planetary Transits & Sade Sati",
           hindiLabel: "ग्रह गोचर एवं साढ़े साती",
-          icon: "🪐",
           desc: "Live transits over Natal Moon & Lagna, 5-phase Sade Sati & Dual Transit Chart",
           badge: "Live",
         },
@@ -219,20 +212,18 @@ export default function HeaderNav() {
           mode: "prashna",
           label: "Tajik Prashna (Horary)",
           hindiLabel: "ताजिक प्रश्न तन्त्र",
-          icon: "🔮",
           desc: "16 Tajika Yogas (Ithasala/Ishrafa), query orbs & instant yes/no verdict",
           badge: "Tajika",
         },
       ],
     },
     {
-      category: "⚖️ Classical Strengths & Analysis (बल साधन)",
+      category: "Classical Strengths & Analysis (बल साधन)",
       items: [
         {
           mode: "shadbala",
           label: "Parashari Shadbala (6-Fold)",
           hindiLabel: "षड्बल (6-अंग ग्रह बल)",
-          icon: "⚖️",
           desc: "Sthan, Dig, Kaal, Cheshta, Naisargika, Drik & Ishta/Kashta Phala",
           badge: "BPHS",
         },
@@ -240,26 +231,23 @@ export default function HeaderNav() {
           mode: "bhavabala",
           label: "Bhava Bala (12 House Strengths)",
           hindiLabel: "भाव बल (12 भाव शक्ति)",
-          icon: "🏛️",
           desc: "House Lords, Dig, Drishti & Kendra required Rupas analysis",
         },
         {
           mode: "ashtakavarga",
           label: "Ashtakavarga Matrix Suite",
           hindiLabel: "अष्टकवर्ग चक्र",
-          icon: "📊",
           desc: "Sarvashtakavarga 337 bindus & 7 Bhinnashtakavarga score matrices",
         },
       ],
     },
     {
-      category: "📅 Panchanga, Calendar & Muhurta (पञ्चाङ्ग एवं मुहूर्त)",
+      category: "Panchanga, Calendar & Muhurta (पञ्चाङ्ग एवं मुहूर्त)",
       items: [
         {
           mode: "muhurta",
           label: "Auspicious Muhurta Finder",
           hindiLabel: "शुभ मुहूर्त एवं पञ्चाङ्ग शुद्धि",
-          icon: "⏳",
           desc: "Abhijit, Brahma, Amrit Kaal, Rahu Kaal, & Event Muhurta Suitability",
           badge: "Muhurta",
         },
@@ -267,7 +255,6 @@ export default function HeaderNav() {
           mode: "choghadiya",
           label: "Real-Time Choghadiya & Horas",
           hindiLabel: "चौघड़िया एवं ग्रह होरा",
-          icon: "⏱️",
           desc: "Live Day & Night Choghadiyas, countdown timer, and 24 Planetary Horas",
           badge: "Live",
         },
@@ -275,7 +262,6 @@ export default function HeaderNav() {
           mode: "tithi-calendar",
           label: "Vedic Tithi Calendar",
           hindiLabel: "तिथि पञ्चाङ्ग कैलेण्डर",
-          icon: "📅",
           desc: "Daily Sunrise Tithi, Moon phases & 50+ festival Shubh Muhurtas",
           badge: "New",
         },
@@ -283,33 +269,29 @@ export default function HeaderNav() {
           mode: "tithi-birthday",
           label: "Vedic Tithi Birthday",
           hindiLabel: "तिथि जन्मदिन (तिथि प्रवेश)",
-          icon: "🎂",
           desc: "Tithi Pravesha exact recurrence and prescribed birthday rituals",
         },
         {
           mode: "numerology",
           label: "Vedic & Chaldean Numerology",
           hindiLabel: "वैदिक अंकशास्त्र",
-          icon: "🔢",
           desc: "Mulank, Bhagyank, Name Number & Chinese Lo Shu 3x3 Grid",
         },
       ],
     },
     {
-      category: "🪐 Observatory & Ephemeris (खगोलीय वेधशाला)",
+      category: "Observatory & Ephemeris (खगोलीय वेधशाला)",
       items: [
         {
           mode: "3d",
           label: "3D Celestial WebGL Dome",
           hindiLabel: "3D खगोलीय आकाश मण्डल",
-          icon: "🪐",
           desc: "Real-time 3D planetary orbits, Nakshatras & sky coordinates",
         },
         {
           mode: "table",
           label: "Complete Ephemeris Table",
           hindiLabel: "ग्रह स्थिति सारणी",
-          icon: "📋",
           desc: "Sidereal degrees, Nakshatras, Padas, Speed & Retrograde status",
         },
       ],
@@ -326,7 +308,6 @@ export default function HeaderNav() {
       mode: "kundli-north" as ViewMode,
       label: "Traditional Kundli",
       hindiLabel: "जन्म कुण्डली",
-      icon: "☸",
       desc: "",
     };
   }, [viewMode]);
@@ -355,8 +336,18 @@ export default function HeaderNav() {
 
           {/* Logo & Brand */}
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setShowMenuDrawer(true)}>
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-300 flex items-center justify-center text-base md:text-lg shadow-lg shadow-amber-500/20 flex-shrink-0">
-              ☸
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 flex items-center justify-center shadow-lg shadow-amber-500/20 flex-shrink-0 text-slate-950">
+              <svg className="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2" />
+                <path d="M12 20v2" />
+                <path d="m4.93 4.93 1.41 1.41" />
+                <path d="m17.66 17.66 1.41 1.41" />
+                <path d="M2 12h2" />
+                <path d="M20 12h2" />
+                <path d="m6.34 17.66-1.41 1.41" />
+                <path d="m19.07 4.93-1.41 1.41" />
+              </svg>
             </div>
             <div>
               <h1 className="font-black text-sm md:text-base bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent tracking-tight leading-none">
@@ -371,11 +362,11 @@ export default function HeaderNav() {
           {/* Active Module Indicator Chip */}
           <button
             onClick={() => setShowMenuDrawer(true)}
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer text-xs"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer text-xs"
             title="Click to Switch Module"
           >
-            <span className="text-amber-400 text-xs">{currentModule.icon}</span>
-            <span className="font-extrabold text-slate-100 text-[11px] md:text-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-sm shadow-amber-400/80" />
+            <span className="font-bold text-slate-100 text-[11px] md:text-xs">
               {currentModule.label}
             </span>
             <span className="text-[9px] text-slate-500 font-bold ml-0.5">▼</span>
@@ -387,12 +378,15 @@ export default function HeaderNav() {
           {/* Location Trigger Chip */}
           <button
             onClick={() => setShowLocationModal(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-500/50 text-slate-200 font-semibold transition-all shadow-sm cursor-pointer"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-500/50 text-slate-200 font-semibold transition-all shadow-sm cursor-pointer"
             title="Edit Observer Location & GPS"
           >
-            <span className="text-amber-400 text-xs">📍</span>
+            <svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
             <div className="text-left">
-              <span className="font-bold text-[11px] md:text-xs block max-w-[90px] sm:max-w-[120px] truncate">
+              <span className="font-bold text-[11px] md:text-xs block max-w-[90px] sm:max-w-[120px] truncate text-slate-100">
                 {location.cityName}
               </span>
               <span className="text-[8.5px] text-slate-400 font-mono hidden sm:block">
@@ -440,13 +434,17 @@ export default function HeaderNav() {
             onClick={() => setShowSettingsDrawer(true)}
             className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-amber-400 transition-all flex items-center justify-center cursor-pointer shadow-sm"
             title="Jyotish Configuration & Settings"
+            aria-label="Settings"
           >
-            <span className="text-base leading-none">⚙️</span>
+            <svg className="w-4 h-4 text-slate-300 hover:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
           </button>
         </div>
       </div>
 
-      {/* 🧭 SLIDE-OVER LEFT NAVIGATION DRAWER (via Portal) */}
+      {/* SLIDE-OVER LEFT NAVIGATION DRAWER (via Portal) */}
       {mounted && showMenuDrawer && createPortal(
         <div className="fixed inset-0 z-[99999] flex items-stretch bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
           {/* Backdrop Click */}
@@ -461,11 +459,14 @@ export default function HeaderNav() {
               {/* Drawer Header */}
               <div className="flex items-center justify-between border-b border-slate-800 pb-3.5">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-300 flex items-center justify-center text-base shadow-lg shadow-amber-500/20">
-                    ☸
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20">
+                    <svg className="w-4 h-4 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                      <circle cx="12" cy="12" r="4" />
+                      <path d="M12 2v2M12 20v2M2 12h2M20 12h2" />
+                    </svg>
                   </div>
                   <div>
-                    <h3 className="font-black text-sm text-slate-100 uppercase tracking-wider">
+                    <h3 className="font-bold text-sm text-slate-100 tracking-wide uppercase">
                       Vedic Sky Jyotish Modules
                     </h3>
                     <p className="text-[10px] text-slate-400 font-medium">
@@ -487,7 +488,7 @@ export default function HeaderNav() {
               <div className="space-y-4">
                 {ALL_MODULES.map((group) => (
                   <div key={group.category} className="space-y-1.5">
-                    <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider block px-1">
+                    <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block px-1">
                       {group.category}
                     </span>
 
@@ -501,29 +502,32 @@ export default function HeaderNav() {
                               setViewMode(item.mode);
                               setShowMenuDrawer(false);
                             }}
-                            className={`w-full p-2.5 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3 group ${
+                            className={`w-full p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 group ${
                               isActive
-                                ? "bg-amber-500/15 border-amber-400 ring-1 ring-amber-400 shadow-lg"
-                                : "bg-slate-900/60 hover:bg-slate-900 border-slate-800/80 hover:border-slate-700"
+                                ? "bg-amber-500/10 border-amber-400/80 ring-1 ring-amber-400/50 shadow-md"
+                                : "bg-slate-900/60 hover:bg-slate-900 border-slate-800 hover:border-slate-700"
                             }`}
                           >
-                            <span className="text-xl mt-0.5 group-hover:scale-110 transition-transform">
-                              {item.icon}
-                            </span>
+                            <div className="pt-1">
+                              <span className={`w-1.5 h-1.5 rounded-full block transition-colors ${
+                                isActive ? "bg-amber-400 shadow-sm shadow-amber-400" : "bg-slate-600 group-hover:bg-slate-400"
+                              }`} />
+                            </div>
+
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-1.5 truncate">
-                                  <span className={`font-black text-xs truncate ${isActive ? "text-amber-300" : "text-slate-100"}`}>
+                                  <span className={`font-bold text-xs truncate ${isActive ? "text-amber-300" : "text-slate-100"}`}>
                                     {item.label}
                                   </span>
                                   {item.badge && (
-                                    <span className="text-[8.5px] font-extrabold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                    <span className="text-[8.5px] font-bold px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700">
                                       {item.badge}
                                     </span>
                                   )}
                                 </div>
                                 {isActive && (
-                                  <span className="text-[9px] font-black text-amber-400 uppercase tracking-tight">
+                                  <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider">
                                     ACTIVE
                                   </span>
                                 )}
@@ -555,9 +559,12 @@ export default function HeaderNav() {
                   setShowMenuDrawer(false);
                   setShowSettingsDrawer(true);
                 }}
-                className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>⚙️</span>
+                <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
                 <span>Open Full Jyotish Settings</span>
               </button>
             </div>
@@ -579,8 +586,11 @@ export default function HeaderNav() {
               {/* Drawer Header */}
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl text-amber-400">⚙️</span>
-                  <h3 className="font-extrabold text-sm text-slate-100 uppercase tracking-wider">
+                  <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                  </svg>
+                  <h3 className="font-bold text-sm text-slate-100 uppercase tracking-wider">
                     Jyotish Settings & Tools
                   </h3>
                 </div>
@@ -708,8 +718,11 @@ export default function HeaderNav() {
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <span className="text-xl text-amber-400">📍</span>
-                <h3 className="font-extrabold text-base text-slate-100">
+                <svg className="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                <h3 className="font-bold text-base text-slate-100">
                   Set Observer Location & Coordinates
                 </h3>
               </div>
@@ -725,9 +738,15 @@ export default function HeaderNav() {
             <button
               onClick={handleDetectLocation}
               disabled={geoLoading}
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-50"
+              className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-700 hover:border-amber-400 text-slate-200 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-50"
             >
-              <span>🛰️</span>
+              <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="22" y1="12" x2="18" y2="12" />
+                <line x1="6" y1="12" x2="2" y2="12" />
+                <line x1="12" y1="6" x2="12" y2="2" />
+                <line x1="12" y1="22" x2="12" y2="18" />
+              </svg>
               <span>{geoLoading ? "Acquiring GPS Fix..." : "Auto-Detect My Exact Device GPS Location"}</span>
             </button>
 

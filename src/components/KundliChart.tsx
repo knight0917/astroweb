@@ -337,9 +337,8 @@ export default function KundliChart() {
 
             {/* Hollow Center */}
             <div className="col-start-2 col-span-2 row-start-2 row-span-2 border border-slate-800 bg-slate-950/80 flex flex-col items-center justify-center text-center p-2">
-              <span className="text-xl text-amber-400">☸</span>
-              <span className="text-xs font-bold text-slate-200 mt-1">Rashi Kundli</span>
-              <span className="text-[10px] text-slate-400">{ephemeris.ayanamshaType} Ayanamsha</span>
+              <span className="text-xs font-bold text-slate-200">Rashi Kundli</span>
+              <span className="text-[10px] text-slate-400 font-mono mt-0.5">{ephemeris.ayanamshaType} Ayanamsha</span>
             </div>
           </div>
         )}
@@ -349,8 +348,8 @@ export default function KundliChart() {
       <div className="w-full max-w-[640px] mt-4 pt-3 border-t border-slate-800 space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-amber-400 text-sm">👑</span>
-            <span className="font-extrabold text-xs text-slate-200 tracking-wide uppercase">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            <span className="font-bold text-xs text-slate-200 tracking-wide uppercase">
               Jaimini Chara Karakas (चर कारक • AK to DK)
             </span>
           </div>
@@ -426,26 +425,23 @@ export default function KundliChart() {
       <div className="mt-3 w-full max-w-[460px] grid grid-cols-1 sm:grid-cols-3 gap-2">
         <button
           onClick={() => setViewMode("shodashavarga")}
-          className="py-2.5 px-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-[11px] transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/35 hover:scale-[1.02] flex items-center justify-center gap-1 cursor-pointer"
+          className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 text-slate-100 font-bold text-[11px] transition-all shadow-sm cursor-pointer text-center"
         >
-          <span>✨</span>
-          <span>16 Vargas (D1-D60)</span>
+          16 Vargas (D1-D60)
         </button>
 
         <button
           onClick={() => setViewMode("shadbala")}
-          className="py-2.5 px-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-[11px] transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/35 hover:scale-[1.02] flex items-center justify-center gap-1 cursor-pointer"
+          className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 text-slate-100 font-bold text-[11px] transition-all shadow-sm cursor-pointer text-center"
         >
-          <span>⚖️</span>
-          <span>Shadbala (Planets)</span>
+          Shadbala (Planets)
         </button>
 
         <button
           onClick={() => setViewMode("bhavabala")}
-          className="py-2.5 px-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-[11px] transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:scale-[1.02] flex items-center justify-center gap-1 cursor-pointer"
+          className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 text-slate-100 font-bold text-[11px] transition-all shadow-sm cursor-pointer text-center"
         >
-          <span>🏛️</span>
-          <span>Bhava Bala (Houses)</span>
+          Bhava Bala (Houses)
         </button>
       </div>
     </div>

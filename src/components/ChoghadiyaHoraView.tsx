@@ -171,11 +171,11 @@ export default function ChoghadiyaHoraView() {
           onClick={() => setActiveTab("horas")}
           className={`px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${
             activeTab === "horas"
-              ? "bg-cyan-500 text-slate-950 shadow-md font-black"
+              ? "bg-cyan-500 text-slate-950 shadow-md font-bold"
               : "text-slate-400 hover:text-slate-200"
           }`}
         >
-          🪐 24 Planetary Horas (ग्रह होरा सारणी)
+          24 Planetary Horas (ग्रह होरा सारणी)
         </button>
       </div>
 

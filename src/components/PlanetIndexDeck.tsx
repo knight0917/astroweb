@@ -61,9 +61,12 @@ export default function PlanetIndexDeck() {
         <button
           onClick={() => setIsOpen(true)}
           title="Open Celestial Index (Click any planet to turn 3D sky dome)"
-          className="glass-panel px-3 py-2 rounded-xl border border-amber-500/50 text-amber-300 font-extrabold text-xs shadow-2xl flex items-center gap-1.5 hover:scale-105 transition-all cursor-pointer bg-slate-950/95"
+          className="glass-panel px-3 py-2 rounded-xl border border-amber-500/50 text-amber-300 font-bold text-xs shadow-2xl flex items-center gap-2 hover:scale-105 transition-all cursor-pointer bg-slate-950/95"
         >
-          <span className="text-base">🪐</span>
+          <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(30 12 12)" />
+          </svg>
           <span className="text-xs font-bold">Celestial Index</span>
           <span className="text-[10px] bg-amber-500/20 px-1.5 py-0.2 rounded-full text-amber-300 font-mono font-bold">
             {planets.length + 2 + (showUpagrahas ? upagrahas.length : 0)}
@@ -81,9 +84,12 @@ export default function PlanetIndexDeck() {
           {/* Header */}
           <div className="p-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
             <div className="flex items-center gap-2">
-              <span className="text-base">🪐</span>
+              <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(30 12 12)" />
+              </svg>
               <div>
-                <h3 className="font-extrabold text-xs text-slate-100 uppercase tracking-wider">
+                <h3 className="font-bold text-xs text-slate-100 uppercase tracking-wider">
                   Celestial Index
                 </h3>
                 <p className="text-[9px] text-amber-400 font-medium">Click planet to rotate 3D view</p>

@@ -203,7 +203,7 @@ export default function ShodashavargaView() {
           {vargaChart.varga.id !== "D1" && vargaChart.vargottamaPlanets.length > 0 && (
             <div className="w-full mb-3 p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/50 flex flex-wrap items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-2 text-emerald-300">
-                <span className="text-base">🌟</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
                 <span className="font-bold">Vargottama Grahas in {vargaChart.varga.id}:</span>
                 <span className="font-mono font-extrabold text-emerald-200">
                   {vargaChart.vargottamaPlanets.join(", ")}
@@ -219,8 +219,8 @@ export default function ShodashavargaView() {
           {vargaChart.varga.id === "D1" && (
             <div className="w-full mb-3 p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/40 flex flex-wrap items-center justify-between gap-2 text-xs shadow-inner">
               <div className="flex flex-wrap items-center gap-2 text-slate-200">
-                <span className="text-amber-400 font-extrabold flex items-center gap-1">
-                  <span>👑</span>
+                <span className="text-amber-400 font-extrabold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
                   <span>D1 Dignities & Avasthas:</span>
                 </span>
                 <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10.5px]">
@@ -242,7 +242,7 @@ export default function ShodashavargaView() {
                         <span>{e.name}:</span>
                         <span>{e.dignity}</span>
                         {e.isRetro && <span className="text-purple-400 font-black">[R]</span>}
-                        {e.isCombust && <span className="text-orange-400 font-black">🔥</span>}
+                        {e.isCombust && <span className="text-orange-400 font-bold text-[9px]">[C]</span>}
                       </span>
                     ))}
                 </div>
