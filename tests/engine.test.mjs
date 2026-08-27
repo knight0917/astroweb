@@ -1186,3 +1186,49 @@ test("Classical K.N. Rao Advanced Predictive Techniques Engine Verification", as
   assert.ok(result.masterPredictiveSynthesis.length > 20);
 });
 
+test("Classical K.N. Rao & Naval Singh Planets and Education Engine Verification", async () => {
+  const { evaluateEducationStream } = await import("../src/engine/educationStream.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateEducationStream(natalEphem);
+
+  // 1. Tripartite Houses
+  assert.ok(result.tripartiteHouses.fourthHouse);
+  assert.ok(result.tripartiteHouses.fourthHouse.signName);
+  assert.ok(result.tripartiteHouses.fourthHouse.lord);
+  assert.ok(result.tripartiteHouses.fifthHouse);
+  assert.ok(result.tripartiteHouses.fifthHouse.signName);
+  assert.ok(result.tripartiteHouses.fifthHouse.lord);
+  assert.ok(result.tripartiteHouses.ninthHouse);
+  assert.ok(result.tripartiteHouses.ninthHouse.signName);
+  assert.ok(result.tripartiteHouses.ninthHouse.lord);
+
+  // 2. 6 Stream Aptitudes
+  assert.strictEqual(result.streamAptitudes.length, 6);
+  result.streamAptitudes.forEach((s) => {
+    assert.ok(s.id);
+    assert.ok(s.streamName);
+    assert.ok(s.aptitudeScorePercent >= 0 && s.aptitudeScorePercent <= 100);
+    assert.ok(s.recommendedDegrees.length > 0);
+    assert.ok(s.careerPathways.length > 0);
+    assert.ok(s.classicalReasoning.length > 10);
+  });
+
+  // 3. Top Recommended Stream
+  assert.ok(result.topRecommendedStream);
+  assert.ok(result.topRecommendedStream.aptitudeScorePercent >= 50);
+
+  // 4. D24 Siddhamsa
+  assert.ok(result.d24Siddhamsa);
+  assert.ok(result.d24Siddhamsa.d24LagnaSign);
+  assert.ok(result.d24Siddhamsa.d24FifthHouseSign);
+  assert.ok(result.d24Siddhamsa.academicDistinctionScore >= 0 && result.d24Siddhamsa.academicDistinctionScore <= 100);
+  assert.ok(result.d24Siddhamsa.classicalInterpretation.length > 15);
+
+  // 5. Master guidance
+  assert.ok(result.masterAcademicGuidance.length > 20);
+});
+

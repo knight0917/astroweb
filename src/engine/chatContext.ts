@@ -24,6 +24,7 @@ import { evaluateKarmaRebirth } from "./karmaRebirth";
 import { calculateDoubleTransit } from "./doubleTransit";
 import { evaluateMarriageTiming } from "./marriageTiming";
 import { evaluateKnRaoTechniques } from "./knRaoTechniques";
+import { evaluateEducationStream } from "./educationStream";
 import { RASHI_NAMES } from "./constants";
 
 export function buildAstroDossier(
@@ -324,6 +325,24 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 18. K.N. Rao & Naval Singh Planets & Education
+  let educationSummary = "";
+  try {
+    const edu = evaluateEducationStream(natalEphemeris);
+    const topStreams = edu.streamAptitudes.slice(0, 3)
+      .map((s) => "- " + s.icon + " **" + s.streamName + ":** " + s.aptitudeScorePercent + "% Aptitude • Recommended: " + s.recommendedDegrees.slice(0, 2).join(", "))
+      .join("\n");
+
+    educationSummary = [
+      "- **Primary Recommended Stream:** **" + edu.topRecommendedStream.streamName + "** (" + edu.topRecommendedStream.aptitudeScorePercent + "% Match)",
+      "- **Top Academic Orientations:**",
+      topStreams,
+      "- **Tripartite Academic Houses:** 4th House (Schooling): " + edu.tripartiteHouses.fourthHouse.signName + " (Lord: " + edu.tripartiteHouses.fourthHouse.lord + ") • 5th House (Buddhi): " + edu.tripartiteHouses.fifthHouse.signName + " (Lord: " + edu.tripartiteHouses.fifthHouse.lord + ") • 9th House (Higher Vidya): " + edu.tripartiteHouses.ninthHouse.signName + " (Lord: " + edu.tripartiteHouses.ninthHouse.lord + ")",
+      "- **D24 Siddhamsa (Higher Learning & Distinction):** Lagna in " + edu.d24Siddhamsa.d24LagnaSign + " • Distinction Score: " + edu.d24Siddhamsa.academicDistinctionScore + "% (" + edu.d24Siddhamsa.researchPotential + ")",
+      "- **Master Educational Guidance:** " + edu.masterAcademicGuidance,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -411,6 +430,9 @@ export function buildAstroDossier(
     "",
     "#### 🌟 19. K.N. RAO ADVANCED PREDICTIVE TECHNIQUES (SATURN-VENUS & SPHUTAS):",
     techniquesSummary,
+    "",
+    "#### 🎓 20. K.N. RAO & NAVAL SINGH PLANETS & EDUCATION DOSSIER:",
+    educationSummary,
   ];
 
   return lines.filter(Boolean).join("\n");

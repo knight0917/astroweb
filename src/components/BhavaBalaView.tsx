@@ -9,10 +9,11 @@ import KarmaRebirthDeck from "./KarmaRebirthDeck";
 import DoubleTransitDeck from "./DoubleTransitDeck";
 import MarriageTimingDeck from "./MarriageTimingDeck";
 import KnRaoTechniquesDeck from "./KnRaoTechniquesDeck";
+import EducationStreamDeck from "./EducationStreamDeck";
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -145,6 +146,16 @@ export default function BhavaBalaView() {
           >
             <span>🌟 Advanced Rao Techniques</span>
           </button>
+          <button
+            onClick={() => setDisplayMode("education")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              displayMode === "education"
+                ? "bg-cyan-600 text-white shadow"
+                : "text-cyan-300 hover:text-white bg-cyan-950/30 border border-cyan-800/40"
+            }`}
+          >
+            <span>🎓 Planets & Education (K.N. Rao)</span>
+          </button>
         </div>
       </div>
 
@@ -178,8 +189,13 @@ export default function BhavaBalaView() {
         <KnRaoTechniquesDeck />
       )}
 
+      {/* K.N. Rao & Naval Singh Planets & Education View */}
+      {displayMode === "education" && (
+        <EducationStreamDeck />
+      )}
+
       {/* Hero House Leaderboard (1st to 12th Rank Cards) */}
-      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && (
+      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && (
         <>
         <div className="space-y-3">
         <div className="flex items-center justify-between">
