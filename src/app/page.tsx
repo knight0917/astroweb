@@ -87,6 +87,26 @@ const TithiBirthdayView = dynamic(() => import("../components/TithiBirthdayView"
   loading: () => <ModuleLoadingSkeleton title="Vedic Tithi Birthday & Pravesha" />,
 });
 
+const JaiminiView = dynamic(() => import("../components/JaiminiView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Classical Jaimini Astrology Suite" />,
+});
+
+const MatchmakingView = dynamic(() => import("../components/MatchmakingView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Kundli Milan & 36 Guna Compatibility" />,
+});
+
+const MuhurtaView = dynamic(() => import("../components/MuhurtaView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Auspicious Muhurta Finder & Panchanga Shuddhi" />,
+});
+
+const PrashnaView = dynamic(() => import("../components/PrashnaView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Instant Tajik Prashna Horary Engine" />,
+});
+
 const EntityDetailModal = dynamic(() => import("../components/EntityDetailModal"), {
   ssr: false,
 });
@@ -183,6 +203,30 @@ export default function HomePage() {
         {viewMode === "tithi-calendar" && (
           <div className="w-full">
             <TithiCalendarView />
+          </div>
+        )}
+
+        {viewMode === "jaimini" && (
+          <div className="w-full">
+            <JaiminiView />
+          </div>
+        )}
+
+        {viewMode === "matchmaking" && (
+          <div className="w-full">
+            <MatchmakingView />
+          </div>
+        )}
+
+        {viewMode === "muhurta" && (
+          <div className="w-full">
+            <MuhurtaView />
+          </div>
+        )}
+
+        {viewMode === "prashna" && (
+          <div className="w-full">
+            <PrashnaView />
           </div>
         )}
 

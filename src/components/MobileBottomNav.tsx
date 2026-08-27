@@ -21,6 +21,10 @@ export default function MobileBottomNav() {
   ];
 
   const MORE_MODULES: { mode: ViewMode; label: string; icon: string; desc: string }[] = [
+    { mode: "prashna", label: "Tajik Prashna", icon: "🔮", desc: "16 Tajika Yogas & Horary Yes/No" },
+    { mode: "muhurta", label: "Muhurta Finder", icon: "⏳", desc: "Abhijit, Brahma & Event Muhurtas" },
+    { mode: "matchmaking", label: "Kundli Milan", icon: "💑", desc: "Ashtakoota 36 Gunas & Manglik Check" },
+    { mode: "jaimini", label: "Jaimini Suite", icon: "🏛️", desc: "Arudha Padas, Karakamsha & Chara Dasha" },
     { mode: "3d", label: "3D Celestial Dome", icon: "🪐", desc: "Interactive WebGL Sky & Star Dome" },
     { mode: "ashtakavarga", label: "Ashtakavarga Suite", icon: "📊", desc: "Sarva & Bhinna 8-Grid Charts" },
     { mode: "numerology", label: "Vedic Numerology", icon: "🔢", desc: "Mulank, Bhagyank & Lo Shu Grid" },

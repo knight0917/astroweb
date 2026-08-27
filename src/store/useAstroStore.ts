@@ -22,6 +22,10 @@ export type ViewMode =
   | "shodashavarga"
   | "shadbala"
   | "bhavabala"
+  | "jaimini"
+  | "matchmaking"
+  | "muhurta"
+  | "prashna"
   | "table"
   | "dual";
 export type SkyViewType = "ecliptic" | "horizontal";

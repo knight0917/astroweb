@@ -347,7 +347,13 @@ test("Classical Parashari Bhava Bala (12 House Strengths) Verification", async (
 });
 
 test("Classical Jaimini Chara Karakas (AK to DK) Verification", async () => {
-  const { calculateJaiminiKarakas } = await import("../src/engine/jaimini.ts");
+  const {
+    calculateJaiminiKarakas,
+    calculateArudhaPadas,
+    analyzeKarakamsha,
+    calculateJaiminiCharaDasha,
+    calculateJaiminiRashiDrishti,
+  } = await import("../src/engine/jaimini.ts");
   const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
 
   // 25 May 1998 00:16 IST
@@ -381,6 +387,143 @@ test("Classical Jaimini Chara Karakas (AK to DK) Verification", async () => {
   assert.equal(jaimini.atmakaraka.planetId, "Jupiter", "Jupiter must be Atmakaraka (AK)");
   assert.equal(jaimini.darakaraka.planetId, "Venus", "Venus must be Darakaraka (DK)");
   assert.equal(jaimini.amatyakaraka.planetId, "Moon", "Moon must be Amatyakaraka (AmK)");
+
+  // 4. Verify 12 Arudha Padas (A1 to A12)
+  const padas = calculateArudhaPadas(ephem);
+  assert.equal(padas.length, 12, "Must calculate all 12 Arudha Padas");
+  assert.equal(padas[0].code, "AL", "First Pada must be Arudha Lagna (AL)");
+  assert.equal(padas[11].code, "UL", "Twelfth Pada must be Upapada Lagna (UL)");
+  padas.forEach((p) => {
+    assert.ok(p.padaHouse >= 1 && p.padaHouse <= 12, "Pada house must be between 1 and 12");
+    assert.ok(p.padaSignIndex >= 0 && p.padaSignIndex <= 11, "Pada sign index must be between 0 and 11");
+  });
+
+  // 5. Verify Karakamsha & Swamsha analysis
+  const karakamsha = analyzeKarakamsha(ephem);
+  assert.equal(karakamsha.atmakaraka.planetId, "Jupiter");
+  assert.ok(karakamsha.karakamshaRashi.englishName);
+  assert.ok(karakamsha.swamshaRashi.englishName);
+  assert.ok(karakamsha.ishtaDevata.deity);
+
+  // 6. Verify Jaimini Chara Dasha
+  const charaDasha = calculateJaiminiCharaDasha(birthDate, ephem.ascendant.siderealLongitude, new Date());
+  assert.equal(charaDasha.dashas.length, 12, "Must have 12 Mahadashas");
+  assert.ok(charaDasha.activeDasha.mahadasha.rashi.englishName);
+  assert.ok(charaDasha.activeDasha.percentageCompleteMD >= 0 && charaDasha.activeDasha.percentageCompleteMD <= 100);
+
+  // 7. Verify Jaimini Rashi Drishti (Movable aspects Fixed except adjacent, Fixed aspects Movable, Dual aspects Dual)
+  const ariesDrishti = calculateJaiminiRashiDrishti(0); // Aries (Movable)
+  assert.equal(ariesDrishti.signType, "Chara (Movable)");
+  const aspectedByAries = ariesDrishti.aspectedSigns.map((s) => s.englishName);
+  assert.ok(aspectedByAries.includes("Leo"));
+  assert.ok(aspectedByAries.includes("Scorpio"));
+  assert.ok(aspectedByAries.includes("Aquarius"));
+  assert.ok(!aspectedByAries.includes("Taurus"), "Aries cannot aspect adjacent Taurus");
+});
+
+test("Classical Ashtakoota 36-Guna Matchmaking & Manglik Dosha Verification", async () => {
+  const { calculateMatchmaking, evaluateManglikDosha } = await import("../src/engine/matchmaking.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const boyDate = new Date("1998-05-25T00:16:00Z");
+  const girlDate = new Date("2000-09-14T14:30:00Z");
+  const loc = { cityName: "Delhi", latitude: 28.6139, longitude: 77.209, timezoneOffsetHours: 5.5, country: "India" };
+
+  const boyEphem = calculateVedicEphemeris(boyDate, loc, "Lahiri", "WholeSign", "Mean");
+  const girlEphem = calculateVedicEphemeris(girlDate, loc, "Lahiri", "WholeSign", "Mean");
+
+  const result = calculateMatchmaking(boyEphem, girlEphem);
+
+  // 1. Gunas must sum to total score (0 to 36)
+  assert.ok(result.totalScore >= 0 && result.totalScore <= 36, "Total score must be between 0 and 36");
+  assert.equal(result.maxScore, 36);
+  assert.ok(result.percentage >= 0 && result.percentage <= 100);
+
+  // 2. Verify all 8 Kootas exist with proper max scores
+  assert.equal(result.kootas.varna.maxScore, 1);
+  assert.equal(result.kootas.vashya.maxScore, 2);
+  assert.equal(result.kootas.tara.maxScore, 3);
+  assert.equal(result.kootas.yoni.maxScore, 4);
+  assert.equal(result.kootas.grahaMaitri.maxScore, 5);
+  assert.equal(result.kootas.gana.maxScore, 6);
+  assert.equal(result.kootas.bhakoot.maxScore, 7);
+  assert.equal(result.kootas.nadi.maxScore, 8);
+
+  // 3. Verify Manglik Dosha Evaluation
+  const boyManglik = evaluateManglikDosha(boyEphem);
+  const girlManglik = evaluateManglikDosha(girlEphem);
+  assert.ok(typeof boyManglik.isManglik === "boolean");
+  assert.ok(typeof girlManglik.isManglik === "boolean");
+  assert.ok(result.manglikCompatibility.statusText);
+  assert.ok(result.verdict);
+});
+
+test("Classical Auspicious Muhurta Finder & Panchanga Shuddhi Verification", async () => {
+  const { calculateDayMuhurta, evaluateEventMuhurta } = await import("../src/engine/muhurta.ts");
+
+  const testDate = new Date("2026-08-27T10:00:00Z");
+  const loc = { cityName: "Varanasi", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5, country: "India" };
+
+  const dayData = calculateDayMuhurta(testDate, loc);
+
+  // 1. Check Day Data
+  assert.ok(dayData.sunrise instanceof Date);
+  assert.ok(dayData.sunset instanceof Date);
+  assert.ok(dayData.sunrise < dayData.sunset, "Sunrise must be earlier than sunset");
+  assert.ok(dayData.dayDurationHours > 0 && dayData.dayDurationHours < 24);
+  assert.ok(dayData.shuddhiScore >= 0 && dayData.shuddhiScore <= 100);
+
+  // 2. Auspicious slots check (Abhijit, Brahma, Godhuli, Amrit Kaal)
+  assert.ok(dayData.auspiciousSlots.length >= 4, "Must contain standard auspicious Muhurtas");
+  const slotTypes = dayData.auspiciousSlots.map((s) => s.type);
+  assert.ok(slotTypes.includes("Abhijit"));
+  assert.ok(slotTypes.includes("Brahma"));
+  assert.ok(slotTypes.includes("Godhuli"));
+
+  // 3. Inauspicious slots check (Rahu Kaal, Gulika, Yamaganda)
+  assert.equal(dayData.inauspiciousSlots.length, 3, "Must calculate Rahu, Gulika and Yamaganda");
+  const inauspiciousTypes = dayData.inauspiciousSlots.map((s) => s.type);
+  assert.ok(inauspiciousTypes.includes("RahuKaal"));
+  assert.ok(inauspiciousTypes.includes("GulikaKaal"));
+  assert.ok(inauspiciousTypes.includes("Yamaganda"));
+
+  // 4. Event Suitability Evaluations
+  const griha = evaluateEventMuhurta("grihaPravesh", dayData);
+  assert.ok(typeof griha.isRecommended === "boolean");
+  assert.ok(griha.suitabilityScore >= 0 && griha.suitabilityScore <= 100);
+  assert.ok(griha.bestTimeSlots.length > 0);
+
+  const vivaha = evaluateEventMuhurta("vivaha", dayData);
+  assert.ok(typeof vivaha.isRecommended === "boolean");
+});
+
+test("Classical Tajik Prashna (Horary) 16 Yogas & Yes/No Verdict Verification", async () => {
+  const { evaluatePrashna, PRASHNA_TOPICS } = await import("../src/engine/prashna.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const queryDate = new Date("2026-08-27T10:00:00Z");
+  const loc = { cityName: "Varanasi", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5, country: "India" };
+  const ephem = calculateVedicEphemeris(queryDate, loc);
+
+  // 1. Evaluate Career Prashna
+  const careerPrashna = evaluatePrashna("career", ephem, 45);
+  assert.equal(careerPrashna.topic.id, "career");
+  assert.equal(careerPrashna.karyaHouse, 10);
+  assert.ok(careerPrashna.lagnesha, "Lagnesha must be identified");
+  assert.ok(careerPrashna.karyesha, "Karyesha must be identified");
+  assert.ok(careerPrashna.confidenceScore >= 0 && careerPrashna.confidenceScore <= 100);
+  assert.ok(careerPrashna.verdict, "Must have an authoritative verdict");
+  assert.ok(careerPrashna.timingPrediction, "Must provide manifestation timing prediction");
+
+  // 2. Evaluate Marriage Prashna
+  const marriagePrashna = evaluatePrashna("marriage", ephem);
+  assert.equal(marriagePrashna.topic.id, "marriage");
+  assert.equal(marriagePrashna.karyaHouse, 7);
+  assert.ok(marriagePrashna.applyingAspect.aspectType);
+  assert.ok(marriagePrashna.applyingAspect.maxAllowedOrb > 0);
+
+  // 3. Verify All 9 Topics Exist
+  assert.equal(Object.keys(PRASHNA_TOPICS).length, 9, "Must support 9 classical Prashna topics");
 });
 
 test("Classical Vedic Tithi & Panchanga Calendar Suite Verification", async () => {

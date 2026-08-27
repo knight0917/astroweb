@@ -178,6 +178,22 @@ export default function HeaderNav() {
           icon: "🔲",
           desc: "Side-by-side interactive 3D SkyDome and Kundli chart",
         },
+        {
+          mode: "jaimini",
+          label: "Jaimini Astrology Suite",
+          hindiLabel: "जैमिनी ज्योतिष (कारकांश व आरूढ़)",
+          icon: "🏛️",
+          desc: "7 Chara Karakas, 12 Arudha Padas (AL/UL), Karakamsha & Chara Dasha",
+          badge: "Jaimini",
+        },
+        {
+          mode: "matchmaking",
+          label: "Kundli Milan (36 Gunas)",
+          hindiLabel: "अष्टकूट ३६ गुण मिलान",
+          icon: "💑",
+          desc: "Ashtakoota compatibility, Nadi/Bhakoot cancellation & Manglik check",
+          badge: "36 Gunas",
+        },
       ],
     },
     {
@@ -198,6 +214,14 @@ export default function HeaderNav() {
           icon: "🪐",
           desc: "Live transits over Natal Moon & Lagna, 5-phase Sade Sati & Dual Transit Chart",
           badge: "Live",
+        },
+        {
+          mode: "prashna",
+          label: "Tajik Prashna (Horary)",
+          hindiLabel: "ताजिक प्रश्न तन्त्र",
+          icon: "🔮",
+          desc: "16 Tajika Yogas (Ithasala/Ishrafa), query orbs & instant yes/no verdict",
+          badge: "Tajika",
         },
       ],
     },
@@ -231,6 +255,14 @@ export default function HeaderNav() {
     {
       category: "📅 Panchanga, Calendar & Muhurta (पञ्चाङ्ग एवं मुहूर्त)",
       items: [
+        {
+          mode: "muhurta",
+          label: "Auspicious Muhurta Finder",
+          hindiLabel: "शुभ मुहूर्त एवं पञ्चाङ्ग शुद्धि",
+          icon: "⏳",
+          desc: "Abhijit, Brahma, Amrit Kaal, Rahu Kaal, & Event Muhurta Suitability",
+          badge: "Muhurta",
+        },
         {
           mode: "choghadiya",
           label: "Real-Time Choghadiya & Horas",
