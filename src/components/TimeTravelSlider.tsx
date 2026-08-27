@@ -34,6 +34,7 @@ export default function TimeTravelSlider() {
   const [isEditing, setIsEditing] = useState(false);
   const [showPickerModal, setShowPickerModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showCoordinatesDropdown, setShowCoordinatesDropdown] = useState(false);
   const [showProfilesDropdown, setShowProfilesDropdown] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [newProfileName, setNewProfileName] = useState("");
@@ -839,47 +840,74 @@ export default function TimeTravelSlider() {
 
             {/* Form Coordinates */}
             <form onSubmit={handleSaveLocation} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1">Latitude (° N/S)</label>
-                  <input
-                    type="text"
-                    value={latitude}
-                    onChange={(e) => setLatitude(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 font-mono"
-                  />
+              {/* Collapsible Dropdown Header */}
+              <button
+                type="button"
+                onClick={() => setShowCoordinatesDropdown(!showCoordinatesDropdown)}
+                className="w-full text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800 transition-all cursor-pointer group shadow-sm"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">📍</span>
+                  <span className="group-hover:text-amber-300 transition-colors">
+                    Selected Coordinates {cityName ? `(${cityName}${countryName ? `, ${countryName}` : ""})` : ""}
+                  </span>
                 </div>
-                <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1">Longitude (° E/W)</label>
-                  <input
-                    type="text"
-                    value={longitude}
-                    onChange={(e) => setLongitude(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 font-mono"
-                  />
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-emerald-400 font-mono font-normal">
+                    {latitude && longitude ? `${parseFloat(latitude).toFixed(2)}°, ${parseFloat(longitude).toFixed(2)}°` : "● Auto-Calculated"}
+                  </span>
+                  <span className="text-xs text-amber-400 font-bold px-1.5 py-0.5 rounded bg-slate-800">
+                    {showCoordinatesDropdown ? "▲ Hide" : "▼ Expand / Edit"}
+                  </span>
                 </div>
-              </div>
+              </button>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1">Elevation (meters)</label>
-                  <input
-                    type="text"
-                    value={elevation}
-                    onChange={(e) => setElevation(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 font-mono"
-                  />
+              {/* Collapsible Inputs Body */}
+              {showCoordinatesDropdown && (
+                <div className="space-y-3 p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 animate-in fade-in duration-150">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 block mb-1">Latitude (° N/S)</label>
+                      <input
+                        type="text"
+                        value={latitude}
+                        onChange={(e) => setLatitude(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 block mb-1">Longitude (° E/W)</label>
+                      <input
+                        type="text"
+                        value={longitude}
+                        onChange={(e) => setLongitude(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 block mb-1">Elevation (meters)</label>
+                      <input
+                        type="text"
+                        value={elevation}
+                        onChange={(e) => setElevation(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 block mb-1">Timezone Offset (Hours)</label>
+                      <input
+                        type="text"
+                        value={timezoneOffset}
+                        onChange={(e) => setTimezoneOffset(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 font-mono"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1">Timezone Offset (Hours)</label>
-                  <input
-                    type="text"
-                    value={timezoneOffset}
-                    onChange={(e) => setTimezoneOffset(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 font-mono"
-                  />
-                </div>
-              </div>
+              )}
 
               {/* Popular Cities Pills */}
               <div className="space-y-1.5 pt-1">

@@ -10,6 +10,7 @@ import { PlaceAutocompleteInput } from "./PlaceAutocompleteInput";
 export default function HeaderNav() {
   const [mounted, setMounted] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showCoordinatesDropdown, setShowCoordinatesDropdown] = useState(false);
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
   const [showMenuDrawer, setShowMenuDrawer] = useState(false);
 
@@ -795,91 +796,114 @@ export default function HeaderNav() {
 
             {/* Custom Coordinates Form */}
             <form onSubmit={handleSaveLocation} className="space-y-3 pt-2 border-t border-slate-800">
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                <span>Selected Coordinates</span>
-                <span className="text-[10px] text-emerald-400 font-normal">● Auto-Calculated</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
-                    City / Place Name
-                  </label>
-                  <input
-                    type="text"
-                    value={cityName}
-                    onChange={(e) => setCityName(e.target.value)}
-                    required
-                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-semibold"
-                  />
+              {/* Collapsible Dropdown Header */}
+              <button
+                type="button"
+                onClick={() => setShowCoordinatesDropdown(!showCoordinatesDropdown)}
+                className="w-full text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800 transition-all cursor-pointer group shadow-sm"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">📍</span>
+                  <span className="group-hover:text-amber-300 transition-colors">
+                    Selected Coordinates {cityName ? `(${cityName}${countryName ? `, ${countryName}` : ""})` : ""}
+                  </span>
                 </div>
-                <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
-                    Country
-                  </label>
-                  <input
-                    type="text"
-                    value={countryName}
-                    onChange={(e) => setCountryName(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2"
-                  />
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-emerald-400 font-mono font-normal">
+                    {latitude && longitude ? `${parseFloat(latitude).toFixed(2)}°N, ${parseFloat(longitude).toFixed(2)}°E` : "● Auto-Calculated"}
+                  </span>
+                  <span className="text-xs text-amber-400 font-bold px-1.5 py-0.5 rounded bg-slate-800">
+                    {showCoordinatesDropdown ? "▲ Hide" : "▼ Expand / Edit"}
+                  </span>
                 </div>
-              </div>
+              </button>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
-                    Latitude (-90° to +90°)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    value={latitude}
-                    onChange={(e) => setLatitude(e.target.value)}
-                    required
-                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
-                    Longitude (-180° to +180°)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    value={longitude}
-                    onChange={(e) => setLongitude(e.target.value)}
-                    required
-                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-mono"
-                  />
-                </div>
-              </div>
+              {/* Collapsible Inputs Body */}
+              {showCoordinatesDropdown && (
+                <div className="space-y-3 p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 animate-in fade-in duration-150">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                        City / Place Name
+                      </label>
+                      <input
+                        type="text"
+                        value={cityName}
+                        onChange={(e) => setCityName(e.target.value)}
+                        required
+                        className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                        Country
+                      </label>
+                      <input
+                        type="text"
+                        value={countryName}
+                        onChange={(e) => setCountryName(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2"
+                      />
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
-                    Timezone Offset (Hours)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.25"
-                    value={timezoneOffset}
-                    onChange={(e) => setTimezoneOffset(e.target.value)}
-                    required
-                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-mono"
-                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                        Latitude (-90° to +90°)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={latitude}
+                        onChange={(e) => setLatitude(e.target.value)}
+                        required
+                        className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                        Longitude (-180° to +180°)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={longitude}
+                        onChange={(e) => setLongitude(e.target.value)}
+                        required
+                        className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                        Timezone Offset (Hours)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.25"
+                        value={timezoneOffset}
+                        onChange={(e) => setTimezoneOffset(e.target.value)}
+                        required
+                        className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                        Elevation (Meters)
+                      </label>
+                      <input
+                        type="number"
+                        value={elevation}
+                        onChange={(e) => setElevation(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-mono"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
-                    Elevation (Meters)
-                  </label>
-                  <input
-                    type="number"
-                    value={elevation}
-                    onChange={(e) => setElevation(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 font-mono"
-                  />
-                </div>
-              </div>
+              )}
 
               <div className="flex items-center justify-end gap-2 pt-3">
                 <button
