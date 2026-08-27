@@ -11,10 +11,11 @@ import MarriageTimingDeck from "./MarriageTimingDeck";
 import KnRaoTechniquesDeck from "./KnRaoTechniquesDeck";
 import EducationStreamDeck from "./EducationStreamDeck";
 import DashaSystemsDeck from "./DashaSystemsDeck";
+import BphsCoreDeck from "./BphsCoreDeck";
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas" | "bphs">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -167,6 +168,16 @@ export default function BhavaBalaView() {
           >
             <span>⏳ Multi-Dasha & Yogini (Classical)</span>
           </button>
+          <button
+            onClick={() => setDisplayMode("bphs")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              displayMode === "bphs"
+                ? "bg-amber-600 text-slate-950 shadow"
+                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
+            }`}
+          >
+            <span>📜 BPHS Classical Core (Parashara)</span>
+          </button>
         </div>
       </div>
 
@@ -210,8 +221,13 @@ export default function BhavaBalaView() {
         <DashaSystemsDeck />
       )}
 
+      {/* Primordial BPHS Classical Core View */}
+      {displayMode === "bphs" && (
+        <BphsCoreDeck />
+      )}
+
       {/* Hero House Leaderboard (1st to 12th Rank Cards) */}
-      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && displayMode !== "dashas" && (
+      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && displayMode !== "dashas" && displayMode !== "bphs" && (
         <>
         <div className="space-y-3">
         <div className="flex items-center justify-between">

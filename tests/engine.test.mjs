@@ -1274,3 +1274,61 @@ test("Classical Multi-Dasha & Yogini Dasha Engine Verification", async () => {
   assert.ok(result.multiDashaTriangulation.triangulationVerdict.length > 20);
 });
 
+test("Classical Brihat Parashara Hora Shastra (BPHS) Core Engine Verification", async () => {
+  const { evaluateBphsCore } = await import("../src/engine/bphsCore.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateBphsCore(natalEphem);
+
+  // 1. Special Lagnas
+  assert.ok(result.specialLagnas.horaLagna);
+  assert.ok(result.specialLagnas.horaLagna.signName);
+  assert.ok(result.specialLagnas.horaLagna.houseFromLagna >= 1 && result.specialLagnas.horaLagna.houseFromLagna <= 12);
+  assert.ok(result.specialLagnas.ghatikaLagna);
+  assert.ok(result.specialLagnas.ghatikaLagna.signName);
+  assert.ok(result.specialLagnas.shreeLagna);
+  assert.ok(result.specialLagnas.shreeLagna.signName);
+  assert.ok(result.specialLagnas.bhavaLagna);
+  assert.ok(result.specialLagnas.bhavaLagna.signName);
+  assert.ok(result.specialLagnas.varnadaLagna);
+  assert.ok(result.specialLagnas.varnadaLagna.signName);
+
+  // 2. Sudarshana Chakra
+  assert.strictEqual(result.sudarshanaChakra.bhavas.length, 12);
+  assert.ok(result.sudarshanaChakra.highestFortifiedHouse >= 1 && result.sudarshanaChakra.highestFortifiedHouse <= 12);
+  assert.ok(result.sudarshanaChakra.highestFortifiedHouseTheme);
+
+  // 3. Sayanadi Avasthas
+  assert.strictEqual(result.sayanadiAvasthas.length, 9);
+  result.sayanadiAvasthas.forEach((a) => {
+    assert.ok(a.planetName);
+    assert.ok(a.avasthaName);
+    assert.ok(a.avasthaIndex >= 0 && a.avasthaIndex <= 11);
+    assert.ok(a.icon);
+    assert.ok(a.classicalInterpretation.length > 15);
+  });
+
+  // 4. Ashtakavarga Shodhana & Pindas
+  assert.strictEqual(result.ashtakavargaPindas.length, 7);
+  assert.ok(result.sarvaYogaPinda > 0);
+  result.ashtakavargaPindas.forEach((p) => {
+    assert.ok(p.planetName);
+    assert.strictEqual(p.trikonaReducedBindus.length, 12);
+    assert.strictEqual(p.ekadhipatyaReducedBindus.length, 12);
+    assert.ok(p.rashiPinda >= 0);
+    assert.ok(p.grahaPinda >= 0);
+    assert.ok(p.yogaPinda >= 0);
+  });
+
+  // 5. Vishnu Avataras
+  assert.strictEqual(result.vishnuAvataras.length, 9);
+  assert.ok(result.leadingAvatara.avataraName);
+  assert.ok(result.leadingAvatara.divineArchetype);
+
+  // 6. Master synthesis
+  assert.ok(result.masterBphsSynthesis.length > 25);
+});
+

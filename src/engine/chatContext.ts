@@ -26,6 +26,7 @@ import { evaluateMarriageTiming } from "./marriageTiming";
 import { evaluateKnRaoTechniques } from "./knRaoTechniques";
 import { evaluateEducationStream } from "./educationStream";
 import { evaluateMultiDashaSystems } from "./dashaSystems";
+import { evaluateBphsCore } from "./bphsCore";
 import { RASHI_NAMES } from "./constants";
 
 export function buildAstroDossier(
@@ -361,6 +362,24 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 20. Primordial Parashari BPHS Core (Vols 1 & 2)
+  let bphsSummary = "";
+  try {
+    const bphs = evaluateBphsCore(natalEphemeris);
+    const avasthaStr = bphs.sayanadiAvasthas.slice(0, 5)
+      .map((a) => a.planetName + ": " + a.avasthaName + " (" + a.sanskritName + " " + a.icon + ")")
+      .join(" • ");
+
+    bphsSummary = [
+      "- **Special Lagnas (BPHS Ch. 5):** Hora Lagna (HL - Wealth): " + bphs.specialLagnas.horaLagna.signName + " (H#" + bphs.specialLagnas.horaLagna.houseFromLagna + ") • Ghatika Lagna (GL - Power): " + bphs.specialLagnas.ghatikaLagna.signName + " (H#" + bphs.specialLagnas.ghatikaLagna.houseFromLagna + ") • Shree Lagna (SL - Fortune): " + bphs.specialLagnas.shreeLagna.signName + " (H#" + bphs.specialLagnas.shreeLagna.houseFromLagna + ")",
+      "- **Sudarshana Chakra (BPHS Ch. 74):** Highest Triple Confluence on House #" + bphs.sudarshanaChakra.highestFortifiedHouse + " (" + bphs.sudarshanaChakra.highestFortifiedHouseTheme + ")",
+      "- **12 Sayanadi Planetary Avasthas (BPHS Ch. 45):** " + avasthaStr,
+      "- **Ashtakavarga Shodhana & Pinda Sadhana (BPHS Ch. 66-70):** Total Sarvashtakavarga Yoga Pinda = " + bphs.sarvaYogaPinda + " Units",
+      "- **Vishnu Avatara Archetype (BPHS Ch. 2):** **" + bphs.leadingAvatara.avataraName + "** (" + bphs.leadingAvatara.planetName + " - " + bphs.leadingAvatara.divineArchetype + ")",
+      "- **Master BPHS Synthesis:** " + bphs.masterBphsSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -454,6 +473,9 @@ export function buildAstroDossier(
     "",
     "#### ⏳ 21. CLASSICAL MULTI-DASHA & YOGINI DASHA DOSSIER:",
     multiDashaSummary,
+    "",
+    "#### 📜 22. PRIMORDIAL PARASHARI BPHS CORE DOSSIER:",
+    bphsSummary,
   ];
 
   return lines.filter(Boolean).join("\n");
