@@ -713,6 +713,35 @@ test("Vedic AI Astrologer Chat Context Dossier Verification", async () => {
   assert.ok(dossier.includes("B.V. RAMAN 300 YOGAS"));
   assert.ok(dossier.includes("SHANI SADE SATI"));
   assert.ok(dossier.includes("PANCHANGA AT BIRTH"));
+
+  // Verify Matchmaking Section 24 inclusion
+  const matchmakingData = {
+    boy: {
+      name: "Aditya (Groom)",
+      dateIso: "1998-09-05T21:29",
+      location: { cityName: "Bhuj", country: "India", latitude: 23.254, longitude: 69.6693, timezoneOffsetHours: 5.5 },
+    },
+    girl: {
+      name: "Pooja (Bride)",
+      dateIso: "2000-07-04T19:07",
+      location: { cityName: "Vasai", country: "India", latitude: 19.3919, longitude: 72.8397, timezoneOffsetHours: 5.5 },
+    },
+  };
+
+  const dossierWithMatch = buildAstroDossier(
+    natalEphemeris,
+    transitEphemeris,
+    new Date("2026-08-24T00:00:00Z"),
+    "male",
+    matchmakingData
+  );
+
+  assert.ok(dossierWithMatch.includes("24. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER"));
+  assert.ok(dossierWithMatch.includes("Aditya (Groom)"));
+  assert.ok(dossierWithMatch.includes("Pooja (Bride)"));
+  assert.ok(dossierWithMatch.includes("Ashtakoota 36-Guna Scoring"));
+  assert.ok(dossierWithMatch.includes("Manglik Dosha & Bhanga Status"));
+  assert.ok(dossierWithMatch.includes("Cross-Kundli Synastry"));
 });
 
 test("Classical Vedic Yoga Detection Engine Verification", async () => {

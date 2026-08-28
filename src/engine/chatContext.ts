@@ -28,13 +28,22 @@ import { evaluateEducationStream } from "./educationStream";
 import { evaluateMultiDashaSystems } from "./dashaSystems";
 import { evaluateBphsCore } from "./bphsCore";
 import { evaluateBrihatJataka } from "./brihatJataka";
+import { calculateMatchmaking } from "./matchmaking";
+import { calculateVedicEphemeris } from "./ephemeris";
+import { GeoLocation } from "./types";
 import { RASHI_NAMES } from "./constants";
+
+export interface MatchmakingContextData {
+  boy: { name: string; dateIso: string; location: GeoLocation };
+  girl: { name: string; dateIso: string; location: GeoLocation };
+}
 
 export function buildAstroDossier(
   natalEphemeris: EphemerisResult,
   transitEphemeris: EphemerisResult,
   evaluationDate: Date = new Date(),
-  gender: "male" | "female" = "male"
+  gender: "male" | "female" = "male",
+  matchmaking?: MatchmakingContextData
 ): string {
   const birthDate = new Date(natalEphemeris.utcDate);
   const location = natalEphemeris.location;
@@ -396,6 +405,87 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
+  let matchmakingSummary = "";
+  if (matchmaking && matchmaking.boy && matchmaking.girl) {
+    try {
+      const parseLocal = (iso: string, tz: number = 5.5) => {
+        const [dPart, tPart] = iso.split("T");
+        if (!dPart || !tPart) return new Date(iso);
+        const [y, m, d] = dPart.split("-").map(Number);
+        const [h, min] = tPart.split(":").map(Number);
+        const utcMs = Date.UTC(y, m - 1, d, h || 0, min || 0, 0) - tz * 3600 * 1000;
+        return new Date(utcMs);
+      };
+
+      const boyUtc = parseLocal(matchmaking.boy.dateIso, matchmaking.boy.location?.timezoneOffsetHours || 5.5);
+      const girlUtc = parseLocal(matchmaking.girl.dateIso, matchmaking.girl.location?.timezoneOffsetHours || 5.5);
+
+      const boyEphem = calculateVedicEphemeris(boyUtc, matchmaking.boy.location, natalEphemeris.ayanamshaType);
+      const girlEphem = calculateVedicEphemeris(girlUtc, matchmaking.girl.location, natalEphemeris.ayanamshaType);
+
+      const matchRes = calculateMatchmaking(boyEphem, girlEphem);
+
+      const boyD1 = calculateShodashavargaChart(boyEphem, "D1");
+      const boyD9 = calculateShodashavargaChart(boyEphem, "D9");
+      const girlD1 = calculateShodashavargaChart(girlEphem, "D1");
+      const girlD9 = calculateShodashavargaChart(girlEphem, "D9");
+
+      // Lagna to Lagna relationship
+      const boyLagnaSign = Math.floor(boyEphem.ascendant.siderealLongitude / 30);
+      const girlLagnaSign = Math.floor(girlEphem.ascendant.siderealLongitude / 30);
+      const lagnaDiff = ((girlLagnaSign - boyLagnaSign + 12) % 12) + 1;
+      const lagnaAxisName =
+        lagnaDiff === 1 ? "Sama-Lagna (1-1 Identical / Highly Attuned)" :
+        lagnaDiff === 7 ? "Saptama-Kendra (1-7 Complementary Polarity)" :
+        lagnaDiff === 5 || lagnaDiff === 9 ? "Trikona (1-5-9 Harmonious Trine)" :
+        lagnaDiff === 4 || lagnaDiff === 10 ? "Kendra (1-4-10 Dynamic Action Axis)" :
+        lagnaDiff === 3 || lagnaDiff === 11 ? "Upachaya (3-11 Mutual Growth Axis)" :
+        lagnaDiff === 6 || lagnaDiff === 8 ? "Shadashtaka (6-8 Karmic / Transformation Tension)" :
+        "Dwirdwadashe (2-12 Financial/Resource Adjustment)";
+
+      // Moon to Moon relationship
+      const boyMoonSign = Math.floor((boyEphem.planets.Moon?.siderealLongitude || 0) / 30);
+      const girlMoonSign = Math.floor((girlEphem.planets.Moon?.siderealLongitude || 0) / 30);
+      const moonDiff = ((girlMoonSign - boyMoonSign + 12) % 12) + 1;
+      const moonAxisName =
+        moonDiff === 1 ? "Sama-Rashi (1-1 Emotional Mirroring)" :
+        moonDiff === 7 ? "Saptama-Rashi (1-7 Emotional Attraction)" :
+        moonDiff === 5 || moonDiff === 9 ? "Trikona (5-9 Mutual Emotional Resonance)" :
+        moonDiff === 3 || moonDiff === 11 ? "Mitra (3-11 Friendly Growth)" :
+        moonDiff === 6 || moonDiff === 8 ? "Shadashtaka (6-8 Bhakoot Tension / Adjustments)" :
+        "Dwirdwadashe (2-12 Psychological Difference)";
+
+      matchmakingSummary = [
+        "- **Dual Profile Identity in Matchmaking Suite:**",
+        "  - ♂ **Groom (वर):** " + matchmaking.boy.name + " • Born: " + matchmaking.boy.dateIso + " at " + matchmaking.boy.location.cityName + " (TZ: +" + (matchmaking.boy.location.timezoneOffsetHours || 5.5) + "h)",
+        "    - **D1 Lagna:** " + boyD1.ascendant.vargaRashi.englishName + " (" + boyD1.ascendant.vargaRashi.sanskritName + ") at " + (boyEphem.ascendant.siderealLongitude % 30).toFixed(2) + "° (" + boyEphem.ascendant.nakshatra.sanskritName + " Pada " + (boyEphem.ascendant.nakshatra.pada || 1) + ")",
+        "    - **Moon:** " + (boyEphem.planets.Moon?.rashi.englishName || "N/A") + " at " + ((boyEphem.planets.Moon?.siderealLongitude || 0) % 30).toFixed(2) + "° (" + (boyEphem.planets.Moon?.nakshatra.sanskritName || "") + " Pada " + (boyEphem.planets.Moon?.nakshatra.pada || 1) + ")",
+        "    - **D9 Navamsha Lagna:** " + boyD9.ascendant.vargaRashi.englishName + " (" + boyD9.ascendant.vargaRashi.sanskritName + ")",
+        "  - ♀ **Bride (कन्या):** " + matchmaking.girl.name + " • Born: " + matchmaking.girl.dateIso + " at " + matchmaking.girl.location.cityName + " (TZ: +" + (matchmaking.girl.location.timezoneOffsetHours || 5.5) + "h)",
+        "    - **D1 Lagna:** " + girlD1.ascendant.vargaRashi.englishName + " (" + girlD1.ascendant.vargaRashi.sanskritName + ") at " + (girlEphem.ascendant.siderealLongitude % 30).toFixed(2) + "° (" + girlEphem.ascendant.nakshatra.sanskritName + " Pada " + (girlEphem.ascendant.nakshatra.pada || 1) + ")",
+        "    - **Moon:** " + (girlEphem.planets.Moon?.rashi.englishName || "N/A") + " at " + ((girlEphem.planets.Moon?.siderealLongitude || 0) % 30).toFixed(2) + "° (" + (girlEphem.planets.Moon?.nakshatra.sanskritName || "") + " Pada " + (girlEphem.planets.Moon?.nakshatra.pada || 1) + ")",
+        "    - **D9 Navamsha Lagna:** " + girlD9.ascendant.vargaRashi.englishName + " (" + girlD9.ascendant.vargaRashi.sanskritName + ")",
+        "- **Ashtakoota 36-Guna Scoring:** **" + matchRes.totalScore + " / 36 Gunas (" + matchRes.verdict + ")**",
+        "  - 1. Varna Koota (1 pt): **" + matchRes.kootas.varna.obtainedScore + "/1** (" + matchRes.kootas.varna.description + ")",
+        "  - 2. Vashya Koota (2 pts): **" + matchRes.kootas.vashya.obtainedScore + "/2** (" + matchRes.kootas.vashya.description + ")",
+        "  - 3. Tara Koota (3 pts): **" + matchRes.kootas.tara.obtainedScore + "/3** (" + matchRes.kootas.tara.description + ")",
+        "  - 4. Yoni Koota (4 pts): **" + matchRes.kootas.yoni.obtainedScore + "/4** (" + matchRes.kootas.yoni.description + ")",
+        "  - 5. Graha Maitri (5 pts): **" + matchRes.kootas.grahaMaitri.obtainedScore + "/5** (" + matchRes.kootas.grahaMaitri.description + ")",
+        "  - 6. Gana Koota (6 pts): **" + matchRes.kootas.gana.obtainedScore + "/6** (" + matchRes.kootas.gana.description + ")",
+        "  - 7. Bhakoot Koota (7 pts): **" + matchRes.kootas.bhakoot.obtainedScore + "/7** (" + matchRes.kootas.bhakoot.description + ")",
+        "  - 8. Nadi Koota (8 pts): **" + matchRes.kootas.nadi.obtainedScore + "/8** (" + matchRes.kootas.nadi.description + ")",
+        "- **Manglik Dosha & Bhanga Status:**",
+        "  - Groom Manglik: " + (matchRes.boyManglik.isManglik ? "Manglik (Mars in H" + matchRes.boyManglik.marsHouseFromLagna + ")" : "Non-Manglik") + " • Bride Manglik: " + (matchRes.girlManglik.isManglik ? "Manglik (Mars in H" + matchRes.girlManglik.marsHouseFromLagna + ")" : "Non-Manglik"),
+        "  - Manglik Harmony Verdict: **" + (matchRes.manglikCompatibility.isCompatible ? "Compatible (सम्मत)" : "Caution") + "** -> " + matchRes.manglikCompatibility.description,
+        "- **Cross-Kundli Synastry:**",
+        "  - Lagna-to-Lagna Axis: **" + lagnaAxisName + "**",
+        "  - Moon-to-Moon Axis: **" + moonAxisName + "**",
+        "- **Classical Shastric Verdict:** " + matchRes.verdictDescription,
+      ].join("\n");
+    } catch (_) {}
+  }
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -498,6 +588,12 @@ export function buildAstroDossier(
     "#### 👑 23. ACHARYA VARAHAMIHIRA BRIHAT JATAKA DOSSIER:",
     bjSummary,
   ];
+
+  if (matchmakingSummary) {
+    lines.push("");
+    lines.push("#### 💍 24. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push(matchmakingSummary);
+  }
 
   return lines.filter(Boolean).join("\n");
 }

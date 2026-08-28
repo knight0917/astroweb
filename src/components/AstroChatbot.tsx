@@ -224,6 +224,8 @@ export default function AstroChatbot() {
     houseSystem,
     nodeType,
     gender,
+    viewMode,
+    matchmaking,
   } = useAstroStore();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -233,7 +235,7 @@ export default function AstroChatbot() {
       id: "welcome",
       role: "assistant",
       content:
-        "**Pranam!** 🙏 I am **Acharya Jyotish AI Pro (आचार्य ज्योतिष AI)**.\n\nI have fully ingested your **Lagna, Moon Sign, D9 Navamsha, D10 Dashamsha, Shadbala strengths, Jaimini Karakas, active Vimshottari Dasha, and Saturn Gochar**.\n\nAsk any question about your **Career, Marriage, Dasha, Health, Sade Sati, or Gemstones** in English, हिन्दी, or Hinglish!",
+        "**Pranam!** 🙏 I am **Acharya Jyotish AI Pro (आचार्य ज्योतिष AI)**.\n\nI have fully ingested your **Lagna, Moon Sign, D9 Navamsha, D10 Dashamsha, Shadbala strengths, Jaimini Karakas, active Vimshottari Dasha, and Saturn Gochar**.\n\nAsk any question about your **Career, Marriage, Kundli Milan, Dasha, Health, Sade Sati, or Gemstones** in English, हिन्दी, or Hinglish!",
       timestamp: new Date(),
     },
   ]);
@@ -261,10 +263,10 @@ export default function AstroChatbot() {
     return calculateVedicEphemeris(new Date(), location, ayanamsha, houseSystem, nodeType);
   }, [location, ayanamsha, houseSystem, nodeType]);
 
-  // Build the complete astrological dossier with native gender
+  // Build the complete astrological dossier with native gender & live matchmaking pair
   const astroDossier = useMemo(() => {
-    return buildAstroDossier(natalEphemeris, transitEphemeris, new Date(), gender);
-  }, [natalEphemeris, transitEphemeris, gender]);
+    return buildAstroDossier(natalEphemeris, transitEphemeris, new Date(), gender, matchmaking);
+  }, [natalEphemeris, transitEphemeris, gender, matchmaking]);
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
@@ -352,7 +354,10 @@ STRICT CONSULTATION RULES (MANDATORY):
    - **✨ Key Life Indications**: 2-3 practical, specific bullet points on what this means for their career, marriage, or personal life.
    - **⏳ Timing Window**: Clear, realistic timeframe (e.g. "Late ${currentYear} to Mid ${currentYear + 1}") based on their active Dasha and transits.
    - **💡 Actionable Advice & Simple Remedy**: 1 practical action step + 1 simple daily remedy/mantra.
-6. **LANGUAGE**: Match the user's inquiry language (English, Hindi हिंदी, or Hinglish).
+6. **KUNDLI MILAN & MARRIAGE COMPATIBILITY (DUAL CHARTS)**:
+   - When the dossier contains "#### 💍 24. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER" and the client asks about marriage, compatibility, Kundli Milan, or "is this chart good for my marriage / match", ALWAYS incorporate the active pair data (Groom & Bride)!
+   - State the Ashtakoota 36-Guna score (e.g. "28/36 Gunas"), analyze Nadi / Bhakoot / Gana harmony, evaluate Manglik dosha cancellation, and summarize cross-chart Lagna and D9 Navamsha synastry with clear marital guidance and remedies.
+7. **LANGUAGE**: Match the user's inquiry language (English, Hindi हिंदी, or Hinglish).
 `;
 
     const contents: any[] = [
@@ -611,9 +616,18 @@ STRICT CONSULTATION RULES (MANDATORY):
                     Parashari Pro
                   </span>
                 </div>
-                <div className="text-[10px] text-slate-400 font-mono">
-                  Lagna: <span className="text-amber-300 font-bold">{ascRashi}</span> • Moon:{" "}
-                  <span className="text-cyan-300 font-bold">{moonRashi}</span>
+                <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+                  <span>Lagna: <strong className="text-amber-300">{ascRashi}</strong></span>
+                  <span>•</span>
+                  <span>Moon: <strong className="text-cyan-300">{moonRashi}</strong></span>
+                  {viewMode === "matchmaking" && matchmaking && (
+                    <>
+                      <span>•</span>
+                      <span className="text-pink-300 font-bold truncate max-w-[140px]" title={`Kundli Milan: ${matchmaking.boy.name} ✕ ${matchmaking.girl.name}`}>
+                        💍 {matchmaking.boy.name.slice(0, 8)} ✕ {matchmaking.girl.name.slice(0, 8)}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

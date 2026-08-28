@@ -41,6 +41,9 @@ export default function MatchmakingView() {
     savedProfiles,
     gender,
     activeProfileName,
+    matchmaking,
+    setMatchmakingBoy,
+    setMatchmakingGirl,
   } = useAstroStore();
 
   const activeIso = useMemo(() => {
@@ -48,48 +51,52 @@ export default function MatchmakingView() {
   }, [currentDate, activeLocation]);
 
   const [boyName, setBoyName] = useState(
-    gender === "male" ? activeProfileName || "My Chart (वर ♂)" : "Groom (वर)"
+    matchmaking?.boy?.name || (gender === "male" ? activeProfileName || "My Chart (वर ♂)" : "Groom (वर)")
   );
   const [boyDate, setBoyDate] = useState(
-    gender === "male" ? activeIso : "1998-09-05T21:29"
+    matchmaking?.boy?.dateIso || (gender === "male" ? activeIso : "1998-09-05T21:29")
   );
   const [boyCity, setBoyCity] = useState<GeoLocation>(
-    gender === "male"
-      ? activeLocation
-      : {
-          cityName: "Bhuj",
-          country: "India",
-          latitude: 23.254,
-          longitude: 69.6693,
-          elevation: 106,
-          timezoneOffsetHours: 5.5,
-        }
+    matchmaking?.boy?.location || (
+      gender === "male"
+        ? activeLocation
+        : {
+            cityName: "Bhuj",
+            country: "India",
+            latitude: 23.254,
+            longitude: 69.6693,
+            elevation: 106,
+            timezoneOffsetHours: 5.5,
+          }
+    )
   );
   const [boyCitySearch, setBoyCitySearch] = useState(
-    gender === "male" ? activeLocation.cityName : "Bhuj"
+    matchmaking?.boy?.location?.cityName || (gender === "male" ? activeLocation.cityName : "Bhuj")
   );
   const [showBoyCityDropdown, setShowBoyCityDropdown] = useState(false);
 
   const [girlName, setGirlName] = useState(
-    gender === "female" ? activeProfileName || "My Chart (कन्या ♀)" : "Bride (कन्या)"
+    matchmaking?.girl?.name || (gender === "female" ? activeProfileName || "My Chart (कन्या ♀)" : "Bride (कन्या)")
   );
   const [girlDate, setGirlDate] = useState(
-    gender === "female" ? activeIso : "2000-07-04T19:07"
+    matchmaking?.girl?.dateIso || (gender === "female" ? activeIso : "2000-07-04T19:07")
   );
   const [girlCity, setGirlCity] = useState<GeoLocation>(
-    gender === "female"
-      ? activeLocation
-      : {
-          cityName: "Vasai (Mumbai)",
-          country: "India",
-          latitude: 19.3919,
-          longitude: 72.8397,
-          elevation: 11,
-          timezoneOffsetHours: 5.5,
-        }
+    matchmaking?.girl?.location || (
+      gender === "female"
+        ? activeLocation
+        : {
+            cityName: "Vasai (Mumbai)",
+            country: "India",
+            latitude: 19.3919,
+            longitude: 72.8397,
+            elevation: 11,
+            timezoneOffsetHours: 5.5,
+          }
+    )
   );
   const [girlCitySearch, setGirlCitySearch] = useState(
-    gender === "female" ? activeLocation.cityName : "Vasai (Mumbai)"
+    matchmaking?.girl?.location?.cityName || (gender === "female" ? activeLocation.cityName : "Vasai (Mumbai)")
   );
   const [showGirlCityDropdown, setShowGirlCityDropdown] = useState(false);
 
@@ -107,6 +114,23 @@ export default function MatchmakingView() {
       setGirlCitySearch(activeLocation.cityName);
     }
   }, [gender, activeProfileName, activeIso, activeLocation]);
+
+  // Synchronize state changes directly to the global store for Chatbot awareness
+  useEffect(() => {
+    setMatchmakingBoy({
+      name: boyName,
+      dateIso: boyDate,
+      location: boyCity,
+    });
+  }, [boyName, boyDate, boyCity, setMatchmakingBoy]);
+
+  useEffect(() => {
+    setMatchmakingGirl({
+      name: girlName,
+      dateIso: girlDate,
+      location: girlCity,
+    });
+  }, [girlName, girlDate, girlCity, setMatchmakingGirl]);
 
   const allPlaces = useMemo(() => {
     const list = [...EXTENDED_LOCAL_PLACES];

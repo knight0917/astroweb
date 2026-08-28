@@ -41,8 +41,47 @@ export interface BirthProfile {
   savedAt: number;
 }
 
+export interface MatchmakingProfileData {
+  name: string;
+  dateIso: string;
+  location: GeoLocation;
+}
+
+export interface MatchmakingStoreState {
+  boy: MatchmakingProfileData;
+  girl: MatchmakingProfileData;
+}
+
 const STORAGE_ACTIVE_KEY = "vedic_active_chart_data";
 const STORAGE_PROFILES_KEY = "vedic_saved_birth_profiles";
+const STORAGE_MATCHMAKING_KEY = "vedic_matchmaking_active_state";
+
+const defaultMatchmakingState: MatchmakingStoreState = {
+  boy: {
+    name: "Groom (वर ♂)",
+    dateIso: "1998-09-05T21:29",
+    location: {
+      cityName: "Bhuj",
+      country: "India",
+      latitude: 23.254,
+      longitude: 69.6693,
+      elevation: 106,
+      timezoneOffsetHours: 5.5,
+    },
+  },
+  girl: {
+    name: "Bride (कन्या ♀)",
+    dateIso: "2000-07-04T19:07",
+    location: {
+      cityName: "Vasai (Mumbai)",
+      country: "India",
+      latitude: 19.3919,
+      longitude: 72.8397,
+      elevation: 11,
+      timezoneOffsetHours: 5.5,
+    },
+  },
+};
 
 function getStoredProfiles(): BirthProfile[] {
   if (typeof window === "undefined") return [];
@@ -59,6 +98,23 @@ function saveProfilesToStorage(profiles: BirthProfile[]) {
   try {
     localStorage.setItem(STORAGE_PROFILES_KEY, JSON.stringify(profiles));
   } catch (_) {}
+}
+
+function saveMatchmakingToStorage(state: MatchmakingStoreState) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_MATCHMAKING_KEY, JSON.stringify(state));
+  } catch (_) {}
+}
+
+function getStoredMatchmaking(): MatchmakingStoreState {
+  if (typeof window === "undefined") return defaultMatchmakingState;
+  try {
+    const raw = localStorage.getItem(STORAGE_MATCHMAKING_KEY);
+    return raw ? { ...defaultMatchmakingState, ...JSON.parse(raw) } : defaultMatchmakingState;
+  } catch (_) {
+    return defaultMatchmakingState;
+  }
 }
 
 function saveActiveChartToStorage(
@@ -104,6 +160,9 @@ interface AstroState {
   savedProfiles: BirthProfile[];
   activeProfileName: string | null;
 
+  // Matchmaking State (Groom & Bride)
+  matchmaking: MatchmakingStoreState;
+
   // Actions
   setDate: (date: Date) => void;
   stepTime: (amount: number, unit: "minute" | "hour" | "day" | "month" | "year" | "century") => void;
@@ -112,6 +171,9 @@ interface AstroState {
   setHouseSystem: (sys: HouseSystem) => void;
   setNodeType: (node: NodeType) => void;
   setGender: (gender: "male" | "female") => void;
+  setMatchmakingBoy: (data: Partial<MatchmakingProfileData>) => void;
+  setMatchmakingGirl: (data: Partial<MatchmakingProfileData>) => void;
+  setMatchmakingState: (state: MatchmakingStoreState) => void;
   togglePlay: () => void;
   setPlaySpeed: (speed: number) => void;
   setShowModernPlanets: (show: boolean) => void;
@@ -153,6 +215,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   selectedEntityId: null,
   savedProfiles: [],
   activeProfileName: null,
+  matchmaking: defaultMatchmakingState,
   ephemeris: calculateVedicEphemeris(
     defaultDate,
     defaultLocation,
@@ -236,6 +299,31 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     const { currentDate, location, ayanamsha, activeProfileName } = get();
     saveActiveChartToStorage(currentDate, location, ayanamsha, activeProfileName, g);
     set({ gender: g });
+  },
+
+  setMatchmakingBoy: (data) => {
+    const { matchmaking } = get();
+    const updated: MatchmakingStoreState = {
+      ...matchmaking,
+      boy: { ...matchmaking.boy, ...data },
+    };
+    saveMatchmakingToStorage(updated);
+    set({ matchmaking: updated });
+  },
+
+  setMatchmakingGirl: (data) => {
+    const { matchmaking } = get();
+    const updated: MatchmakingStoreState = {
+      ...matchmaking,
+      girl: { ...matchmaking.girl, ...data },
+    };
+    saveMatchmakingToStorage(updated);
+    set({ matchmaking: updated });
+  },
+
+  setMatchmakingState: (state) => {
+    saveMatchmakingToStorage(state);
+    set({ matchmaking: state });
   },
 
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
@@ -327,6 +415,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     if (typeof window === "undefined") return;
     try {
       const profiles = getStoredProfiles();
+      const storedMatchmaking = getStoredMatchmaking();
       const rawActive = localStorage.getItem(STORAGE_ACTIVE_KEY);
 
       let targetDate: Date = defaultDate;
@@ -361,6 +450,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
         ayanamsha: targetAya,
         activeProfileName: targetProfileName,
         gender: targetGender,
+        matchmaking: storedMatchmaking,
         ephemeris: calculateVedicEphemeris(targetDate, targetLoc, targetAya, houseSystem, nodeType),
       });
     } catch (_) {}
