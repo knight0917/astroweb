@@ -531,19 +531,39 @@ export default function TithiCalendarView() {
                       Moon Illumination: <span className="text-slate-200 font-bold">{selectedDay.tithi.illuminationPercent}%</span>
                     </div>
                   </div>
-                  {selectedDay.tithi.endTimeFormatted && (
-                    <div className="mt-2 pt-1.5 border-t border-slate-800/80">
-                      <div className="text-[11px] font-bold text-amber-400 flex items-center gap-1.5 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">
-                        <span className="text-amber-300">⌛ Ends:</span>
-                        <span className="text-amber-200 font-mono">{selectedDay.tithi.endTimeFormatted}</span>
+                  {selectedDay.tithi.endTimeFormatted && (() => {
+                    const nowMs = Date.now();
+                    const tithiEndMs = selectedDay.tithi.endTime ? new Date(selectedDay.tithi.endTime).getTime() : 0;
+                    const isTithiEnded = selectedDay.isToday && tithiEndMs > 0 && tithiEndMs <= nowMs;
+
+                    return (
+                      <div className="mt-2 pt-1.5 border-t border-slate-800/80">
+                        {isTithiEnded ? (
+                          <div className="flex items-center justify-between bg-slate-800/70 px-2 py-1 rounded-lg border border-slate-700">
+                            <span className="text-amber-300 font-bold text-[10.5px] flex items-center gap-1">
+                              <span>⌛ Ended:</span>
+                              <span className="text-slate-100 font-mono">{selectedDay.tithi.endTimeFormatted}</span>
+                            </span>
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              Ended in morning
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="text-[11px] font-bold text-amber-400 flex items-center justify-between bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-amber-300">⌛ Ends:</span>
+                              <span className="text-amber-200 font-mono">{selectedDay.tithi.endTimeFormatted}</span>
+                            </div>
+                            {selectedDay.isToday && selectedDay.tithi.remainingHoursFormatted && (
+                              <span className="text-[9.5px] text-emerald-300 font-mono font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                                {selectedDay.tithi.remainingHoursFormatted}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {selectedDay.tithi.remainingHoursFormatted && (
-                        <div className="text-[9.5px] text-amber-300/80 font-mono mt-0.5 text-right">
-                          {selectedDay.tithi.remainingHoursFormatted}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
 
                 {/* 2. Nakshatra */}
@@ -558,14 +578,35 @@ export default function TithiCalendarView() {
                     <div className="text-[11px] text-slate-400">Pada {selectedDay.nakshatra.pada} • Lord: {selectedDay.nakshatra.lord}</div>
                     <div className="text-[10px] text-amber-400 mt-1">Deity: {selectedDay.nakshatra.deity}</div>
                   </div>
-                  {selectedDay.nakshatra.endTimeFormatted && (
-                    <div className="mt-2 pt-1.5 border-t border-slate-800/80">
-                      <div className="text-[10.5px] text-cyan-300 flex items-center gap-1 bg-cyan-500/10 px-2 py-0.5 rounded-lg border border-cyan-500/20">
-                        <span className="text-cyan-400">⌛ Ends:</span>
-                        <span className="font-mono font-bold text-cyan-200">{selectedDay.nakshatra.endTimeFormatted}</span>
+                  {selectedDay.nakshatra.endTimeFormatted && (() => {
+                    const nowMs = Date.now();
+                    const nakEndMs = selectedDay.nakshatra.endTime ? new Date(selectedDay.nakshatra.endTime).getTime() : 0;
+                    const isNakEnded = selectedDay.isToday && nakEndMs > 0 && nakEndMs <= nowMs;
+
+                    return (
+                      <div className="mt-2 pt-1.5 border-t border-slate-800/80">
+                        {isNakEnded ? (
+                          <div className="flex items-center justify-between bg-slate-800/70 px-2 py-0.5 rounded-lg border border-slate-700 text-[10px]">
+                            <span className="text-cyan-300 font-bold">
+                              ⌛ Ended: <span className="font-mono text-slate-100">{selectedDay.nakshatra.endTimeFormatted}</span>
+                            </span>
+                            <span className="text-[9px] text-slate-400">Passed</span>
+                          </div>
+                        ) : (
+                          <div className="text-[10.5px] text-cyan-300 flex items-center justify-between bg-cyan-500/10 px-2 py-0.5 rounded-lg border border-cyan-500/20">
+                            <span className="text-cyan-400 font-bold">
+                              ⌛ Ends: <span className="font-mono text-cyan-200">{selectedDay.nakshatra.endTimeFormatted}</span>
+                            </span>
+                            {selectedDay.isToday && selectedDay.nakshatra.remainingHoursFormatted && (
+                              <span className="text-[9px] text-cyan-200 font-mono font-bold bg-cyan-950/60 px-1.5 py-0.2 rounded border border-cyan-500/30">
+                                {selectedDay.nakshatra.remainingHoursFormatted}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
 
                 {/* 3. Vara */}

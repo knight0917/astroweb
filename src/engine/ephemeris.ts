@@ -228,8 +228,8 @@ export function calculateVedicEphemeris(
   const masaIndex = (amavasyaSunSign + 1) % 12;
   const masa = VEDIC_MASAS[masaIndex];
   const gregorianMonth = date.toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
-  const tithiEnd = calculateTithiEndTime(date, location, ayanamshaType);
-  const nakEnd = calculateNakshatraEndTime(date, location, ayanamshaType);
+  const tithiEnd = calculateTithiEndTime(date, location, ayanamshaType, date);
+  const nakEnd = calculateNakshatraEndTime(date, location, ayanamshaType, date);
 
   return {
     utcDate: date.toISOString(),

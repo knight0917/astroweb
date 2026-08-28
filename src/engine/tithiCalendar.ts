@@ -222,10 +222,12 @@ function getMoonPhase(angleDiff: number): { emoji: string; illumination: number 
 export function calculateTithiEndTime(
   anchorDate: Date,
   location: GeoLocation,
-  ayanamshaType: string = "Lahiri"
-): { endTime: Date; endTimeFormatted: string; remainingHoursFormatted: string; hoursRemaining: number } {
+  ayanamshaType: string = "Lahiri",
+  referenceDate?: Date
+): { endTime: Date; endTimeFormatted: string; remainingHoursFormatted: string; hoursRemaining: number; isEnded: boolean } {
   const tzOffset = location.timezoneOffsetHours || 5.5;
   const t0 = anchorDate.getTime();
+  const refTime = referenceDate ? referenceDate.getTime() : t0;
 
   const getAngle = (t: number) => {
     const d = new Date(t);
@@ -267,9 +269,29 @@ export function calculateTithiEndTime(
   const endTimestamp = (low + high) / 2;
   const endDate = new Date(endTimestamp);
 
-  const hoursRemaining = Math.max(0, (endTimestamp - t0) / 3600000);
-  const hrs = Math.floor(hoursRemaining);
-  const mins = Math.floor((hoursRemaining % 1) * 60);
+  const isEnded = endTimestamp <= refTime;
+  const hoursRemaining = (endTimestamp - refTime) / 3600000;
+
+  let remainingHoursFormatted = "";
+  if (referenceDate) {
+    if (isEnded) {
+      const elapsedHours = Math.abs(hoursRemaining);
+      if (elapsedHours < 24) {
+        const h = Math.floor(elapsedHours);
+        const m = Math.floor((elapsedHours % 1) * 60);
+        remainingHoursFormatted = h > 0 ? `Ended ${h}h ${m}m ago` : `Ended ${m}m ago`;
+      } else {
+        remainingHoursFormatted = "Ended";
+      }
+    } else {
+      const hrs = Math.floor(hoursRemaining);
+      const mins = Math.floor((hoursRemaining % 1) * 60);
+      remainingHoursFormatted = hrs > 0 ? `${hrs}h ${mins}m left` : `${mins}m left`;
+    }
+  } else {
+    // If no reference date provided (e.g. general calendar query)
+    remainingHoursFormatted = "";
+  }
 
   const localEndDate = new Date(endTimestamp + tzOffset * 3600 * 1000);
   const localAnchorDate = new Date(t0 + tzOffset * 3600 * 1000);
@@ -292,13 +314,13 @@ export function calculateTithiEndTime(
   });
 
   const endTimeFormatted = isSameDay ? timeStr : `${dateStr}, ${timeStr}`;
-  const remainingHoursFormatted = hrs > 0 ? `${hrs}h ${mins}m left` : `${mins}m left`;
 
   return {
     endTime: endDate,
     endTimeFormatted,
     remainingHoursFormatted,
-    hoursRemaining,
+    hoursRemaining: Math.max(0, hoursRemaining),
+    isEnded,
   };
 }
 
@@ -309,10 +331,12 @@ export function calculateTithiEndTime(
 export function calculateNakshatraEndTime(
   anchorDate: Date,
   location: GeoLocation,
-  ayanamshaType: string = "Lahiri"
-): { endTime: Date; endTimeFormatted: string; remainingHoursFormatted: string } {
+  ayanamshaType: string = "Lahiri",
+  referenceDate?: Date
+): { endTime: Date; endTimeFormatted: string; remainingHoursFormatted: string; isEnded: boolean } {
   const tzOffset = location.timezoneOffsetHours || 5.5;
   const t0 = anchorDate.getTime();
+  const refTime = referenceDate ? referenceDate.getTime() : t0;
 
   const getMoonSidereal = (t: number) => {
     const d = new Date(t);
@@ -353,9 +377,28 @@ export function calculateNakshatraEndTime(
   const endTimestamp = (low + high) / 2;
   const endDate = new Date(endTimestamp);
 
-  const hoursRemaining = Math.max(0, (endTimestamp - t0) / 3600000);
-  const hrs = Math.floor(hoursRemaining);
-  const mins = Math.floor((hoursRemaining % 1) * 60);
+  const isEnded = endTimestamp <= refTime;
+  const hoursRemaining = (endTimestamp - refTime) / 3600000;
+
+  let remainingHoursFormatted = "";
+  if (referenceDate) {
+    if (isEnded) {
+      const elapsedHours = Math.abs(hoursRemaining);
+      if (elapsedHours < 24) {
+        const h = Math.floor(elapsedHours);
+        const m = Math.floor((elapsedHours % 1) * 60);
+        remainingHoursFormatted = h > 0 ? `Ended ${h}h ${m}m ago` : `Ended ${m}m ago`;
+      } else {
+        remainingHoursFormatted = "Ended";
+      }
+    } else {
+      const hrs = Math.floor(hoursRemaining);
+      const mins = Math.floor((hoursRemaining % 1) * 60);
+      remainingHoursFormatted = hrs > 0 ? `${hrs}h ${mins}m left` : `${mins}m left`;
+    }
+  } else {
+    remainingHoursFormatted = "";
+  }
 
   const localEndDate = new Date(endTimestamp + tzOffset * 3600 * 1000);
   const localAnchorDate = new Date(t0 + tzOffset * 3600 * 1000);
@@ -378,12 +421,12 @@ export function calculateNakshatraEndTime(
   });
 
   const endTimeFormatted = isSameDay ? timeStr : `${dateStr}, ${timeStr}`;
-  const remainingHoursFormatted = hrs > 0 ? `${hrs}h ${mins}m left` : `${mins}m left`;
 
   return {
     endTime: endDate,
     endTimeFormatted,
     remainingHoursFormatted,
+    isEnded,
   };
 }
 
@@ -1193,8 +1236,9 @@ export function getMonthlyTithiCalendar(
     const brahmaStr = "04:15 AM - 05:00 AM";
 
     // Precise End Times for 5 Limbs (पञ्चाङ्ग समाप्ति काल)
-    const tithiEndInfo = calculateTithiEndTime(dateAnchor, location, ayanamshaType);
-    const nakEndInfo = calculateNakshatraEndTime(dateAnchor, location, ayanamshaType);
+    const refDate = isToday ? new Date() : undefined;
+    const tithiEndInfo = calculateTithiEndTime(dateAnchor, location, ayanamshaType, refDate);
+    const nakEndInfo = calculateNakshatraEndTime(dateAnchor, location, ayanamshaType, refDate);
     const yogaEndInfo = calculateYogaEndTime(dateAnchor, location);
     const karanaEndInfo = calculateKaranaEndTime(dateAnchor, location);
 
