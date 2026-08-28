@@ -176,6 +176,97 @@ export default function TimeTravelSlider() {
     );
   };
 
+  // Master LIVE NOW handler: snaps to current Date, Time, and Local Place
+  const handleLiveNow = () => {
+    setIsEditing(false);
+    const now = new Date();
+
+    // 1. Immediately reset date and active profile
+    resetToLiveTransit();
+    setDate(now);
+
+    // 2. Resolve user's live location via browser GPS / timezone
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const elev = pos.coords.altitude || 0;
+          const tz = -now.getTimezoneOffset() / 60;
+
+          let resolvedCity = "Current Location";
+          let resolvedCountry = "Device GPS";
+
+          try {
+            const res = await fetch(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
+            );
+            if (res.ok) {
+              const data = await res.json();
+              resolvedCity = data.city || data.locality || data.principalSubdivision || "Current Location";
+              resolvedCountry = data.countryName || "Local";
+            }
+          } catch (_) {}
+
+          const liveLoc: GeoLocation = {
+            cityName: resolvedCity,
+            country: resolvedCountry,
+            latitude: lat,
+            longitude: lon,
+            elevation: elev,
+            timezoneOffsetHours: tz,
+          };
+
+          setLocation(liveLoc);
+          resetToLiveTransit(liveLoc);
+        },
+        () => {
+          // If GPS is denied or unavailable, resolve based on browser timezone
+          const tz = -now.getTimezoneOffset() / 60;
+          const tzName = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+          const tzCity = tzName ? tzName.split("/").pop()?.replace(/_/g, " ") || "Current City" : "Local";
+
+          const matched = POPULAR_CITIES.find(
+            (c) => Math.abs((c.timezoneOffsetHours || 5.5) - tz) < 0.1
+          ) || POPULAR_CITIES[0];
+
+          const fallbackLoc: GeoLocation = {
+            cityName: tzCity,
+            country: matched.country || "Local Timezone",
+            latitude: matched.latitude,
+            longitude: matched.longitude,
+            elevation: matched.elevation || 0,
+            timezoneOffsetHours: tz,
+          };
+
+          setLocation(fallbackLoc);
+          resetToLiveTransit(fallbackLoc);
+        },
+        { enableHighAccuracy: true, timeout: 6000 }
+      );
+    } else {
+      const tz = -now.getTimezoneOffset() / 60;
+      const tzName = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      const tzCity = tzName ? tzName.split("/").pop()?.replace(/_/g, " ") || "Current City" : "Local";
+
+      const matched = POPULAR_CITIES.find(
+        (c) => Math.abs((c.timezoneOffsetHours || 5.5) - tz) < 0.1
+      ) || POPULAR_CITIES[0];
+
+      const fallbackLoc: GeoLocation = {
+        cityName: tzCity,
+        country: matched.country || "Local Timezone",
+        latitude: matched.latitude,
+        longitude: matched.longitude,
+        elevation: matched.elevation || 0,
+        timezoneOffsetHours: tz,
+      };
+
+      setLocation(fallbackLoc);
+      resetToLiveTransit(fallbackLoc);
+    }
+  };
+
   // Apply user edited inputs to state
   const handleApplyDateTime = () => {
     const y = parseInt(year, 10);
@@ -431,14 +522,11 @@ export default function TimeTravelSlider() {
 
         {/* RIGHT SECTION: Live Display + Live Now + Time Format Toggles (Always anchored to the right) */}
         <div className="ml-auto flex items-center gap-2.5 flex-shrink-0">
-          {/* Quick "LIVE NOW" button */}
+          {/* Quick "LIVE NOW" button (Snaps to current date, time, and location) */}
           <button
-            onClick={() => {
-              setIsEditing(false);
-              setDate(new Date());
-            }}
+            onClick={handleLiveNow}
             className="px-2.5 md:px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl shadow transition-transform active:scale-95 cursor-pointer flex items-center gap-1.5"
-            title="Snap to current live moment"
+            title="Snap to current live moment and your current location"
           >
             <span className="w-2 h-2 rounded-full bg-slate-950 inline-block animate-pulse" />
             <span className="hidden sm:inline">LIVE NOW</span>
@@ -1141,13 +1229,13 @@ export default function TimeTravelSlider() {
             <div className="pt-2 border-t border-slate-800">
               <button
                 onClick={() => {
-                  resetToLiveTransit();
+                  handleLiveNow();
                   setShowProfilesDropdown(false);
                 }}
                 className="w-full py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 hover:text-emerald-400 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <span>🔴</span>
-                <span>Reset to Live Transit (Current Sky Now)</span>
+                <span>Reset to Live Transit (Current Sky & Location)</span>
               </button>
             </div>
           </div>

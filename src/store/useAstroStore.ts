@@ -188,7 +188,7 @@ interface AstroState {
   saveProfile: (name: string, isDefault?: boolean, gender?: "male" | "female") => BirthProfile;
   loadProfile: (profile: BirthProfile) => void;
   deleteProfile: (profileId: string) => void;
-  resetToLiveTransit: () => void;
+  resetToLiveTransit: (customLocation?: GeoLocation) => void;
   initFromStorage: () => void;
 }
 
@@ -401,13 +401,15 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     set({ savedProfiles: updatedList });
   },
 
-  resetToLiveTransit: () => {
+  resetToLiveTransit: (customLocation?: GeoLocation) => {
     const { location, ayanamsha, houseSystem, nodeType } = get();
     const liveNow = new Date();
+    const targetLoc = customLocation || location;
     set({
       currentDate: liveNow,
+      location: targetLoc,
       activeProfileName: "🔴 Live Transit (Now)",
-      ephemeris: calculateVedicEphemeris(liveNow, location, ayanamsha, houseSystem, nodeType),
+      ephemeris: calculateVedicEphemeris(liveNow, targetLoc, ayanamsha, houseSystem, nodeType),
     });
   },
 
