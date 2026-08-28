@@ -295,20 +295,31 @@ export default function PositionsTable() {
       {activeTab === "panchanga" && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-2">
           {/* Tithi */}
-          <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-            <span className="text-xs text-slate-400">1. TITHI (Lunar Day)</span>
-            <div className="text-lg font-bold text-amber-300 mt-1">
-              {ephemeris.panchanga.tithi.name} ({ephemeris.panchanga.tithi.paksha} Paksha)
+          <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
+            <div>
+              <span className="text-xs text-slate-400">1. TITHI (Lunar Day)</span>
+              <div className="text-lg font-bold text-amber-300 mt-1">
+                {ephemeris.panchanga.tithi.name} ({ephemeris.panchanga.tithi.paksha} Paksha)
+              </div>
+              <div className="w-full bg-slate-800 rounded-full h-1.5 mt-3">
+                <div
+                  className="bg-amber-400 h-1.5 rounded-full"
+                  style={{ width: `${ephemeris.panchanga.tithi.progressPercent}%` }}
+                ></div>
+              </div>
+              <div className="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
+                <span>{ephemeris.panchanga.tithi.progressPercent.toFixed(1)}% completed</span>
+                {ephemeris.panchanga.tithi.remainingFormatted && (
+                  <span className="text-amber-400/90 font-mono">{ephemeris.panchanga.tithi.remainingFormatted}</span>
+                )}
+              </div>
             </div>
-            <div className="w-full bg-slate-800 rounded-full h-1.5 mt-3">
-              <div
-                className="bg-amber-400 h-1.5 rounded-full"
-                style={{ width: `${ephemeris.panchanga.tithi.progressPercent}%` }}
-              ></div>
-            </div>
-            <div className="text-[10px] text-slate-400 mt-1">
-              {ephemeris.panchanga.tithi.progressPercent.toFixed(1)}% completed
-            </div>
+            {ephemeris.panchanga.tithi.endTime && (
+              <div className="mt-2.5 pt-2 border-t border-slate-800 text-xs flex items-center justify-between text-amber-300">
+                <span className="text-slate-400 text-[11px]">⌛ Ends at:</span>
+                <span className="font-mono font-bold">{ephemeris.panchanga.tithi.endTime}</span>
+              </div>
+            )}
           </div>
 
           {/* Vara */}
@@ -323,14 +334,22 @@ export default function PositionsTable() {
           </div>
 
           {/* Nakshatra */}
-          <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-            <span className="text-xs text-slate-400">3. NAKSHATRA (Moon Constellation)</span>
-            <div className="text-lg font-bold text-sky-300 mt-1">
-              {ephemeris.panchanga.nakshatra.sanskritName} (Pada {ephemeris.panchanga.nakshatra.pada})
+          <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
+            <div>
+              <span className="text-xs text-slate-400">3. NAKSHATRA (Moon Constellation)</span>
+              <div className="text-lg font-bold text-sky-300 mt-1">
+                {ephemeris.panchanga.nakshatra.sanskritName} (Pada {ephemeris.panchanga.nakshatra.pada})
+              </div>
+              <div className="text-xs text-slate-400 mt-1">
+                Lord: {ephemeris.panchanga.nakshatra.lord} | Deity: {ephemeris.panchanga.nakshatra.deity}
+              </div>
             </div>
-            <div className="text-xs text-slate-400 mt-1">
-              Lord: {ephemeris.panchanga.nakshatra.lord} | Deity: {ephemeris.panchanga.nakshatra.deity}
-            </div>
+            {ephemeris.panchanga.nakshatra.endTime && (
+              <div className="mt-2.5 pt-2 border-t border-slate-800 text-xs flex items-center justify-between text-cyan-300">
+                <span className="text-slate-400 text-[11px]">⌛ Ends at:</span>
+                <span className="font-mono font-bold">{ephemeris.panchanga.nakshatra.endTime}</span>
+              </div>
+            )}
           </div>
 
           {/* Yoga */}

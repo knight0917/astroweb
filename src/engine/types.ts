@@ -87,12 +87,19 @@ export interface EphemerisResult {
     cusps: number[]; // 12 sidereal cusp start longitudes
   };
   panchanga: {
-    tithi: { name: string; paksha: "Shukla" | "Krishna"; index: number; progressPercent: number };
+    tithi: {
+      name: string;
+      paksha: "Shukla" | "Krishna";
+      index: number;
+      progressPercent: number;
+      endTime?: string;
+      remainingFormatted?: string;
+    };
     masa: { name: string; sanskritName: string; solarMasa: string };
     gregorianMonth: string;
     vara: { name: string; sanskritName: string; lord: string };
-    nakshatra: NakshatraInfo;
-    yoga: { name: string; index: number };
-    karana: { name: string; index: number };
+    nakshatra: NakshatraInfo & { endTime?: string; remainingFormatted?: string };
+    yoga: { name: string; index: number; endTime?: string };
+    karana: { name: string; index: number; endTime?: string };
   };
 }

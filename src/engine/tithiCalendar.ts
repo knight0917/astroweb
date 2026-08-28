@@ -56,6 +56,9 @@ export interface DailyTithiPanchanga {
     moonPhaseEmoji: string;
     illuminationPercent: number;
     progressPercent: number;
+    endTime: Date;
+    endTimeFormatted: string; // e.g. "11:42 PM" or "Aug 28, 11:42 PM"
+    remainingHoursFormatted: string; // e.g. "5h 24m remaining"
   };
 
   // Lunar Month (Masa)
@@ -74,17 +77,24 @@ export interface DailyTithiPanchanga {
     lord: string;
     deity: string;
     pada: number;
+    endTime: Date;
+    endTimeFormatted: string;
+    remainingHoursFormatted: string;
   };
 
   // Yoga & Karana
   yoga: {
     index: number;
     name: string;
+    endTime: Date;
+    endTimeFormatted: string;
   };
   karana: {
     index: number;
     name: string;
     isBhadra: boolean;
+    endTime: Date;
+    endTimeFormatted: string;
   };
 
   // Muhurta & Timings
@@ -203,6 +213,285 @@ function getMoonPhase(angleDiff: number): { emoji: string; illumination: number 
   else emoji = "🌘"; // Waning Crescent
 
   return { emoji, illumination };
+}
+
+/**
+ * Calculates the exact moment when the current Tithi ends.
+ * 1 Tithi = 12° elongation between Moon and Sun.
+ */
+export function calculateTithiEndTime(
+  anchorDate: Date,
+  location: GeoLocation,
+  ayanamshaType: string = "Lahiri"
+): { endTime: Date; endTimeFormatted: string; remainingHoursFormatted: string; hoursRemaining: number } {
+  const tzOffset = location.timezoneOffsetHours || 5.5;
+  const t0 = anchorDate.getTime();
+
+  const getAngle = (t: number) => {
+    const d = new Date(t);
+    const astroTime = Astronomy.MakeTime(d);
+    const sunGeo = Astronomy.GeoVector(Astronomy.Body.Sun, astroTime, true);
+    const moonGeo = Astronomy.GeoVector(Astronomy.Body.Moon, astroTime, true);
+    const sunEcl = Astronomy.Ecliptic(sunGeo);
+    const moonEcl = Astronomy.Ecliptic(moonGeo);
+    return (moonEcl.elon - sunEcl.elon + 360) % 360;
+  };
+
+  const angle0 = getAngle(t0);
+  const tithiIndex = Math.floor(angle0 / 12);
+  const targetAngle = ((tithiIndex + 1) * 12) % 360;
+  const degreesNeeded = ((tithiIndex + 1) * 12) - angle0; // 0 to 12 degrees
+
+  // Moon moves ~12.19 deg/day relative to Sun (~0.508 deg/hour)
+  const approxHours = degreesNeeded / 0.508;
+  let low = t0;
+  let high = t0 + Math.max(approxHours * 1.5, 2) * 3600 * 1000 + 4 * 3600 * 1000;
+
+  for (let i = 0; i < 14; i++) {
+    const mid = (low + high) / 2;
+    const curAngle = getAngle(mid);
+    let diff = (curAngle - targetAngle + 360) % 360;
+    if (diff > 180) diff -= 360;
+
+    if (Math.abs(diff) < 0.001) {
+      low = mid;
+      break;
+    }
+    if (diff < 0) {
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+
+  const endTimestamp = (low + high) / 2;
+  const endDate = new Date(endTimestamp);
+
+  const hoursRemaining = Math.max(0, (endTimestamp - t0) / 3600000);
+  const hrs = Math.floor(hoursRemaining);
+  const mins = Math.floor((hoursRemaining % 1) * 60);
+
+  const localEndDate = new Date(endTimestamp + tzOffset * 3600 * 1000);
+  const localAnchorDate = new Date(t0 + tzOffset * 3600 * 1000);
+  const isSameDay =
+    localEndDate.getUTCDate() === localAnchorDate.getUTCDate() &&
+    localEndDate.getUTCMonth() === localAnchorDate.getUTCMonth() &&
+    localEndDate.getUTCFullYear() === localAnchorDate.getUTCFullYear();
+
+  const timeStr = localEndDate.toLocaleTimeString("en-US", {
+    timeZone: "UTC",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  const dateStr = localEndDate.toLocaleDateString("en-US", {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric",
+  });
+
+  const endTimeFormatted = isSameDay ? timeStr : `${dateStr}, ${timeStr}`;
+  const remainingHoursFormatted = hrs > 0 ? `${hrs}h ${mins}m left` : `${mins}m left`;
+
+  return {
+    endTime: endDate,
+    endTimeFormatted,
+    remainingHoursFormatted,
+    hoursRemaining,
+  };
+}
+
+/**
+ * Calculates the exact moment when the current Nakshatra ends.
+ * 1 Nakshatra = 13° 20' = 13.333333° of Moon sidereal longitude.
+ */
+export function calculateNakshatraEndTime(
+  anchorDate: Date,
+  location: GeoLocation,
+  ayanamshaType: string = "Lahiri"
+): { endTime: Date; endTimeFormatted: string; remainingHoursFormatted: string } {
+  const tzOffset = location.timezoneOffsetHours || 5.5;
+  const t0 = anchorDate.getTime();
+
+  const getMoonSidereal = (t: number) => {
+    const d = new Date(t);
+    const astroTime = Astronomy.MakeTime(d);
+    const ayan = getAyanamsha(astroTime.ut, ayanamshaType as any);
+    const moonGeo = Astronomy.GeoVector(Astronomy.Body.Moon, astroTime, true);
+    const moonEcl = Astronomy.Ecliptic(moonGeo);
+    return toSiderealLongitude(moonEcl.elon, ayan);
+  };
+
+  const lon0 = getMoonSidereal(t0);
+  const nakSpan = 360 / 27; // 13.333333°
+  const nakIdx = Math.floor(lon0 / nakSpan);
+  const targetLon = ((nakIdx + 1) * nakSpan) % 360;
+  const degNeeded = ((nakIdx + 1) * nakSpan) - lon0;
+
+  const approxHours = degNeeded / 0.549;
+  let low = t0;
+  let high = t0 + Math.max(approxHours * 1.5, 2) * 3600 * 1000 + 4 * 3600 * 1000;
+
+  for (let i = 0; i < 14; i++) {
+    const mid = (low + high) / 2;
+    const curLon = getMoonSidereal(mid);
+    let diff = (curLon - targetLon + 360) % 360;
+    if (diff > 180) diff -= 360;
+
+    if (Math.abs(diff) < 0.001) {
+      low = mid;
+      break;
+    }
+    if (diff < 0) {
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+
+  const endTimestamp = (low + high) / 2;
+  const endDate = new Date(endTimestamp);
+
+  const hoursRemaining = Math.max(0, (endTimestamp - t0) / 3600000);
+  const hrs = Math.floor(hoursRemaining);
+  const mins = Math.floor((hoursRemaining % 1) * 60);
+
+  const localEndDate = new Date(endTimestamp + tzOffset * 3600 * 1000);
+  const localAnchorDate = new Date(t0 + tzOffset * 3600 * 1000);
+  const isSameDay =
+    localEndDate.getUTCDate() === localAnchorDate.getUTCDate() &&
+    localEndDate.getUTCMonth() === localAnchorDate.getUTCMonth() &&
+    localEndDate.getUTCFullYear() === localAnchorDate.getUTCFullYear();
+
+  const timeStr = localEndDate.toLocaleTimeString("en-US", {
+    timeZone: "UTC",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  const dateStr = localEndDate.toLocaleDateString("en-US", {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric",
+  });
+
+  const endTimeFormatted = isSameDay ? timeStr : `${dateStr}, ${timeStr}`;
+  const remainingHoursFormatted = hrs > 0 ? `${hrs}h ${mins}m left` : `${mins}m left`;
+
+  return {
+    endTime: endDate,
+    endTimeFormatted,
+    remainingHoursFormatted,
+  };
+}
+
+/**
+ * Calculates the exact moment when the current Yoga ends.
+ */
+export function calculateYogaEndTime(
+  anchorDate: Date,
+  location: GeoLocation
+): { endTime: Date; endTimeFormatted: string } {
+  const tzOffset = location.timezoneOffsetHours || 5.5;
+  const t0 = anchorDate.getTime();
+
+  const getYogaSum = (t: number) => {
+    const d = new Date(t);
+    const astroTime = Astronomy.MakeTime(d);
+    const sunGeo = Astronomy.GeoVector(Astronomy.Body.Sun, astroTime, true);
+    const moonGeo = Astronomy.GeoVector(Astronomy.Body.Moon, astroTime, true);
+    const sunEcl = Astronomy.Ecliptic(sunGeo);
+    const moonEcl = Astronomy.Ecliptic(moonGeo);
+    return (sunEcl.elon + moonEcl.elon) % 360;
+  };
+
+  const sum0 = getYogaSum(t0);
+  const span = 360 / 27;
+  const idx = Math.floor(sum0 / span);
+  const target = ((idx + 1) * span) % 360;
+  const degNeeded = ((idx + 1) * span) - sum0;
+
+  const approxHours = degNeeded / 0.59;
+  let low = t0;
+  let high = t0 + Math.max(approxHours * 1.5, 2) * 3600 * 1000 + 4 * 3600 * 1000;
+
+  for (let i = 0; i < 14; i++) {
+    const mid = (low + high) / 2;
+    const cur = getYogaSum(mid);
+    let diff = (cur - target + 360) % 360;
+    if (diff > 180) diff -= 360;
+    if (Math.abs(diff) < 0.001) break;
+    if (diff < 0) low = mid; else high = mid;
+  }
+
+  const endTimestamp = (low + high) / 2;
+  const localEndDate = new Date(endTimestamp + tzOffset * 3600 * 1000);
+  const timeStr = localEndDate.toLocaleTimeString("en-US", {
+    timeZone: "UTC",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  return {
+    endTime: new Date(endTimestamp),
+    endTimeFormatted: timeStr,
+  };
+}
+
+/**
+ * Calculates the exact moment when the current Karana ends.
+ */
+export function calculateKaranaEndTime(
+  anchorDate: Date,
+  location: GeoLocation
+): { endTime: Date; endTimeFormatted: string } {
+  const tzOffset = location.timezoneOffsetHours || 5.5;
+  const t0 = anchorDate.getTime();
+
+  const getAngle = (t: number) => {
+    const d = new Date(t);
+    const astroTime = Astronomy.MakeTime(d);
+    const sunGeo = Astronomy.GeoVector(Astronomy.Body.Sun, astroTime, true);
+    const moonGeo = Astronomy.GeoVector(Astronomy.Body.Moon, astroTime, true);
+    const sunEcl = Astronomy.Ecliptic(sunGeo);
+    const moonEcl = Astronomy.Ecliptic(moonGeo);
+    return (moonEcl.elon - sunEcl.elon + 360) % 360;
+  };
+
+  const angle0 = getAngle(t0);
+  const idx = Math.floor(angle0 / 6);
+  const target = ((idx + 1) * 6) % 360;
+  const degNeeded = ((idx + 1) * 6) - angle0;
+
+  const approxHours = degNeeded / 0.508;
+  let low = t0;
+  let high = t0 + Math.max(approxHours * 1.5, 2) * 3600 * 1000 + 4 * 3600 * 1000;
+
+  for (let i = 0; i < 14; i++) {
+    const mid = (low + high) / 2;
+    const cur = getAngle(mid);
+    let diff = (cur - target + 360) % 360;
+    if (diff > 180) diff -= 360;
+    if (Math.abs(diff) < 0.001) break;
+    if (diff < 0) low = mid; else high = mid;
+  }
+
+  const endTimestamp = (low + high) / 2;
+  const localEndDate = new Date(endTimestamp + tzOffset * 3600 * 1000);
+  const timeStr = localEndDate.toLocaleTimeString("en-US", {
+    timeZone: "UTC",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  return {
+    endTime: new Date(endTimestamp),
+    endTimeFormatted: timeStr,
+  };
 }
 
 /**
@@ -903,6 +1192,12 @@ export function getMonthlyTithiCalendar(
     const abhijitStr = "11:50 AM - 12:40 PM";
     const brahmaStr = "04:15 AM - 05:00 AM";
 
+    // Precise End Times for 5 Limbs (पञ्चाङ्ग समाप्ति काल)
+    const tithiEndInfo = calculateTithiEndTime(dateAnchor, location, ayanamshaType);
+    const nakEndInfo = calculateNakshatraEndTime(dateAnchor, location, ayanamshaType);
+    const yogaEndInfo = calculateYogaEndTime(dateAnchor, location);
+    const karanaEndInfo = calculateKaranaEndTime(dateAnchor, location);
+
     days.push({
       date: dateObj,
       dateString: `${year}-${month.toString().padStart(2, "0")}-${d.toString().padStart(2, "0")}`,
@@ -921,6 +1216,9 @@ export function getMonthlyTithiCalendar(
         moonPhaseEmoji: moonPhase.emoji,
         illuminationPercent: moonPhase.illumination,
         progressPercent,
+        endTime: tithiEndInfo.endTime,
+        endTimeFormatted: tithiEndInfo.endTimeFormatted,
+        remainingHoursFormatted: tithiEndInfo.remainingHoursFormatted,
       },
       lunarMonth: {
         index: lunarMasaIdx,
@@ -935,15 +1233,22 @@ export function getMonthlyTithiCalendar(
         lord: nakshatra.lord,
         deity: nakshatra.deity,
         pada: nakshatra.pada,
+        endTime: nakEndInfo.endTime,
+        endTimeFormatted: nakEndInfo.endTimeFormatted,
+        remainingHoursFormatted: nakEndInfo.remainingHoursFormatted,
       },
       yoga: {
         index: yogaIdx,
         name: yogaName,
+        endTime: yogaEndInfo.endTime,
+        endTimeFormatted: yogaEndInfo.endTimeFormatted,
       },
       karana: {
         index: karanaIdx,
         name: karanaName,
         isBhadra,
+        endTime: karanaEndInfo.endTime,
+        endTimeFormatted: karanaEndInfo.endTimeFormatted,
       },
       timings: {
         sunrise: sunriseStr,

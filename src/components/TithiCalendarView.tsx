@@ -319,12 +319,16 @@ export default function TithiCalendarView() {
                             ? "bg-slate-800/80 text-amber-200"
                             : "bg-slate-900/90 text-slate-300"
                         }`}
+                        title={`Tithi: ${day.tithi.name} (${day.tithi.paksha})\nEnds: ${day.tithi.endTimeFormatted}${day.tithi.remainingHoursFormatted ? ` (${day.tithi.remainingHoursFormatted})` : ""}`}
                       >
                         <span className="opacity-75 text-[8px]">{day.tithi.paksha === "Shukla" ? "⚪ S." : "⚫ K."}</span>{" "}
                         <span>{day.tithi.name}</span>
                       </div>
 
-                      <div className="text-[8.5px] text-slate-400 font-mono truncate px-0.5">
+                      <div
+                        className="text-[8.5px] text-slate-400 font-mono truncate px-0.5"
+                        title={`Nakshatra: ${day.nakshatra.name}\nEnds: ${day.nakshatra.endTimeFormatted}`}
+                      >
                         ✨ {day.nakshatra.name}
                       </div>
                     </div>
@@ -514,65 +518,106 @@ export default function TithiCalendarView() {
               {/* Day Panchanga 5 Limbs (पञ्चाङ्ग) Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
                 {/* 1. Tithi */}
-                <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">
-                    1. Tithi (तिथि)
-                  </span>
-                  <div className="font-black text-amber-300 text-sm mt-0.5">
-                    {selectedDay.tithi.name}
+                <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">
+                      1. Tithi (तिथि)
+                    </span>
+                    <div className="font-black text-amber-300 text-sm mt-0.5">
+                      {selectedDay.tithi.name}
+                    </div>
+                    <div className="text-[11px] text-slate-300">{selectedDay.tithi.pakshaHindi}</div>
+                    <div className="text-[10px] text-slate-400 mt-1">
+                      Moon Illumination: <span className="text-slate-200 font-bold">{selectedDay.tithi.illuminationPercent}%</span>
+                    </div>
                   </div>
-                  <div className="text-[11px] text-slate-300">{selectedDay.tithi.pakshaHindi}</div>
-                  <div className="text-[10px] text-slate-400 mt-1">
-                    Moon Illumination: <span className="text-slate-200 font-bold">{selectedDay.tithi.illuminationPercent}%</span>
-                  </div>
+                  {selectedDay.tithi.endTimeFormatted && (
+                    <div className="mt-2 pt-1.5 border-t border-slate-800/80">
+                      <div className="text-[11px] font-bold text-amber-400 flex items-center gap-1.5 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">
+                        <span className="text-amber-300">⌛ Ends:</span>
+                        <span className="text-amber-200 font-mono">{selectedDay.tithi.endTimeFormatted}</span>
+                      </div>
+                      {selectedDay.tithi.remainingHoursFormatted && (
+                        <div className="text-[9.5px] text-amber-300/80 font-mono mt-0.5 text-right">
+                          {selectedDay.tithi.remainingHoursFormatted}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* 2. Nakshatra */}
-                <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">
-                    2. Nakshatra (नक्षत्र)
-                  </span>
-                  <div className="font-black text-slate-100 text-sm mt-0.5">
-                    {selectedDay.nakshatra.name}
+                <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">
+                      2. Nakshatra (नक्षत्र)
+                    </span>
+                    <div className="font-black text-slate-100 text-sm mt-0.5">
+                      {selectedDay.nakshatra.name}
+                    </div>
+                    <div className="text-[11px] text-slate-400">Pada {selectedDay.nakshatra.pada} • Lord: {selectedDay.nakshatra.lord}</div>
+                    <div className="text-[10px] text-amber-400 mt-1">Deity: {selectedDay.nakshatra.deity}</div>
                   </div>
-                  <div className="text-[11px] text-slate-400">Pada {selectedDay.nakshatra.pada} • Lord: {selectedDay.nakshatra.lord}</div>
-                  <div className="text-[10px] text-amber-400 mt-1">Deity: {selectedDay.nakshatra.deity}</div>
+                  {selectedDay.nakshatra.endTimeFormatted && (
+                    <div className="mt-2 pt-1.5 border-t border-slate-800/80">
+                      <div className="text-[10.5px] text-cyan-300 flex items-center gap-1 bg-cyan-500/10 px-2 py-0.5 rounded-lg border border-cyan-500/20">
+                        <span className="text-cyan-400">⌛ Ends:</span>
+                        <span className="font-mono font-bold text-cyan-200">{selectedDay.nakshatra.endTimeFormatted}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 3. Vara */}
-                <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">
-                    3. Vara (वार)
-                  </span>
-                  <div className="font-black text-slate-100 text-sm mt-0.5">
-                    {selectedDay.dayName}
+                <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">
+                      3. Vara (वार)
+                    </span>
+                    <div className="font-black text-slate-100 text-sm mt-0.5">
+                      {selectedDay.dayName}
+                    </div>
+                    <div className="text-[11px] text-slate-400">{selectedDay.sanskritVara}</div>
+                    <div className="text-[10px] text-amber-400 mt-1">Lord: {selectedDay.varaLord}</div>
                   </div>
-                  <div className="text-[11px] text-slate-400">{selectedDay.sanskritVara}</div>
-                  <div className="text-[10px] text-amber-400 mt-1">Lord: {selectedDay.varaLord}</div>
                 </div>
 
                 {/* 4. Yoga */}
-                <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">
-                    4. Yoga (योग)
-                  </span>
-                  <div className="font-black text-slate-100 text-sm mt-0.5">
-                    {selectedDay.yoga.name}
+                <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">
+                      4. Yoga (योग)
+                    </span>
+                    <div className="font-black text-slate-100 text-sm mt-0.5">
+                      {selectedDay.yoga.name}
+                    </div>
+                    <div className="text-[10px] text-emerald-400 mt-1">Auspicious Angle</div>
                   </div>
-                  <div className="text-[10px] text-emerald-400 mt-1">Auspicious Angle</div>
+                  {selectedDay.yoga.endTimeFormatted && (
+                    <div className="mt-1.5 text-[10px] text-slate-400">
+                      Ends: <span className="text-slate-200 font-mono font-bold">{selectedDay.yoga.endTimeFormatted}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* 5. Karana */}
-                <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">
-                    5. Karana (करण)
-                  </span>
-                  <div className="font-black text-slate-100 text-sm mt-0.5">
-                    {selectedDay.karana.name}
+                <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">
+                      5. Karana (करण)
+                    </span>
+                    <div className="font-black text-slate-100 text-sm mt-0.5">
+                      {selectedDay.karana.name}
+                    </div>
+                    <div className={`text-[10px] mt-1 ${selectedDay.karana.isBhadra ? "text-rose-400 font-bold" : "text-slate-400"}`}>
+                      {selectedDay.karana.isBhadra ? "⚠️ Vishti (Bhadra)" : "Favorable"}
+                    </div>
                   </div>
-                  <div className={`text-[10px] mt-1 ${selectedDay.karana.isBhadra ? "text-rose-400 font-bold" : "text-slate-400"}`}>
-                    {selectedDay.karana.isBhadra ? "⚠️ Vishti (Bhadra)" : "Favorable"}
-                  </div>
+                  {selectedDay.karana.endTimeFormatted && (
+                    <div className="mt-1.5 text-[10px] text-slate-400">
+                      Ends: <span className="text-slate-200 font-mono font-bold">{selectedDay.karana.endTimeFormatted}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* 6. Lunar & Solar Masa Card */}

@@ -13,6 +13,7 @@ import { getRashi, getNakshatra, getHouse } from "./rashiNakshatra";
 import { calculateAscendantAndAngles } from "./ascendant";
 import { PLANET_METADATA, TITHI_NAMES, YOGA_NAMES, KARANA_NAMES } from "./constants";
 import { calculateUpagrahas } from "./upagrahas";
+import { calculateTithiEndTime, calculateNakshatraEndTime } from "./tithiCalendar";
 
 const ASTRONOMY_BODIES: Record<string, Astronomy.Body> = {
   Sun: Astronomy.Body.Sun,
@@ -227,6 +228,8 @@ export function calculateVedicEphemeris(
   const masaIndex = (amavasyaSunSign + 1) % 12;
   const masa = VEDIC_MASAS[masaIndex];
   const gregorianMonth = date.toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+  const tithiEnd = calculateTithiEndTime(date, location, ayanamshaType);
+  const nakEnd = calculateNakshatraEndTime(date, location, ayanamshaType);
 
   return {
     utcDate: date.toISOString(),
@@ -246,11 +249,22 @@ export function calculateVedicEphemeris(
       cusps,
     },
     panchanga: {
-      tithi: { name: tithiName, paksha, index: tithiIndex + 1, progressPercent: tithiProgress },
+      tithi: {
+        name: tithiName,
+        paksha,
+        index: tithiIndex + 1,
+        progressPercent: tithiProgress,
+        endTime: tithiEnd.endTimeFormatted,
+        remainingFormatted: tithiEnd.remainingHoursFormatted,
+      },
       masa,
       gregorianMonth,
       vara,
-      nakshatra: planets["Moon"].nakshatra,
+      nakshatra: {
+        ...planets["Moon"].nakshatra,
+        endTime: nakEnd.endTimeFormatted,
+        remainingFormatted: nakEnd.remainingHoursFormatted,
+      },
       yoga: { name: yogaName, index: yogaIndex + 1 },
       karana: { name: karanaName, index: karanaRaw + 1 },
     },
