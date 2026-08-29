@@ -40,6 +40,7 @@ import { evaluateSaravali } from "./saravali";
 import { evaluatePhaladeepika } from "./phaladeepika";
 import { evaluatePrasnaMarga } from "./prasnaMarga";
 import { evaluateSamhitaSkandha } from "./samhitaSkandha";
+import { evaluateSanketanidhi } from "./sanketanidhi";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -737,6 +738,33 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 34. Acharya Ramadayalu Sanketanidhi (9 Sanketas) Suite
+  let sanketanidhiSummary = "";
+  try {
+    const sn = evaluateSanketanidhi(natalEphemeris);
+    const topVridhiBhavas = sn.bhavaVitality.filter((b) => b.vridhiScore >= 70).slice(0, 4);
+    const vridhiStr = topVridhiBhavas.map((b) => `- **${b.sanskritTitle.split(" (")[0]}:** ${b.status} (${b.vridhiScore}%) • Anatomical Zone: ${b.anatomicalZone.split(" (")[0]}`).join("\n");
+    const activeShields = sn.arishtaBhangaShields.filter((s) => s.isActive);
+    const shieldsStr = activeShields.length > 0
+      ? activeShields.map((s) => `- **${s.shieldName} (${s.sanskritName.split(" ")[0]}):** ${s.protectiveEffect}`).join("\n")
+      : "- General steady planetary resilience active.";
+
+    sanketanidhiSummary = [
+      "- **12 Bhavas Vridhi vs Nashana Potency (भाव वृद्धि एवं भाव नाशन - Sanketas 1-3):**",
+      vridhiStr,
+      "- **Ayurvedic Medical Tridosha Diagnostics (रोग निदान एवं त्रिदोष - Sanketa 8):**",
+      `  - Constitution: **${sn.medicalDiagnostics.dominantDosha}** (Vata: ${sn.medicalDiagnostics.vataPercentage}%, Pitta: ${sn.medicalDiagnostics.pittaPercentage}%, Kapha: ${sn.medicalDiagnostics.kaphaPercentage}%)`,
+      `  - Vulnerable Biological Systems: ${sn.medicalDiagnostics.vulnerableOrgans.join(", ")}`,
+      `  - Prescribed Ayurvedic Lifestyle & Diet: ${sn.medicalDiagnostics.ayurvedicParihara}`,
+      "- **Ayurdaya & Maraka Longevity Diagnostics (आयुर्दाय एवं मारक विचार - Sanketa 6):**",
+      `  - Longevity Tier: **${sn.ayurdayaLongevity.longevityTier}** (Vitality Index: ${sn.ayurdayaLongevity.vitalityIndex}%)`,
+      `  - Analysis: ${sn.ayurdayaLongevity.longevityAnalysis}`,
+      "- **Arishta Bhanga Neutralization Shields (अरिष्ट भङ्ग कवच - Sanketa 9):**",
+      shieldsStr,
+      "- **Master Sanketanidhi Synthesis:** " + sn.masterSanketanidhiSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -956,11 +984,14 @@ export function buildAstroDossier(
     "",
     "#### 🌧️ 35. ACHARYA SADANANDA SAMHITA SKANDHA (MUNDANE & ASTROMETEOROLOGY) DOSSIER:",
     samhitaSummary,
+    "",
+    "#### 📜 36. ACHARYA RAMADAYALU SANKETANIDHI (9 SANKETAS) DOSSIER:",
+    sanketanidhiSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 36. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 37. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

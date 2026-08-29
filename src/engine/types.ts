@@ -744,6 +744,52 @@ export interface SamhitaSkandhaAnalysis {
   masterSamhitaSynthesis: string;
 }
 
+export interface SanketanidhiBhavaVitality {
+  bhavaNum: number; // 1 to 12
+  sanskritTitle: string;
+  signName: string;
+  lordName: string;
+  vridhiScore: number; // 0 to 100%
+  nashanaScore: number; // 0 to 100%
+  status: "Brimming Vridhi (पूर्ण वृद्धि)" | "Balanced Growth (सम वृद्धि)" | "Vulnerable / Nashana (भाव क्षय)";
+  anatomicalZone: string;
+  classicalSanketaShloka: string;
+}
+
+export interface SanketanidhiMedicalTridosha {
+  vataPercentage: number;
+  pittaPercentage: number;
+  kaphaPercentage: number;
+  dominantDosha: "Vata (वात)" | "Pitta (पित्त)" | "Kapha (कफ)" | "Vata-Pitta (वात-पित्त)" | "Pitta-Kapha (पित्त-कफ)" | "Tridoshic Balanced (समदोष)";
+  vulnerableOrgans: string[];
+  ayurvedicParihara: string;
+}
+
+export interface SanketanidhiAyurdaya {
+  longevityTier: "Purnayu (Long Life: 67-100+ Years)" | "Madhyayu (Middle Life: 33-66 Years)" | "Alpayu (Short Life: 0-32 Years)";
+  vitalityIndex: number; // 0-100%
+  marakaLords: string[];
+  longevityAnalysis: string;
+}
+
+export interface SanketanidhiArishtaShield {
+  shieldName: string;
+  sanskritName: string;
+  isActive: boolean;
+  potencyScore: number; // 0-100%
+  protectiveEffect: string;
+  sanketaCitation: string;
+}
+
+export interface SanketanidhiAnalysis {
+  bhavaVitality: SanketanidhiBhavaVitality[];
+  medicalDiagnostics: SanketanidhiMedicalTridosha;
+  ayurdayaLongevity: SanketanidhiAyurdaya;
+  arishtaBhangaShields: SanketanidhiArishtaShield[];
+  masterSanketanidhiSynthesis: string;
+}
+
+
 
 
 

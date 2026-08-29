@@ -1992,6 +1992,58 @@ test("Classical Acharya Sadananda Samhita Skandha (Mundane & Astrometeorology) V
   assert.ok(result.masterSamhitaSynthesis.length > 30);
 });
 
+test("Classical Acharya Ramadayalu Sanketanidhi (9 Sanketas) Verification", async () => {
+  const { evaluateSanketanidhi } = await import("../src/engine/sanketanidhi.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateSanketanidhi(natalEphem);
+
+  // 1. Bhava Vitality
+  assert.strictEqual(result.bhavaVitality.length, 12);
+  for (const b of result.bhavaVitality) {
+    assert.ok(b.sanskritTitle);
+    assert.ok(b.signName);
+    assert.ok(b.lordName);
+    assert.ok(b.vridhiScore >= 0 && b.vridhiScore <= 100);
+    assert.ok(b.nashanaScore >= 0 && b.nashanaScore <= 100);
+    assert.ok(["Brimming Vridhi (पूर्ण वृद्धि)", "Balanced Growth (सम वृद्धि)", "Vulnerable / Nashana (भाव क्षय)"].includes(b.status));
+    assert.ok(b.anatomicalZone.length > 10);
+    assert.ok(b.classicalSanketaShloka.length > 15);
+  }
+
+  // 2. Medical Tridosha Diagnostics
+  assert.ok(result.medicalDiagnostics.vataPercentage >= 0 && result.medicalDiagnostics.vataPercentage <= 100);
+  assert.ok(result.medicalDiagnostics.pittaPercentage >= 0 && result.medicalDiagnostics.pittaPercentage <= 100);
+  assert.ok(result.medicalDiagnostics.kaphaPercentage >= 0 && result.medicalDiagnostics.kaphaPercentage <= 100);
+  assert.strictEqual(result.medicalDiagnostics.vataPercentage + result.medicalDiagnostics.pittaPercentage + result.medicalDiagnostics.kaphaPercentage, 100);
+  assert.ok(result.medicalDiagnostics.dominantDosha);
+  assert.ok(result.medicalDiagnostics.vulnerableOrgans.length > 0);
+  assert.ok(result.medicalDiagnostics.ayurvedicParihara.length > 15);
+
+  // 3. Ayurdaya Longevity
+  assert.ok(["Purnayu (Long Life: 67-100+ Years)", "Madhyayu (Middle Life: 33-66 Years)", "Alpayu (Short Life: 0-32 Years)"].includes(result.ayurdayaLongevity.longevityTier));
+  assert.ok(result.ayurdayaLongevity.vitalityIndex >= 0 && result.ayurdayaLongevity.vitalityIndex <= 100);
+  assert.strictEqual(result.ayurdayaLongevity.marakaLords.length, 2);
+  assert.ok(result.ayurdayaLongevity.longevityAnalysis.length > 20);
+
+  // 4. Arishta Bhanga Shields
+  assert.strictEqual(result.arishtaBhangaShields.length, 4);
+  for (const s of result.arishtaBhangaShields) {
+    assert.ok(s.shieldName);
+    assert.ok(s.sanskritName);
+    assert.ok(typeof s.isActive === "boolean");
+    assert.ok(s.potencyScore >= 0 && s.potencyScore <= 100);
+    assert.ok(s.sanketaCitation.includes("Sanketanidhi"));
+  }
+
+  // 5. Master Synthesis
+  assert.ok(result.masterSanketanidhiSynthesis.length > 30);
+});
+
+
 
 
 

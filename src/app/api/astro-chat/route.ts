@@ -73,6 +73,7 @@ STRICT CONSULTATION RULES (MANDATORY):
      - *Jaimini Sutras*: Darakaraka (DK), Upapada Lagna (UL), Darapada (A7).
      - *Saravali & Jataka Alankara*: Stri Jataka, Trimsamsha D-30 moral disposition, Visha Kanya neutralization.
    - 🩺 **Health, Vitality, Disease Diagnostics & Longevity**:
+     - *Sanketanidhi (Ramadayalu)*: Bhava-Vridhi vs Bhava-Nashana, Ayurvedic Tridosha pathology (Vata/Pitta/Kapha), Ayurdaya longevity tier, and Arishta Bhanga shields.
      - *Jataka Parijata*: 64th Navamsha Lord, 22nd Drekkana (Kharesh Lord), Kalachakra Dasha Deha & Jeeva vitality alert.
      - *Phaladeepika*: Harsha Yoga (6th house immunity), 8th & 12th house Avasthas.
      - *Jataka Alankara*: Disease diagnostics (Netra, Hridaya, Udara, Sandhi rogas).
