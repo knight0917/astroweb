@@ -1452,6 +1452,52 @@ export interface SuryaRemedialAnalysis {
   mantraAnushthanaRecommendation: string;
 }
 
+// ==========================================
+// 57. MAHARSHI PATANJALI YOGA SUTRAS & CHAKRA SADHANA
+// ==========================================
+
+export interface ChakraEnergeticBalance {
+  chakraNumber: number; // 1 to 7
+  sanskritName: string;
+  englishName: string;
+  element: string;
+  rulingGrahas: string[];
+  balanceScore: number; // 0-100%
+  status: "Aligned & Fortified (सन्तुलित)" | "Excess Energy / Overactive (प्रचण्ड)" | "Depleted / Blocked (अवरुद्ध)";
+  recommendedAsana: string;
+  recommendedPranayama: string;
+  bijaMantra: string;
+}
+
+export interface AshtangaLimbPrescription {
+  limbNumber: number; // 1 to 8
+  limbName: string;
+  sanskritTitle: string;
+  planetaryAlignment: string;
+  dailyPracticeProtocol: string;
+  spiritualObjective: string;
+}
+
+export interface PatanjaliSutraItem {
+  padaNumber: number; // 1 to 4
+  padaName: string;
+  sutraRef: string;
+  sanskritText: string;
+  englishTranslation: string;
+  astrologicalApplication: string;
+}
+
+export interface PatanjaliYogaAnalysis {
+  chakras: ChakraEnergeticBalance[];
+  ashtangaLimbs: AshtangaLimbPrescription[];
+  keySutras: PatanjaliSutraItem[];
+  overallChakraHarmonyScore: number; // 0-100%
+  chittaVrittiState: string;
+  kaivalyaLiberationReadiness: string;
+  masterPatanjaliSynthesis: string;
+}
+
+
 
 
 

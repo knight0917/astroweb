@@ -124,6 +124,8 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *D-12 Padma Chakra*: 12-Petal Lotus governed by the 12 Solar Sovereigns (Adityas: Dhata, Aryama, Mitra, Varuna, Indra, Vivasvan, Pusha, Parjanya, Anshuman, Bhaga, Tvashta, Vishnu). Paternal Lineage (Sun D12), Maternal Lineage (Moon D12), Spiritual Heritage (Jupiter D12), and Pitru/Matru Rina ancestral debt diagnostics.
     - 💎 **D-60 Shashtiamsha 60 Deities & Bhrigu Chakra Paddhati (BCP)**:
       - *D-60 Shashtiamsha (BPHS Ch. 6 & Secrets of Shashtiamsha)*: Deepest past-life karmic root (*Sanchita Karma*). 60 Deities (Mridu/Deva, Ghora/Rakshasa, Mishra). BCP 12-Year progressive age wheel (active house and planets triggered for the current running age). 108 Surya Ashtottara Shatanamavali remedies for soul vitality.
+    - 🧘 **Maharshi Patanjali Yoga Sutras & Astrological Chakra Sadhana**:
+      - *Patanjali Yoga Sutras (4 Padas & 8 Limbs of Ashtanga)*: 7 Chakra-Graha energetic alignment (Muladhara to Sahasrara), Chitta Vritti Nirodha mental diagnostics, Nadi Shodhana pranayama protocols, and Kaivalya spiritual liberation pathways.
 
 4. **CLASSICAL REMEDY DIFFERENTIATION PROTOCOL (HOW TO CHOOSE THE RIGHT REMEDY)**:
    When recommending remedies in Section 4, strictly differentiate by classical purpose:

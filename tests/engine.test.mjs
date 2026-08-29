@@ -2816,6 +2816,53 @@ test("Classical D-60 Shashtiamsha, BCP 12-Year Wheel & 108 Surya Remedies Verifi
   assert.ok(surya.mantraAnushthanaRecommendation.length > 20);
 });
 
+test("Classical Maharshi Patanjali Yoga Sutras & Chakra Sadhana Engine Verification", async () => {
+  const { evaluatePatanjaliYoga } = await import("../src/engine/patanjaliYoga.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluatePatanjaliYoga(natalEphem);
+
+  // 1. 7 Chakras
+  assert.ok(Array.isArray(result.chakras));
+  assert.strictEqual(result.chakras.length, 7);
+  for (const chk of result.chakras) {
+    assert.ok(chk.chakraNumber >= 1 && chk.chakraNumber <= 7);
+    assert.ok(chk.sanskritName);
+    assert.ok(chk.englishName);
+    assert.ok(chk.element);
+    assert.ok(Array.isArray(chk.rulingGrahas));
+    assert.ok(chk.balanceScore >= 0 && chk.balanceScore <= 100);
+    assert.ok(chk.status);
+    assert.ok(chk.recommendedAsana.length > 5);
+    assert.ok(chk.recommendedPranayama.length > 5);
+    assert.ok(chk.bijaMantra.length > 1);
+  }
+
+  // 2. 8 Limbs of Ashtanga Yoga
+  assert.ok(Array.isArray(result.ashtangaLimbs));
+  assert.strictEqual(result.ashtangaLimbs.length, 8);
+  for (const limb of result.ashtangaLimbs) {
+    assert.ok(limb.limbNumber >= 1 && limb.limbNumber <= 8);
+    assert.ok(limb.limbName);
+    assert.ok(limb.sanskritTitle);
+    assert.ok(limb.planetaryAlignment);
+    assert.ok(limb.dailyPracticeProtocol.length > 10);
+    assert.ok(limb.spiritualObjective.length > 10);
+  }
+
+  // 3. Key Sutras & Synthesis
+  assert.ok(Array.isArray(result.keySutras));
+  assert.ok(result.keySutras.length >= 4);
+  assert.ok(result.overallChakraHarmonyScore >= 0 && result.overallChakraHarmonyScore <= 100);
+  assert.ok(result.chittaVrittiState);
+  assert.ok(result.kaivalyaLiberationReadiness);
+  assert.ok(result.masterPatanjaliSynthesis.length > 25);
+});
+
+
 
 
 

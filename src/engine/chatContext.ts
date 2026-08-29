@@ -58,6 +58,7 @@ import { evaluateMeenaNadi } from "./meenaNadi";
 import { evaluateJatakaTattvam } from "./jatakaTattvam";
 import { evaluatePadmaChakra } from "./padmaChakra";
 import { evaluateShashtiamsha, evaluateBcpWheel, evaluateSuryaRemedies } from "./shashtiamsha";
+import { evaluatePatanjaliYoga } from "./patanjaliYoga";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -1119,6 +1120,25 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 55. Maharshi Patanjali Yoga Sutras & Astrological Chakra Sadhana
+  let patanjaliYogaSummary = "";
+  try {
+    const py = evaluatePatanjaliYoga(natalEphemeris);
+    const chakrasStr = py.chakras.map((c) => `  - **${c.chakraNumber}. ${c.sanskritName} (${c.englishName}):** ${c.balanceScore}% (${c.status.split(" ")[0]}) | Grahas: ${c.rulingGrahas.join(", ")} | Asana: ${c.recommendedAsana} | Pranayama: ${c.recommendedPranayama} | Bija: ${c.bijaMantra}`).join("\n");
+    const limbsStr = py.ashtangaLimbs.slice(0, 4).map((l) => `  - **Limb ${l.limbNumber} (${l.limbName.split(" ")[0]}):** ${l.planetaryAlignment} -> ${l.dailyPracticeProtocol}`).join("\n");
+
+    patanjaliYogaSummary = [
+      `- **Overall Chakra Harmony Index:** **${py.overallChakraHarmonyScore}%**`,
+      `- **Chitta Vritti Mental Orientation:** **${py.chittaVrittiState}**`,
+      `- **Kaivalya Spiritual Readiness:** ${py.kaivalyaLiberationReadiness}`,
+      "- **7 Chakra-Graha Energetic Matrix:**",
+      chakrasStr,
+      "- **Core Ashtanga Sadhana Directives:**",
+      limbsStr,
+      "- **Master Patanjali Synthesis:** " + py.masterPatanjaliSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1393,6 +1413,9 @@ export function buildAstroDossier(
     "",
     "#### 💎 54. D-60 SHASHTIAMSHA (60 DEITIES & SANCHITA KARMA) & BCP AGE WHEEL DOSSIER:",
     shashtiamshaBcpSummary,
+    "",
+    "#### 🧘 55. MAHARSHI PATANJALI YOGA SUTRAS & CHAKRA SADHANA DOSSIER:",
+    patanjaliYogaSummary,
   ];
 
   if (matchmakingSummary) {
