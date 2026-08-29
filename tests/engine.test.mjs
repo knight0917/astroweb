@@ -2613,6 +2613,54 @@ test("Classical Crux of Vedic Astrology (Pt. Sanjay Rath) & Parashari Conditiona
   assert.ok(result.masterCruxSynthesis.length > 30);
 });
 
+test("Classical Kalamsa and Cuspal Interlinks Theory (KCIL - S.P. Khullar) Verification", async () => {
+  const { evaluateCuspalInterlinks, getKpSubSubLord } = await import("../src/engine/cuspalInterlinks.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Delhi", country: "India", latitude: 28.6139, longitude: 77.2090, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1993-07-15T09:15:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateCuspalInterlinks(natalEphem);
+
+  // 1. Sub-Sub Lord calculation helper
+  const kp = getKpSubSubLord(125.5);
+  assert.ok(kp.signLord);
+  assert.ok(kp.starLord);
+  assert.ok(kp.subLord);
+  assert.ok(kp.subSubLord);
+
+  // 2. 12 Cusps
+  assert.strictEqual(result.cuspalData.length, 12);
+  for (const c of result.cuspalData) {
+    assert.ok(c.cuspNum >= 1 && c.cuspNum <= 12);
+    assert.ok(c.cuspName);
+    assert.ok(c.signLord);
+    assert.ok(c.starLord);
+    assert.ok(c.subLord);
+    assert.ok(c.subSubLord);
+    assert.ok(typeof c.positionalStatus === "boolean");
+    assert.ok(Array.isArray(c.linkedHouses));
+    assert.ok(c.primaryInterlinkSignification.length > 10);
+  }
+
+  // 3. Domain Promises
+  assert.strictEqual(result.domainPromises.length, 6);
+  for (const dp of result.domainPromises) {
+    assert.ok(dp.domain);
+    assert.ok(dp.primaryCusp >= 1 && dp.primaryCusp <= 12);
+    assert.ok(dp.promiseVerdict);
+    assert.ok(dp.kcilAnalysis.length > 15);
+  }
+
+  // 4. BTR & Ruling Planets
+  assert.ok(result.btrDiagnostic.lagnaSsl);
+  assert.ok(result.btrDiagnostic.moonNl);
+  assert.ok(result.btrDiagnostic.btrRecommendation.length > 15);
+  assert.ok(result.rulingPlanets.lagnaLord);
+  assert.ok(result.masterKcilSynthesis.length > 30);
+});
+
+
 
 
 

@@ -53,6 +53,7 @@ import { evaluateBhriguSamhita } from "./bhriguSamhita";
 import { evaluateBhavarthaRatnakara } from "./bhavarthaRatnakara";
 import { evaluateJaiminiRangacharya } from "./jaiminiRangacharya";
 import { evaluateCruxOfAstrology } from "./cruxOfVedicAstrology";
+import { evaluateCuspalInterlinks } from "./cuspalInterlinks";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -1001,6 +1002,23 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 49. Kalamsa & Cuspal Interlinks Theory (KCIL — S.P. Khullar)
+  let cuspalInterlinksSummary = "";
+  try {
+    const kcil = evaluateCuspalInterlinks(natalEphemeris);
+    const cuspsStr = kcil.cuspalData.slice(0, 6).map((c) => `  - **Cusp ${c.cuspNum} (${c.signName}):** RL: ${c.signLord} | NL: ${c.starLord} | SL: ${c.subLord} | SSL: **${c.subSubLord}** (PS: ${c.positionalStatus ? "Yes" : "No"}) -> *Links: [${c.linkedHouses.join(", ")}]*`).join("\n");
+    const promisesStr = kcil.domainPromises.map((dp) => `  - **${dp.domain}:** ${dp.promiseVerdict} (${dp.kcilAnalysis})`).join("\n");
+
+    cuspalInterlinksSummary = [
+      `- **Lagna SSL (Kalamsa):** ${kcil.btrDiagnostic.lagnaSsl} (BTR Status: ${kcil.btrDiagnostic.isBtrAligned ? "Aligned" : "Fine-tune"})`,
+      "- **Core Cuspal Hierarchy (C1 to C6):**",
+      cuspsStr,
+      "- **KCIL Life Domain Promises:**",
+      promisesStr,
+      "- **Master KCIL Synthesis:** " + kcil.masterKcilSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1259,11 +1277,14 @@ export function buildAstroDossier(
     "",
     "#### 🌐 48. CRUX OF VEDIC ASTROLOGY (PT. SANJAY RATH) & PARASHARI CONDITIONAL DASHAS DOSSIER:",
     cruxOfAstrologySummary,
+    "",
+    "#### 📐 49. KALAMSA & CUSPAL INTERLINKS THEORY (KCIL — S.P. KHULLAR) DOSSIER:",
+    cuspalInterlinksSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 49. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 50. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

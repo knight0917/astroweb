@@ -1230,6 +1230,52 @@ export interface CruxOfAstrologyAnalysis {
   masterCruxSynthesis: string;
 }
 
+export interface CuspalInterlinkData {
+  cuspNum: number;
+  cuspName: string;
+  degree: number;
+  signName: string;
+  signLord: string; // RL
+  starLord: string; // NL
+  subLord: string; // SL
+  subSubLord: string; // SSL / Kalamsa
+  positionalStatus: boolean;
+  linkedHouses: number[];
+  primaryInterlinkSignification: string;
+}
+
+export interface CuspalDomainPromise {
+  domain: string;
+  primaryCusp: number;
+  supportingCusps: number[];
+  detrimentalCusps: number[];
+  promiseVerdict: "Guaranteed / Highly Auspicious (प्रबल योग)" | "Moderate / Conditional (मध्यम)" | "Denial / Difficult (बाधक / संघर्ष)";
+  kcilAnalysis: string;
+}
+
+export interface KcilBtrDiagnostic {
+  lagnaSsl: string;
+  moonNl: string;
+  isBtrAligned: boolean;
+  genderParity: string;
+  btrRecommendation: string;
+}
+
+export interface CuspalInterlinksAnalysis {
+  cuspalData: CuspalInterlinkData[];
+  domainPromises: CuspalDomainPromise[];
+  btrDiagnostic: KcilBtrDiagnostic;
+  rulingPlanets: {
+    dayLord: string;
+    lagnaLord: string;
+    lagnaStarLord: string;
+    moonSignLord: string;
+    moonStarLord: string;
+  };
+  masterKcilSynthesis: string;
+}
+
+
 
 
 
