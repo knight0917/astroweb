@@ -2356,6 +2356,83 @@ test("Classical Vedic Astrology and Predictions (Multi-Tier Event Forecasting & 
   assert.ok(result.masterPredictionsSynthesis.length > 30);
 });
 
+test("Classical Jataka Chandrika (Laghu Parashari - Prof. B. Suryanarain Rao) Verification", async () => {
+  const { evaluateJatakaChandrika } = await import("../src/engine/jatakaChandrika.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1989-11-22T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateJatakaChandrika(natalEphem);
+
+  // 1. Core Synthesis & Classification
+  assert.ok(result.ascendantSign);
+  assert.ok(Array.isArray(result.yogakarakas));
+  assert.ok(Array.isArray(result.benefics));
+  assert.ok(Array.isArray(result.malefics));
+  assert.ok(Array.isArray(result.marakas));
+  assert.ok(Array.isArray(result.kendradhipatiDoshaGrahas));
+
+  // 2. Graha Roles
+  assert.strictEqual(result.grahaRoles.length, 7);
+  for (const gr of result.grahaRoles) {
+    assert.ok(gr.grahaName);
+    assert.ok(gr.housesOwned.length > 0);
+    assert.ok(["Premier Yogakaraka (अति शुभ राजयोगकारक)", "Benefic (शुभ)", "Neutral / Mixed (तटस्थ)", "Malefic (अशुभ / त्रिशडाय)", "Maraka (मारक)"].includes(gr.functionalNature));
+    assert.ok(typeof gr.kendradhipatiDosha === "boolean");
+    assert.ok(typeof gr.isMaraka === "boolean");
+    assert.ok(gr.classicalReasoning.length > 10);
+  }
+
+  // 3. Sambandhas
+  assert.ok(Array.isArray(result.sambandhas));
+  for (const s of result.sambandhas) {
+    assert.ok(s.planetA);
+    assert.ok(s.planetB);
+    assert.ok(s.sambandhaType);
+    assert.ok(typeof s.isRajaYoga === "boolean");
+    assert.ok(s.fruitionDescription.length > 10);
+  }
+
+  // 4. Master Synthesis
+  assert.ok(result.masterChandrikaSynthesis.length > 30);
+});
+
+test("Classical Chappanna Prasna Sastra (56 Questions Horary Oracle - Prof. B. Suryanarain Rao) Verification", async () => {
+  const { evaluateChappannaPrasna } = await import("../src/engine/chappannaPrasna.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Bangalore", country: "India", latitude: 12.9716, longitude: 77.5946, timezoneOffsetHours: 5.5 };
+  const prasnaEphem = calculateVedicEphemeris(new Date("2026-06-21T09:08:42Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateChappannaPrasna(prasnaEphem, 1);
+
+  // 1. Structure Verification
+  assert.strictEqual(result.totalQuestionsCount, 56);
+  assert.strictEqual(result.allQuestions.length, 56);
+  assert.ok(result.lagnaSign);
+  assert.ok(result.lagnaLord);
+  assert.ok(result.moonSign);
+  assert.ok(result.moonLord);
+
+  // 2. Selected Question
+  assert.strictEqual(result.selectedQuestion.id, 1);
+  assert.strictEqual(result.selectedQuestion.category, "Health & Longevity");
+  assert.ok(result.selectedQuestion.sanskritName);
+  assert.ok(result.selectedQuestion.questionTitle);
+  assert.ok(result.selectedQuestion.karyaBhava >= 1 && result.selectedQuestion.karyaBhava <= 12);
+  assert.ok(result.selectedQuestion.karyeshPlanet);
+  assert.ok(["Highly Favorable / Immediate Success (शीघ्र कार्य सिद्धि)", "Moderate / Delayed Success (विलम्बित फल)", "Obstruction / Unfavorable (कार्य हानि)"].includes(result.selectedQuestion.outcomeStatus));
+  assert.ok(result.selectedQuestion.successProbability >= 0 && result.selectedQuestion.successProbability <= 100);
+  assert.ok(result.selectedQuestion.timingOfFruition.length > 5);
+  assert.ok(result.selectedQuestion.oracleVerdict.length > 15);
+  assert.ok(result.selectedQuestion.classicalGuidance.length > 15);
+
+  // 3. Master Synthesis
+  assert.ok(result.masterPrasnaSynthesis.length > 30);
+});
+
+
 
 
 

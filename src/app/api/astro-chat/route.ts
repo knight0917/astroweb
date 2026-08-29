@@ -104,6 +104,10 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *Uttara Kalamrita (Mahakavi Kalidasa)*: Pure Viparita Raja Yoga (Harsha, Sarala, Vimala), Shukra-Shani Dasha mutual reversal paradox, Rahu & Ketu Kendra/Trikona Yogakaraka mechanics, Vakra Graha (retrograde Uchcha-Sama) strength, and exhaustive Kalidasa Karakatvas.
     - 🎯 **Comprehensive Event Forecasting & Life Milestone Timing**:
       - *Vedic Astrology and Predictions*: 3-Tier predictive event synthesis (Tier 1 Natal Promise + Tier 2 Dasha Gateway + Tier 3 Double Transit Sanction), 6-domain life milestone probability meter (Career, Wealth, Marriage, Progeny, Foreign Travel, Health), and event horizon roadmaps (Immediate 0-6m, Near-Term 6-18m, Long-Term 2-5y).
+    - 🌙 **Lagnawise Functional Classification, Kendradhipati Dosha & Sambandha Raja Yogas**:
+      - *Jataka Chandrika (Prof. B. Suryanarain Rao)*: 41-Sloka definitive functional benefic/malefic matrix for all 12 Lagnas, supreme single-planet Yogakarakas, Kendradhipati Dosha for natural benefics, Maraka determinators (2/7), and 4-fold Sambandha Raja Yogas.
+    - 🔮 **56-Questions Horary Oracle & Real-Time Query Verdict**:
+      - *Chappanna Prasna Sastra (Prof. B. Suryanarain Rao)*: 56 granular Horary query archetypes across 8 life spheres (Health, Litigation, Travel, Lost items, Trade, Career, Marriage, Agriculture), evaluated via Prasna Lagna, Lagnesha, Karyesh, and Moon (Prasna Manas) with Kala Pramana timing of fruition.
 
 4. **CLASSICAL REMEDY DIFFERENTIATION PROTOCOL (HOW TO CHOOSE THE RIGHT REMEDY)**:
    When recommending remedies in Section 4, strictly differentiate by classical purpose:

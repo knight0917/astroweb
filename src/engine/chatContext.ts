@@ -47,6 +47,8 @@ import { evaluateSatyaJataka } from "./satyaJataka";
 import { evaluateSugamJyotish } from "./sugamJyotish";
 import { evaluateUttaraKalamrita } from "./uttaraKalamrita";
 import { evaluateVedicPredictions } from "./vedicPredictions";
+import { evaluateJatakaChandrika } from "./jatakaChandrika";
+import { evaluateChappannaPrasna } from "./chappannaPrasna";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -892,6 +894,43 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 41. Jataka Chandrika (Laghu Parashari - Prof. B. Suryanarain Rao)
+  let jatakaChandrikaSummary = "";
+  try {
+    const jc = evaluateJatakaChandrika(natalEphemeris);
+    const rolesStr = jc.grahaRoles.map((r) => `- **${r.grahaName}:** ${r.functionalNature} (H${r.housesOwned.join(",")}) -> ${r.classicalReasoning}`).join("\n");
+    const ryStr = jc.sambandhas.filter((s) => s.isRajaYoga).map((s) => `- **${s.planetA}-${s.planetB} (${s.sambandhaType.split(" (")[0]}):** ${s.fruitionDescription}`).join("\n");
+
+    jatakaChandrikaSummary = [
+      `- **Ascendant Functional Disposition (${jc.ascendantSign} Lagna):**`,
+      `  - Premier Yogakaraka: **${jc.yogakarakas.join(", ") || "None"}** | Benefics: **${jc.benefics.join(", ") || "None"}**`,
+      `  - Trishadaya Malefics: **${jc.malefics.join(", ")}** | Marakas: **${jc.marakas.join(", ")}**`,
+      `  - Kendradhipati Dosha: **${jc.kendradhipatiDoshaGrahas.join(", ") || "None"}**`,
+      "- **Planetary Roles & Classical Reasoning:**",
+      rolesStr,
+      "- **4-Fold Sambandha Raja Yogas:**",
+      ryStr || "  - No classical Kendra-Trikona Sambandha Raja Yogas active.",
+      "- **Master Jataka Chandrika Synthesis:** " + jc.masterChandrikaSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
+  // 42. Chappanna Prasna Sastra (56 Questions Horary Oracle - Prof. B. Suryanarain Rao)
+  let chappannaPrasnaSummary = "";
+  try {
+    const cp = evaluateChappannaPrasna(natalEphemeris, 1);
+    const sampleQueries = [1, 8, 15, 22, 29, 36, 43, 50].map((id) => {
+      const q = cp.allQuestions.find((item) => item.id === id);
+      return q ? `- **[Q${q.id} - ${q.category}] ${q.questionTitle}:** ${q.outcomeStatus} (${q.successProbability}%) • *Timing:* ${q.timingOfFruition}` : "";
+    }).filter(Boolean).join("\n");
+
+    chappannaPrasnaSummary = [
+      `- **Prasna Lagna & Moon Disposition:** Lagna **${cp.lagnaSign}** (${cp.lagnaLord}), Moon in **${cp.moonSign}** (${cp.moonLord})`,
+      "- **Sample Representative Horary Judgements (from 56 Archetypes):**",
+      sampleQueries,
+      "- **Master Chappanna Prasna Synthesis:** " + cp.masterPrasnaSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1132,11 +1171,17 @@ export function buildAstroDossier(
     "",
     "#### 🎯 42. VEDIC ASTROLOGY AND PREDICTIONS (MULTI-TIER EVENT FORECASTING & MILESTONES) DOSSIER:",
     vedicPredictionsSummary,
+    "",
+    "#### 🌙 43. JATAKA CHANDRIKA (LAGHU PARASHARI - PROF. B. SURYANARAIN RAO) DOSSIER:",
+    jatakaChandrikaSummary,
+    "",
+    "#### 🔮 44. CHAPPANNA PRASNA SASTRA (56 QUESTIONS HORARY ORACLE - PROF. B. SURYANARAIN RAO) DOSSIER:",
+    chappannaPrasnaSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 43. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 45. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

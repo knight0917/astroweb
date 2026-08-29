@@ -1,45 +1,46 @@
-# Walkthrough: Uttara Kalamrita Classical Masterpiece Integration
+# Walkthrough: Vedic Astrology and Predictions Master Suite Integration
 
-We have completed the algorithmic codification and full-stack integration of **Uttara Kalamrita (उत्तर कालामृतम्)** by Mahakavi Kalidasa.
+We have completed the algorithmic codification and full-stack integration of **Vedic Astrology and Predictions (वैदिक ज्योतिष एवं भविष्यकथन — Advanced Event Forecasting Suite)**.
 
 ---
 
-## 1. Calculation Engine ([`src/engine/uttaraKalamrita.ts`](file:///d:/newWayToAstro/src/engine/uttaraKalamrita.ts))
-- **Quintessential Viparita Raja Yoga (विपरीत राजयोग — Khanda 4, Sloka 22)**:
-  - **Harsha Yoga (हर्ष योग)**: 6th lord in 6th, 8th, or 12th house $\rightarrow$ Invincible health, immunity, and triumph over opponents.
-  - **Sarala Yoga (सरल योग)**: 8th lord in 6th, 8th, or 12th house $\rightarrow$ Fearlessness, long life, and sudden windfall breakthroughs.
-  - **Vimala Yoga (विमल योग)**: 12th lord in 6th, 8th, or 12th house $\rightarrow$ Noble expenditure, serene peace of mind, and financial independence.
-  - Evaluates mutual Dusthana placements and exchanges without benefic interference to verify pure classical VRY potency.
-- **Shukra-Shani Dasha Mutual Paradox (शनि-शुक्र परस्पर दशा नियम — Khanda 4, Slokas 28-29)**:
-  - Detects whether Venus and Saturn's mutual periods bring unexpected ascetic detours (when both are well-placed in Kendras/Trikonas) or unexpected material affluence (when both are ill-placed/functional malefics).
-- **Rahu & Ketu Yogakaraka Engine (राहु-केतु कारकत्व — Khanda 4, Slokas 25-26)**:
-  - Calculates Kendra/Trikona connection, shadow dispositor amplification, and Yogakaraka status.
-- **Vakra Graha Exaltation-Equivalence Potency (वक्र ग्रह बल)**:
-  - Codifies Kalidasa's rule that a retrograde planet (*Vakra*) possesses the full operational force of an exalted (*Uchcha*) Graha.
-- **Mahakavi Kalidasa Karakatva Repository**:
-  - Granular classical significations across all 9 Grahas.
+## 1. Calculation Engine ([`src/engine/vedicPredictions.ts`](file:///d:/newWayToAstro/src/engine/vedicPredictions.ts))
+- **Multi-Tiered Event Synthesis Engine (त्रिसूत्रीय फलकथन सिद्धान्त)**:
+  - **Tier 1 (Natal Promise)**: Evaluates foundational dignity and strength of prime Bhavas and Bhaveshas in D1 and Divisional Charts.
+  - **Tier 2 (Dasha Gateway)**: Validates Vimshottari Mahadasha and Antardasha lord connections with the relevant life domain.
+  - **Tier 3 (Double Transit Sanction)**: Validates simultaneous catalytic transit aspects of Jupiter (Guru) and Saturn (Shani).
+- **6-Domain Life Milestone Probability Meter (0–100%)**:
+  1. **Career Elevation & Leadership Promotion (कर्मोन्नति)**
+  2. **Wealth Inflow & Asset Expansion (धन लाभ)**
+  3. **Marriage & Soulmate Union (विवाह सुख)**
+  4. **Progeny, Education & Creative Breakthrough (सन्तान एवं विद्या)**
+  5. **Foreign Relocation & Global Venture (विदेश गमन)**
+  6. **Health Vitality & Chronic Recovery (आरोग्य लाभ)**
+- **Chronological Time Horizons**:
+  - Immediate (0–6 Months), Near-Term (6–18 Months), Long-Term (2–5 Years).
+- **Holistic Triad Remedial Protocol**:
+  - Mani (Gemstones for Yogakaraka), Mantra (Japa for Dasha lord), Dana/Aushadha (Charity & conduct).
 
 ---
 
 ## 2. AI Astrologer Chat Context Dossier & Dispatching ([`src/engine/chatContext.ts`](file:///d:/newWayToAstro/src/engine/chatContext.ts), [`src/app/api/astro-chat/route.ts`](file:///d:/newWayToAstro/src/app/api/astro-chat/route.ts))
-- Injected **Section 41: Uttara Kalamrita Dossier** into the Astro Chat Dossier.
-- Renumbered Kundli Milan to Section 42.
-- Updated the Master Dispatching Matrix so questions regarding Viparita Raja Yoga, Shukra-Shani Dasha paradoxes, and Rahu/Ketu shadow dispositor mechanics automatically draw from *Uttara Kalamrita*.
+- Injected **Section 42: Vedic Astrology and Predictions Dossier** into the Astro Chat Dossier.
+- Renumbered Kundli Milan to Section 43.
+- Updated the Master Dispatching Matrix so questions regarding specific life milestone timing, career promotion dates, marriage timing windows, and wealth accumulation automatically draw from *Vedic Astrology and Predictions*.
 
 ---
 
-## 3. UI Dashboard Component ([`src/components/UttaraKalamritaDeck.tsx`](file:///d:/newWayToAstro/src/components/UttaraKalamritaDeck.tsx))
-- **Hero Card**: Active VRYs, Shukra-Shani Paradox Status, Rahu Dispositorship, and Master Synthesis.
-- **Tab 1: 👑 Viparita Raja Yoga**: Interactive Harsha, Sarala, and Vimala cards with classical dictums.
-- **Tab 2: ⚖️ Shukra-Shani Dasha Paradox**: Visual meter analyzing mutual Venus-Saturn Dasha effects.
-- **Tab 3: 🐉 Rahu & Ketu Node Mechanics**: Shadow planet dispositor and Yogakaraka engine.
-- **Tab 4: 🌀 Vakra (Retrograde Strength)**: Retrogression exaltation-equivalence potency.
-- **Tab 5: 📜 Kalidasa Karakatvas**: Interactive selector for 9 Grahas.
-- Wired into `BhavaBalaView.tsx` under the **"📜 Uttara Kalamrita (Kalidasa)"** tab.
+## 3. UI Dashboard Component ([`src/components/VedicPredictionsDeck.tsx`](file:///d:/newWayToAstro/src/components/VedicPredictionsDeck.tsx))
+- **Hero Card**: Overall Predictive Potency, Top Milestone, Active Time Horizon breakdown, and Master Synthesis.
+- **Tab 1: 🎯 6 Life Milestones Probability Forecaster**: Interactive cards with 0–100% progress meters and 3-tier validation tags.
+- **Tab 2: 🔍 Multi-Tier Filter Inspector**: Interactive selector for deep-dive diagnostics into Natal Promise, Dasha Gateway, and Double Transit.
+- **Tab 3: ⏳ Timing Window Roadmap**: Immediate, Near-Term, and Long-Term chronological columns.
+- **Tab 4: 🌿 Holistic Remedial Protocol**: Synchronized triad cards.
+- Wired into `BhavaBalaView.tsx` under the **"🎯 Vedic Predictions (Event Timing)"** tab.
 
 ---
 
 ## 4. Verification
-- **Automated Tests**: All **52 test suites** in `tests/engine.test.mjs` passed cleanly (`52/52 pass`).
+- **Automated Tests**: All **53 test suites** in `tests/engine.test.mjs` passed cleanly (`53/53 pass`).
 - **TypeScript & Production Build**: `next build` compiled with 0 errors.
-- **Git Push**: Committed and pushed to `origin/main` (`commit 91aafc7`).
+- **Git Push**: Committed and pushed to `origin/main` (`commit 770a38b`).

@@ -1017,6 +1017,61 @@ export interface VedicPredictiveAnalysis {
   masterPredictionsSynthesis: string;
 }
 
+export interface JatakaChandrikaGrahaRole {
+  grahaName: string;
+  housesOwned: number[];
+  functionalNature: "Premier Yogakaraka (अति शुभ राजयोगकारक)" | "Benefic (शुभ)" | "Neutral / Mixed (तटस्थ)" | "Malefic (अशुभ / त्रिशडाय)" | "Maraka (मारक)";
+  kendradhipatiDosha: boolean;
+  isMaraka: boolean;
+  classicalReasoning: string;
+}
+
+export interface JatakaChandrikaSambandha {
+  planetA: string;
+  planetB: string;
+  sambandhaType: "Parivartana (Mutual Exchange)" | "Mutual Drishti (Mutual Aspect)" | "Eka Drishti (Single Aspect)" | "Kshetra Sthana Ekata (Conjunction)";
+  isRajaYoga: boolean;
+  fruitionDescription: string;
+}
+
+export interface JatakaChandrikaAnalysis {
+  ascendantSign: string;
+  yogakarakas: string[];
+  benefics: string[];
+  malefics: string[];
+  marakas: string[];
+  kendradhipatiDoshaGrahas: string[];
+  grahaRoles: JatakaChandrikaGrahaRole[];
+  sambandhas: JatakaChandrikaSambandha[];
+  masterChandrikaSynthesis: string;
+}
+
+export interface ChappannaPrasnaQuestion {
+  id: number; // 1 to 56
+  category: "Health & Longevity" | "Litigation & Disputes" | "Travel & Missing" | "Stolen & Lost" | "Trade & Finance" | "Career & Honours" | "Marriage & Children" | "Agriculture & Property";
+  sanskritName: string;
+  questionTitle: string;
+  karyaBhava: number;
+  karyeshPlanet: string;
+  outcomeStatus: "Highly Favorable / Immediate Success (शीघ्र कार्य सिद्धि)" | "Moderate / Delayed Success (विलम्बित फल)" | "Obstruction / Unfavorable (कार्य हानि)";
+  successProbability: number; // 0 to 100%
+  timingOfFruition: string; // Kala Pramana
+  oracleVerdict: string;
+  classicalGuidance: string;
+}
+
+export interface ChappannaPrasnaAnalysis {
+  totalQuestionsCount: number;
+  selectedQuestion: ChappannaPrasnaQuestion;
+  allQuestions: ChappannaPrasnaQuestion[];
+  lagnaSign: string;
+  lagnaLord: string;
+  moonSign: string;
+  moonLord: string;
+  masterPrasnaSynthesis: string;
+}
+
+
 
 
 
