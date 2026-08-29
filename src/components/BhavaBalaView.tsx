@@ -26,10 +26,11 @@ import PhaladeepikaDeck from "./PhaladeepikaDeck";
 import PrasnaMargaDeck from "./PrasnaMargaDeck";
 import SamhitaSkandhaDeck from "./SamhitaSkandhaDeck";
 import SanketanidhiDeck from "./SanketanidhiDeck";
+import SarvarthaChintamaniDeck from "./SarvarthaChintamaniDeck";
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas" | "bphs" | "jataka" | "samhita" | "keralam" | "suka" | "jaimini" | "gayatri" | "alankara" | "nirnay" | "parijata" | "saravali" | "phaladeepika" | "prasnamarga" | "samhitaskandha" | "sanketanidhi">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas" | "bphs" | "jataka" | "samhita" | "keralam" | "suka" | "jaimini" | "gayatri" | "alankara" | "nirnay" | "parijata" | "saravali" | "phaladeepika" | "prasnamarga" | "samhitaskandha" | "sanketanidhi" | "chintamani">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -332,6 +333,16 @@ export default function BhavaBalaView() {
           >
             <span>📜 Sanketanidhi (Ramadayalu 9 Sanketas)</span>
           </button>
+          <button
+            onClick={() => setDisplayMode("chintamani")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              displayMode === "chintamani"
+                ? "bg-cyan-600 text-white shadow"
+                : "text-cyan-300 hover:text-white bg-cyan-950/30 border border-cyan-800/40"
+            }`}
+          >
+            <span>💎 Sarvartha Chintamani (13 Adhyayas)</span>
+          </button>
         </div>
       </div>
 
@@ -450,8 +461,13 @@ export default function BhavaBalaView() {
         <SanketanidhiDeck />
       )}
 
+      {/* Sarvartha Chintamani View */}
+      {displayMode === "chintamani" && (
+        <SarvarthaChintamaniDeck />
+      )}
+
       {/* Hero House Leaderboard (1st to 12th Rank Cards) */}
-      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && displayMode !== "dashas" && displayMode !== "bphs" && displayMode !== "jataka" && displayMode !== "samhita" && displayMode !== "keralam" && displayMode !== "suka" && displayMode !== "jaimini" && displayMode !== "gayatri" && displayMode !== "alankara" && displayMode !== "nirnay" && displayMode !== "parijata" && displayMode !== "saravali" && displayMode !== "phaladeepika" && displayMode !== "prasnamarga" && displayMode !== "samhitaskandha" && displayMode !== "sanketanidhi" && (
+      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && displayMode !== "dashas" && displayMode !== "bphs" && displayMode !== "jataka" && displayMode !== "samhita" && displayMode !== "keralam" && displayMode !== "suka" && displayMode !== "jaimini" && displayMode !== "gayatri" && displayMode !== "alankara" && displayMode !== "nirnay" && displayMode !== "parijata" && displayMode !== "saravali" && displayMode !== "phaladeepika" && displayMode !== "prasnamarga" && displayMode !== "samhitaskandha" && displayMode !== "sanketanidhi" && displayMode !== "chintamani" && (
         <>
         <div className="space-y-3">
         <div className="flex items-center justify-between">

@@ -789,6 +789,50 @@ export interface SanketanidhiAnalysis {
   masterSanketanidhiSynthesis: string;
 }
 
+export interface ChintamaniBhavaPrediction {
+  bhavaNum: number; // 1 to 12
+  sanskritTitle: string;
+  signName: string;
+  lordName: string;
+  chintamaniScore: number; // 0 to 100%
+  fulfillmentGrade: "Uttama Chintamani (उत्कृष्ट फल)" | "Madhyama Chintamani (मध्यम फल)" | "Samanya Chintamani (सामान्य फल)";
+  primaryPrediction: string;
+  classicalShloka: string;
+  adhyayaCitation: string;
+}
+
+export interface ChintamaniYoga {
+  yogaName: string;
+  sanskritName: string;
+  isFormed: boolean;
+  potencyScore: number; // 0-100%
+  classicalEffect: string;
+  formationRule: string;
+}
+
+export interface ChintamaniBhagyodaya {
+  ageYear: number; // e.g. 16, 21, 24, 28, 32, 36, 42, 48
+  triggerPlanet: string;
+  isActive: boolean;
+  fortuneManifestation: string;
+}
+
+export interface ChintamaniTriBhaga {
+  bhavaNum: number;
+  prathamaThirdEffect: string;
+  madhyamaThirdEffect: string;
+  uttamaThirdEffect: string;
+}
+
+export interface SarvarthaChintamaniAnalysis {
+  bhavaPredictions: ChintamaniBhavaPrediction[];
+  specialYogas: ChintamaniYoga[];
+  bhagyodayaAges: ChintamaniBhagyodaya[];
+  triBhagaAnalysis: ChintamaniTriBhaga[];
+  masterChintamaniSynthesis: string;
+}
+
+
 
 
 

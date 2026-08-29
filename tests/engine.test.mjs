@@ -2043,6 +2043,60 @@ test("Classical Acharya Ramadayalu Sanketanidhi (9 Sanketas) Verification", asyn
   assert.ok(result.masterSanketanidhiSynthesis.length > 30);
 });
 
+test("Classical Acharya Venkatesha Sharma Sarvartha Chintamani (13 Adhyayas) Verification", async () => {
+  const { evaluateSarvarthaChintamani } = await import("../src/engine/sarvarthaChintamani.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Tirupati", country: "India", latitude: 13.6288, longitude: 79.4192, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateSarvarthaChintamani(natalEphem);
+
+  // 1. 12 Bhavas Wish-Fulfilling Predictions
+  assert.strictEqual(result.bhavaPredictions.length, 12);
+  for (const b of result.bhavaPredictions) {
+    assert.ok(b.sanskritTitle);
+    assert.ok(b.signName);
+    assert.ok(b.lordName);
+    assert.ok(b.chintamaniScore >= 0 && b.chintamaniScore <= 100);
+    assert.ok(["Uttama Chintamani (उत्कृष्ट फल)", "Madhyama Chintamani (मध्यम फल)", "Samanya Chintamani (सामान्य फल)"].includes(b.fulfillmentGrade));
+    assert.ok(b.primaryPrediction.length > 15);
+    assert.ok(b.classicalShloka.includes("Sarvartha Chintamani"));
+  }
+
+  // 2. Special Classical Yogas
+  assert.strictEqual(result.specialYogas.length, 8);
+  for (const y of result.specialYogas) {
+    assert.ok(y.yogaName);
+    assert.ok(y.sanskritName);
+    assert.ok(typeof y.isFormed === "boolean");
+    assert.ok(y.potencyScore >= 0 && y.potencyScore <= 100);
+    assert.ok(y.formationRule.length > 15);
+  }
+
+  // 3. Bhagyodaya Ages
+  assert.strictEqual(result.bhagyodayaAges.length, 8);
+  for (const bg of result.bhagyodayaAges) {
+    assert.ok(bg.ageYear >= 16 && bg.ageYear <= 60);
+    assert.ok(bg.triggerPlanet);
+    assert.ok(typeof bg.isActive === "boolean");
+    assert.ok(bg.fortuneManifestation.length > 15);
+  }
+
+  // 4. Tri-Bhaga Potency
+  assert.strictEqual(result.triBhagaAnalysis.length, 4);
+  for (const t of result.triBhagaAnalysis) {
+    assert.ok([1, 4, 9, 10].includes(t.bhavaNum));
+    assert.ok(t.prathamaThirdEffect.length > 10);
+    assert.ok(t.madhyamaThirdEffect.length > 10);
+    assert.ok(t.uttamaThirdEffect.length > 10);
+  }
+
+  // 5. Master Synthesis
+  assert.ok(result.masterChintamaniSynthesis.length > 30);
+});
+
+
 
 
 

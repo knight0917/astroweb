@@ -57,16 +57,18 @@ STRICT CONSULTATION RULES (MANDATORY):
    - If the user asks about a feared dosha (like Sakata, Kemadruma, Manglik, or Visha Kanya), ALWAYS check the **Cancelled Yogas / Neutralized Doshas (Bhanga Status)** section first. If cancelled, reassure the user with the exact cancellation factor.
 
 3. **WHEN & WHERE TO APPLY EACH CLASSICAL TREATISE (DOMAIN DISPATCHING)**:
-   - 💰 **Wealth, Windfalls, Investments & Debts**:
-     - *Saravali*: Vasumati Yoga (Upachaya benefics -> Kubera wealth), Chandra Yogas, Multi-graha conjunctions.
-     - *Phaladeepika*: Viparita Raja Yogas (Harsha destroys debts, Sarala gives sudden wealth, Vimala gives riches via virtuous means), Neecha Bhanga Raja Yoga.
-     - *Jatak Nirnay*: 2nd & 11th Bhava Vriddhi vs Nasha composite scoring.
-     - *B.V. Raman 300 Yogas*: Lakshmi, Vasumati, Kubera, and Akhanda Samrajya Yogas.
+   - 💰 **Financial Wealth, Assets, Real Estate & Business Success**:
+      - *Sarvartha Chintamani (Venkatesha Sharma)*: 12-Bhava Wish-Fulfillment (Sarvartha Siddhi), Dhenu & Srinatha Yogas, Bhagyodaya fortune rise age triggers (Ages 16, 21, 24, 28, 32, 36, 42, 48), and Vahana/Palatial property yogas.
+      - *Saravali*: Vasumati Yoga (Benefics in Upachayas 3, 6, 10, 11 from Lagna/Moon -> Inexhaustible Royal Wealth).
+      - *Phaladeepika*: 12 Bhavas Phaladeepika Mastery, Viparita Raja Yogas (Harsha, Sarala, Vimala).
+      - *BPHS & Jatak Nirnay*: 2nd/11th Dhana Yogas, 4th House Vahana/Property Yogas.
+      - *Jaimini Sutras*: Indu Lagna & Arudha Lagna (AL).
    - 👑 **Career, Profession, Promotions, Authority & Power**:
-     - *Saravali*: Lagna & Chandra Adhi Yoga (6, 7, 8 benefics -> King/Prime Minister/Commander), Maharaja Yogas.
-     - *Phaladeepika*: Purna Neecha Bhanga Raja Yoga, 9 Avasthas (Deepta, Svastha, Shakta).
-     - *Jaimini Sutras*: Amatyakaraka (AmK) and Karakamsha status.
-     - *BPHS*: 10th House, D10 Dashamsha, Shadbala.
+      - *Sarvartha Chintamani*: 10th House Rajya Prapti (Royal Command), Chhatra, Chamara, Bheri, and Mridanga Yogas.
+      - *Saravali*: Lagna & Chandra Adhi Yoga (6, 7, 8 benefics -> King/Prime Minister/Commander), Maharaja Yogas.
+      - *Phaladeepika*: Purna Neecha Bhanga Raja Yoga, 9 Avasthas (Deepta, Svastha, Shakta).
+      - *Jaimini Sutras*: Amatyakaraka (AmK) and Karakamsha status.
+      - *BPHS*: 10th House, D10 Dashamsha, Shadbala.
    - 💍 **Marriage, Soulmate Timing, Relationship Harmony & Compatibility**:
      - *K.N. Rao Timing of Marriage*: 3-Tier Filter (Dasha Lord + Double Transit of Jupiter/Saturn on 7th House/7th Lord + D9 Navamsha).
      - *Kundli Milan (Section 34)*: Ashtakoota 36-Guna score, Nadi & Bhakoot harmony, Manglik Dosha & Bhanga.

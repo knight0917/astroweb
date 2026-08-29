@@ -41,6 +41,7 @@ import { evaluatePhaladeepika } from "./phaladeepika";
 import { evaluatePrasnaMarga } from "./prasnaMarga";
 import { evaluateSamhitaSkandha } from "./samhitaSkandha";
 import { evaluateSanketanidhi } from "./sanketanidhi";
+import { evaluateSarvarthaChintamani } from "./sarvarthaChintamani";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -765,6 +766,30 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 35. Acharya Venkatesha Sharma Sarvartha Chintamani (13 Adhyayas)
+  let chintamaniSummary = "";
+  try {
+    const sc = evaluateSarvarthaChintamani(natalEphemeris);
+    const topBhavas = sc.bhavaPredictions.filter((b) => b.chintamaniScore >= 70).slice(0, 4);
+    const bhavasStr = topBhavas.map((b) => `- **${b.sanskritTitle.split(" (")[0]}:** ${b.fulfillmentGrade} (${b.chintamaniScore}%) -> ${b.primaryPrediction}`).join("\n");
+    const activeYogas = sc.specialYogas.filter((y) => y.isFormed);
+    const yogasStr = activeYogas.length > 0
+      ? activeYogas.map((y) => `- **${y.yogaName} (${y.sanskritName.split(" ")[0]}):** ${y.classicalEffect}`).join("\n")
+      : "- General Kendra/Trikona standard potency.";
+    const activeAges = sc.bhagyodayaAges.filter((a) => a.isActive).slice(0, 4);
+    const agesStr = activeAges.map((a) => `- **Age ${a.ageYear} (${a.triggerPlanet.split(" ")[0]}):** ${a.fortuneManifestation}`).join("\n");
+
+    chintamaniSummary = [
+      "- **12 Bhavas Wish-Fulfilling Potency (द्वादश भाव सर्वार्थ निर्णय - Adhyayas 1-12):**",
+      bhavasStr,
+      "- **Special Classical Yogas of Sarvartha Chintamani (विशिष्ट राजयोग):**",
+      yogasStr,
+      "- **Bhagyodaya Fortune Rise Age Milestones (भाग्योदय वर्ष - Adhyaya 9):**",
+      agesStr,
+      "- **Master Sarvartha Chintamani Synthesis:** " + sc.masterChintamaniSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -987,11 +1012,14 @@ export function buildAstroDossier(
     "",
     "#### 📜 36. ACHARYA RAMADAYALU SANKETANIDHI (9 SANKETAS) DOSSIER:",
     sanketanidhiSummary,
+    "",
+    "#### 💎 37. ACHARYA VENKATESHA SHARMA SARVARTHA CHINTAMANI (13 ADHYAYAS) DOSSIER:",
+    chintamaniSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 37. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 38. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 
