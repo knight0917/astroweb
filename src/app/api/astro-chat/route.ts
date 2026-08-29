@@ -126,6 +126,8 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *D-60 Shashtiamsha (BPHS Ch. 6 & Secrets of Shashtiamsha)*: Deepest past-life karmic root (*Sanchita Karma*). 60 Deities (Mridu/Deva, Ghora/Rakshasa, Mishra). BCP 12-Year progressive age wheel (active house and planets triggered for the current running age). 108 Surya Ashtottara Shatanamavali remedies for soul vitality.
     - 🧘 **Maharshi Patanjali Yoga Sutras & Astrological Chakra Sadhana**:
       - *Patanjali Yoga Sutras (4 Padas & 8 Limbs of Ashtanga)*: 7 Chakra-Graha energetic alignment (Muladhara to Sahasrara), Chitta Vritti Nirodha mental diagnostics, Nadi Shodhana pranayama protocols, and Kaivalya spiritual liberation pathways.
+    - 🏰 **Classical Kota Chakra & Dasha-Lord Transit Defense**:
+      - *Kota Chakra (28 Nakshatras & Fort Defense)*: 4 concentric defense zones (Stambha, Madhya, Prakara, Bahya), Kota Swami (Lord of Fort), Kota Pala (Guardian), and Kota Bhanga vulnerability alerts during critical transits. Dasha-Lord transits tracking macro timing from active Mahadasha/Antardasha lords.
 
 4. **CLASSICAL REMEDY DIFFERENTIATION PROTOCOL (HOW TO CHOOSE THE RIGHT REMEDY)**:
    When recommending remedies in Section 4, strictly differentiate by classical purpose:

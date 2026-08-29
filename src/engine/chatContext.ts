@@ -59,6 +59,7 @@ import { evaluateJatakaTattvam } from "./jatakaTattvam";
 import { evaluatePadmaChakra } from "./padmaChakra";
 import { evaluateShashtiamsha, evaluateBcpWheel, evaluateSuryaRemedies } from "./shashtiamsha";
 import { evaluatePatanjaliYoga } from "./patanjaliYoga";
+import { evaluateKotaChakra, evaluateDashaLordTransit } from "./kotaChakra";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -1139,6 +1140,25 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 56. Classical Kota Chakra & Dasha-Lord Transit Defense
+  let kotaChakraSummary = "";
+  try {
+    const kc = evaluateKotaChakra(natalEphemeris);
+    const dlt = evaluateDashaLordTransit(natalEphemeris);
+    const occupiedSegments = kc.segments.filter((s) => s.occupyingPlanets.length > 0).map((s) => `  - **${s.zone.split(" ")[0]} (${s.nakshatraName} #${s.nakshatraNumber28}):** ${s.occupyingPlanets.join(", ")} [${s.segmentVulnerabilityGrade}]`).join("\n");
+    const mdTransitsStr = dlt.transitsFromMahaDasha.map((t) => `${t.planetName} in H${t.houseFromDasha}`).join(" | ");
+
+    kotaChakraSummary = [
+      `- **Fort Defense Integrity:** **${kc.fortDefenseScore}%** (${kc.isKotaBhangaActive ? "⚠️ Active Kota Bhanga / Siege Alert" : "🛡️ Impregnable Fortification"})`,
+      `- **Kota Swami (Lord of Fort):** ${kc.kotaSwamiPlanet} in ${kc.kotaSwamiZone.split(" ")[0]}`,
+      `- **Kota Pala (Guardian of Gates):** ${kc.kotaPalaPlanet} in ${kc.kotaPalaZone.split(" ")[0]}`,
+      "- **Planetary Deployment Across 4 Concentric Zones:**",
+      occupiedSegments || "  - No major planetary clustering.",
+      "- **Dasha-Lord Transit Alignment:** " + mdTransitsStr,
+      "- **Master Kota Synthesis:** " + kc.masterKotaSynthesis + " " + dlt.masterDashaTransitSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1416,6 +1436,9 @@ export function buildAstroDossier(
     "",
     "#### 🧘 55. MAHARSHI PATANJALI YOGA SUTRAS & CHAKRA SADHANA DOSSIER:",
     patanjaliYogaSummary,
+    "",
+    "#### 🏰 56. CLASSICAL KOTA CHAKRA & DASHA-LORD TRANSIT DEFENSE DOSSIER:",
+    kotaChakraSummary,
   ];
 
   if (matchmakingSummary) {

@@ -1497,6 +1497,50 @@ export interface PatanjaliYogaAnalysis {
   masterPatanjaliSynthesis: string;
 }
 
+// ==========================================
+// 58. CLASSICAL KOTA CHAKRA & DASHA-LORD TRANSIT DEFENSE
+// ==========================================
+
+export type KotaZone =
+  | "Stambha (स्तम्भ - Central Pillar)"
+  | "Madhya (मध्य - Inner Court)"
+  | "Prakara (प्राकार - Ramparts)"
+  | "Bahya (बाह्य - Outer Gate)";
+
+export interface KotaChakraSegment {
+  nakshatraNumber28: number; // 1 to 28
+  nakshatraName: string;
+  zone: KotaZone;
+  direction: "East" | "South" | "West" | "North";
+  isJanmaNakshatra: boolean;
+  occupyingPlanets: string[];
+  segmentVulnerabilityGrade: "Impregnable / Fortified" | "Guarded / Neutral" | "Vulnerable / Under Siege";
+}
+
+export interface KotaChakraAnalysis {
+  segments: KotaChakraSegment[];
+  kotaSwamiPlanet: string;
+  kotaSwamiZone: KotaZone;
+  kotaSwamiStatus: string;
+  kotaPalaPlanet: string;
+  kotaPalaZone: KotaZone;
+  kotaPalaStatus: string;
+  stambhaPlanets: string[];
+  isKotaBhangaActive: boolean;
+  fortDefenseScore: number; // 0-100%
+  vulnerabilityWarnings: string[];
+  masterKotaSynthesis: string;
+}
+
+export interface DashaLordTransitAnalysis {
+  activeMahadashaLord: string;
+  activeAntardashaLord: string;
+  transitsFromMahaDasha: { planetName: string; houseFromDasha: number; transitImpact: string }[];
+  transitsFromAntarDasha: { planetName: string; houseFromDasha: number; transitImpact: string }[];
+  masterDashaTransitSynthesis: string;
+}
+
+
 
 
 

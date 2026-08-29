@@ -2862,6 +2862,51 @@ test("Classical Maharshi Patanjali Yoga Sutras & Chakra Sadhana Engine Verificat
   assert.ok(result.masterPatanjaliSynthesis.length > 25);
 });
 
+test("Classical Kota Chakra (28-Nakshatra Fort) & Dasha-Lord Transit Engine Verification", async () => {
+  const { evaluateKotaChakra, evaluateDashaLordTransit } = await import("../src/engine/kotaChakra.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Kota Chakra
+  const kota = evaluateKotaChakra(natalEphem);
+  assert.ok(Array.isArray(kota.segments));
+  assert.strictEqual(kota.segments.length, 28);
+  for (const seg of kota.segments) {
+    assert.ok(seg.nakshatraNumber28 >= 1 && seg.nakshatraNumber28 <= 28);
+    assert.ok(seg.nakshatraName);
+    assert.ok(seg.zone);
+    assert.ok(seg.direction);
+    assert.strictEqual(typeof seg.isJanmaNakshatra, "boolean");
+    assert.ok(Array.isArray(seg.occupyingPlanets));
+    assert.ok(seg.segmentVulnerabilityGrade);
+  }
+  assert.ok(kota.kotaSwamiPlanet);
+  assert.ok(kota.kotaSwamiZone);
+  assert.ok(kota.kotaPalaPlanet);
+  assert.ok(kota.kotaPalaZone);
+  assert.strictEqual(typeof kota.isKotaBhangaActive, "boolean");
+  assert.ok(kota.fortDefenseScore >= 0 && kota.fortDefenseScore <= 100);
+  assert.ok(Array.isArray(kota.vulnerabilityWarnings));
+  assert.ok(kota.masterKotaSynthesis.length > 25);
+
+  // 2. Dasha-Lord Transit
+  const dlt = evaluateDashaLordTransit(natalEphem, "Jupiter", "Saturn");
+  assert.strictEqual(dlt.activeMahadashaLord, "Jupiter");
+  assert.strictEqual(dlt.activeAntardashaLord, "Saturn");
+  assert.ok(Array.isArray(dlt.transitsFromMahaDasha));
+  assert.strictEqual(dlt.transitsFromMahaDasha.length, 4);
+  for (const t of dlt.transitsFromMahaDasha) {
+    assert.ok(t.planetName);
+    assert.ok(t.houseFromDasha >= 1 && t.houseFromDasha <= 12);
+    assert.ok(t.transitImpact.length > 10);
+  }
+  assert.strictEqual(dlt.transitsFromAntarDasha.length, 4);
+  assert.ok(dlt.masterDashaTransitSynthesis.length > 25);
+});
+
+
 
 
 
