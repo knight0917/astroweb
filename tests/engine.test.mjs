@@ -2771,6 +2771,52 @@ test("Classical D-12 Padma Chakra (Dwadasamsa Nadi & 12 Adityas) Verification", 
   assert.ok(result.masterPadmaChakraSynthesis.length > 25);
 });
 
+test("Classical D-60 Shashtiamsha, BCP 12-Year Wheel & 108 Surya Remedies Verification", async () => {
+  const { evaluateShashtiamsha, evaluateBcpWheel, evaluateSuryaRemedies } = await import("../src/engine/shashtiamsha.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. D-60 Shashtiamsha
+  const d60 = evaluateShashtiamsha(natalEphem);
+  assert.ok(d60.planets);
+  assert.strictEqual(Object.keys(d60.planets).length, 9);
+  for (const p of Object.values(d60.planets)) {
+    assert.ok(p.planetName);
+    assert.ok(p.d60SignName);
+    assert.ok(p.shashtiamshaNumber >= 1 && p.shashtiamshaNumber <= 60);
+    assert.ok(p.deityName);
+    assert.ok(p.deityCategory);
+    assert.ok(p.sanchitaKarmaSignification.length > 10);
+    assert.ok(p.karmicPotencyScore >= 0 && p.karmicPotencyScore <= 100);
+  }
+  assert.ok(d60.lagnaResult.deityName);
+  assert.ok(d60.sanchitaKarmaScore >= 0 && d60.sanchitaKarmaScore <= 100);
+  assert.ok(d60.dominantKarmicOrientation);
+  assert.ok(d60.masterShashtiamshaSynthesis.length > 25);
+
+  // 2. Bhrigu Chakra Paddhati (BCP)
+  const bcp = evaluateBcpWheel(natalEphem, 28);
+  assert.strictEqual(bcp.currentRunningAge, 28);
+  assert.strictEqual(bcp.currentActiveCycle.activeHouseNum, 4); // (28-1)%12 + 1 = 4
+  assert.strictEqual(bcp.currentActiveCycle.cycleNumber, 3);
+  assert.ok(bcp.currentActiveCycle.houseSignName);
+  assert.ok(bcp.currentActiveCycle.houseLord);
+  assert.ok(bcp.currentActiveCycle.primaryKarmicTrigger.length > 10);
+  assert.strictEqual(bcp.tenYearUpcomingCycles.length, 11);
+  assert.ok(bcp.masterBcpSynthesis.length > 25);
+
+  // 3. 108 Surya Remedies
+  const surya = evaluateSuryaRemedies(natalEphem);
+  assert.ok(Array.isArray(surya.names));
+  assert.ok(surya.names.length >= 10);
+  assert.ok(surya.solarVitalityScore >= 0 && surya.solarVitalityScore <= 100);
+  assert.strictEqual(surya.targetedSolarRemedies.length, 4);
+  assert.ok(surya.mantraAnushthanaRecommendation.length > 20);
+});
+
+
 
 
 

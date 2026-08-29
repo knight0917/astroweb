@@ -57,6 +57,7 @@ import { evaluateCuspalInterlinks } from "./cuspalInterlinks";
 import { evaluateMeenaNadi } from "./meenaNadi";
 import { evaluateJatakaTattvam } from "./jatakaTattvam";
 import { evaluatePadmaChakra } from "./padmaChakra";
+import { evaluateShashtiamsha, evaluateBcpWheel, evaluateSuryaRemedies } from "./shashtiamsha";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -1097,6 +1098,27 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 54. D-60 Shashtiamsha 60 Deities & Bhrigu Chakra Paddhati (BCP)
+  let shashtiamshaBcpSummary = "";
+  try {
+    const d60 = evaluateShashtiamsha(natalEphemeris);
+    const nativeAge = Math.max(1, evaluationDate.getFullYear() - birthDate.getFullYear());
+    const bcp = evaluateBcpWheel(natalEphemeris, nativeAge);
+    const planetsD60Str = Object.values(d60.planets).slice(0, 7).map((p) => `  - **${p.planetName}:** D60 ${p.d60SignName} (${p.d60Degree}°) • #${p.shashtiamshaNumber} **${p.deityName}** [${p.deityCategory}] -> ${p.sanchitaKarmaSignification}`).join("\n");
+    const ghoraWarnings = d60.ghoraDeityRemedialWarnings.length > 0 ? d60.ghoraDeityRemedialWarnings.map((w) => `  - ⚠️ ${w}`).join("\n") : "  - No severe Ghora Shashtiamsha afflictions.";
+
+    shashtiamshaBcpSummary = [
+      `- **D-60 Sanchita Karma Score:** **${d60.sanchitaKarmaScore}%** (${d60.dominantKarmicOrientation})`,
+      `- **Ascendant (Lagna) D-60 Anchor:** #${d60.lagnaResult.shashtiamshaNumber} **${d60.lagnaResult.deityName}** [${d60.lagnaResult.deityCategory}] -> *${d60.lagnaResult.sanchitaKarmaSignification}*`,
+      "- **Key Planets Shashtiamsha Deities & Past-Life Root:**",
+      planetsD60Str,
+      "- **Ghora Deity Remedial Directives:**",
+      ghoraWarnings,
+      `- **Bhrigu Chakra Paddhati (BCP) Age ${nativeAge} Activation:** **House ${bcp.currentActiveCycle.activeHouseNum} (${bcp.currentActiveCycle.houseSignName})** [${bcp.currentActiveCycle.activationGrade}] -> *${bcp.currentActiveCycle.primaryKarmicTrigger}*`,
+      "- **Master D60 & BCP Synthesis:** " + d60.masterShashtiamshaSynthesis + " " + bcp.masterBcpSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1368,6 +1390,9 @@ export function buildAstroDossier(
     "",
     "#### 🪷 53. D-12 PADMA CHAKRA (DWADASAMSA ANCESTRAL NADI & 12 ADITYAS) DOSSIER:",
     padmaChakraSummary,
+    "",
+    "#### 💎 54. D-60 SHASHTIAMSHA (60 DEITIES & SANCHITA KARMA) & BCP AGE WHEEL DOSSIER:",
+    shashtiamshaBcpSummary,
   ];
 
   if (matchmakingSummary) {

@@ -1378,6 +1378,81 @@ export interface PadmaChakraAnalysis {
   masterPadmaChakraSynthesis: string;
 }
 
+// ==========================================
+// 54. D-60 SHASHTIAMSHA (60 DEITIES & SANCHITA KARMA)
+// ==========================================
+
+export type ShashtiamshaDeityCategory =
+  | "Mridu (सौम्य / देव - 100%)"
+  | "Ghora (घोर / क्रूर - 20%)"
+  | "Mishra (मिश्र - 60%)";
+
+export interface ShashtiamshaPlanetResult {
+  planetName: string;
+  longitude: number;
+  d60SignName: string;
+  d60Degree: string;
+  shashtiamshaNumber: number; // 1 to 60
+  deityName: string;
+  deityCategory: ShashtiamshaDeityCategory;
+  sanchitaKarmaSignification: string;
+  karmicPotencyScore: number; // 0-100%
+  lifeManifestation: string;
+}
+
+export interface ShashtiamshaAnalysis {
+  planets: Record<string, ShashtiamshaPlanetResult>;
+  lagnaResult: ShashtiamshaPlanetResult;
+  sanchitaKarmaScore: number; // 0-100%
+  dominantKarmicOrientation: string;
+  ghoraDeityRemedialWarnings: string[];
+  masterShashtiamshaSynthesis: string;
+}
+
+// ==========================================
+// 55. BHRIGU CHAKRA PADDHATI (BCP 12-YEAR PROGRESSIVE WHEEL)
+// ==========================================
+
+export interface BcpAgeCycle {
+  age: number;
+  cycleNumber: number; // 1, 2, 3...
+  activeHouseNum: number; // 1 to 12
+  houseSignName: string;
+  houseLord: string;
+  occupyingPlanets: string[];
+  aspectingPlanets: string[];
+  primaryKarmicTrigger: string;
+  lifeDomainFocus: string;
+  activationGrade: "Supreme Event / Peak (प्रबल)" | "Transformational / Growth (मध्यम)" | "Challenging / Rectification (संघर्ष)";
+}
+
+export interface BcpAnalysis {
+  currentRunningAge: number;
+  currentActiveCycle: BcpAgeCycle;
+  tenYearUpcomingCycles: BcpAgeCycle[];
+  keyMajorMilestoneAges: { age: number; eventTheme: string }[];
+  masterBcpSynthesis: string;
+}
+
+// ==========================================
+// 56. 108 SURYA ASHTOTTARA SHATANAMAVALI & SOLAR REMEDIES
+// ==========================================
+
+export interface Surya108Name {
+  number: number;
+  sanskritName: string;
+  englishTranslation: string;
+  spiritualSignification: string;
+}
+
+export interface SuryaRemedialAnalysis {
+  names: Surya108Name[];
+  solarVitalityScore: number; // 0-100%
+  targetedSolarRemedies: string[];
+  mantraAnushthanaRecommendation: string;
+}
+
+
 
 
 
