@@ -60,6 +60,7 @@ import { evaluatePadmaChakra } from "./padmaChakra";
 import { evaluateShashtiamsha, evaluateBcpWheel, evaluateSuryaRemedies } from "./shashtiamsha";
 import { evaluatePatanjaliYoga } from "./patanjaliYoga";
 import { evaluateKotaChakra, evaluateDashaLordTransit } from "./kotaChakra";
+import { evaluateRaman300Combinations, evaluateLalKitabTeva, evaluateNarayanaKavacham } from "./raman300Combinations";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -1159,6 +1160,27 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 57. Dr. B.V. Raman 300 Important Combinations, Lal Kitab & Narayana Kavacham
+  let raman300Summary = "";
+  try {
+    const r300 = evaluateRaman300Combinations(natalEphemeris);
+    const lk = evaluateLalKitabTeva(natalEphemeris);
+    const nk = evaluateNarayanaKavacham(natalEphemeris);
+    const yogasStr = r300.activeYogas.slice(0, 5).map((y) => `  - **Yoga #${y.combinationNumber} (${y.yogaName} - ${y.sanskritTitle}):** [${y.category}] -> ${y.lifeFruition}`).join("\n");
+    const lkRemediesStr = lk.targetedLalKitabRemedies.slice(0, 2).join(" | ");
+
+    raman300Summary = [
+      `- **Active Classical Combinations Count:** **${r300.totalActiveCount} Yogas** (Premier: **${r300.premierYoga.yogaName}**)`,
+      `- **Raja Yoga Index:** **${r300.rajaYogaScore}%** | **Dhana Yoga Index:** **${r300.dhanaYogaScore}%**`,
+      `- **Lal Kitab Chart Archetype:** **${lk.tevaType}** (${lk.tevaSignification})`,
+      "- **Key Activated Classical Combinations:**",
+      yogasStr,
+      "- **Lal Kitab Targeted Pariharas:** " + lkRemediesStr,
+      `- **Sri Narayana Kavacham Supreme Shield:** ${nk.supremeProtectorForm}`,
+      "- **Master Raman & Lal Kitab Synthesis:** " + r300.masterRamanSynthesis + " " + lk.masterLalKitabSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1439,6 +1461,9 @@ export function buildAstroDossier(
     "",
     "#### 🏰 56. CLASSICAL KOTA CHAKRA & DASHA-LORD TRANSIT DEFENSE DOSSIER:",
     kotaChakraSummary,
+    "",
+    "#### 🌟 57. DR. B.V. RAMAN 300 IMPORTANT COMBINATIONS & LAL KITAB TEVA DOSSIER:",
+    raman300Summary,
   ];
 
   if (matchmakingSummary) {

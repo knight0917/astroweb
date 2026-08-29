@@ -2906,6 +2906,49 @@ test("Classical Kota Chakra (28-Nakshatra Fort) & Dasha-Lord Transit Engine Veri
   assert.ok(dlt.masterDashaTransitSynthesis.length > 25);
 });
 
+test("Classical Dr. B.V. Raman 300 Important Combinations, Lal Kitab Tevas & Narayana Kavacham Verification", async () => {
+  const { evaluateRaman300Combinations, evaluateLalKitabTeva, evaluateNarayanaKavacham } = await import("../src/engine/raman300Combinations.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Raman 300 Combinations
+  const raman = evaluateRaman300Combinations(natalEphem);
+  assert.ok(Array.isArray(raman.activeYogas));
+  assert.ok(raman.totalActiveCount >= 1);
+  assert.ok(raman.premierYoga);
+  assert.ok(raman.premierYoga.yogaName);
+  assert.ok(raman.premierYoga.sanskritTitle);
+  assert.ok(raman.rajaYogaScore >= 0 && raman.rajaYogaScore <= 100);
+  assert.ok(raman.dhanaYogaScore >= 0 && raman.dhanaYogaScore <= 100);
+  assert.ok(raman.masterRamanSynthesis.length > 25);
+
+  // 2. Lal Kitab Teva
+  const lk = evaluateLalKitabTeva(natalEphem);
+  assert.ok(lk.tevaType);
+  assert.ok(lk.tevaSignification.length > 10);
+  assert.ok(Array.isArray(lk.karmicRinaDebts));
+  assert.ok(lk.karmicRinaDebts.length >= 2);
+  assert.ok(Array.isArray(lk.targetedLalKitabRemedies));
+  assert.ok(lk.targetedLalKitabRemedies.length >= 2);
+  assert.ok(lk.masterLalKitabSynthesis.length > 20);
+
+  // 3. Narayana Kavacham
+  const nk = evaluateNarayanaKavacham(natalEphem);
+  assert.ok(Array.isArray(nk.shields));
+  assert.strictEqual(nk.shields.length, 9);
+  for (const s of nk.shields) {
+    assert.ok(s.planetName);
+    assert.ok(s.narayanaForm);
+    assert.ok(s.sanskritArmorVerse);
+    assert.ok(s.protectiveShieldBenefit.length > 10);
+  }
+  assert.ok(nk.supremeProtectorForm);
+  assert.ok(nk.masterKavachamSynthesis.length > 20);
+});
+
+
 
 
 

@@ -128,6 +128,8 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *Patanjali Yoga Sutras (4 Padas & 8 Limbs of Ashtanga)*: 7 Chakra-Graha energetic alignment (Muladhara to Sahasrara), Chitta Vritti Nirodha mental diagnostics, Nadi Shodhana pranayama protocols, and Kaivalya spiritual liberation pathways.
     - 🏰 **Classical Kota Chakra & Dasha-Lord Transit Defense**:
       - *Kota Chakra (28 Nakshatras & Fort Defense)*: 4 concentric defense zones (Stambha, Madhya, Prakara, Bahya), Kota Swami (Lord of Fort), Kota Pala (Guardian), and Kota Bhanga vulnerability alerts during critical transits. Dasha-Lord transits tracking macro timing from active Mahadasha/Antardasha lords.
+    - 🌟 **Dr. B.V. Raman 300 Important Combinations & Lal Kitab Tevas**:
+      - *300 Important Combinations (Dr. B.V. Raman)*: Canonical Raja, Dhana, and Mahapurusha combinations (Parijata, Parvata, Kahala, Srikanta, Srinatha, Viranchi, Saraswati Yogas). Lal Kitab Teva Archetypes (Dharmi Teva, Andhi Kundli, Kayam Teva) with karmic debt (Rina) pariharas and Sri Narayana Kavacham 9-Graha spiritual armor.
 
 4. **CLASSICAL REMEDY DIFFERENTIATION PROTOCOL (HOW TO CHOOSE THE RIGHT REMEDY)**:
    When recommending remedies in Section 4, strictly differentiate by classical purpose:

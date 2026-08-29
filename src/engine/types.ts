@@ -1540,6 +1540,58 @@ export interface DashaLordTransitAnalysis {
   masterDashaTransitSynthesis: string;
 }
 
+// ==========================================
+// 59. DR. B.V. RAMAN 300 IMPORTANT COMBINATIONS & LAL KITAB TEVAS
+// ==========================================
+
+export interface RamanCombinationYoga {
+  combinationNumber: number; // 1 to 300
+  yogaName: string;
+  sanskritTitle: string;
+  category: "Raja Yoga" | "Dhana Yoga" | "Mahapurusha" | "Spiritual / Wisdom" | "Arishta / Neutralized";
+  isActive: boolean;
+  potencyScore: number; // 0-100%
+  classicalFormula: string;
+  lifeFruition: string;
+}
+
+export interface Raman300Analysis {
+  activeYogas: RamanCombinationYoga[];
+  totalActiveCount: number;
+  premierYoga: RamanCombinationYoga;
+  rajaYogaScore: number; // 0-100%
+  dhanaYogaScore: number; // 0-100%
+  masterRamanSynthesis: string;
+}
+
+export type LalKitabTevaType =
+  | "Dharmi Teva (धर्मी तेवा - Divinely Protected)"
+  | "Andhi Kundli (अन्धी कुण्डली - Blind Chart)"
+  | "Ratandhi Kundli (रतौंधी - Night Blind)"
+  | "Kayam Teva (कायम तेवा - Established)";
+
+export interface LalKitabAnalysis {
+  tevaType: LalKitabTevaType;
+  tevaSignification: string;
+  karmicRinaDebts: string[];
+  targetedLalKitabRemedies: string[];
+  masterLalKitabSynthesis: string;
+}
+
+export interface NarayanaKavachamShield {
+  planetName: string;
+  narayanaForm: string;
+  sanskritArmorVerse: string;
+  protectiveShieldBenefit: string;
+}
+
+export interface NarayanaKavachamAnalysis {
+  shields: NarayanaKavachamShield[];
+  supremeProtectorForm: string;
+  masterKavachamSynthesis: string;
+}
+
+
 
 
 
