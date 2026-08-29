@@ -2096,6 +2096,85 @@ test("Classical Acharya Venkatesha Sharma Sarvartha Chintamani (13 Adhyayas) Ver
   assert.ok(result.masterChintamaniSynthesis.length > 30);
 });
 
+test("Classical Stri Jataka (Female Horoscopy & Trimsamsha) Verification", async () => {
+  const { evaluateStriJataka } = await import("../src/engine/striJataka.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Kashi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1996-05-20T10:15:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateStriJataka(natalEphem);
+
+  // 1. Disposition
+  assert.ok(result.disposition.ascendantSignType);
+  assert.ok(result.disposition.moonSignType);
+  assert.ok(result.disposition.summary.length > 20);
+
+  // 2. Trimsamsha
+  assert.ok(result.trimsamshaAnalysis.ascendantTrimsamshaLord);
+  assert.ok(result.trimsamshaAnalysis.moonTrimsamshaLord);
+  assert.ok(result.trimsamshaAnalysis.moralDisposition.length > 15);
+  assert.ok(result.trimsamshaAnalysis.spiritualInclination.length > 15);
+
+  // 3. Mangalya & Soubhagya
+  assert.ok(result.mangalyaSoubhagya.mangalyaScore >= 0 && result.mangalyaSoubhagya.mangalyaScore <= 100);
+  assert.ok(result.mangalyaSoubhagya.soubhagyaScore >= 0 && result.mangalyaSoubhagya.soubhagyaScore <= 100);
+  assert.ok(result.mangalyaSoubhagya.maritalBlissGrade);
+  assert.ok(result.mangalyaSoubhagya.partnerLongevityOutlook.length > 15);
+
+  // 4. Visha Kanya
+  assert.ok(typeof result.vishaKanya.isFormed === "boolean");
+  assert.ok(typeof result.vishaKanya.isCancelled === "boolean");
+  assert.ok(result.vishaKanya.cancellationFactor.length > 10);
+  assert.ok(result.vishaKanya.analysis.length > 15);
+
+  // 5. Master Synthesis
+  assert.ok(result.masterStriJatakaSynthesis.length > 30);
+});
+
+test("Classical Maharshi Satyacharya Satya Jataka (Dhruva Nadi) Verification", async () => {
+  const { evaluateSatyaJataka } = await import("../src/engine/satyaJataka.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Kashi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1996-05-20T10:15:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateSatyaJataka(natalEphem);
+
+  // 1. Planetary Star Lords
+  assert.strictEqual(result.planetaryStarLords.length, 9);
+  for (const s of result.planetaryStarLords) {
+    assert.ok(s.planetName);
+    assert.ok(s.nakshatraName);
+    assert.ok(s.starLord);
+    assert.ok(s.manifestedBhavas.length > 0);
+    assert.ok(s.effectSummary.includes("Satyacharya"));
+  }
+
+  // 2. Functional Dignities
+  assert.strictEqual(result.functionalDignities.length, 7);
+  for (const f of result.functionalDignities) {
+    assert.ok(f.planetName);
+    assert.ok(f.role);
+    assert.ok(["Subha (शुभ - Auspicious)", "Asubha (अशुभ - Friction/Struggle)", "Neutral/Mixed (मिश्र)"].includes(f.dignityType));
+    assert.ok(f.satyaRule.length > 15);
+  }
+
+  // 3. Janma Tara Matrix
+  assert.strictEqual(result.janmaTaraMatrix.length, 9);
+  for (const t of result.janmaTaraMatrix) {
+    assert.ok(t.planetName);
+    assert.ok(t.nakshatraName);
+    assert.ok(t.taraName);
+    assert.ok(typeof t.isFavorable === "boolean");
+    assert.ok(t.description.length > 15);
+  }
+
+  // 4. Master Synthesis
+  assert.ok(result.masterSatyaJatakaSynthesis.length > 30);
+});
+
+
 
 
 

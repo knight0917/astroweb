@@ -42,6 +42,8 @@ import { evaluatePrasnaMarga } from "./prasnaMarga";
 import { evaluateSamhitaSkandha } from "./samhitaSkandha";
 import { evaluateSanketanidhi } from "./sanketanidhi";
 import { evaluateSarvarthaChintamani } from "./sarvarthaChintamani";
+import { evaluateStriJataka } from "./striJataka";
+import { evaluateSatyaJataka } from "./satyaJataka";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -790,6 +792,42 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 36. Classical Stri Jataka (Female Horoscopy & Trimsamsha)
+  let striJatakaSummary = "";
+  try {
+    const sj = evaluateStriJataka(natalEphemeris);
+    striJatakaSummary = [
+      `- **Lagna & Moon Disposition (युग्म/अयुग्म):** ${sj.disposition.ascendantSignType} | ${sj.disposition.moonSignType} -> ${sj.disposition.summary}`,
+      "- **Trimsamsha D-30 Archetypes (त्रिंशांश विचार):**",
+      `  - ${sj.trimsamshaAnalysis.moralDisposition}`,
+      `  - ${sj.trimsamshaAnalysis.spiritualInclination}`,
+      "- **Mangalya & Soubhagya Sthana (7th, 8th & 9th Bhavas):**",
+      `  - Mangalya Score: **${sj.mangalyaSoubhagya.mangalyaScore}%** (${sj.mangalyaSoubhagya.maritalBlissGrade}) • Soubhagya Score: **${sj.mangalyaSoubhagya.soubhagyaScore}%**`,
+      `  - Marital Outlook: ${sj.mangalyaSoubhagya.partnerLongevityOutlook}`,
+      "- **Visha Kanya & Arishta Bhanga Shield:** " + sj.vishaKanya.cancellationFactor,
+      "- **Master Stri Jataka Synthesis:** " + sj.masterStriJatakaSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
+  // 37. Maharshi Satyacharya Satya Jataka (Dhruva Nadi)
+  let satyaJatakaSummary = "";
+  try {
+    const satya = evaluateSatyaJataka(natalEphemeris);
+    const starLordsStr = satya.planetaryStarLords.slice(0, 4).map((s) => `- **${s.planetName} in ${s.nakshatraName} (${s.starLord}):** Manifests House(s) ${s.manifestedBhavas.join(", ")}`).join("\n");
+    const subhaLords = satya.functionalDignities.filter((f) => f.dignityType.includes("Subha")).map((f) => `${f.planetName} (${f.role})`).join(", ");
+    const favTaras = satya.janmaTaraMatrix.filter((t) => t.isFavorable).slice(0, 4).map((t) => `${t.planetName} in ${t.taraName.split(" (")[0]}`).join(", ");
+
+    satyaJatakaSummary = [
+      "- **Satyacharya's Starlord Principle (नक्षत्र स्वामी सिद्धान्त - Dispositor Deliverers):**",
+      starLordsStr,
+      "- **Functional Dignities of Satyacharya:**",
+      `  - Auspicious Trikonadhipatis (1, 5, 9): **${subhaLords || "Balanced"}**`,
+      "- **9 Janma Tara Matrix (नवतारा चक्र):**",
+      `  - Key Auspicious Taras Active: **${favTaras}**`,
+      "- **Master Satya Jataka Synthesis:** " + satya.masterSatyaJatakaSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1015,11 +1053,17 @@ export function buildAstroDossier(
     "",
     "#### 💎 37. ACHARYA VENKATESHA SHARMA SARVARTHA CHINTAMANI (13 ADHYAYAS) DOSSIER:",
     chintamaniSummary,
+    "",
+    "#### 🌺 38. STRI JATAKA (FEMALE HOROSCOPY & TRIMSAMSHA) DOSSIER:",
+    striJatakaSummary,
+    "",
+    "#### ⭐ 39. MAHARSHI SATYACHARYA SATYA JATAKA (DHRUVA NADI) DOSSIER:",
+    satyaJatakaSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 38. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 40. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

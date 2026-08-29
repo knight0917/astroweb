@@ -1,51 +1,53 @@
-# Walkthrough: Acharya Ramadayalu's Sanketanidhi (9 Sanketas) Integration
+# Walkthrough: Acharya Venkatesha Sharma's Sarvartha Chintamani Integration
 
-We have completed the algorithmic codification and full-stack integration of **Acharya Ramadayalu's Sanketanidhi (सङ्केतनिधि - 1860 CE, 9 Sanketas)** into the calculation engine, UI dashboard, and AI Astrologer Chat Context Dossier.
+We have completed the algorithmic codification and full-stack integration of **Acharya Venkatesha Sharma's Sarvartha Chintamani (सर्वार्थ चिन्तामणि - 13 Adhyayas, Commentary by J.N. Bhasin)** into the calculation engine, UI dashboard, and AI Astrologer Chat Context Dossier.
 
 ---
 
-## 1. Calculation Engine ([`src/engine/sanketanidhi.ts`](file:///d:/newWayToAstro/src/engine/sanketanidhi.ts))
+## 1. Calculation Engine ([`src/engine/sarvarthaChintamani.ts`](file:///d:/newWayToAstro/src/engine/sarvarthaChintamani.ts))
 
-### A. 🏛️ 12 Bhavas Vridhi vs Nashana Matrix (Sanketas 1–3)
-- Computes **Bhava-Vridhi** (house expansion/vitality) vs **Bhava-Nashana** (house friction/dissolution) scores (0–100%) for all 12 houses based on lord placement, Karaka strength, and aspectual geometry.
-- Maps each house to its exact anatomical organ systems (*Head, Face/Throat, Arms/Bronchia, Heart/Lungs, Stomach/Liver, Intestines/Kidneys, Pelvis, Excretory, Thighs, Knees, Calves, Feet*).
+### A. 🏛️ 12 Bhavas Wish-Fulfilling Predictive Matrix (Adhyayas 1–12)
+- Computes wish-fulfillment scores (0–100%) and fulfillment grades (*Uttama, Madhyama, Samanya*) for all 12 houses.
+- Predicts self-made wealth (*Swaryadhitam*), speech eloquence (*Vak Chamatkara*), mansions and luxury vehicles (*Vahana Yoga*), ministerial counsel (*Mantri Yoga*), adversarial triumph (*Shatru Hanta*), conjugal devotion, unearned legacies, and royal executive command (*Rajya Prapti*).
 
-### B. 🩺 Medical Jyotish & Ayurvedic Tridosha Engine (Sanketa 8)
-- Calculates precise percentage breakdown for **Vata (वात), Pitta (पित्त), and Kapha (कफ)** based on planetary weights and zodiac elements.
-- Identifies the dominant biological constitution (*Vata, Pitta, Kapha, Vata-Pitta, Pitta-Kapha, Tridoshic Balanced*).
-- Formulates specific Ayurvedic lifestyle, dietary (*Ritucharya*), and herbal balancing pariharas.
+### B. 👑 Special Classical Yogas of Sarvartha Chintamani
+- Evaluates the 8 monumental planetary combinations:
+  - **Chamara Yoga (चामर योग)**: Lagna lord in Kendra aspected by Jupiter $\rightarrow$ Royal honors, eloquent scholarship, leadership over thousands.
+  - **Dhenu Yoga (धेनु योग)**: 2nd lord in Kendra/Trikona with strong Venus $\rightarrow$ Inexhaustible wealth, flourishing estates, persuasive speech.
+  - **Chhatra Yoga (छत्र योग)**: Benefics in all Kendra pillars $\rightarrow$ Sovereign executive umbrella of state, ministerial rank.
+  - **Bheri Yoga (भेरी योग)**: 9th lord fortified with Jupiter/Venus in Kendras $\rightarrow$ Battle drum of victory, widespread fame.
+  - **Mridanga Yoga (मृदङ्ग योग)**: Exalted/Kendra planets in mutual trines $\rightarrow$ Regal splendor, mastery over fine arts.
+  - **Srinatha Yoga (श्रीनाथ योग)**: 9th lord and exalted Venus in angular harmony $\rightarrow$ Supreme Lakshmi grace, vast landed fortunes.
+  - **Shankha Yoga (शंख योग)**: 5th and 6th lords in mutual Kendras with strong Lagna $\rightarrow$ Supreme philosophical intellect, legal command.
+  - **Kusuma Yoga (कुसुम योग)**: Venus in Kendra, Moon in Trikona, Saturn in 10th $\rightarrow$ Fragrant reputation, beloved by the state.
 
-### C. ⏳ Ayurdaya & Maraka Longevity Diagnostics (Sanketa 6)
-- Evaluates longevity tier: *Purnayu (Long Life: 67–100+ Years)*, *Madhyayu (Middle Life: 33–66 Years)*, or *Alpayu (Short Life: 0–32 Years)*.
-- Assesses the 2nd and 7th Maraka lords and 8th house vital stamina reserve.
+### C. ⏳ Bhagyodaya Fortune Rise Age Timeline (Adhyaya 9)
+- Maps active planetary age triggers:
+  - Jupiter (Ages 16 & 32), Sun (Age 21), Moon (Age 24), Mars/Venus (Age 28), Mercury/Jupiter (Age 32), Saturn (Age 36), Rahu (Age 42), Ketu/Jupiter (Age 48).
 
-### D. 🛡️ Arishta Bhanga Sanctuary (Sanketa 9)
-- Evaluates supreme classical cancellation shields:
-  - **Guru Kendra Kavacha**: Jupiter in Kendra neutralizing 100,000 blemishes.
-  - **Shukra-Budha Shubhadrishti**: Benefic radiance fortifying physical health.
-  - **Digbala Surya Shield**: 10th house directional Sun destroying dark afflictions.
-  - **Lagnesha Bala Kavacha**: Fortified Ascendant lord ensuring resilience.
+### D. 📐 Tri-Bhaga Bhava Sphuta Potency
+- Tripartite division of key houses into Early (*Prathama Bhaga: 0°-10°*), Peak (*Madhyama Bhaga: 10°-20°*), and Elder (*Uttama Bhaga: 20°-30°*) life manifestation.
 
 ---
 
 ## 2. AI Astrologer Chat Context Dossier & Dispatching ([`src/engine/chatContext.ts`](file:///d:/newWayToAstro/src/engine/chatContext.ts), [`src/app/api/astro-chat/route.ts`](file:///d:/newWayToAstro/src/app/api/astro-chat/route.ts))
-- Injected **Section 36: Acharya Ramadayalu Sanketanidhi (9 Sanketas) Dossier** into the Astro Chat Dossier.
-- Renumbered Kundli Milan to Section 37.
-- The AI Astrologer automatically dispatches to **Sanketanidhi** whenever the user asks questions on physical health, disease pathology, Ayurvedic constitution, and house growth/decay.
+- Injected **Section 37: Acharya Venkatesha Sharma Sarvartha Chintamani (13 Adhyayas) Dossier** into the Astro Chat Dossier.
+- Renumbered Kundli Milan to Section 38.
+- The AI Astrologer automatically dispatches to **Sarvartha Chintamani** for financial wealth, real estate, vehicles, executive authority, and fortune rise timing.
 
 ---
 
-## 3. UI Dashboard Component ([`src/components/SanketanidhiDeck.tsx`](file:///d:/newWayToAstro/src/components/SanketanidhiDeck.tsx))
-- **Hero Overview Card**: Overall Vitality Score, Dominant Ayurvedic Dosha, Longevity Category, and Master Synthesis.
-- **Tab 1: 🏛️ 12 Bhavas Vridhi/Nashana**: Interactive 12-house card grid with expansion vs decay bars and Ramadayalu shlokas.
-- **Tab 2: 🩺 Medical Jyotish & Tridosha**: Ayurvedic Tridosha balance bars (Vata/Pitta/Kapha), vulnerable organ checklist, and diet/lifestyle advice.
-- **Tab 3: ⏳ Ayurdaya & Longevity**: Longevity tier gauge (*Purnayu/Madhyayu*), Maraka houses analysis, and lifespan stamina.
-- **Tab 4: 🛡️ Arishta Bhanga Shields**: Active affliction cancellations and Jupiter/Lagna protective shields.
-- Available in the dashboard under the **"📜 Sanketanidhi (Ramadayalu 9 Sanketas)"** tab.
+## 3. UI Dashboard Component ([`src/components/SarvarthaChintamaniDeck.tsx`](file:///d:/newWayToAstro/src/components/SarvarthaChintamaniDeck.tsx))
+- **Hero Overview Card**: Wish-Fulfillment Score, Primary Bhagyodaya Age, Top Classical Yoga, and Master Synthesis.
+- **Tab 1: 🏛️ 12 Bhavas Chintamani**: Interactive 12-house card grid with wish-fulfillment scores, predictions, and Venkatesha Sharma citations.
+- **Tab 2: 👑 Special Classical Yogas**: Showcase cards for Chamara, Dhenu, Chhatra, Bheri, Mridanga, Srinatha, Shankha, and Kusuma yogas.
+- **Tab 3: ⏳ Bhagyodaya Age Timeline**: Interactive age milestone roadmap (Ages 16 to 48) with fortune elevation triggers.
+- **Tab 4: 📐 Tri-Bhaga Potency**: Prathama, Madhyama, and Uttama house third stage evaluations.
+- Available in the dashboard under the **"💎 Sarvartha Chintamani (13 Adhyayas)"** tab.
 
 ---
 
 ## 4. Verification
-- **Automated Tests**: All **47 test suites** in `tests/engine.test.mjs` passed cleanly (`47/47 pass`).
+- **Automated Tests**: All **48 test suites** in `tests/engine.test.mjs` passed cleanly (`48/48 pass`).
 - **TypeScript & Production Build**: `next build` compiled with 0 errors.
-- **Git Push**: Committed and pushed to `origin/main` (`commit 2a9ad3c`).
+- **Git Push**: Committed and pushed to `origin/main` (`commit 4eabe70`).

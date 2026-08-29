@@ -832,6 +832,72 @@ export interface SarvarthaChintamaniAnalysis {
   masterChintamaniSynthesis: string;
 }
 
+export interface StriJatakaDisposition {
+  ascendantSignType: "Even (युग्म - Feminine Grace & Fertility)" | "Odd (अयुग्म - Dynamic Independence & Command)";
+  moonSignType: "Even (युग्म - Soft Emotional Receptivity)" | "Odd (अयुग्म - Courageous Emotional Independence)";
+  summary: string;
+}
+
+export interface StriJatakaTrimsamsha {
+  ascendantTrimsamshaLord: string;
+  moonTrimsamshaLord: string;
+  moralDisposition: string;
+  spiritualInclination: string;
+}
+
+export interface StriJatakaMangalyaSoubhagya {
+  mangalyaScore: number; // 0-100%
+  soubhagyaScore: number; // 0-100%
+  maritalBlissGrade: "Uttama Mangalya (उत्कृष्ट दाम्पत्य)" | "Madhyama Mangalya (मध्यम दाम्पत्य)" | "Samanya / Parihara Needed (शान्ति योग्य)";
+  partnerLongevityOutlook: string;
+}
+
+export interface StriJatakaVishaKanya {
+  isFormed: boolean;
+  isCancelled: boolean;
+  cancellationFactor: string;
+  analysis: string;
+}
+
+export interface StriJatakaAnalysis {
+  disposition: StriJatakaDisposition;
+  trimsamshaAnalysis: StriJatakaTrimsamsha;
+  mangalyaSoubhagya: StriJatakaMangalyaSoubhagya;
+  vishaKanya: StriJatakaVishaKanya;
+  masterStriJatakaSynthesis: string;
+}
+
+export interface SatyaPlanetaryStarLord {
+  planetName: string;
+  nakshatraName: string;
+  starLord: string;
+  manifestedBhavas: number[];
+  effectSummary: string;
+}
+
+export interface SatyaFunctionalDignity {
+  planetName: string;
+  role: string;
+  dignityType: "Subha (शुभ - Auspicious)" | "Asubha (अशुभ - Friction/Struggle)" | "Neutral/Mixed (मिश्र)";
+  satyaRule: string;
+}
+
+export interface SatyaJanmaTara {
+  planetName: string;
+  nakshatraName: string;
+  taraName: "Janma (जन्म)" | "Sampat (सम्पत्)" | "Vipat (विपत्)" | "Kshema (क्षेम)" | "Pratyak (प्रत्यक्)" | "Sadhaka (साधक)" | "Vadha (वध)" | "Mitra (मित्र)" | "Parama Mitra (परम मित्र)";
+  isFavorable: boolean;
+  description: string;
+}
+
+export interface SatyaJatakaAnalysis {
+  planetaryStarLords: SatyaPlanetaryStarLord[];
+  functionalDignities: SatyaFunctionalDignity[];
+  janmaTaraMatrix: SatyaJanmaTara[];
+  masterSatyaJatakaSynthesis: string;
+}
+
+
 
 
 

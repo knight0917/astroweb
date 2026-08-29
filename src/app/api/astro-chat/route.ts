@@ -70,10 +70,13 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *Jaimini Sutras*: Amatyakaraka (AmK) and Karakamsha status.
       - *BPHS*: 10th House, D10 Dashamsha, Shadbala.
    - 💍 **Marriage, Soulmate Timing, Relationship Harmony & Compatibility**:
-     - *K.N. Rao Timing of Marriage*: 3-Tier Filter (Dasha Lord + Double Transit of Jupiter/Saturn on 7th House/7th Lord + D9 Navamsha).
-     - *Kundli Milan (Section 34)*: Ashtakoota 36-Guna score, Nadi & Bhakoot harmony, Manglik Dosha & Bhanga.
-     - *Jaimini Sutras*: Darakaraka (DK), Upapada Lagna (UL), Darapada (A7).
-     - *Saravali & Jataka Alankara*: Stri Jataka, Trimsamsha D-30 moral disposition, Visha Kanya neutralization.
+      - *Stri Jataka*: Classical female horoscopy, Even/Odd sign disposition, Trimsamsha D-30 moral/spiritual inclinations, 8th house Mangalya Sthana (partner longevity), 9th house Soubhagya (auspicious fortune & children), and Visha Kanya neutralization.
+      - *K.N. Rao Timing of Marriage*: 3-Tier Filter (Dasha Lord + Double Transit of Jupiter/Saturn on 7th House/7th Lord + D9 Navamsha).
+      - *Kundli Milan (Section 40)*: Ashtakoota 36-Guna score, Nadi & Bhakoot harmony, Manglik Dosha & Bhanga.
+      - *Jaimini Sutras*: Darakaraka (DK), Upapada Lagna (UL), Darapada (A7).
+      - *Saravali & Jataka Alankara*: Stri Jataka, Trimsamsha D-30 moral disposition, Visha Kanya neutralization.
+    - ⭐ **Nakshatra Dispositor Mechanics, Janma Taras & Dhruva Nadi**:
+      - *Satya Jataka (Sage Satyacharya)*: Satyacharya's Starlord Principle (planets deliver fruits of houses owned/occupied by their Nakshatra dispositor), 9 Janma Tara Matrix (Janma, Sampat, Vipat, Kshema, Pratyak, Sadhaka, Vadha, Mitra, Parama Mitra), and functional Trikonadhipati rules.
    - 🩺 **Health, Vitality, Disease Diagnostics & Longevity**:
      - *Sanketanidhi (Ramadayalu)*: Bhava-Vridhi vs Bhava-Nashana, Ayurvedic Tridosha pathology (Vata/Pitta/Kapha), Ayurdaya longevity tier, and Arishta Bhanga shields.
      - *Jataka Parijata*: 64th Navamsha Lord, 22nd Drekkana (Kharesh Lord), Kalachakra Dasha Deha & Jeeva vitality alert.
