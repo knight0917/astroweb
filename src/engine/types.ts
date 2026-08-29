@@ -647,6 +647,58 @@ export interface PhaladeepikaAnalysis {
   masterPhaladeepikaSynthesis: string;
 }
 
+export interface PrasnaTriLagna {
+  udayaSign: string;
+  udayaSignIdx: number;
+  arudhaSign: string;
+  arudhaSignIdx: number;
+  chatraSign: string;
+  chatraSignIdx: number;
+  veedhiRashi: string;
+  relationship: string;
+}
+
+export interface PrasnaPanchaSutra {
+  sutraName: "Jeeva Sutra" | "Roga Sutra" | "Mrityu Sutra" | "Utpanna Sutra" | "Nashana Sutra";
+  sanskritName: string;
+  status: "Active (Formed)" | "Inactive";
+  isFavorable: boolean;
+  diagnosticVerdict: string;
+  classicalShloka: string;
+}
+
+export interface PrasnaAshtamangala {
+  ashtamangalaNumber: number; // 1 to 8 / 1 to 108
+  auspiciousScore: number; // 0 to 100%
+  devaDoshaDetected: boolean;
+  devaDoshaDetails: string;
+  abhicharaDetected: boolean;
+  abhicharaDetails: string;
+  deepaLakshana: string; // Flame diagnostic
+  keralaParihara: string;
+}
+
+export interface PrasnaBhavaVerdict {
+  bhavaNum: number; // 1 to 12
+  queryTopic: string;
+  sanskritTitle: string;
+  arudhaLordName: string;
+  arudhaLordHouse: number;
+  successProbability: number; // 0-100%
+  verdict: "Immediate Fulfillment (शीघ्र फल)" | "Delayed Success with Effort (विलम्ब फल)" | "Adverse / High Obstacles (कष्ट फल)";
+  timingWindow: string;
+  classicalShlokaPhala: string;
+}
+
+export interface PrasnaMargaAnalysis {
+  triLagnas: PrasnaTriLagna;
+  panchaSutras: PrasnaPanchaSutra[];
+  ashtamangala: PrasnaAshtamangala;
+  bhavaVerdicts: PrasnaBhavaVerdict[];
+  masterPrasnaVerdict: string;
+}
+
+
 
 
 

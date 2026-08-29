@@ -1897,6 +1897,56 @@ test("Classical Acharya Mantreswara Phaladeepika (28 Adhyayas) Verification", as
   assert.ok(result.masterPhaladeepikaSynthesis.length > 30);
 });
 
+test("Classical Prasna Marga (32 Adhyayas) & Prasna Arudha Phala Verification", async () => {
+  const { evaluatePrasnaMarga } = await import("../src/engine/prasnaMarga.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Kochi", country: "India", latitude: 9.9312, longitude: 76.2673, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluatePrasnaMarga(natalEphem, 0); // Arudha = Aries
+
+  // 1. Tri-Lagnas
+  assert.ok(result.triLagnas.udayaSign);
+  assert.ok(result.triLagnas.arudhaSign);
+  assert.ok(result.triLagnas.chatraSign);
+  assert.ok(result.triLagnas.veedhiRashi);
+  assert.ok(result.triLagnas.relationship.length > 10);
+
+  // 2. Pancha Sutras
+  assert.strictEqual(result.panchaSutras.length, 5);
+  for (const s of result.panchaSutras) {
+    assert.ok(s.sutraName);
+    assert.ok(s.sanskritName);
+    assert.ok(s.diagnosticVerdict.length > 15);
+    assert.ok(s.classicalShloka.includes("Prasna Marga"));
+  }
+
+  // 3. Ashtamangala
+  assert.ok(result.ashtamangala.ashtamangalaNumber >= 1 && result.ashtamangala.ashtamangalaNumber <= 8);
+  assert.ok(result.ashtamangala.auspiciousScore >= 0 && result.ashtamangala.auspiciousScore <= 100);
+  assert.ok(typeof result.ashtamangala.devaDoshaDetected === "boolean");
+  assert.ok(typeof result.ashtamangala.abhicharaDetected === "boolean");
+  assert.ok(result.ashtamangala.deepaLakshana.length > 15);
+  assert.ok(result.ashtamangala.keralaParihara.length > 15);
+
+  // 4. 12 Bhavas Arudha Phala
+  assert.strictEqual(result.bhavaVerdicts.length, 12);
+  for (const b of result.bhavaVerdicts) {
+    assert.ok(b.queryTopic);
+    assert.ok(b.sanskritTitle);
+    assert.ok(b.arudhaLordName);
+    assert.ok(b.successProbability >= 0 && b.successProbability <= 100);
+    assert.ok(["Immediate Fulfillment (शीघ्र फल)", "Delayed Success with Effort (विलम्ब फल)", "Adverse / High Obstacles (कष्ट फल)"].includes(b.verdict));
+    assert.ok(b.timingWindow.length > 5);
+    assert.ok(b.classicalShlokaPhala.length > 15);
+  }
+
+  // 5. Master Horary Verdict
+  assert.ok(result.masterPrasnaVerdict.length > 30);
+});
+
+
 
 
 

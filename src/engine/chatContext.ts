@@ -38,6 +38,7 @@ import { evaluateJatakNirnay } from "./jatakNirnay";
 import { evaluateJatakaParijata } from "./jatakaParijata";
 import { evaluateSaravali } from "./saravali";
 import { evaluatePhaladeepika } from "./phaladeepika";
+import { evaluatePrasnaMarga } from "./prasnaMarga";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -683,6 +684,34 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 32. Prasna Marga (32 Adhyayas) & Prasna Arudha Phala Horary Suite
+  let prasnaMargaSummary = "";
+  try {
+    const pm = evaluatePrasnaMarga(natalEphemeris);
+    const sutrasStr = pm.panchaSutras.map((s) => `- **${s.sutraName} (${s.sanskritName.split(" ")[0]}):** ${s.status} -> ${s.diagnosticVerdict}`).join("\n");
+    const topVerdicts = pm.bhavaVerdicts.filter((v) => v.successProbability >= 70).slice(0, 4);
+    const topVerdictsStr = topVerdicts.length > 0
+      ? topVerdicts.map((v) => `- **${v.queryTopic.split(" (")[0]}:** ${v.verdict} (${v.successProbability}%) • Timeline: ${v.timingWindow}`).join("\n")
+      : "- General steady effort required across standard queries.";
+
+    prasnaMargaSummary = [
+      "- **Tri-Lagna Horary Trinity (आरूढ़, उदय एवं छत्र लग्न):**",
+      `  - Udaya Lagna: **${pm.triLagnas.udayaSign}** • Arudha Lagna: **${pm.triLagnas.arudhaSign}** • Chatra Lagna: **${pm.triLagnas.chatraSign}** (Veedhi: ${pm.triLagnas.veedhiRashi})`,
+      `  - Alignment: ${pm.triLagnas.relationship}`,
+      "- **Pancha Sutras Diagnostics (पञ्च सूत्र निर्णय - Adhyaya 8):**",
+      sutrasStr,
+      "- **Ashtamangala & Deva/Abhichara Diagnostics:**",
+      `  - Ashtamangala Number: **${pm.ashtamangala.ashtamangalaNumber}** (Sanctity Score: ${pm.ashtamangala.auspiciousScore}%)`,
+      `  - Deva Dosha (Ancestral Deity): ${pm.ashtamangala.devaDoshaDetected ? "Affliction Present -> " + pm.ashtamangala.devaDoshaDetails : "Clean (Daiva Kripa Active)"}`,
+      `  - Abhichara / Shatru Dosha: ${pm.ashtamangala.abhicharaDetected ? "Warning -> " + pm.ashtamangala.abhicharaDetails : "Zero Malice / Aura Protected"}`,
+      `  - Deepa Lakshana (Flame): ${pm.ashtamangala.deepaLakshana}`,
+      `  - Prescribed Kerala Parihara: ${pm.ashtamangala.keralaParihara}`,
+      "- **High-Probability Favorable Query Domains:**",
+      topVerdictsStr,
+      "- **Master Horary Verdict:** " + pm.masterPrasnaVerdict,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -896,11 +925,14 @@ export function buildAstroDossier(
     "",
     "#### 📖 33. ACHARYA MANTRESWARA PHALADEEPIKA (28 ADHYAYAS) DOSSIER:",
     phaladeepikaSummary,
+    "",
+    "#### 🔮 34. PRASNA MARGA (32 ADHYAYAS) & PRASNA ARUDHA PHALA DOSSIER:",
+    prasnaMargaSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 34. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 35. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 
