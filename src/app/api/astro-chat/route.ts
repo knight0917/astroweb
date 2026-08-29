@@ -102,6 +102,8 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *Sugam Jyotish*: 12-Bhava practical fruition diagnostics, Baladi Avastha Potency Meter (Yuva 100%, Kumara 75%, Bala 25%, Vriddha 10%, Mrita 0%), Subha & Papa Kartari flanking protection, and accessible everyday daily pariharas.
     - 👑 **Viparita Raja Yoga, Shukra-Shani Dasha Paradox & Node Mechanics**:
       - *Uttara Kalamrita (Mahakavi Kalidasa)*: Pure Viparita Raja Yoga (Harsha, Sarala, Vimala), Shukra-Shani Dasha mutual reversal paradox, Rahu & Ketu Kendra/Trikona Yogakaraka mechanics, Vakra Graha (retrograde Uchcha-Sama) strength, and exhaustive Kalidasa Karakatvas.
+    - 🎯 **Comprehensive Event Forecasting & Life Milestone Timing**:
+      - *Vedic Astrology and Predictions*: 3-Tier predictive event synthesis (Tier 1 Natal Promise + Tier 2 Dasha Gateway + Tier 3 Double Transit Sanction), 6-domain life milestone probability meter (Career, Wealth, Marriage, Progeny, Foreign Travel, Health), and event horizon roadmaps (Immediate 0-6m, Near-Term 6-18m, Long-Term 2-5y).
 
 4. **CLASSICAL REMEDY DIFFERENTIATION PROTOCOL (HOW TO CHOOSE THE RIGHT REMEDY)**:
    When recommending remedies in Section 4, strictly differentiate by classical purpose:

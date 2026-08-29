@@ -2309,6 +2309,54 @@ test("Classical Mahakavi Kalidasa Uttara Kalamrita (VRY, Shukra-Shani Paradox & 
   assert.ok(result.masterUttaraKalamritaSynthesis.length > 30);
 });
 
+test("Classical Vedic Astrology and Predictions (Multi-Tier Event Forecasting & Milestones) Verification", async () => {
+  const { evaluateVedicPredictions } = await import("../src/engine/vedicPredictions.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Delhi", country: "India", latitude: 28.6139, longitude: 77.2090, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1994-04-18T11:20:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateVedicPredictions(natalEphem);
+
+  // 1. Milestone Predictions
+  assert.strictEqual(result.milestonePredictions.length, 6);
+  for (const m of result.milestonePredictions) {
+    assert.ok(m.milestoneId);
+    assert.ok(m.title);
+    assert.ok(m.sanskritTitle);
+    assert.ok(m.targetBhavas.length > 0);
+    assert.ok(m.probabilityScore >= 0 && m.probabilityScore <= 100);
+    assert.ok(["High Certainty (अति प्रबल सम्भावना)", "Moderate Potential (मध्यम सम्भावना)", "Future / Dormant (आगामी सम्भावना)"].includes(m.probabilityTier));
+    assert.ok(typeof m.tiers.tier1NatalPromise === "boolean");
+    assert.ok(m.tiers.tier1Details.length > 10);
+    assert.ok(typeof m.tiers.tier2DashaGateway === "boolean");
+    assert.ok(m.tiers.tier2Details.length > 10);
+    assert.ok(typeof m.tiers.tier3DoubleTransit === "boolean");
+    assert.ok(m.tiers.tier3Details.length > 10);
+    assert.ok(["Immediate (0-6 Months)", "Near-Term (6-18 Months)", "Long-Term (2-5 Years)"].includes(m.timeHorizon));
+    assert.ok(m.predictiveVerdict.length > 15);
+    assert.ok(m.actionGuidance.length > 15);
+  }
+
+  // 2. Overall Potency & Horizons
+  assert.ok(result.overallPredictivePotency >= 0 && result.overallPredictivePotency <= 100);
+  assert.ok(typeof result.activeTimeHorizons.immediateCount === "number");
+  assert.ok(typeof result.activeTimeHorizons.nearTermCount === "number");
+  assert.ok(typeof result.activeTimeHorizons.longTermCount === "number");
+
+  // 3. Holistic Remedies
+  assert.strictEqual(result.holisticRemedies.length, 3);
+  for (const r of result.holisticRemedies) {
+    assert.ok(r.category);
+    assert.ok(r.remedy.length > 15);
+    assert.ok(r.targetGraha);
+  }
+
+  // 4. Master Synthesis
+  assert.ok(result.masterPredictionsSynthesis.length > 30);
+});
+
+
 
 
 

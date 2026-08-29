@@ -46,6 +46,7 @@ import { evaluateStriJataka } from "./striJataka";
 import { evaluateSatyaJataka } from "./satyaJataka";
 import { evaluateSugamJyotish } from "./sugamJyotish";
 import { evaluateUttaraKalamrita } from "./uttaraKalamrita";
+import { evaluateVedicPredictions } from "./vedicPredictions";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -875,6 +876,22 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 40. Vedic Astrology and Predictions (Multi-Tier Event Forecasting & Milestones)
+  let vedicPredictionsSummary = "";
+  try {
+    const vp = evaluateVedicPredictions(natalEphemeris);
+    const topMilestones = vp.milestonePredictions.slice(0, 3).map((m) => `- **${m.title} (${m.sanskritTitle}):** ${m.probabilityTier} (${m.probabilityScore}%) • *Horizon:* ${m.timeHorizon} -> ${m.predictiveVerdict}`).join("\n");
+    const horizonsStr = `Immediate: ${vp.activeTimeHorizons.immediateCount} | Near-Term: ${vp.activeTimeHorizons.nearTermCount} | Long-Term: ${vp.activeTimeHorizons.longTermCount}`;
+
+    vedicPredictionsSummary = [
+      "- **6 Life Milestones Probability Forecaster (त्रिसूत्रीय फल सम्भावना):**",
+      topMilestones,
+      "- **Predictive Potency & Timing Horizons:**",
+      `  - Overall Potency: **${vp.overallPredictivePotency}%** | Event Horizons: **${horizonsStr}**`,
+      "- **Master Vedic Predictions Synthesis:** " + vp.masterPredictionsSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1112,11 +1129,14 @@ export function buildAstroDossier(
     "",
     "#### 📜 41. MAHAKAVI KALIDASA UTTARA KALAMRITA (VRY, SHUKRA-SHANI PARADOX & KARAKATVA) DOSSIER:",
     uttaraKalamritaSummary,
+    "",
+    "#### 🎯 42. VEDIC ASTROLOGY AND PREDICTIONS (MULTI-TIER EVENT FORECASTING & MILESTONES) DOSSIER:",
+    vedicPredictionsSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 42. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 43. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

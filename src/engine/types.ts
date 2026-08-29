@@ -987,6 +987,37 @@ export interface UttaraKalamritaAnalysis {
   masterUttaraKalamritaSynthesis: string;
 }
 
+export interface VedicTierValidation {
+  tier1NatalPromise: boolean;
+  tier1Details: string;
+  tier2DashaGateway: boolean;
+  tier2Details: string;
+  tier3DoubleTransit: boolean;
+  tier3Details: string;
+}
+
+export interface VedicMilestonePrediction {
+  milestoneId: "career" | "wealth" | "marriage" | "progeny" | "foreign" | "health";
+  title: string;
+  sanskritTitle: string;
+  targetBhavas: number[];
+  probabilityScore: number; // 0 to 100%
+  probabilityTier: "High Certainty (अति प्रबल सम्भावना)" | "Moderate Potential (मध्यम सम्भावना)" | "Future / Dormant (आगामी सम्भावना)";
+  tiers: VedicTierValidation;
+  timeHorizon: "Immediate (0-6 Months)" | "Near-Term (6-18 Months)" | "Long-Term (2-5 Years)";
+  predictiveVerdict: string;
+  actionGuidance: string;
+}
+
+export interface VedicPredictiveAnalysis {
+  milestonePredictions: VedicMilestonePrediction[];
+  overallPredictivePotency: number;
+  activeTimeHorizons: { immediateCount: number; nearTermCount: number; longTermCount: number };
+  holisticRemedies: { category: string; remedy: string; targetGraha: string }[];
+  masterPredictionsSynthesis: string;
+}
+
+
 
 
 
