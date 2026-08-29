@@ -447,6 +447,55 @@ export interface JatakaAlankaraAnalysis {
   masterAlankaraSynthesis: string;
 }
 
+export interface JatakNirnayBhavaJudgement {
+  bhavaNum: number; // 1 to 12
+  sanskritTitle: string;
+  part: "Part 1 (Bhavas 1-6)" | "Part 2 (Bhavas 7-12)";
+  signName: string;
+  lordName: string;
+  lordPlacementHouse: number;
+  primaryKaraka: string;
+  bhavaScore: number; // 0-100% (30% weight)
+  lordScore: number; // 0-100% (40% weight)
+  karakaScore: number; // 0-100% (30% weight)
+  compositeRamanScore: number; // 0-100%
+  potencyGrade: "Uttama (Supreme)" | "Madhyama (Moderate)" | "Heena (Depleted)";
+  vriddhiNashaStatus: "Bhava Vriddhi (Flourishing)" | "Bhava Samanya (Balanced)" | "Bhava Nasha (Afflicted)";
+  kartariStatus: "Shubha Kartari" | "Papa Kartari" | "Neutral";
+  occupants: string[];
+  aspectingPlanets: string[];
+  lifePredictions: string;
+  ramanRemedy: string;
+}
+
+export interface JatakNirnayKartari {
+  targetType: "Bhava" | "Lord";
+  targetIndex: number;
+  targetName: string;
+  kartariType: "Shubha Kartari" | "Papa Kartari";
+  planets2nd: string[];
+  planets12th: string[];
+  effect: string;
+}
+
+export interface JatakNirnayVriddhiNasha {
+  bhavaNum: number;
+  sanskritTitle: string;
+  status: "Bhava Vriddhi (Flourishing)" | "Bhava Nasha (Afflicted)";
+  astrologicalBasis: string;
+  realWorldImpact: string;
+}
+
+export interface JatakNirnayAnalysis {
+  strongestBhava: JatakNirnayBhavaJudgement;
+  weakestBhava: JatakNirnayBhavaJudgement;
+  bhavaJudgements: JatakNirnayBhavaJudgement[];
+  kartariYogas: JatakNirnayKartari[];
+  vriddhiNashaSummaries: JatakNirnayVriddhiNasha[];
+  masterNirnaySynthesis: string;
+}
+
+
 
 
 

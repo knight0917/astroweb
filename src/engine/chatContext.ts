@@ -34,6 +34,7 @@ import { calculateSukaNadi } from "./sukaNadi";
 import { evaluateJaiminiSutrasComplete } from "./jaiminiSutras";
 import { evaluateGayatriJyotish } from "./gayatriJyotish";
 import { evaluateJatakaAlankara } from "./jatakaAlankara";
+import { evaluateJatakNirnay } from "./jatakNirnay";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -561,6 +562,33 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 28. Dr. B.V. Raman Jatak Nirnay (Parts 1 & 2 - How to Judge a Horoscope) Suite
+  let nirnaySummary = "";
+  try {
+    const jn = evaluateJatakNirnay(natalEphemeris);
+    const topBhavas = [...jn.bhavaJudgements].sort((a, b) => b.compositeRamanScore - a.compositeRamanScore).slice(0, 4);
+    const topBhavasStr = topBhavas.map((b) => `- **House ${b.bhavaNum} (${b.sanskritTitle.split(" ")[0]}):** ${b.compositeRamanScore}% (${b.potencyGrade}) • Tripartite: Bhava ${b.bhavaScore}%, Lord ${b.lordScore}% (H${b.lordPlacementHouse}), Karaka ${b.primaryKaraka} ${b.karakaScore}% • Status: ${b.vriddhiNashaStatus} -> ${b.lifePredictions}`).join("\n");
+    const vriddhiList = jn.vriddhiNashaSummaries.filter((v) => v.status === "Bhava Vriddhi (Flourishing)");
+    const nashaList = jn.vriddhiNashaSummaries.filter((v) => v.status === "Bhava Nasha (Afflicted)");
+    const vriddhiStr = vriddhiList.length > 0
+      ? vriddhiList.map((v) => `H${v.bhavaNum} (${v.sanskritTitle.split(" ")[0]})`).join(", ")
+      : "None";
+    const nashaStr = nashaList.length > 0
+      ? nashaList.map((n) => `H${n.bhavaNum} (${n.sanskritTitle.split(" ")[0]} -> ${n.astrologicalBasis})`).join("; ")
+      : "None (All Bhavas well-fortified)";
+
+    nirnaySummary = [
+      "- **Supreme Raman House (अग्रणी भाव निर्णय):** House " + jn.strongestBhava.bhavaNum + " (" + jn.strongestBhava.sanskritTitle + ") with " + jn.strongestBhava.compositeRamanScore + "% (" + jn.strongestBhava.potencyGrade + ")",
+      "- **Lowest Scoring House:** House " + jn.weakestBhava.bhavaNum + " (" + jn.weakestBhava.sanskritTitle + ") with " + jn.weakestBhava.compositeRamanScore + "% (" + jn.weakestBhava.potencyGrade + ")",
+      "- **Top Tripartite Judged Bhavas (भाव, भावेश, भावकारक):**",
+      topBhavasStr,
+      "- **Bhava Vriddhi (Flourishing Houses):** " + vriddhiStr,
+      "- **Bhava Nasha (Afflicted Houses Requiring Shanti):** " + nashaStr,
+      "- **Dr. B.V. Raman Remedial Prescription:** " + jn.weakestBhava.ramanRemedy,
+      "- **Master Jatak Nirnay Synthesis:** " + jn.masterNirnaySynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -762,11 +790,14 @@ export function buildAstroDossier(
     "",
     "#### 🏛️ 29. ACHARYA GANESH KAVI JATAKA ALANKARA (1613 CE) DOSSIER:",
     alankaraSummary,
+    "",
+    "#### 📖 30. DR. B.V. RAMAN JATAK NIRNAY (HOW TO JUDGE A HOROSCOPE 1 & 2) DOSSIER:",
+    nirnaySummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 30. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 31. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

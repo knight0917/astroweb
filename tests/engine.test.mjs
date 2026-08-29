@@ -1708,6 +1708,50 @@ test("Classical Acharya Ganesh Kavi Jataka Alankara (1613 CE) Verification", asy
   assert.ok(result.masterAlankaraSynthesis.length > 30);
 });
 
+test("Classical Dr. B.V. Raman Jatak Nirnay (How to Judge a Horoscope 1 & 2) Verification", async () => {
+  const { evaluateJatakNirnay } = await import("../src/engine/jatakNirnay.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateJatakNirnay(natalEphem);
+
+  // 1. 12 Bhava Judgements
+  assert.strictEqual(result.bhavaJudgements.length, 12);
+  assert.ok(result.strongestBhava);
+  assert.ok(result.weakestBhava);
+  assert.ok(result.strongestBhava.compositeRamanScore >= result.weakestBhava.compositeRamanScore);
+
+  for (const b of result.bhavaJudgements) {
+    assert.ok(b.sanskritTitle);
+    assert.ok(b.signName);
+    assert.ok(b.lordName);
+    assert.ok(b.primaryKaraka);
+    assert.ok(b.bhavaScore >= 0 && b.bhavaScore <= 100);
+    assert.ok(b.lordScore >= 0 && b.lordScore <= 100);
+    assert.ok(b.karakaScore >= 0 && b.karakaScore <= 100);
+    assert.ok(b.compositeRamanScore >= 0 && b.compositeRamanScore <= 100);
+    assert.ok(["Uttama (Supreme)", "Madhyama (Moderate)", "Heena (Depleted)"].includes(b.potencyGrade));
+    assert.ok(["Bhava Vriddhi (Flourishing)", "Bhava Samanya (Balanced)", "Bhava Nasha (Afflicted)"].includes(b.vriddhiNashaStatus));
+    assert.ok(["Shubha Kartari", "Papa Kartari", "Neutral"].includes(b.kartariStatus));
+    assert.ok(b.lifePredictions.length > 20);
+    assert.ok(b.ramanRemedy.length > 15);
+  }
+
+  // 2. Vriddhi / Nasha Summaries
+  assert.ok(result.vriddhiNashaSummaries.length >= 0);
+  for (const vn of result.vriddhiNashaSummaries) {
+    assert.ok(vn.bhavaNum >= 1 && vn.bhavaNum <= 12);
+    assert.ok(vn.astrologicalBasis.length > 15);
+    assert.ok(vn.realWorldImpact.length > 15);
+  }
+
+  // 3. Master Synthesis
+  assert.ok(result.masterNirnaySynthesis.length > 30);
+});
+
+
 
 
 
