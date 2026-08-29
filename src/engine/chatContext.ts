@@ -52,6 +52,7 @@ import { evaluateChappannaPrasna } from "./chappannaPrasna";
 import { evaluateBhriguSamhita } from "./bhriguSamhita";
 import { evaluateBhavarthaRatnakara } from "./bhavarthaRatnakara";
 import { evaluateJaiminiRangacharya } from "./jaiminiRangacharya";
+import { evaluateCruxOfAstrology } from "./cruxOfVedicAstrology";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -985,6 +986,21 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 48. Crux of Vedic Astrology (Pt. Sanjay Rath) & Parashari Conditional Dashas
+  let cruxOfAstrologySummary = "";
+  try {
+    const ca = evaluateCruxOfAstrology(natalEphemeris);
+    const condDashaStr = ca.conditionalDashas.map((cd) => `  - **${cd.dashaName}:** ${cd.isEligible ? "✅ ACTIVE" : "❌ INACTIVE"} (${cd.eligibilityReason})`).join("\n");
+
+    cruxOfAstrologySummary = [
+      `- **Active Narayana Dasha Sign:** ${ca.activeNarayanaSign} (Direct Rashi Dasha of BPHS & Pt. Sanjay Rath)`,
+      "- **Parashari Conditional Nakshatra Dashas Eligibility:**",
+      condDashaStr,
+      "- **Tithi Pravesha Annual Chart Principles:** " + ca.tithiPraveshaOverview,
+      "- **Master Crux Synthesis:** " + ca.masterCruxSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1240,11 +1256,14 @@ export function buildAstroDossier(
     "",
     "#### 🌿 47. JAIMINI MASTER SUITE (VARNADA LAGNA, SHOOLA DASHA, BRAHMA/RUDRA & ARUDHA EXCEPTIONS) DOSSIER:",
     jaiminiRangacharyaSummary,
+    "",
+    "#### 🌐 48. CRUX OF VEDIC ASTROLOGY (PT. SANJAY RATH) & PARASHARI CONDITIONAL DASHAS DOSSIER:",
+    cruxOfAstrologySummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 48. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 49. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

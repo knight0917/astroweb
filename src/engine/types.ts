@@ -1190,6 +1190,47 @@ export interface JaiminiRangacharyaAnalysis {
   masterRangacharyaSynthesis: string;
 }
 
+export interface CruxBhavaReading {
+  bhava: number;
+  bhavaName: string;
+  karaka: string;
+  arudhaSign: string;
+  vargaDeity: string;
+  sanjayRathDictum: string;
+  cruxSynthesis: string;
+}
+
+export interface CruxNarayanaDashaPeriod {
+  signIndex: number;
+  signName: string;
+  startYear: number;
+  endYear: number;
+  durationYears: number;
+  isActive: boolean;
+  lifeFocus: string;
+  narayanaIndication: string;
+}
+
+export interface ParashariConditionalDasha {
+  dashaName: string;
+  totalSpanYears: number;
+  conditionRule: string;
+  isEligible: boolean;
+  eligibilityReason: string;
+  activeLord: string;
+  activePeriodRange: string;
+}
+
+export interface CruxOfAstrologyAnalysis {
+  narayanaDashaPeriods: CruxNarayanaDashaPeriod[];
+  activeNarayanaSign: string;
+  bhavaCruxReadings: CruxBhavaReading[];
+  conditionalDashas: ParashariConditionalDasha[];
+  tithiPraveshaOverview: string;
+  masterCruxSynthesis: string;
+}
+
+
 
 
 

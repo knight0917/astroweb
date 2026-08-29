@@ -112,6 +112,8 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *Jataka Chandrika (Prof. B. Suryanarain Rao)*: 41-Sloka definitive functional benefic/malefic matrix for all 12 Lagnas, supreme single-planet Yogakarakas, Kendradhipati Dosha for natural benefics, Maraka determinators (2/7), and 4-fold Sambandha Raja Yogas.
     - 📖 **Secret Lagnawise Yogas, Special Dhana Yogas & Parashari Exceptions**:
       - *Bhavartha Ratnakara (Sri Ramanujacharya / Dr. B.V. Raman)*: 14-Adhyaya masterwork detailing Lagnawise secret Raja/Dhana Yogas, premier Yogakaraka definitions, Dhana combinations, and rare Dasha-Bhukti exceptions overriding standard Parashari dictums.
+    - 🌐 **Narayana Dasha, 12 Bhavas Arudha Manifestation & Conditional Dashas**:
+      - *Crux of Vedic Astrology (Pt. Sanjay Rath)* & *BPHS Ch. 46*: Complete Narayana Dasha (universal BPHS Rashi Dasha), 12 Bhavas Arudha/Varga deity manifestation, Tithi Pravesha solar return principles, and 5 Parashari Conditional Nakshatra Dashas (Dwisaptati 72y, Chatursheeti 84y, Shat-Trimsha 36y, Shodashottari 116y, Ashtottari 108y).
 
 4. **CLASSICAL REMEDY DIFFERENTIATION PROTOCOL (HOW TO CHOOSE THE RIGHT REMEDY)**:
    When recommending remedies in Section 4, strictly differentiate by classical purpose:

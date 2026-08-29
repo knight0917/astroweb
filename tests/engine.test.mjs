@@ -2569,6 +2569,51 @@ test("Classical Jaimini Master Suite (Iranganti Rangacharya & Arudha Exceptions)
   assert.ok(result.masterRangacharyaSynthesis.length > 30);
 });
 
+test("Classical Crux of Vedic Astrology (Pt. Sanjay Rath) & Parashari Conditional Dashas Verification", async () => {
+  const { evaluateCruxOfAstrology } = await import("../src/engine/cruxOfVedicAstrology.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Delhi", country: "India", latitude: 28.6139, longitude: 77.2090, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1993-07-15T09:15:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateCruxOfAstrology(natalEphem);
+
+  // 1. Narayana Dasha
+  assert.strictEqual(result.narayanaDashaPeriods.length, 12);
+  assert.ok(result.activeNarayanaSign);
+  for (const np of result.narayanaDashaPeriods) {
+    assert.ok(np.signName);
+    assert.ok(np.durationYears >= 1 && np.durationYears <= 12);
+    assert.ok(np.lifeFocus.length > 5);
+    assert.ok(np.narayanaIndication.length > 10);
+  }
+
+  // 2. 12 Bhavas Crux Readings
+  assert.strictEqual(result.bhavaCruxReadings.length, 12);
+  for (const b of result.bhavaCruxReadings) {
+    assert.ok(b.bhava >= 1 && b.bhava <= 12);
+    assert.ok(b.bhavaName);
+    assert.ok(b.karaka);
+    assert.ok(b.arudhaSign);
+    assert.ok(b.vargaDeity);
+    assert.ok(b.sanjayRathDictum.length > 10);
+  }
+
+  // 3. Parashari Conditional Dashas
+  assert.strictEqual(result.conditionalDashas.length, 5);
+  for (const cd of result.conditionalDashas) {
+    assert.ok(cd.dashaName);
+    assert.ok(cd.totalSpanYears > 0);
+    assert.ok(typeof cd.isEligible === "boolean");
+    assert.ok(cd.eligibilityReason.length > 10);
+  }
+
+  // 4. Tithi Pravesha & Master Synthesis
+  assert.ok(result.tithiPraveshaOverview.length > 20);
+  assert.ok(result.masterCruxSynthesis.length > 30);
+});
+
+
 
 
 
