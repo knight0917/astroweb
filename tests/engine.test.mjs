@@ -1658,6 +1658,57 @@ test("Classical Gayatri Jyotish (24 Aksharas, 9 Graha Gayatris & 5 Koshas) Verif
   assert.ok(result.masterGayatriSynthesis.length > 30);
 });
 
+test("Classical Acharya Ganesh Kavi Jataka Alankara (1613 CE) Verification", async () => {
+  const { evaluateJatakaAlankara } = await import("../src/engine/jatakaAlankara.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateJatakaAlankara(natalEphem);
+
+  // 1. 12 Bhava Alankaras
+  assert.strictEqual(result.bhavaAlankaras.length, 12);
+  assert.ok(result.strongestBhava);
+  assert.ok(result.strongestBhava.bhavaNum >= 1 && result.strongestBhava.bhavaNum <= 12);
+  assert.ok(result.strongestBhava.alankaraScore >= 10 && result.strongestBhava.alankaraScore <= 100);
+
+  for (const b of result.bhavaAlankaras) {
+    assert.ok(b.sanskritTitle);
+    assert.ok(b.signName);
+    assert.ok(b.lordName);
+    assert.ok(b.lordPlacementHouse >= 1 && b.lordPlacementHouse <= 12);
+    assert.ok(b.classicalPhala.length > 15);
+    assert.ok(b.shlokaReference.includes("J.A."));
+    assert.ok(["Uttama (Supreme)", "Madhyama (Moderate)", "Alpa (Modest)"].includes(b.ornamentationGrade));
+  }
+
+  // 2. Special Raja Yogas
+  assert.ok(result.specialYogas.length >= 4);
+  for (const y of result.specialYogas) {
+    assert.ok(y.yogaName);
+    assert.ok(y.sanskritName);
+    assert.ok(y.classicalShlokaEffect.length > 15);
+  }
+
+  // 3. Arishta & Disease Diagnostics
+  assert.strictEqual(result.diseaseDiagnostics.length, 4);
+  for (const d of result.diseaseDiagnostics) {
+    assert.ok(d.diseaseCategory);
+    assert.ok(["Low", "Moderate", "Elevated"].includes(d.vulnerabilityLevel));
+    assert.ok(d.astrologicalCause.length > 15);
+    assert.ok(d.classicalRemedy.length > 15);
+  }
+
+  // 4. Stri Jataka & Marital Fortune
+  assert.ok(result.maritalFortune.saubhagyaScore >= 0 && result.maritalFortune.saubhagyaScore <= 100);
+  assert.ok(result.maritalFortune.spouseCharacter.length > 15);
+  assert.ok(result.maritalFortune.maritalProsperityVerdict.length > 15);
+  assert.ok(result.maritalFortune.ganeshKaviRemedy.length > 15);
+  assert.ok(result.masterAlankaraSynthesis.length > 30);
+});
+
+
 
 
 

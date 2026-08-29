@@ -33,6 +33,7 @@ import { evaluateDevaKeralam } from "./devaKeralam";
 import { calculateSukaNadi } from "./sukaNadi";
 import { evaluateJaiminiSutrasComplete } from "./jaiminiSutras";
 import { evaluateGayatriJyotish } from "./gayatriJyotish";
+import { evaluateJatakaAlankara } from "./jatakaAlankara";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -535,6 +536,31 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 27. Acharya Ganesh Kavi Jataka Alankara (1613 CE) Suite
+  let alankaraSummary = "";
+  try {
+    const ja = evaluateJatakaAlankara(natalEphemeris);
+    const topHouses = [...ja.bhavaAlankaras].sort((a, b) => b.alankaraScore - a.alankaraScore).slice(0, 4);
+    const topHousesStr = topHouses.map((b) => `- **House ${b.bhavaNum} (${b.sanskritTitle.split(" ")[0]}):** ${b.alankaraScore}% (${b.ornamentationGrade}) • Lord: ${b.lordName} in H${b.lordPlacementHouse} • Occupants: ${b.occupants.join(", ") || "None"} -> ${b.classicalPhala}`).join("\n");
+    const activeYogas = ja.specialYogas.filter((y) => y.isFormed);
+    const yogasStr = activeYogas.length > 0
+      ? activeYogas.map((y) => `- 👑 **${y.yogaName}:** ${y.description} -> *${y.classicalShlokaEffect}*`).join("\n")
+      : "- Steady baseline planetary ornamentation.";
+    const diseaseStr = ja.diseaseDiagnostics.map((d) => `- **${d.diseaseCategory}:** ${d.vulnerabilityLevel} -> Remedy: ${d.classicalRemedy}`).join("\n");
+
+    alankaraSummary = [
+      "- **Supreme Ornamented House (उत्तम भाव अलंकार):** House " + ja.strongestBhava.bhavaNum + " (" + ja.strongestBhava.sanskritTitle + ") with " + ja.strongestBhava.alankaraScore + "% (" + ja.strongestBhava.ornamentationGrade + ")",
+      "- **Leading House Ornamentation Hierarchy (Ganesh Kavi Shlokas):**",
+      topHousesStr,
+      "- **Detected Jataka Alankara Special Yogas:**",
+      yogasStr,
+      "- **Arishta & Disease Diagnostics (रोग एवं अरिष्ट निर्णय):**",
+      diseaseStr,
+      "- **Stri Jataka & Marital Fortune (दाम्पत्य सौख्य):** Saubhagya Score: " + ja.maritalFortune.saubhagyaScore + "% • Spouse: " + ja.maritalFortune.spouseCharacter + " • " + ja.maritalFortune.maritalProsperityVerdict + " • Remedy: " + ja.maritalFortune.ganeshKaviRemedy,
+      "- **Master Jataka Alankara Synthesis:** " + ja.masterAlankaraSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -733,11 +759,14 @@ export function buildAstroDossier(
     "",
     "#### ☀️ 28. GAYATRI JYOTISH (SAVITA SOLAR RESONANCE & 24 AKSHARAS) DOSSIER:",
     gayatriSummary,
+    "",
+    "#### 🏛️ 29. ACHARYA GANESH KAVI JATAKA ALANKARA (1613 CE) DOSSIER:",
+    alankaraSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 29. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 30. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

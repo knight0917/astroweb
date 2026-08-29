@@ -399,5 +399,54 @@ export interface GayatriJyotishAnalysis {
   masterGayatriSynthesis: string;
 }
 
+export interface JatakaAlankaraBhava {
+  bhavaNum: number; // 1 to 12
+  sanskritTitle: string;
+  signName: string;
+  lordName: string;
+  lordPlacementHouse: number;
+  occupants: string[];
+  aspectingPlanets: string[];
+  alankaraScore: number; // 0-100%
+  ornamentationGrade: "Uttama (Supreme)" | "Madhyama (Moderate)" | "Alpa (Modest)";
+  classicalPhala: string;
+  shlokaReference: string;
+}
+
+export interface JatakaAlankaraYoga {
+  yogaName: string;
+  sanskritName: string;
+  category: "Raja Yoga" | "Dhana Yoga" | "Jnana Yoga" | "Arishta Yoga";
+  isFormed: boolean;
+  participatingPlanets: string[];
+  description: string;
+  classicalShlokaEffect: string;
+}
+
+export interface JatakaAlankaraDisease {
+  diseaseCategory: "Netra Roga (Vision)" | "Hridaya Roga (Cardiac)" | "Udara Roga (Digestive)" | "Asthi/Sandhi (Bone/Joints)" | "Vata/Pitta/Kapha";
+  vulnerabilityLevel: "Low" | "Moderate" | "Elevated";
+  astrologicalCause: string;
+  classicalRemedy: string;
+}
+
+export interface JatakaAlankaraMarital {
+  saubhagyaScore: number; // 0-100%
+  spouseCharacter: string;
+  maritalProsperityVerdict: string;
+  progenyProspects: string;
+  ganeshKaviRemedy: string;
+}
+
+export interface JatakaAlankaraAnalysis {
+  strongestBhava: JatakaAlankaraBhava;
+  bhavaAlankaras: JatakaAlankaraBhava[];
+  specialYogas: JatakaAlankaraYoga[];
+  diseaseDiagnostics: JatakaAlankaraDisease[];
+  maritalFortune: JatakaAlankaraMarital;
+  masterAlankaraSynthesis: string;
+}
+
+
 
 
