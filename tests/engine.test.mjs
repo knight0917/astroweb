@@ -1603,6 +1603,62 @@ test("Classical Maharshi Jaimini Upadesha Sutras (Complete 4 Adhyayas) Verificat
   assert.ok(result.masterJaiminiSynthesis.length > 30);
 });
 
+test("Classical Gayatri Jyotish (24 Aksharas, 9 Graha Gayatris & 5 Koshas) Verification", async () => {
+  const { evaluateGayatriJyotish } = await import("../src/engine/gayatriJyotish.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateGayatriJyotish(natalEphem);
+
+  // 1. Personal Gayatri Akshara
+  assert.ok(result.personalAkshara);
+  assert.ok(result.personalAkshara.syllable.length > 0);
+  assert.ok(result.personalAkshara.presidingDeity.length > 0);
+  assert.ok(result.personalAkshara.presidingRishi.length > 0);
+  assert.ok(result.savitaSolarResonanceScore >= 0 && result.savitaSolarResonanceScore <= 100);
+
+  // 2. 24 Akshara Matrix
+  assert.strictEqual(result.aksharaMatrix.length, 24);
+  for (const ak of result.aksharaMatrix) {
+    assert.ok(ak.syllable);
+    assert.ok(ak.presidingDeity);
+    assert.ok(ak.presidingRishi);
+    assert.ok(ak.tattwa);
+    assert.ok(ak.associatedRashiName);
+  }
+
+  // 3. 9 Graha Gayatri Mantras
+  assert.strictEqual(result.grahaGayatris.length, 9);
+  for (const gg of result.grahaGayatris) {
+    assert.ok(gg.planetName);
+    assert.ok(gg.sanskritMantra.includes("धीमहि"));
+    assert.ok(gg.englishTransliteration.includes("Dhimahi"));
+    assert.ok(gg.afflictionScore >= 0 && gg.afflictionScore <= 100);
+    assert.ok(gg.recommendedDailyMalas >= 1);
+  }
+
+  // 4. 5 Kosha Diagnostics
+  assert.strictEqual(result.koshaDiagnostics.length, 5);
+  const koshaNames = result.koshaDiagnostics.map((k) => k.koshaName);
+  assert.deepStrictEqual(koshaNames, ["Annamaya", "Pranamaya", "Manomaya", "Vijnanamaya", "Anandamaya"]);
+  for (const kd of result.koshaDiagnostics) {
+    assert.ok(kd.vitalityScore >= 0 && kd.vitalityScore <= 100);
+    assert.ok(["Fortified", "Balanced", "Depleted"].includes(kd.pranicStatus));
+    assert.ok(kd.harmonizationGuidance.length > 15);
+  }
+
+  // 5. Anushthana Plan & Master Synthesis
+  assert.ok(result.anushthanaPlan);
+  assert.ok(result.anushthanaPlan.targetJapaCount > 0);
+  assert.ok(result.anushthanaPlan.dailyMalaCount >= 1);
+  assert.ok(result.anushthanaPlan.suryaArghyaGuidance.length > 20);
+  assert.ok(result.anushthanaPlan.savitaMeditationVisualization.length > 20);
+  assert.ok(result.masterGayatriSynthesis.length > 30);
+});
+
+
 
 
 

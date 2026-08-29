@@ -32,6 +32,7 @@ import { evaluateBrihatSamhita } from "./brihatSamhita";
 import { evaluateDevaKeralam } from "./devaKeralam";
 import { calculateSukaNadi } from "./sukaNadi";
 import { evaluateJaiminiSutrasComplete } from "./jaiminiSutras";
+import { evaluateGayatriJyotish } from "./gayatriJyotish";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -507,6 +508,33 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 26. Gayatri Jyotish (Savita Solar Resonance & 24 Aksharas) Suite
+  let gayatriSummary = "";
+  try {
+    const gj = evaluateGayatriJyotish(natalEphemeris);
+    const koshasStr = gj.koshaDiagnostics.map((k) => `- **${k.sanskritTitle}:** ${k.vitalityScore}% (${k.pranicStatus}) • Guidance: ${k.harmonizationGuidance}`).join("\n");
+    const afflictedGayatris = gj.grahaGayatris.filter((g) => g.afflictionScore >= 35);
+    const gayatrisStr = afflictedGayatris.length > 0
+      ? afflictedGayatris.map((g) => `- 🕉️ **${g.planetName} Gayatri (${g.presidingDevata} — Affliction: ${g.afflictionScore}%):** \`${g.sanskritMantra}\` (${g.recommendedDailyMalas} Malas/day) -> ${g.therapeuticEffect}`).join("\n")
+      : "- All 9 Grahas in serene cosmic harmony; standard Rigvedic Gayatri recitation sufficient.";
+
+    gayatriSummary = [
+      "- **Personal Gayatri Akshara (Janma Nakshatra Pada):** **" + gj.personalAkshara.syllable + "** (Pada " + gj.personalAkshara.padaNumber + ") • Presiding Deity: **" + gj.personalAkshara.presidingDeity + "** • Rishi: **" + gj.personalAkshara.presidingRishi + "** • Tattwa: " + gj.personalAkshara.tattwa,
+      "- **Savita Solar Resonance Score:** **" + gj.savitaSolarResonanceScore + "%** (Solar Core Prana)",
+      "- **5 Kosha Spiritual Vitality Diagnostics (पञ्चकोश विश्लेषण):**",
+      koshasStr,
+      "- **Targeted Graha Gayatri Remedial Mantras:**",
+      gayatrisStr,
+      "- **Personalized Gayatri Anushthana Prescription:**",
+      "  - Recommended Form: **" + gj.anushthanaPlan.recommendedAnushthana + "** (" + gj.anushthanaPlan.targetJapaCount + " Total Japa, " + gj.anushthanaPlan.dailyMalaCount + " Malas/day for " + gj.anushthanaPlan.durationDays + " days)",
+      "  - Optimal Timing: " + gj.anushthanaPlan.optimalSandhyaTiming,
+      "  - Surya Arghya Ritual: " + gj.anushthanaPlan.suryaArghyaGuidance,
+      "  - Savita Dhyana Visualization: " + gj.anushthanaPlan.savitaMeditationVisualization,
+      "  - Protective Shield: " + gj.anushthanaPlan.recommendedKavacham,
+      "- **Master Gayatri Synthesis:** " + gj.masterGayatriSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -702,11 +730,14 @@ export function buildAstroDossier(
     "",
     "#### 📜 27. MAHARSHI JAIMINI UPADESHA SUTRAS (COMPLETE 4 ADHYAYAS) DOSSIER:",
     jsSummary,
+    "",
+    "#### ☀️ 28. GAYATRI JYOTISH (SAVITA SOLAR RESONANCE & 24 AKSHARAS) DOSSIER:",
+    gayatriSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 28. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 29. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

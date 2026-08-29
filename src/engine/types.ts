@@ -345,4 +345,59 @@ export interface JaiminiSutrasCompleteAnalysis {
   masterJaiminiSynthesis: string;
 }
 
+export interface GayatriAksharaInfo {
+  index: number; // 1 to 24
+  syllable: string; // e.g. "तत् (Tat)"
+  padaNumber: 1 | 2 | 3;
+  presidingDeity: string;
+  presidingRishi: string;
+  tattwa: string;
+  associatedRashiIndex: number;
+  associatedRashiName: string;
+  planetsPresent: string[];
+  spiritualSignification: string;
+}
+
+export interface GrahaGayatriMantra {
+  planetName: string;
+  sanskritMantra: string;
+  englishTransliteration: string;
+  afflictionScore: number; // 0-100
+  afflictionReason: string;
+  recommendedDailyMalas: number;
+  presidingDevata: string;
+  therapeuticEffect: string;
+}
+
+export interface KoshaDiagnostic {
+  koshaName: "Annamaya" | "Pranamaya" | "Manomaya" | "Vijnanamaya" | "Anandamaya";
+  sanskritTitle: string;
+  governingPlanets: string[];
+  vitalityScore: number; // 0-100%
+  pranicStatus: "Fortified" | "Balanced" | "Depleted";
+  harmonizationGuidance: string;
+}
+
+export interface GayatriAnushthanaPlan {
+  recommendedAnushthana: "Laghu Gayatri Anushthana (24,000 Japa)" | "Maha Gayatri Anushthana (125,000 Japa)" | "Daily Nitya Gayatri Sandhya";
+  targetJapaCount: number;
+  dailyMalaCount: number;
+  durationDays: number;
+  optimalSandhyaTiming: string;
+  suryaArghyaGuidance: string;
+  savitaMeditationVisualization: string;
+  recommendedKavacham: string;
+}
+
+export interface GayatriJyotishAnalysis {
+  personalAkshara: GayatriAksharaInfo;
+  savitaSolarResonanceScore: number; // 0-100%
+  aksharaMatrix: GayatriAksharaInfo[];
+  grahaGayatris: GrahaGayatriMantra[];
+  koshaDiagnostics: KoshaDiagnostic[];
+  anushthanaPlan: GayatriAnushthanaPlan;
+  masterGayatriSynthesis: string;
+}
+
+
 
