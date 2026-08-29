@@ -297,3 +297,174 @@ export function evaluateBhriguNadi(
     currentYearBsp,
   };
 }
+
+/**
+ * R.G. Rao's Bhrigu Prashna Nadi (भृगु प्रश्न नाड़ी)
+ * Instant Horary Directional Oracle
+ */
+export function evaluateBhriguPrashna(
+  ephemeris: EphemerisResult,
+  queryDomain: "Career" | "Finance" | "Marriage" | "Health" | "Travel" | "Property" = "Career"
+): import("./types").BhriguPrashnaAnalysis {
+  const planets = ephemeris.planets;
+  const ascSignIdx = Math.floor(ephemeris.ascendant.siderealLongitude / 30);
+
+  const domainKarakaMap: Record<string, { karaka: string; targetDirIndex: number }> = {
+    Career: { karaka: "Saturn", targetDirIndex: 1 }, // South / Artha
+    Finance: { karaka: "Venus", targetDirIndex: 1 }, // South / Artha
+    Marriage: { karaka: "Venus", targetDirIndex: 2 }, // West / Kama
+    Health: { karaka: "Jupiter", targetDirIndex: 0 }, // East / Dharma
+    Travel: { karaka: "Moon", targetDirIndex: 3 }, // North / Moksha
+    Property: { karaka: "Mars", targetDirIndex: 1 }, // South / Artha
+  };
+
+  const config = domainKarakaMap[queryDomain] || domainKarakaMap.Career;
+  const karakaObj = planets[config.karaka];
+  const karakaSignIdx = karakaObj ? Math.floor(karakaObj.siderealLongitude / 30) : 0;
+  const karakaDir = DIRECTION_MAP[karakaSignIdx]?.dir || "East (Agni)";
+
+  // Find planets sharing the same directional trines (1, 5, 9 from karaka)
+  const dirCompanions = Object.entries(planets)
+    .filter(([name, p]) => {
+      if (name === config.karaka || p.isModernPlanet || p.isUpagraha) return false;
+      const pSign = Math.floor(p.siderealLongitude / 30);
+      return pSign % 4 === karakaSignIdx % 4;
+    })
+    .map(([name]) => name);
+
+  let score = 50;
+  if (dirCompanions.includes("Jupiter") || dirCompanions.includes("Venus")) score += 25;
+  if (dirCompanions.includes("Mercury") || dirCompanions.includes("Sun")) score += 15;
+  if (dirCompanions.includes("Rahu") || dirCompanions.includes("Saturn")) score -= 15;
+
+  score = Math.max(20, Math.min(95, score));
+
+  const outcome: import("./types").BhriguPrashnaAnalysis["outcome"] =
+    score >= 70
+      ? "Immediate Success (शीघ्र कार्य सिद्धि)"
+      : score >= 50
+      ? "Moderate / Effort Required (प्रयत्न साध्य)"
+      : "Obstruction (विघ्न / अवरोध)";
+
+  const bhriguPrashnaVerdict = `Bhrigu Prashna Nadi: Primary Karaka ${config.karaka} posited in ${karakaDir} accompanied by trinal Grahas: [${dirCompanions.join(", ") || "None"}]. Oracle confirms ${outcome.split(" (")[0]} for ${queryDomain} query.`;
+
+  return {
+    queryKaraka: config.karaka,
+    queryDomain,
+    directionalDisposition: `${karakaDir} Trinal Axis`,
+    outcome,
+    probabilityScore: score,
+    bhriguPrashnaVerdict,
+  };
+}
+
+/**
+ * Essence of Nadi Astrology: 12-Year Jupiter (Jeeva) Age Progression Cycles
+ */
+export function calculateNadiAgeProgressions(ephemeris: EphemerisResult): import("./types").NadiAgeProgressionCycle[] {
+  const jupObj = ephemeris.planets.Jupiter;
+  const jupSignIdx = jupObj ? Math.floor(jupObj.siderealLongitude / 30) : 0;
+
+  const cycles: import("./types").NadiAgeProgressionCycle[] = [
+    {
+      cycleRound: 1,
+      ageRange: "Ages 1 - 12 (Infancy & Education)",
+      progressedSign: SIGN_NAMES[jupSignIdx],
+      activatedHouses: [1, 5, 9],
+      lifeFocus: "Physical growth, primary schooling, parental nurture, foundational Sanskaras.",
+      keyMilestones: "Immunity building, language acquisition, and foundational learning.",
+    },
+    {
+      cycleRound: 2,
+      ageRange: "Ages 13 - 24 (Higher Learning & Skills)",
+      progressedSign: SIGN_NAMES[(jupSignIdx + 1) % 12],
+      activatedHouses: [2, 6, 10],
+      lifeFocus: "Higher education, career skill acquisition, competitive exams, initial financial self-reliance.",
+      keyMilestones: "Graduation, first job / venture, and emergence of independent identity.",
+    },
+    {
+      cycleRound: 3,
+      ageRange: "Ages 25 - 36 (Career & Conjugal Union)",
+      progressedSign: SIGN_NAMES[(jupSignIdx + 2) % 12],
+      activatedHouses: [3, 7, 11],
+      lifeFocus: "Matrimony, establishment of family lineage, major career promotions, asset creation.",
+      keyMilestones: "Marriage, childbirth, real estate purchase, and professional expansion.",
+    },
+    {
+      cycleRound: 4,
+      ageRange: "Ages 37 - 48 (Executive Pinnacle & Status)",
+      progressedSign: SIGN_NAMES[(jupSignIdx + 3) % 12],
+      activatedHouses: [4, 8, 12],
+      lifeFocus: "Peak professional leadership, societal prestige, wealth accumulation, spiritual introspection.",
+      keyMilestones: "Executive authority, major business breakthroughs, and mentorship roles.",
+    },
+    {
+      cycleRound: 5,
+      ageRange: "Ages 49 - 60 (Legacy Consolidation & Dharma)",
+      progressedSign: SIGN_NAMES[(jupSignIdx + 4) % 12],
+      activatedHouses: [1, 5, 9],
+      lifeFocus: "Children's settlement, philanthropic investments, religious pilgrimages, legacy handoff.",
+      keyMilestones: "Grandchildren, senior societal honors, and spiritual renunciation.",
+    },
+    {
+      cycleRound: 6,
+      ageRange: "Ages 61 - 72+ (Moksha & Spiritual Enlightenment)",
+      progressedSign: SIGN_NAMES[(jupSignIdx + 5) % 12],
+      activatedHouses: [2, 6, 10],
+      lifeFocus: "Self-realization, dispassionate wisdom, sharing ancestral knowledge, liberation.",
+      keyMilestones: "Spiritual mastery, peace of mind, and harmonious detachment.",
+    },
+  ];
+
+  return cycles;
+}
+
+/**
+ * Bhrigu Nadi Sangraha: Rare Nadi Planetary Combinations
+ */
+export function detectNadiSangrahaYogas(ephemeris: EphemerisResult): { yogaName: string; participatingPlanets: string[]; description: string; effect: string }[] {
+  const planets = ephemeris.planets;
+  const yogas: { yogaName: string; participatingPlanets: string[]; description: string; effect: string }[] = [];
+
+  const getSign = (p: string) => Math.floor((planets[p]?.siderealLongitude || 0) / 30);
+  const areInTrine = (p1: string, p2: string) => planets[p1] && planets[p2] && getSign(p1) % 4 === getSign(p2) % 4;
+
+  if (areInTrine("Jupiter", "Moon")) {
+    yogas.push({
+      yogaName: "Guru-Chandra Nadi Yoga (ज्ञान एवं जनप्रियता)",
+      participatingPlanets: ["Jupiter", "Moon"],
+      description: "Jupiter and Moon in trinal resonance (1-5-9 axis).",
+      effect: "Bestows high emotional intelligence, spotless reputation, divine protection, and public popularity.",
+    });
+  }
+
+  if (areInTrine("Jupiter", "Venus")) {
+    yogas.push({
+      yogaName: "Guru-Shukra Maha Bhoga Yoga (वैभव एवं राजसुख)",
+      participatingPlanets: ["Jupiter", "Venus"],
+      description: "Two great Gurus (Devaguru Jupiter and Daityaguru Venus) in trinal connection.",
+      effect: "Confers profound aesthetic refinement, abundant wealth, luxury vehicles, and spiritual elegance.",
+    });
+  }
+
+  if (areInTrine("Saturn", "Rahu")) {
+    yogas.push({
+      yogaName: "Shani-Rahu Videsha/Tantra Yoga (विदेश एवं तकनीकी कर्म)",
+      participatingPlanets: ["Saturn", "Rahu"],
+      description: "Saturn (Karma) trine Rahu (Foreign/Innovation).",
+      effect: "Unlocks cutting-edge technological mastery, international business, foreign employment, and unconventional success.",
+    });
+  }
+
+  if (areInTrine("Mars", "Ketu")) {
+    yogas.push({
+      yogaName: "Mangala-Ketu Astra/Trikala Yoga (शल्यक्रिया एवं सूक्ष्म पराक्रम)",
+      participatingPlanets: ["Mars", "Ketu"],
+      description: "Mars (Valour) trine Ketu (Moksha/Precision).",
+      effect: "Produces extraordinary surgical precision, technical problem solving, martial arts prowess, or intense spiritual tapas.",
+    });
+  }
+
+  return yogas;
+}
+

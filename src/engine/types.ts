@@ -1071,6 +1071,57 @@ export interface ChappannaPrasnaAnalysis {
   masterPrasnaSynthesis: string;
 }
 
+export interface BhriguKarmicDebt {
+  debtName: "Pitru Rina (पितृ ऋण - Paternal Debt)" | "Matru Rina (मातृ ऋण - Maternal Debt)" | "Bhratri Rina (भ्रातृ ऋण - Sibling Debt)" | "Stri Rina (स्त्री ऋण - Spouse/Female Debt)" | "Brahma Hatya Rina (ब्रह्म हत्या ऋण - Guru/Scholar Debt)" | "Sarpa Rina (सर्प ऋण - Serpent Curse)";
+  isAfflicted: boolean;
+  severity: "Severe (गम्भीर)" | "Moderate (मध्यम)" | "Clear / Unafflicted (ऋण मुक्त)";
+  afflictingPlanets: string[];
+  karmicReason: string;
+  symptomsInCurrentLife: string;
+  bhriguSamhitaRemedy: string;
+}
+
+export interface BhriguBhavaKarmicReading {
+  bhava: number;
+  bhavaName: string;
+  occupyingPlanets: string[];
+  karmicImprint: string;
+  bhriguDictum: string;
+}
+
+export interface BhriguSamhitaAnalysis {
+  karmicDebts: BhriguKarmicDebt[];
+  bhavaReadings: BhriguBhavaKarmicReading[];
+  dominantPastLifeTheme: string;
+  masterSamhitaSynthesis: string;
+}
+
+export interface BhriguPrashnaDirection {
+  directionName: "East (पूर्व - Dharma)" | "South (दक्षिण - Artha)" | "West (पश्चिम - Kama)" | "North (उत्तर - Moksha)";
+  houses: number[];
+  planets: string[];
+  karakaSignificance: string;
+}
+
+export interface BhriguPrashnaAnalysis {
+  queryKaraka: string;
+  queryDomain: string;
+  directionalDisposition: string;
+  outcome: "Immediate Success (शीघ्र कार्य सिद्धि)" | "Moderate / Effort Required (प्रयत्न साध्य)" | "Obstruction (विघ्न / अवरोध)";
+  probabilityScore: number;
+  bhriguPrashnaVerdict: string;
+}
+
+export interface NadiAgeProgressionCycle {
+  cycleRound: number; // 1 to 6
+  ageRange: string; // "Ages 1 - 12", "Ages 13 - 24", etc.
+  progressedSign: string;
+  activatedHouses: number[];
+  lifeFocus: string;
+  keyMilestones: string;
+}
+
+
 
 
 

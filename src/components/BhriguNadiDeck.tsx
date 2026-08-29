@@ -2,16 +2,35 @@
 
 import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
-import { evaluateBhriguNadi, BhriguNadiReport } from "../engine/bhriguNadi";
+import {
+  evaluateBhriguNadi,
+  evaluateBhriguPrashna,
+  calculateNadiAgeProgressions,
+  detectNadiSangrahaYogas,
+  BhriguNadiReport,
+} from "../engine/bhriguNadi";
 
 export default function BhriguNadiDeck() {
   const { ephemeris, currentDate } = useAstroStore();
-  const [activeTab, setActiveTab] = useState<"quadrants" | "jiva-karma" | "bsp-timeline">("quadrants");
+  const [activeTab, setActiveTab] = useState<"quadrants" | "jiva-karma" | "bsp-timeline" | "prashna" | "progressions" | "sangraha">("quadrants");
   const [previewAge, setPreviewAge] = useState<number | null>(null);
+  const [prashnaDomain, setPrashnaDomain] = useState<"Career" | "Finance" | "Marriage" | "Health" | "Travel" | "Property">("Career");
 
   const report: BhriguNadiReport = useMemo(() => {
     return evaluateBhriguNadi(ephemeris, currentDate);
   }, [ephemeris, currentDate]);
+
+  const prashnaReport = useMemo(() => {
+    return evaluateBhriguPrashna(ephemeris, prashnaDomain);
+  }, [ephemeris, prashnaDomain]);
+
+  const ageProgressions = useMemo(() => {
+    return calculateNadiAgeProgressions(ephemeris);
+  }, [ephemeris]);
+
+  const sangrahaYogas = useMemo(() => {
+    return detectNadiSangrahaYogas(ephemeris);
+  }, [ephemeris]);
 
   const selectedAge = previewAge !== null ? previewAge : report.runningAge;
   const currentBspItem = report.activeBspActivations.find((b) => b.ageYear === selectedAge) || report.currentYearBsp;
@@ -24,11 +43,11 @@ export default function BhriguNadiDeck() {
           <div className="flex items-center gap-2">
             <span className="text-xl">📜</span>
             <h2 className="text-lg font-bold text-slate-100">
-              Bhrigu Nandi Nadi (BNN) & Bhrigu Saral Paddhati (BSP) Suite
+              Bhrigu Nandi Nadi (BNN) & R.G. Rao Nadi Master Suite
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Sri R.G. Rao Tradition & Saptarishis Astrology — Directional 1-5-9 Trines, Jiva/Karma Nadi Linkages, and Age-Based Karmic Triggers.
+            Sri R.G. Rao Tradition — Directional 1-5-9 Trines, Jiva/Karma Linkages, Bhrigu Prashna, Age Progressions & BSP Triggers.
           </p>
         </div>
 
@@ -55,7 +74,7 @@ export default function BhriguNadiDeck() {
               : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
           }`}
         >
-          🧭 4 Directional Quadrants (1-5-9 Trines)
+          🧭 4 Directional Quadrants (1-5-9)
         </button>
         <button
           onClick={() => setActiveTab("jiva-karma")}
@@ -65,7 +84,37 @@ export default function BhriguNadiDeck() {
               : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
           }`}
         >
-          👑 Jiva (Self) & Karma (Saturn) Profiles
+          👑 Jiva (Guru) & Karma (Shani)
+        </button>
+        <button
+          onClick={() => setActiveTab("prashna")}
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "prashna"
+              ? "bg-amber-500 text-slate-950 shadow"
+              : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
+          }`}
+        >
+          🔮 Bhrigu Prashna Nadi Oracle
+        </button>
+        <button
+          onClick={() => setActiveTab("progressions")}
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "progressions"
+              ? "bg-amber-500 text-slate-950 shadow"
+              : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
+          }`}
+        >
+          ⏳ Nadi Age Progressions (12-Yr)
+        </button>
+        <button
+          onClick={() => setActiveTab("sangraha")}
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "sangraha"
+              ? "bg-amber-500 text-slate-950 shadow"
+              : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
+          }`}
+        >
+          ⭐ Nadi Sangraha Yogas
         </button>
         <button
           onClick={() => setActiveTab("bsp-timeline")}
@@ -75,51 +124,69 @@ export default function BhriguNadiDeck() {
               : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
           }`}
         >
-          ⏳ BSP Age Karmic Timeline
+          🎯 BSP Karmic Triggers (Year-by-Year)
         </button>
       </div>
 
-      {/* Tab 1: 4 Directional Quadrants */}
+      {/* TAB 1: 4 DIRECTIONAL QUADRANTS */}
       {activeTab === "quadrants" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Object.entries(report.directionalClusters).map(([key, cluster]) => {
-            const isEast = key === "East";
-            const isSouth = key === "South";
-            const isWest = key === "West";
-            const colorBorder = isEast ? "border-red-500/40 bg-red-950/20" : isSouth ? "border-amber-500/40 bg-amber-950/20" : isWest ? "border-blue-500/40 bg-blue-950/20" : "border-cyan-500/40 bg-cyan-950/20";
-            const colorTitle = isEast ? "text-red-400" : isSouth ? "text-amber-400" : isWest ? "text-blue-400" : "text-cyan-400";
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Object.entries(report.directionalClusters).map(([dirKey, cluster]) => {
+            const isAgni = cluster.element === "Agni";
+            const isPrithvi = cluster.element === "Prithvi";
+            const isVayu = cluster.element === "Vayu";
+            const isJala = cluster.element === "Jala";
+
+            const borderCol = isAgni
+              ? "border-rose-500/30 bg-rose-950/10"
+              : isPrithvi
+              ? "border-amber-500/30 bg-amber-950/10"
+              : isVayu
+              ? "border-sky-500/30 bg-sky-950/10"
+              : "border-emerald-500/30 bg-emerald-950/10";
+
+            const tagCol = isAgni
+              ? "text-rose-400 bg-rose-950/60 border-rose-800/60"
+              : isPrithvi
+              ? "text-amber-400 bg-amber-950/60 border-amber-800/60"
+              : isVayu
+              ? "text-sky-400 bg-sky-950/60 border-sky-800/60"
+              : "text-emerald-400 bg-emerald-950/60 border-emerald-800/60";
 
             return (
-              <div key={key} className={`p-4 rounded-2xl border ${colorBorder} flex flex-col justify-between gap-3`}>
+              <div key={dirKey} className={`p-4 rounded-2xl border ${borderCol} flex flex-col justify-between gap-3 shadow-lg`}>
                 <div>
-                  <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
-                    <span className={`text-sm font-bold ${colorTitle}`}>{cluster.direction}</span>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded border border-slate-800">
-                      {cluster.element}
+                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                    <span className="font-black text-sm text-slate-100">{cluster.direction}</span>
+                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${tagCol}`}>
+                      {cluster.element} Element
                     </span>
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-2 font-medium">
-                    Signs: <strong className="text-slate-300">{cluster.signs.join(", ")}</strong>
+
+                  <div className="text-xs text-slate-400 mt-2">
+                    <strong>Signs:</strong> {cluster.signs.join(", ")}
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{cluster.description}</p>
+
+                  <div className="mt-2">
+                    <span className="text-[10px] uppercase text-slate-500 font-bold block mb-1">
+                      Conjoined Planets in this Trinal Arc:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {cluster.planets.length > 0 ? (
+                        cluster.planets.map((p) => (
+                          <span key={p} className="px-2 py-0.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-200">
+                            {p}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs text-slate-500 italic">No Grahas (Empty Arc)</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Planets posited */}
-                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 mt-1">
-                  <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
-                    Conjunct Planets (1-5-9):
-                  </div>
-                  {cluster.planets.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {cluster.planets.map((p) => (
-                        <span key={p} className="px-2 py-0.5 rounded-md text-xs font-bold bg-slate-900 text-slate-200 border border-slate-700">
-                          {p}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-xs text-slate-500 italic">No planets in this quadrant</span>
-                  )}
+                <div className="text-[11px] text-slate-400 border-t border-slate-800/60 pt-2 leading-relaxed">
+                  {cluster.description}
                 </div>
               </div>
             );
@@ -127,74 +194,66 @@ export default function BhriguNadiDeck() {
         </div>
       )}
 
-      {/* Tab 2: Jiva & Karma Profiles */}
+      {/* TAB 2: JIVA & KARMA */}
       {activeTab === "jiva-karma" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Jiva Karaka (Jupiter) */}
-          <div className="p-5 rounded-2xl border border-amber-500/30 bg-amber-950/15 flex flex-col gap-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Jiva Card */}
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-950/20 to-slate-950 border border-amber-500/30 flex flex-col gap-4">
+            <div className="border-b border-slate-800 pb-2 flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">{report.jivaProfile.sanskritRole}</span>
-                <h3 className="text-base font-bold text-slate-100">{report.jivaProfile.karakaName}</h3>
+                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Self & Soul Vector</span>
+                <h3 className="text-base font-black text-slate-100">Jiva Karaka (Jupiter / गुरु)</h3>
               </div>
-              <span className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              <span className="text-xs font-bold text-amber-300 bg-amber-950/80 px-2.5 py-1 rounded-lg border border-amber-800">
                 {report.jivaProfile.occupiedSign} (H{report.jivaProfile.occupiedHouse})
               </span>
             </div>
 
             <div className="space-y-2 text-xs">
-              <div className="flex justify-between border-b border-slate-800/60 pb-1">
-                <span className="text-slate-400">Directional Trines (1-5-9):</span>
-                <span className="font-semibold text-slate-200">{report.jivaProfile.directionalCompanions.join(", ") || "None (Independent)"}</span>
+              <div>
+                <span className="text-slate-400 font-bold">Directional Trine Allies (1-5-9):</span>
+                <p className="text-slate-200 mt-0.5">{report.jivaProfile.directionalCompanions.join(", ") || "Solo Transit"}</p>
               </div>
-              <div className="flex justify-between border-b border-slate-800/60 pb-1">
-                <span className="text-slate-400">2nd House (Forward Momentum):</span>
-                <span className="font-semibold text-emerald-400">{report.jivaProfile.secondHousePlanets.join(", ") || "Open space"}</span>
+              <div>
+                <span className="text-slate-400 font-bold">Next House Ahead (2nd - Food/Future):</span>
+                <p className="text-slate-200 mt-0.5">{report.jivaProfile.secondHousePlanets.join(", ") || "Empty"}</p>
               </div>
-              <div className="flex justify-between border-b border-slate-800/60 pb-1">
-                <span className="text-slate-400">12th House (Past Baggage / Support):</span>
-                <span className="font-semibold text-slate-300">{report.jivaProfile.twelfthHousePlanets.join(", ") || "None"}</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-800/60 pb-1">
-                <span className="text-slate-400">7th House (Direct Dialogue):</span>
-                <span className="font-semibold text-purple-300">{report.jivaProfile.seventhHousePlanets.join(", ") || "None"}</span>
+              <div>
+                <span className="text-slate-400 font-bold">Behind House (12th - Past Karma/Baggage):</span>
+                <p className="text-slate-200 mt-0.5">{report.jivaProfile.twelfthHousePlanets.join(", ") || "Clear"}</p>
               </div>
             </div>
 
             <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 mt-auto">
-              <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1">Jiva Nadi Synthesis</div>
+              <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1">Jiva Manifestation (R.G. Rao)</div>
               <p className="text-xs text-slate-300 leading-relaxed">{report.jivaProfile.synthesisVerdict}</p>
             </div>
           </div>
 
-          {/* Karma Karaka (Saturn) */}
-          <div className="p-5 rounded-2xl border border-purple-500/30 bg-purple-950/15 flex flex-col gap-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+          {/* Karma Card */}
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-purple-950/20 to-slate-950 border border-purple-500/30 flex flex-col gap-4">
+            <div className="border-b border-slate-800 pb-2 flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">{report.karmaProfile.sanskritRole}</span>
-                <h3 className="text-base font-bold text-slate-100">{report.karmaProfile.karakaName}</h3>
+                <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider">Profession & Duty Vector</span>
+                <h3 className="text-base font-black text-slate-100">Karma Karaka (Saturn / शनि)</h3>
               </div>
-              <span className="px-2 py-1 rounded-lg text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40">
+              <span className="text-xs font-bold text-purple-300 bg-purple-950/80 px-2.5 py-1 rounded-lg border border-purple-800">
                 {report.karmaProfile.occupiedSign} (H{report.karmaProfile.occupiedHouse})
               </span>
             </div>
 
             <div className="space-y-2 text-xs">
-              <div className="flex justify-between border-b border-slate-800/60 pb-1">
-                <span className="text-slate-400">Directional Trines (1-5-9):</span>
-                <span className="font-semibold text-slate-200">{report.karmaProfile.directionalCompanions.join(", ") || "None (Independent)"}</span>
+              <div>
+                <span className="text-slate-400 font-bold">Directional Trine Allies (1-5-9):</span>
+                <p className="text-slate-200 mt-0.5">{report.karmaProfile.directionalCompanions.join(", ") || "Solo Transit"}</p>
               </div>
-              <div className="flex justify-between border-b border-slate-800/60 pb-1">
-                <span className="text-slate-400">2nd House (Vocation Sustenance):</span>
-                <span className="font-semibold text-emerald-400">{report.karmaProfile.secondHousePlanets.join(", ") || "Open space"}</span>
+              <div>
+                <span className="text-slate-400 font-bold">Next House Ahead (2nd - Work Product):</span>
+                <p className="text-slate-200 mt-0.5">{report.karmaProfile.secondHousePlanets.join(", ") || "Empty"}</p>
               </div>
-              <div className="flex justify-between border-b border-slate-800/60 pb-1">
-                <span className="text-slate-400">12th House (Past Professional Debt):</span>
-                <span className="font-semibold text-slate-300">{report.karmaProfile.twelfthHousePlanets.join(", ") || "None"}</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-800/60 pb-1">
-                <span className="text-slate-400">7th House (Direct Aspect):</span>
-                <span className="font-semibold text-purple-300">{report.karmaProfile.seventhHousePlanets.join(", ") || "None"}</span>
+              <div>
+                <span className="text-slate-400 font-bold">Behind House (12th - Karmic Debt):</span>
+                <p className="text-slate-200 mt-0.5">{report.karmaProfile.twelfthHousePlanets.join(", ") || "Clear"}</p>
               </div>
             </div>
 
@@ -206,10 +265,125 @@ export default function BhriguNadiDeck() {
         </div>
       )}
 
-      {/* Tab 3: BSP Age Timeline */}
+      {/* TAB 3: BHRIGU PRASHNA NADI ORACLE */}
+      {activeTab === "prashna" && (
+        <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-5 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <span className="text-[10px] text-amber-400 uppercase font-bold">Sri R.G. Rao Classical Horary</span>
+              <h4 className="text-base font-black text-slate-100 mt-0.5">
+                Bhrigu Prashna Nadi (Directional Karaka Oracle)
+              </h4>
+            </div>
+
+            {/* Domain Selector */}
+            <div className="flex flex-wrap gap-1.5">
+              {(["Career", "Finance", "Marriage", "Health", "Travel", "Property"] as const).map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setPrashnaDomain(d)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    prashnaDomain === d
+                      ? "bg-amber-600 text-white shadow"
+                      : "bg-slate-900 text-slate-400 border border-slate-800"
+                  }`}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+              <span className="text-[10px] text-amber-400 font-bold uppercase">Query Disposition:</span>
+              <div className="text-sm font-bold text-slate-100">
+                Primary Karaka: <span className="text-amber-300">{prashnaReport.queryKaraka}</span>
+              </div>
+              <div className="text-slate-300">
+                Directional Axis: <strong>{prashnaReport.directionalDisposition}</strong>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+              <span className="text-[10px] text-emerald-400 font-bold uppercase">Oracle Verdict:</span>
+              <div className="text-sm font-black text-emerald-300">
+                {prashnaReport.outcome} ({prashnaReport.probabilityScore}%)
+              </div>
+              <div className="text-slate-300">
+                Instant horary resolution via trinal linkages.
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30">
+            <span className="text-amber-300 font-bold block mb-1">📜 Bhrigu Prashna Synthesis:</span>
+            <p className="text-slate-200 leading-relaxed">{prashnaReport.bhriguPrashnaVerdict}</p>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: NADI AGE PROGRESSIONS */}
+      {activeTab === "progressions" && (
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-sm font-black text-slate-100">12-Year Jupiter (Jeeva) Age Progression Cycles</h4>
+            <p className="text-xs text-slate-400">
+              Per Essence of Nadi Astrology (R.G. Rao), Jupiter advances through 12-year developmental rounds.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {ageProgressions.map((cyc) => (
+              <div key={cyc.cycleRound} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="text-amber-400 font-bold">Round {cyc.cycleRound}</span>
+                  <span className="text-slate-200 font-bold">{cyc.progressedSign}</span>
+                </div>
+                <div className="text-slate-200 font-semibold">{cyc.ageRange}</div>
+                <p className="text-slate-300 leading-relaxed">{cyc.lifeFocus}</p>
+                <div className="pt-2 border-t border-slate-900 text-[11px] text-amber-300">
+                  ★ {cyc.keyMilestones}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: NADI SANGRAHA YOGAS */}
+      {activeTab === "sangraha" && (
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-sm font-black text-slate-100">Bhrigu Nadi Sangraha: Rare Planetary Yogas</h4>
+            <p className="text-xs text-slate-400">
+              High-potency trinal and directional yoga linkages from Bhrigu Nadi Sangraha.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {sangrahaYogas.map((y, idx) => (
+              <div key={idx} className="p-4 rounded-2xl bg-slate-950 border border-amber-500/30 space-y-2 text-xs">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <h5 className="font-bold text-slate-100">{y.yogaName}</h5>
+                  <span className="text-[10px] text-amber-300 font-mono">{y.participatingPlanets.join(" + ")}</span>
+                </div>
+                <p className="text-slate-300">{y.description}</p>
+                <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-200">
+                  <strong>Manifestation:</strong> {y.effect}
+                </div>
+              </div>
+            ))}
+            {sangrahaYogas.length === 0 && (
+              <p className="text-xs text-slate-500 italic">No rare Nadi Sangraha trinal yogas active.</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 6: BSP TIMELINE */}
       {activeTab === "bsp-timeline" && (
         <div className="space-y-6">
-          {/* Active Years Carousel / Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-11 gap-2">
             {report.activeBspActivations.map((b) => {
               const isSelected = selectedAge === b.ageYear;
@@ -238,7 +412,6 @@ export default function BhriguNadiDeck() {
             })}
           </div>
 
-          {/* Selected Age Deep Dive Box */}
           {currentBspItem && (
             <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-5 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
@@ -261,7 +434,6 @@ export default function BhriguNadiDeck() {
                 <strong>Core Cyclical House Domain:</strong> {currentBspItem.cycleHouseTheme}
               </div>
 
-              {/* Specific BSP Rule Triggers */}
               {currentBspItem.specificBspTriggers.length > 0 ? (
                 <div className="space-y-2 mt-2">
                   <div className="text-xs font-bold text-rose-400 uppercase tracking-wider">

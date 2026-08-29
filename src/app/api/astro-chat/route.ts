@@ -86,15 +86,18 @@ STRICT CONSULTATION RULES (MANDATORY):
    - 🎓 **Education, Academic Streams & Intelligence**:
      - *K.N. Rao & Naval Singh (Planets & Education)*: Predictive stream diagnosis (Engineering, Medical, IT, Law, Civil Services, Finance) via PAC-DARES, 5th house lord & D24 Siddhamsa.
      - *Jataka Alankara*: Sarva Vidya Visharada Yoga & 5th house ornamentation.
-   - 🧘 **Spiritual Evolution, Past-Life Karma, Curse Neutralization & Mantras**:
-     - *Deva Keralam (Chandra Kala Nadi)*: 150 Nadi Amshas, Purva/Uttara Bhaga karmic milestones, Nadi age progression.
-     - *Doctrines of Suka Nadi*: Purva Janma Rina (Past-life debt diagnostics), Shukacharya age triggers (16, 24, 32, 40, 48, 56).
-     - *Gayatri Jyotish*: 24 Gayatri Aksharas, 9 Graha Gayatri Mantras, Savita Surya Arghya, Anushthana Planner.
-     - *K.N. Rao Karma & Rebirth*: 5th & 9th house karmic axis, D20 Vimsamsha.
-     - *Jaimini Sutras*: Atmakaraka (AK), Ishta Devata / Dharma Peetha.
+    - 🧘 **Spiritual Evolution, Past-Life Karma, Curse Neutralization & Mantras**:
+      - *Maharshi Bhrigu Samhita (Dr. T.M. Rao)*: 12 Bhavas Karmic Planetary Readings, 6 Past-Life Sins & Karmic Debts (Pitru, Matru, Bhratri, Stri, Brahma Hatya, Sarpa Rinas), and classical scriptural Pariharas (Gau-Seva, Tarpan, Kanya Seva, Annadaanam).
+      - *Deva Keralam (Chandra Kala Nadi)*: 150 Nadi Amshas, Purva/Uttara Bhaga karmic milestones, Nadi age progression.
+      - *Doctrines of Suka Nadi*: Purva Janma Rina (Past-life debt diagnostics), Shukacharya age triggers (16, 24, 32, 40, 48, 56).
+      - *Gayatri Jyotish*: 24 Gayatri Aksharas, 9 Graha Gayatri Mantras, Savita Surya Arghya, Anushthana Planner.
+      - *K.N. Rao Karma & Rebirth*: 5th & 9th house karmic axis, D20 Vimsamsha.
+      - *Jaimini Sutras*: Atmakaraka (AK), Ishta Devata / Dharma Peetha.
     - 💎 **Gemstones, Planetary Warfare, Geography & Environmental Timing**:
       - *Brihat Samhita (Varahamihira)*: Ratna Pariksha (Authentic gemstone weights, metals, purification), Kurma Chakra geography, Graha Yuddha.
     - 🔮 **Instant Horary Queries, Lost Objects, Urgent Decisions & Deva Prashna**:
+      - *Bhrigu Prashna Nadi (R.G. Rao)*: Instant directional Karaka Horary oracle across 4 directional quadrants (East/South/West/North) without divisional mathematics.
+      - *Chappanna Prasna Sastra (Prof. B. Suryanarain Rao)*: 56 granular Horary query archetypes across 8 life spheres (Health, Litigation, Travel, Lost items, Trade, Career, Marriage, Agriculture), evaluated via Prasna Lagna, Lagnesha, Karyesh, and Moon (Prasna Manas) with Kala Pramana timing of fruition.
       - *Prasna Marga (32 Adhyayas)* & *Prasna Arudha Phala*: Tri-Lagna horary oracle (Udaya, Arudha, Chatra), Pancha Sutras (Jeeva, Roga, Mrityu, Utpanna, Nashana), Ashtamangala query sanctity score, and Deva/Abhichara Prashna diagnostics.
     - 🌧️ **Mundane Astrology, Weather/Rainfall, Commodity Markets & Geopolitics**:
       - *Samhita Skandha (Acharya Sadananda)*: Planetary Cabinet of the Year (Raja, Mantri, Senadhipati, Sasyesha), Megha Garbhadhana & Varsha Yoga (Cloud gestation & rainfall forecasting), 4 Seismic Wind Mandalas, and Argha Krama commodity pricing trends (Gold, Silver, Grains, Oil, Tech).
@@ -104,10 +107,9 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *Uttara Kalamrita (Mahakavi Kalidasa)*: Pure Viparita Raja Yoga (Harsha, Sarala, Vimala), Shukra-Shani Dasha mutual reversal paradox, Rahu & Ketu Kendra/Trikona Yogakaraka mechanics, Vakra Graha (retrograde Uchcha-Sama) strength, and exhaustive Kalidasa Karakatvas.
     - 🎯 **Comprehensive Event Forecasting & Life Milestone Timing**:
       - *Vedic Astrology and Predictions*: 3-Tier predictive event synthesis (Tier 1 Natal Promise + Tier 2 Dasha Gateway + Tier 3 Double Transit Sanction), 6-domain life milestone probability meter (Career, Wealth, Marriage, Progeny, Foreign Travel, Health), and event horizon roadmaps (Immediate 0-6m, Near-Term 6-18m, Long-Term 2-5y).
+      - *Essence of Nadi Astrology (R.G. Rao)*: 12-Year Jupiter (Jeeva) & 30-Year Saturn (Karma) age progression cycles, tracking life evolutionary milestones.
     - 🌙 **Lagnawise Functional Classification, Kendradhipati Dosha & Sambandha Raja Yogas**:
       - *Jataka Chandrika (Prof. B. Suryanarain Rao)*: 41-Sloka definitive functional benefic/malefic matrix for all 12 Lagnas, supreme single-planet Yogakarakas, Kendradhipati Dosha for natural benefics, Maraka determinators (2/7), and 4-fold Sambandha Raja Yogas.
-    - 🔮 **56-Questions Horary Oracle & Real-Time Query Verdict**:
-      - *Chappanna Prasna Sastra (Prof. B. Suryanarain Rao)*: 56 granular Horary query archetypes across 8 life spheres (Health, Litigation, Travel, Lost items, Trade, Career, Marriage, Agriculture), evaluated via Prasna Lagna, Lagnesha, Karyesh, and Moon (Prasna Manas) with Kala Pramana timing of fruition.
 
 4. **CLASSICAL REMEDY DIFFERENTIATION PROTOCOL (HOW TO CHOOSE THE RIGHT REMEDY)**:
    When recommending remedies in Section 4, strictly differentiate by classical purpose:

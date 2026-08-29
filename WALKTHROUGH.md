@@ -1,46 +1,51 @@
-# Walkthrough: Vedic Astrology and Predictions Master Suite Integration
+# Walkthrough: Jataka Chandrika & Chappanna Prasna Sastra Integration
 
-We have completed the algorithmic codification and full-stack integration of **Vedic Astrology and Predictions (वैदिक ज्योतिष एवं भविष्यकथन — Advanced Event Forecasting Suite)**.
-
----
-
-## 1. Calculation Engine ([`src/engine/vedicPredictions.ts`](file:///d:/newWayToAstro/src/engine/vedicPredictions.ts))
-- **Multi-Tiered Event Synthesis Engine (त्रिसूत्रीय फलकथन सिद्धान्त)**:
-  - **Tier 1 (Natal Promise)**: Evaluates foundational dignity and strength of prime Bhavas and Bhaveshas in D1 and Divisional Charts.
-  - **Tier 2 (Dasha Gateway)**: Validates Vimshottari Mahadasha and Antardasha lord connections with the relevant life domain.
-  - **Tier 3 (Double Transit Sanction)**: Validates simultaneous catalytic transit aspects of Jupiter (Guru) and Saturn (Shani).
-- **6-Domain Life Milestone Probability Meter (0–100%)**:
-  1. **Career Elevation & Leadership Promotion (कर्मोन्नति)**
-  2. **Wealth Inflow & Asset Expansion (धन लाभ)**
-  3. **Marriage & Soulmate Union (विवाह सुख)**
-  4. **Progeny, Education & Creative Breakthrough (सन्तान एवं विद्या)**
-  5. **Foreign Relocation & Global Venture (विदेश गमन)**
-  6. **Health Vitality & Chronic Recovery (आरोग्य लाभ)**
-- **Chronological Time Horizons**:
-  - Immediate (0–6 Months), Near-Term (6–18 Months), Long-Term (2–5 Years).
-- **Holistic Triad Remedial Protocol**:
-  - Mani (Gemstones for Yogakaraka), Mantra (Japa for Dasha lord), Dana/Aushadha (Charity & conduct).
+All three classical masterworks in `D:\ASTROLOGY-BOOKS-DATABASE-master\Books by Authors\b Suryanarain Rao` are now fully codified and integrated into the platform:
+1. **Sarvartha Chintamani** (Acharya Venkatesha Sharma / Prof. B. Suryanarain Rao)
+2. **Jataka Chandrika (Laghu Parashari)** (Prof. B. Suryanarain Rao, 1900)
+3. **Chappanna or Prasna Sastra (56 Questions Horary Oracle)** (Prof. B. Suryanarain Rao, 1946)
 
 ---
 
-## 2. AI Astrologer Chat Context Dossier & Dispatching ([`src/engine/chatContext.ts`](file:///d:/newWayToAstro/src/engine/chatContext.ts), [`src/app/api/astro-chat/route.ts`](file:///d:/newWayToAstro/src/app/api/astro-chat/route.ts))
-- Injected **Section 42: Vedic Astrology and Predictions Dossier** into the Astro Chat Dossier.
-- Renumbered Kundli Milan to Section 43.
-- Updated the Master Dispatching Matrix so questions regarding specific life milestone timing, career promotion dates, marriage timing windows, and wealth accumulation automatically draw from *Vedic Astrology and Predictions*.
+## 1. Jataka Chandrika Engine ([`src/engine/jatakaChandrika.ts`](file:///d:/newWayToAstro/src/engine/jatakaChandrika.ts))
+- **Lagnawise Functional Matrix**:
+  - *Premier Yogakarakas*: Single planet ruling both Kendra and Trikona (Saturn for Taurus/Libra, Mars for Cancer/Leo, Venus for Capricorn/Aquarius).
+  - *Trikona Benefics (1, 5, 9)* vs *Trishadaya Malefics (3, 6, 11)*.
+  - *Kendradhipati Dosha*: Natural benefics (Jupiter, Venus, Mercury, Moon) owning Kendras lose their natural beneficence.
+  - *Maraka Lords*: 2nd and 7th house rulers.
+  - *4-Fold Sambandha Raja Yogas*: Parivartana (Exchange), Mutual Drishti (Aspect), Eka Drishti, and Conjunction.
 
 ---
 
-## 3. UI Dashboard Component ([`src/components/VedicPredictionsDeck.tsx`](file:///d:/newWayToAstro/src/components/VedicPredictionsDeck.tsx))
-- **Hero Card**: Overall Predictive Potency, Top Milestone, Active Time Horizon breakdown, and Master Synthesis.
-- **Tab 1: 🎯 6 Life Milestones Probability Forecaster**: Interactive cards with 0–100% progress meters and 3-tier validation tags.
-- **Tab 2: 🔍 Multi-Tier Filter Inspector**: Interactive selector for deep-dive diagnostics into Natal Promise, Dasha Gateway, and Double Transit.
-- **Tab 3: ⏳ Timing Window Roadmap**: Immediate, Near-Term, and Long-Term chronological columns.
-- **Tab 4: 🌿 Holistic Remedial Protocol**: Synchronized triad cards.
-- Wired into `BhavaBalaView.tsx` under the **"🎯 Vedic Predictions (Event Timing)"** tab.
+## 2. Chappanna Prasna Sastra Engine ([`src/engine/chappannaPrasna.ts`](file:///d:/newWayToAstro/src/engine/chappannaPrasna.ts))
+- **56 Exhaustive Question Archetypes across 8 Life Spheres**:
+  1. *Health & Longevity* (Q1 - Q7)
+  2. *Litigation & Disputes* (Q8 - Q14)
+  3. *Travel & Missing Persons* (Q15 - Q21)
+  4. *Stolen & Lost Objects* (Q22 - Q28)
+  5. *Trade & Financial Profit* (Q29 - Q35)
+  6. *Career & Honours* (Q36 - Q42)
+  7. *Marriage & Children* (Q43 - Q49)
+  8. *Agriculture & Property* (Q50 - Q56)
+- **Real-Time Oracle Engine**: Evaluates query Lagna, Lagnesha, Karya Bhava, Karyesh, and Moon (*Prasna Manas*) to calculate outcome probability (0–100%) and *Kala Pramana* timing of fruition.
 
 ---
 
-## 4. Verification
-- **Automated Tests**: All **53 test suites** in `tests/engine.test.mjs` passed cleanly (`53/53 pass`).
+## 3. AI Astrologer Chat Context Dossier & Dispatching ([`src/engine/chatContext.ts`](file:///d:/newWayToAstro/src/engine/chatContext.ts), [`src/app/api/astro-chat/route.ts`](file:///d:/newWayToAstro/src/app/api/astro-chat/route.ts))
+- Injected **Section 43: Jataka Chandrika Dossier** and **Section 44: Chappanna Prasna Sastra Dossier** into the Chat Dossier.
+- Renumbered Kundli Milan to Section 45.
+- Updated Master Dispatching Matrix for functional Lagnawise analysis and 56 Horary question predictions.
+
+---
+
+## 4. UI Dashboard Components
+- **[`src/components/JatakaChandrikaDeck.tsx`](file:///d:/newWayToAstro/src/components/JatakaChandrikaDeck.tsx)**: Functional Matrix, Sambandha Yogas, Kendradhipati Dosha, Maraka Meter.
+- **[`src/components/ChappannaPrasnaDeck.tsx`](file:///d:/newWayToAstro/src/components/ChappannaPrasnaDeck.tsx)**: Interactive 56-Question Horary Browser, Instant Oracle Judgement, 8 Life Categories, Timing of Fruition.
+- Wired into `BhavaBalaView.tsx` under **"🌙 Jataka Chandrika (Laghu Parashari)"** and **"🔮 Chappanna Prasna (56 Questions)"**.
+
+---
+
+## 5. Verification
+- **Automated Tests**: All **55 test suites** in `tests/engine.test.mjs` passed cleanly (`55/55 pass`).
 - **TypeScript & Production Build**: `next build` compiled with 0 errors.
-- **Git Push**: Committed and pushed to `origin/main` (`commit 770a38b`).
+- **Git Push**: Committed and pushed to `origin/main` (`commit b1a8bd2`).

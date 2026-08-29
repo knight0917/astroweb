@@ -49,6 +49,7 @@ import { evaluateUttaraKalamrita } from "./uttaraKalamrita";
 import { evaluateVedicPredictions } from "./vedicPredictions";
 import { evaluateJatakaChandrika } from "./jatakaChandrika";
 import { evaluateChappannaPrasna } from "./chappannaPrasna";
+import { evaluateBhriguSamhita } from "./bhriguSamhita";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -931,6 +932,22 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 43. Maharshi Bhrigu Samhita (Karmic Debts, Past Life Sins & Pariharas)
+  let bhriguSamhitaSummary = "";
+  try {
+    const bs = evaluateBhriguSamhita(natalEphemeris);
+    const debtsStr = bs.karmicDebts.map(
+      (d) => `  - **${d.debtName}:** Status: **${d.severity}** (Afflicting: ${d.afflictingPlanets.join(", ") || "None"})\n    - *Karmic Root:* ${d.karmicReason}\n    - *Manifestation:* ${d.symptomsInCurrentLife}\n    - *Bhrigu Parihara:* ${d.bhriguSamhitaRemedy}`
+    ).join("\n");
+
+    bhriguSamhitaSummary = [
+      `- **Dominant Past-Life Karmic Theme:** ${bs.dominantPastLifeTheme}`,
+      "- **6 Past-Life Karmic Debts (Purva Janma Rinas) & Specific Scriptural Remedies:**",
+      debtsStr,
+      "- **Master Bhrigu Samhita Synthesis:** " + bs.masterSamhitaSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1177,11 +1194,14 @@ export function buildAstroDossier(
     "",
     "#### 🔮 44. CHAPPANNA PRASNA SASTRA (56 QUESTIONS HORARY ORACLE - PROF. B. SURYANARAIN RAO) DOSSIER:",
     chappannaPrasnaSummary,
+    "",
+    "#### 📜 45. MAHARSHI BHRIGU SAMHITA (KARMIC DEBTS, PAST LIFE SINS & PARIHARAS) DOSSIER:",
+    bhriguSamhitaSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 45. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 46. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

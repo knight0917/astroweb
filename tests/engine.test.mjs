@@ -995,6 +995,26 @@ test("Classical Bhrigu Nandi Nadi & Bhrigu Saral Paddhati (BSP) Engine Verificat
     assert.ok(b.cycleHouseNumber >= 1 && b.cycleHouseNumber <= 12);
     assert.ok(b.cycleHouseTheme);
   });
+
+  // 5. Upgraded Bhrigu Prashna Nadi & Progressions
+  const { evaluateBhriguPrashna, calculateNadiAgeProgressions, detectNadiSangrahaYogas } = await import("../src/engine/bhriguNadi.ts");
+  const prashnaResult = evaluateBhriguPrashna(ephem, "Career");
+  assert.ok(prashnaResult.queryKaraka);
+  assert.ok(prashnaResult.directionalDisposition);
+  assert.ok(["Immediate Success (शीघ्र कार्य सिद्धि)", "Moderate / Effort Required (प्रयत्न साध्य)", "Obstruction (विघ्न / अवरोध)"].includes(prashnaResult.outcome));
+  assert.ok(prashnaResult.bhriguPrashnaVerdict.length > 20);
+
+  const progressions = calculateNadiAgeProgressions(ephem);
+  assert.strictEqual(progressions.length, 6);
+  for (const p of progressions) {
+    assert.ok(p.cycleRound >= 1 && p.cycleRound <= 6);
+    assert.ok(p.ageRange);
+    assert.ok(p.progressedSign);
+    assert.ok(p.activatedHouses.length > 0);
+  }
+
+  const sangrahaYogas = detectNadiSangrahaYogas(ephem);
+  assert.ok(Array.isArray(sangrahaYogas));
 });
 
 test("Classical Jaimini Argala & Virodhargala Engine Verification", async () => {
@@ -2431,6 +2451,42 @@ test("Classical Chappanna Prasna Sastra (56 Questions Horary Oracle - Prof. B. S
   // 3. Master Synthesis
   assert.ok(result.masterPrasnaSynthesis.length > 30);
 });
+
+test("Classical Maharshi Bhrigu Samhita (Karmic Debts, Past Life Sins & Pariharas) Verification", async () => {
+  const { evaluateBhriguSamhita } = await import("../src/engine/bhriguSamhita.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Ujjain", country: "India", latitude: 23.1765, longitude: 75.7885, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1991-03-25T14:40:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateBhriguSamhita(natalEphem);
+
+  // 1. 6 Karmic Debts (Purva Janma Rinas)
+  assert.strictEqual(result.karmicDebts.length, 6);
+  for (const kd of result.karmicDebts) {
+    assert.ok(kd.debtName);
+    assert.ok(typeof kd.isAfflicted === "boolean");
+    assert.ok(["Severe (गम्भीर)", "Moderate (मध्यम)", "Clear / Unafflicted (ऋण मुक्त)"].includes(kd.severity));
+    assert.ok(kd.karmicReason.length > 15);
+    assert.ok(kd.symptomsInCurrentLife.length > 15);
+    assert.ok(kd.bhriguSamhitaRemedy.length > 15);
+  }
+
+  // 2. 12 Bhavas Karmic Readings
+  assert.strictEqual(result.bhavaReadings.length, 12);
+  for (const br of result.bhavaReadings) {
+    assert.ok(br.bhava >= 1 && br.bhava <= 12);
+    assert.ok(br.bhavaName);
+    assert.ok(Array.isArray(br.occupyingPlanets));
+    assert.ok(br.karmicImprint.length > 10);
+    assert.ok(br.bhriguDictum.length > 10);
+  }
+
+  // 3. Dominant Theme & Master Synthesis
+  assert.ok(result.dominantPastLifeTheme.length > 15);
+  assert.ok(result.masterSamhitaSynthesis.length > 30);
+});
+
 
 
 
