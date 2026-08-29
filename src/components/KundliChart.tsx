@@ -5,7 +5,7 @@ import { useAstroStore } from "../store/useAstroStore";
 import { RASHIS } from "../engine/constants";
 import { calculateJaiminiKarakas, KarakaCode } from "../engine/jaimini";
 
-export default function KundliChart() {
+function KundliChart() {
   const [chartType, setChartType] = useState<"north" | "south">("north");
   const [showKarakaTable, setShowKarakaTable] = useState(true);
   const {
@@ -173,10 +173,10 @@ export default function KundliChart() {
       </div>
 
       {/* SVG Canvas Container */}
-      <div className="relative w-full max-w-[460px] aspect-square bg-slate-950 rounded-2xl border-2 border-slate-800/80 shadow-2xl p-2 flex items-center justify-center overflow-visible">
+      <div className="relative w-full max-w-[460px] aspect-square bg-slate-950 rounded-2xl border-2 border-slate-800/80 shadow-2xl p-2 flex items-center justify-center overflow-visible transform-gpu will-change-transform">
         {chartType === "north" ? (
           // North Indian Diamond Kundli (SVG)
-          <svg viewBox="0 0 400 400" className="w-full h-full text-slate-200 select-none overflow-visible">
+          <svg viewBox="0 0 400 400" className="w-full h-full text-slate-200 select-none overflow-visible transform-gpu">
             {/* Outer Box */}
             <rect x="5" y="5" width="390" height="390" fill="none" stroke="#b45309" strokeWidth="2.5" />
 
@@ -447,3 +447,5 @@ export default function KundliChart() {
     </div>
   );
 }
+
+export default React.memo(KundliChart);

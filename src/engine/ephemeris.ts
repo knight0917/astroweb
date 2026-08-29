@@ -53,6 +53,13 @@ function getTrueLunarNodeTropical(daysSinceJ2000: number): number {
   return ((meanNode + correction % 360) + 360) % 360;
 }
 
+const EPHEMERIS_CACHE_MAX = 500;
+const ephemerisCache = new Map<string, EphemerisResult>();
+
+export function clearEphemerisCache(): void {
+  ephemerisCache.clear();
+}
+
 export function calculateVedicEphemeris(
   date: Date,
   location: GeoLocation,
@@ -60,6 +67,11 @@ export function calculateVedicEphemeris(
   houseSystem: HouseSystem = "WholeSign",
   nodeType: NodeType = "Mean"
 ): EphemerisResult {
+  const cacheKey = `${date.getTime()}_${(location.latitude || 0).toFixed(4)}_${(location.longitude || 0).toFixed(4)}_${location.elevation || 0}_${ayanamshaType}_${houseSystem}_${nodeType}`;
+  if (ephemerisCache.has(cacheKey)) {
+    return ephemerisCache.get(cacheKey)!;
+  }
+
   const astroTime = Astronomy.MakeTime(date);
   const jd = astroTime.ut;
   const ayanamsha = getAyanamsha(jd, ayanamshaType);
@@ -231,7 +243,7 @@ export function calculateVedicEphemeris(
   const tithiEnd = calculateTithiEndTime(date, location, ayanamshaType, date);
   const nakEnd = calculateNakshatraEndTime(date, location, ayanamshaType, date);
 
-  return {
+  const result: EphemerisResult = {
     utcDate: date.toISOString(),
     localDate: new Date(date.getTime() + location.timezoneOffsetHours * 3600 * 1000).toISOString(),
     julianDay: jd,
@@ -269,4 +281,14 @@ export function calculateVedicEphemeris(
       karana: { name: karanaName, index: karanaRaw + 1 },
     },
   };
+
+  if (ephemerisCache.size >= EPHEMERIS_CACHE_MAX) {
+    const oldestKey = ephemerisCache.keys().next().value;
+    if (typeof oldestKey === "string") {
+      ephemerisCache.delete(oldestKey);
+    }
+  }
+  ephemerisCache.set(cacheKey, result);
+
+  return result;
 }

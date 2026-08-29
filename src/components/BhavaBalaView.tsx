@@ -1,51 +1,75 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { useAstroStore } from "../store/useAstroStore";
 import { calculateBhavaBala, HouseBala } from "../engine/bhavabala";
-import BhavaJudgementDeck from "./BhavaJudgementDeck";
-import BhriguNadiDeck from "./BhriguNadiDeck";
-import KarmaRebirthDeck from "./KarmaRebirthDeck";
-import DoubleTransitDeck from "./DoubleTransitDeck";
-import MarriageTimingDeck from "./MarriageTimingDeck";
-import KnRaoTechniquesDeck from "./KnRaoTechniquesDeck";
-import EducationStreamDeck from "./EducationStreamDeck";
-import DashaSystemsDeck from "./DashaSystemsDeck";
-import BphsCoreDeck from "./BphsCoreDeck";
-import BrihatJatakaDeck from "./BrihatJatakaDeck";
-import BrihatSamhitaDeck from "./BrihatSamhitaDeck";
-import DevaKeralamDeck from "./DevaKeralamDeck";
-import SukaNadiDeck from "./SukaNadiDeck";
-import JaiminiSutrasDeck from "./JaiminiSutrasDeck";
-import GayatriJyotishDeck from "./GayatriJyotishDeck";
-import JatakaAlankaraDeck from "./JatakaAlankaraDeck";
-import JatakNirnayDeck from "./JatakNirnayDeck";
-import JatakaParijataDeck from "./JatakaParijataDeck";
-import SaravaliDeck from "./SaravaliDeck";
-import PhaladeepikaDeck from "./PhaladeepikaDeck";
-import PrasnaMargaDeck from "./PrasnaMargaDeck";
-import SamhitaSkandhaDeck from "./SamhitaSkandhaDeck";
-import SanketanidhiDeck from "./SanketanidhiDeck";
-import SarvarthaChintamaniDeck from "./SarvarthaChintamaniDeck";
-import StriJatakaDeck from "./StriJatakaDeck";
-import SatyaJatakaDeck from "./SatyaJatakaDeck";
-import SugamJyotishDeck from "./SugamJyotishDeck";
-import UttaraKalamritaDeck from "./UttaraKalamritaDeck";
-import VedicPredictionsDeck from "./VedicPredictionsDeck";
-import JatakaChandrikaDeck from "./JatakaChandrikaDeck";
-import ChappannaPrasnaDeck from "./ChappannaPrasnaDeck";
-import BhriguSamhitaDeck from "./BhriguSamhitaDeck";
-import BhavarthaRatnakaraDeck from "./BhavarthaRatnakaraDeck";
-import CruxOfAstrologyDeck from "./CruxOfAstrologyDeck";
-import CuspalInterlinksDeck from "./CuspalInterlinksDeck";
-import NadiMasterDeck from "./NadiMasterDeck";
-import ShashtiamshaBcpDeck from "./ShashtiamshaBcpDeck";
-import PatanjaliYogaDeck from "./PatanjaliYogaDeck";
-import KotaChakraDeck from "./KotaChakraDeck";
-import Raman300CombinationsDeck from "./Raman300CombinationsDeck";
-import BenchmarkHoroscopesDeck from "./BenchmarkHoroscopesDeck";
-import PrasnaTantraDeck from "./PrasnaTantraDeck";
-import PatelAshtakavargaDeck from "./PatelAshtakavargaDeck";
+
+function DeckLoadingSkeleton({ title }: { title: string }) {
+  return (
+    <div className="w-full min-h-[360px] rounded-3xl bg-slate-950/80 border border-slate-800/80 p-8 flex flex-col items-center justify-center gap-3 animate-pulse shadow-xl">
+      <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-lg text-amber-400">
+        📜
+      </div>
+      <div className="space-y-1 text-center">
+        <h4 className="font-extrabold text-xs text-slate-200 uppercase tracking-wider">
+          Loading {title}...
+        </h4>
+        <p className="text-[11px] text-slate-500 font-mono">
+          Streaming classical computational treatise
+        </p>
+      </div>
+      <div className="w-28 h-1 bg-slate-800 rounded-full overflow-hidden">
+        <div className="w-full h-full bg-gradient-to-r from-amber-500 to-yellow-300 animate-indeterminate"></div>
+      </div>
+    </div>
+  );
+}
+
+// Dynamically imported secondary classical decks (Code-split for sub-50ms instant loading)
+const BhavaJudgementDeck = dynamic(() => import("./BhavaJudgementDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Raman 12 Bhavas Judgement" /> });
+const BhriguNadiDeck = dynamic(() => import("./BhriguNadiDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Bhrigu Nadi & BSP" /> });
+const KarmaRebirthDeck = dynamic(() => import("./KarmaRebirthDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Karma & Rebirth" /> });
+const DoubleTransitDeck = dynamic(() => import("./DoubleTransitDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Double Transit & PAC-DARES" /> });
+const MarriageTimingDeck = dynamic(() => import("./MarriageTimingDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Timing of Marriage" /> });
+const KnRaoTechniquesDeck = dynamic(() => import("./KnRaoTechniquesDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="K.N. Rao Research Techniques" /> });
+const EducationStreamDeck = dynamic(() => import("./EducationStreamDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Education & Career Streams" /> });
+const DashaSystemsDeck = dynamic(() => import("./DashaSystemsDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Vimshottari & Conditional Dashas" /> });
+const BphsCoreDeck = dynamic(() => import("./BphsCoreDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="BPHS Core Principles" /> });
+const BrihatJatakaDeck = dynamic(() => import("./BrihatJatakaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Brihat Jataka" /> });
+const BrihatSamhitaDeck = dynamic(() => import("./BrihatSamhitaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Brihat Samhita" /> });
+const DevaKeralamDeck = dynamic(() => import("./DevaKeralamDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Deva Keralam 150 Amshas" /> });
+const SukaNadiDeck = dynamic(() => import("./SukaNadiDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Suka Nadi" /> });
+const JaiminiSutrasDeck = dynamic(() => import("./JaiminiSutrasDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Jaimini Upadesha Sutras" /> });
+const GayatriJyotishDeck = dynamic(() => import("./GayatriJyotishDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Gayatri Jyotish" /> });
+const JatakaAlankaraDeck = dynamic(() => import("./JatakaAlankaraDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Jataka Alankara" /> });
+const JatakNirnayDeck = dynamic(() => import("./JatakNirnayDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Dr. B.V. Raman Jatak Nirnay" /> });
+const JatakaParijataDeck = dynamic(() => import("./JatakaParijataDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Jataka Parijata" /> });
+const SaravaliDeck = dynamic(() => import("./SaravaliDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Saravali" /> });
+const PhaladeepikaDeck = dynamic(() => import("./PhaladeepikaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Phaladeepika" /> });
+const PrasnaMargaDeck = dynamic(() => import("./PrasnaMargaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Prasna Marga" /> });
+const SamhitaSkandhaDeck = dynamic(() => import("./SamhitaSkandhaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Samhita Skandha" /> });
+const SanketanidhiDeck = dynamic(() => import("./SanketanidhiDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Sanketanidhi" /> });
+const SarvarthaChintamaniDeck = dynamic(() => import("./SarvarthaChintamaniDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Sarvartha Chintamani" /> });
+const StriJatakaDeck = dynamic(() => import("./StriJatakaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Stri Jataka" /> });
+const SatyaJatakaDeck = dynamic(() => import("./SatyaJatakaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Satya Jataka" /> });
+const SugamJyotishDeck = dynamic(() => import("./SugamJyotishDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Sugam Everyday Remedies" /> });
+const UttaraKalamritaDeck = dynamic(() => import("./UttaraKalamritaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Uttara Kalamrita" /> });
+const VedicPredictionsDeck = dynamic(() => import("./VedicPredictionsDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Vedic Event Forecasting" /> });
+const JatakaChandrikaDeck = dynamic(() => import("./JatakaChandrikaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Jataka Chandrika" /> });
+const ChappannaPrasnaDeck = dynamic(() => import("./ChappannaPrasnaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Chappanna Prasna" /> });
+const BhriguSamhitaDeck = dynamic(() => import("./BhriguSamhitaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Bhrigu Samhita" /> });
+const BhavarthaRatnakaraDeck = dynamic(() => import("./BhavarthaRatnakaraDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Bhavartha Ratnakara" /> });
+const CruxOfAstrologyDeck = dynamic(() => import("./CruxOfAstrologyDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Crux of Vedic Astrology" /> });
+const CuspalInterlinksDeck = dynamic(() => import("./CuspalInterlinksDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Cuspal Interlinks (KCIL)" /> });
+const NadiMasterDeck = dynamic(() => import("./NadiMasterDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Nadi Master Suite" /> });
+const ShashtiamshaBcpDeck = dynamic(() => import("./ShashtiamshaBcpDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="D-60 Deities & BCP Wheel" /> });
+const PatanjaliYogaDeck = dynamic(() => import("./PatanjaliYogaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Patanjali Yoga & Chakras" /> });
+const KotaChakraDeck = dynamic(() => import("./KotaChakraDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Kota Chakra" /> });
+const Raman300CombinationsDeck = dynamic(() => import("./Raman300CombinationsDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Raman 300 Yogas" /> });
+const BenchmarkHoroscopesDeck = dynamic(() => import("./BenchmarkHoroscopesDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Benchmark Titan Horoscopes" /> });
+const PrasnaTantraDeck = dynamic(() => import("./PrasnaTantraDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Prasna Tantra & Sahams" /> });
+const PatelAshtakavargaDeck = dynamic(() => import("./PatelAshtakavargaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Patel Ashtakavarga & Kakshyas" /> });
 
 type DeckCategory = "all" | "foundations" | "nadi" | "classics" | "divisional" | "timing" | "prasna" | "research";
 
