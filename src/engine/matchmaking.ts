@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Classical Ashtakoota 36-Guna Kundli Milan & Manglik Dosha Engine (अष्टकूट मिलान)
  * References:
  * - Muhurta Chintamani (मुहूर्त चिन्तामणि - विवाह प्रकरण)
@@ -8,6 +8,7 @@
 
 import { EphemerisResult } from "./types";
 import { RASHI_NAMES } from "./constants";
+import { calculateAshtakavarga } from "./ashtakavarga";
 
 export interface KootaScore {
   name: string;
@@ -36,6 +37,23 @@ export interface ManglikAnalysis {
   cancellationReasons: string[];
 }
 
+export interface AshtakavargaCompatibility {
+  boyLagnaSAVInGirlChart: number;
+  girlLagnaSAVInBoyChart: number;
+  boyMoonSAVInGirlChart: number;
+  girlMoonSAVInBoyChart: number;
+  boyMoonBAVInGirl: number;
+  girlMoonBAVInBoy: number;
+  boyVenusBAVInGirl: number;
+  girlVenusBAVInBoy: number;
+  boy7thHouseSAV: number;
+  girl7thHouseSAV: number;
+  ashtakavargaScore: number;
+  verdict: "Highly Auspicious (उत्कृष्ट)" | "Auspicious (शुभ)" | "Average (साधारण)" | "Requires Attention (सावधानी)";
+  description: string;
+  principles: string[];
+}
+
 export interface CompatibilityResult {
   totalScore: number;
   maxScore: 36;
@@ -59,6 +77,7 @@ export interface CompatibilityResult {
     statusText: string;
     description: string;
   };
+  ashtakavargaCompatibility: AshtakavargaCompatibility;
 }
 
 // 1. VARNA DATA (Brahmin 4, Kshatriya 3, Vaishya 2, Shudra 1)
@@ -485,6 +504,96 @@ export function calculateMatchmaking(
     manglikDesc = "One chart is Manglik while the other is not. Kumbh Vivah or Mars remedial Upayas advised.";
   }
 
+  // 9. CLASSICAL ASHTAKAVARGA SYNASTRY (C.S. Patel & Parashara)
+  const bAV = calculateAshtakavarga(boyEphem);
+  const gAV = calculateAshtakavarga(girlEphem);
+
+  const bLagnaSign = boyEphem.ascendant?.rashi.index || 0;
+  const gLagnaSign = girlEphem.ascendant?.rashi.index || 0;
+  const bVenusSign = boyEphem.planets.Venus?.rashi.index || 0;
+  const gVenusSign = girlEphem.planets.Venus?.rashi.index || 0;
+
+  const boyLagnaSAVInGirlChart = gAV.sarvaRashiBindus[bLagnaSign] || 0;
+  const girlLagnaSAVInBoyChart = bAV.sarvaRashiBindus[gLagnaSign] || 0;
+  const boyMoonSAVInGirlChart = gAV.sarvaRashiBindus[bRashiIdx] || 0;
+  const girlMoonSAVInBoyChart = bAV.sarvaRashiBindus[gRashiIdx] || 0;
+
+  const boyMoonBAVInGirl = gAV.bav?.Moon?.rashiBindus[bRashiIdx] || 0;
+  const girlMoonBAVInBoy = bAV.bav?.Moon?.rashiBindus[gRashiIdx] || 0;
+  const boyVenusBAVInGirl = gAV.bav?.Venus?.rashiBindus[bVenusSign] || 0;
+  const girlVenusBAVInBoy = bAV.bav?.Venus?.rashiBindus[gVenusSign] || 0;
+
+  const boy7thHouseSAV = bAV.sarvaHouseBindus[6] || 0;
+  const girl7thHouseSAV = gAV.sarvaHouseBindus[6] || 0;
+
+  const avPrinciples: string[] = [];
+  let avPoints = 0;
+  const maxAvPoints = 8;
+
+  // Principle 1: Moon BAV reception (>= 4 bindus is favorable)
+  if (boyMoonBAVInGirl >= 4 && girlMoonBAVInBoy >= 4) {
+    avPoints += 2;
+    avPrinciples.push("Both Moon signs have >= 4 Moon BAV bindus in partner's chart (High emotional receptivity & mutual affection).");
+  } else if (boyMoonBAVInGirl >= 4 || girlMoonBAVInBoy >= 4) {
+    avPoints += 1;
+    avPrinciples.push("One partner's Moon sign receives >= 4 Moon BAV bindus (Moderate emotional reception).");
+  } else {
+    avPrinciples.push("Moon BAV bindus below 4 in partner's chart (Requires conscious emotional empathy).");
+  }
+
+  // Principle 2: Lagna SAV in partner's chart (>= 28 bindus is auspicious, >= 30 is royal fortune)
+  if (boyLagnaSAVInGirlChart >= 28 && girlLagnaSAVInBoyChart >= 28) {
+    avPoints += 2;
+    avPrinciples.push(`Both Lagna signs receive high SAV bindus (Groom in Bride: ${boyLagnaSAVInGirlChart}, Bride in Groom: ${girlLagnaSAVInBoyChart}) -> Mutual life expansion and good fortune.`);
+  } else if (boyLagnaSAVInGirlChart >= 28 || girlLagnaSAVInBoyChart >= 28) {
+    avPoints += 1;
+    avPrinciples.push(`One Lagna sign receives >= 28 SAV bindus in partner's chart (Groom: ${boyLagnaSAVInGirlChart}, Bride: ${girlLagnaSAVInBoyChart}).`);
+  } else {
+    avPrinciples.push(`Lagna SAV bindus moderate in partner's chart (Groom: ${boyLagnaSAVInGirlChart}, Bride: ${girlLagnaSAVInBoyChart}).`);
+  }
+
+  // Principle 3: Moon SAV in partner's chart (>= 28 bindus)
+  if (boyMoonSAVInGirlChart >= 28 && girlMoonSAVInBoyChart >= 28) {
+    avPoints += 2;
+    avPrinciples.push(`Both Moon signs receive >= 28 SAV bindus (Groom: ${boyMoonSAVInGirlChart}, Bride: ${girlMoonSAVInBoyChart}) -> Enduring psychological peace and family harmony.`);
+  } else {
+    avPoints += 1;
+    avPrinciples.push(`Moon SAV bindus (Groom: ${boyMoonSAVInGirlChart}, Bride: ${girlMoonSAVInBoyChart}) -> Stable domestic harmony.`);
+  }
+
+  // Principle 4: 7th House SAV Strength (>= 28 bindus)
+  if (boy7thHouseSAV >= 28 && girl7thHouseSAV >= 28) {
+    avPoints += 2;
+    avPrinciples.push(`Both 7th houses have strong SAV bindus (Groom: ${boy7thHouseSAV}, Bride: ${girl7thHouseSAV}) -> Stable marital foundation and strong partnership endurance.`);
+  } else {
+    avPoints += 1;
+    avPrinciples.push(`7th House SAV bindus (Groom: ${boy7thHouseSAV}, Bride: ${girl7thHouseSAV}) -> Standard marital foundation.`);
+  }
+
+  const ashtakavargaScore = Math.round((avPoints / maxAvPoints) * 100);
+  let avVerdict: AshtakavargaCompatibility["verdict"] = "Auspicious (शुभ)";
+  if (ashtakavargaScore >= 85) avVerdict = "Highly Auspicious (उत्कृष्ट)";
+  else if (ashtakavargaScore >= 60) avVerdict = "Auspicious (शुभ)";
+  else if (ashtakavargaScore >= 40) avVerdict = "Average (साधारण)";
+  else avVerdict = "Requires Attention (सावधानी)";
+
+  const ashtakavargaCompatibility: AshtakavargaCompatibility = {
+    boyLagnaSAVInGirlChart,
+    girlLagnaSAVInBoyChart,
+    boyMoonSAVInGirlChart,
+    girlMoonSAVInBoyChart,
+    boyMoonBAVInGirl,
+    girlMoonBAVInBoy,
+    boyVenusBAVInGirl,
+    girlVenusBAVInBoy,
+    boy7thHouseSAV,
+    girl7thHouseSAV,
+    ashtakavargaScore,
+    verdict: avVerdict,
+    description: `Ashtakavarga compatibility is ${avVerdict} (${ashtakavargaScore}% harmony across SAV & BAV cross-placements).`,
+    principles: avPrinciples,
+  };
+
   return {
     totalScore,
     maxScore: 36,
@@ -508,6 +617,7 @@ export function calculateMatchmaking(
       statusText: manglikText,
       description: manglikDesc,
     },
+    ashtakavargaCompatibility,
   };
 }
 

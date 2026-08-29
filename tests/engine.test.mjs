@@ -3110,6 +3110,36 @@ test("C.S. Patel & Aiyar Ashtakavarga Shodhana, Shodhya Pinda & 8 Kakshyas Engin
   assert.ok(pa.masterPatelSynthesis.length > 25);
 });
 
+test("Classical Ashtakavarga Synastry & Dual Chart Compatibility (C.S. Patel & Parashara) Verification", async () => {
+  const { calculateMatchmaking } = await import("../src/engine/matchmaking.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const loc = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const boyEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), loc, "Lahiri", "WholeSign", "Mean");
+  const girlEphem = calculateVedicEphemeris(new Date("1998-05-25T04:45:00Z"), loc, "Lahiri", "WholeSign", "Mean");
+
+  const match = calculateMatchmaking(boyEphem, girlEphem);
+
+  assert.ok(match);
+  assert.ok(match.totalScore >= 0 && match.totalScore <= 36);
+  assert.ok(match.ashtakavargaCompatibility);
+
+  const av = match.ashtakavargaCompatibility;
+  assert.ok(av.boyLagnaSAVInGirlChart >= 0);
+  assert.ok(av.girlLagnaSAVInBoyChart >= 0);
+  assert.ok(av.boyMoonSAVInGirlChart >= 0);
+  assert.ok(av.girlMoonSAVInBoyChart >= 0);
+  assert.ok(av.boyMoonBAVInGirl >= 0 && av.boyMoonBAVInGirl <= 8);
+  assert.ok(av.girlMoonBAVInBoy >= 0 && av.girlMoonBAVInBoy <= 8);
+  assert.ok(av.boy7thHouseSAV > 0);
+  assert.ok(av.girl7thHouseSAV > 0);
+  assert.ok(av.ashtakavargaScore >= 0 && av.ashtakavargaScore <= 100);
+  assert.ok(av.verdict);
+  assert.ok(Array.isArray(av.principles));
+  assert.ok(av.principles.length >= 3);
+});
+
+
 
 
 
