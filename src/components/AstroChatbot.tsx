@@ -288,7 +288,7 @@ export default function AstroChatbot() {
       `- **Ascendant (Lagna):** ${ascRashi} (${natalEphemeris.ascendant.rashi.sanskritName})`,
       `- **Moon Sign (Janma Rashi):** ${moonRashi}`,
       `- **Birth Place:** ${location.cityName}${location.country ? `, ${location.country}` : ""}`,
-      `- **Date of Birth:** ${new Date(natalEphemeris.utcDate).toUTCString()}`,
+      `- **Date & Time of Birth:** ${currentDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })} at ${currentDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`,
       `---`,
       `## Consultation Dialogue:`,
       ``,

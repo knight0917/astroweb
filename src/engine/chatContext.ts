@@ -73,6 +73,24 @@ export function buildAstroDossier(
 ): string {
   const birthDate = new Date(natalEphemeris.utcDate);
   const location = natalEphemeris.location;
+  const tzOffset = location.timezoneOffsetHours || 0;
+  const tzOffsetMs = tzOffset * 3600 * 1000;
+  const localBirthDate = new Date(birthDate.getTime() + tzOffsetMs);
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const localYear = localBirthDate.getUTCFullYear();
+  const localMonth = monthNames[localBirthDate.getUTCMonth()];
+  const localDay = localBirthDate.getUTCDate();
+  const localHours = String(localBirthDate.getUTCHours()).padStart(2, "0");
+  const localMinutes = String(localBirthDate.getUTCMinutes()).padStart(2, "0");
+  const tzSign = tzOffset >= 0 ? "+" : "-";
+  const tzAbsH = Math.floor(Math.abs(tzOffset));
+  const tzAbsM = Math.round((Math.abs(tzOffset) - tzAbsH) * 60);
+  const tzFormatted = `UTC${tzSign}${String(tzAbsH).padStart(2, "0")}:${String(tzAbsM).padStart(2, "0")}`;
+  const localBirthStr = `${localMonth} ${localDay}, ${localYear} at ${localHours}:${localMinutes} (${tzFormatted} Local Standard Time)`;
+
   const moonLon = natalEphemeris.planets.Moon?.siderealLongitude || 0;
   const ascLon = natalEphemeris.ascendant.siderealLongitude;
   const ascRashiIdx = Math.floor(ascLon / 30);
@@ -1103,7 +1121,8 @@ export function buildAstroDossier(
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
-    "- **Date & Time of Birth (UTC):** " + birthDate.toUTCString(),
+    "- **Date & Time of Birth (Local Civil Time / जन्म समय):** " + localBirthStr,
+    "- **Astronomical Calculation Epoch (UTC):** " + birthDate.toUTCString(),
     "- **Birth Location:** " + location.cityName + (location.country ? ", " + location.country : "") + " (Lat: " + location.latitude.toFixed(2) + "°, Lon: " + location.longitude.toFixed(2) + "°)",
     "- **Ayanamsha Model:** " + natalEphemeris.ayanamshaType + " (" + natalEphemeris.ayanamshaValue.toFixed(3) + "°)",
     "",
