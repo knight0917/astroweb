@@ -1,45 +1,46 @@
-# Walkthrough: Stri Jataka & Satya Jataka Classical Treatises Integration
+# Walkthrough: Sugam Jyotish Practical Predictive Suite Integration
 
-We have completed the algorithmic codification and full-stack integration of two classical masterworks:
-1. **Stri Jataka (स्त्रीजातकम् — Classical Female Horoscopy Matrix)**
-2. **Satya Jataka (सत्यजातकम् — Maharshi Satyacharya's Dhruva Nadi Foundation)**
+We have completed the algorithmic codification and full-stack integration of **Sugam Jyotish (सुगम ज्योतिष — Practical Predictive Astrology Manual)**.
 
 ---
 
-## 1. Calculation Engines
-
-### A. 🌺 Stri Jataka ([`src/engine/striJataka.ts`](file:///d:/newWayToAstro/src/engine/striJataka.ts))
-- **Lagna & Moon Disposition**: Categorizes *Yugma* (Even - feminine grace, fertility, marital harmony) vs *Ayugma* (Odd - independence, executive drive) signs.
-- **Trimsamsha D-30 Moral & Spiritual Archetypes**: Computes planetary Trimsamsha rulers of Ascendant and Moon (*Mars, Saturn, Jupiter, Mercury, Venus*) and maps moral virtues, fidelity, and spiritual devotion.
-- **Mangalya & Soubhagya Sthanas**: Evaluates 8th house (*Mangalya* - partner longevity) and 9th house (*Soubhagya* - children, auspicious prosperity) indices (0–100%).
-- **Visha Kanya Sanctuary & Cancellation Shield**: Evaluates birth combination hazards and applies *Guru Kendra Kavacha* and benefic aspectual shields.
-
-### B. ⭐ Satya Jataka ([`src/engine/satyaJataka.ts`](file:///d:/newWayToAstro/src/engine/satyaJataka.ts))
-- **Satyacharya's Starlord Principle (नक्षत्र स्वामी सिद्धान्त)**: Evaluates each planet's Nakshatra dispositor and determines the manifested Bhavas.
-- **Functional Dignity Rules**: Categorizes *Trikonadhipatis* (Lords of 1, 5, 9 as intrinsically auspicious *Subha*) vs *Trishadayadhipatis* (Lords of 3, 6, 11 as struggle-generating *Asubha*).
-- **9 Janma Tara Matrix (नवतारा चक्र)**: Computes full 9-Tara relationship from natal Moon (*Janma, Sampat, Vipat, Kshema, Pratyak, Sadhaka, Vadha, Mitra, Parama Mitra*).
+## 1. Calculation Engine ([`src/engine/sugamJyotish.ts`](file:///d:/newWayToAstro/src/engine/sugamJyotish.ts))
+- **Sugam 12-Bhava Practical Diagnostics**:
+  - Computes real-world practical success scores (0–100%) and practical grades (*Ati-Uttama, Uttama, Madhyama, Samanya*) for all 12 Bhavas.
+  - Combines Bhava Karakatva, Bhavesha placement, and aspectual dignity.
+  - Generates clear real-world outcomes and actionable everyday advice.
+- **Sugam Baladi Avastha Potency Meter**:
+  - Mathematical percentage capacity calculated for odd and even signs:
+    - *Yuva (युवा)*: 100% full capacity and immediate manifestation.
+    - *Kumara (कुमार)*: 75% adolescent potency and quick activation.
+    - *Bala (बाल)*: 25% infant potency; slow maturation.
+    - *Vriddha (वृद्ध)*: 10% elder maturity; produces wisdom and delayed fruits.
+    - *Mrita (मृत)*: 0% dormant state; requires conscious strengthening.
+- **Subha & Papa Kartari Flanking Analysis**:
+  - Identifies whether the Ascendant and key houses are flanked by benefics (*Subha Kartari* $\rightarrow$ Protection & Ease) or malefics (*Papa Kartari* $\rightarrow$ Pressure & Caution).
+- **Sugam Everyday Accessible Remedies**:
+  - Structured, practical, zero-cost and low-cost pariharas for all 9 Grahas (Surya Arghya in copper vessel, Gau-Seva, Saffron tilak, Hanuman Chalisa, Mustard oil deepam, feeding birds and dogs).
 
 ---
 
 ## 2. AI Astrologer Chat Context Dossier & Dispatching ([`src/engine/chatContext.ts`](file:///d:/newWayToAstro/src/engine/chatContext.ts), [`src/app/api/astro-chat/route.ts`](file:///d:/newWayToAstro/src/app/api/astro-chat/route.ts))
-- Injected **Section 38: Stri Jataka Dossier** and **Section 39: Maharshi Satyacharya Satya Jataka Dossier** into the Astro Chat Dossier.
-- Renumbered Kundli Milan to Section 40.
-- The AI Astrologer automatically dispatches to **Stri Jataka** for female horoscopy, Trimsamsha D-30, and Mangalya queries, and to **Satya Jataka** for Nakshatra dispositor deliverers and Janma Tara timing.
+- Injected **Section 40: Sugam Jyotish Dossier** into the Astro Chat Dossier.
+- Renumbered Kundli Milan to Section 41.
+- Updated the Master Dispatching Matrix and the **Classical Remedy Differentiation Protocol** to prioritize accessible daily pariharas from Sugam Jyotish alongside Gemstones, Mantras, and Seva.
 
 ---
 
-## 3. UI Dashboard Components
-- **[`src/components/StriJatakaDeck.tsx`](file:///d:/newWayToAstro/src/components/StriJatakaDeck.tsx)**:
-  - Hero Card: Mangalya Score, Soubhagya Score, Marital Bliss Grade, and Master Synthesis.
-  - Tabs: Lagna & Moon Disposition, Trimsamsha D-30 Archetypes, Mangalya & Soubhagya Sthanas, Visha Kanya Shields.
-- **[`src/components/SatyaJatakaDeck.tsx`](file:///d:/newWayToAstro/src/components/SatyaJatakaDeck.tsx)**:
-  - Hero Card: Favorable Taras Count, Trikonadhipatis, and Dhruva Nadi Synthesis.
-  - Tabs: Nakshatra Starlord Deliverers, Satyacharya Dignities, 9 Janma Tara Matrix.
-- Available in the dashboard under the **"🌺 Stri Jataka (Female Horoscopy)"** and **"⭐ Satya Jataka (Dhruva Nadi)"** tabs in `BhavaBalaView.tsx`.
+## 3. UI Dashboard Component ([`src/components/SugamJyotishDeck.tsx`](file:///d:/newWayToAstro/src/components/SugamJyotishDeck.tsx))
+- **Hero Card**: Top Practical House, Yuva Potency Grahas, Kartari Status, and Master Synthesis.
+- **Tab 1: 🏛️ 12 Bhavas Practical Diagnostics**: 12 interactive house cards with real-world outcomes, Karaka details, and progress bars.
+- **Tab 2: ⚡ Baladi Avastha Potency Meter**: 9 Graha progress bars (0% to 100% capacity).
+- **Tab 3: 🛡️ Subha/Papa Kartari Shield**: Visual status of flanking protection.
+- **Tab 4: 🌿 Sugam Everyday Remedies**: Practical daily rituals, mantras, and behavioral pariharas for all 9 Grahas.
+- Wired into `BhavaBalaView.tsx` under the **"🌿 Sugam Jyotish (Practical Predictive)"** tab.
 
 ---
 
 ## 4. Verification
-- **Automated Tests**: All **50 test suites** in `tests/engine.test.mjs` passed cleanly (`50/50 pass`).
+- **Automated Tests**: All **51 test suites** in `tests/engine.test.mjs` passed cleanly (`51/51 pass`).
 - **TypeScript & Production Build**: `next build` compiled with 0 errors.
-- **Git Push**: Committed and pushed to `origin/main` (`commit fec6498`).
+- **Git Push**: Committed and pushed to `origin/main` (`commit 171423c`).

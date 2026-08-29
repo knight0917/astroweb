@@ -1373,7 +1373,7 @@ test("Classical Varahamihira Brihat Jataka Engine Verification", async () => {
 
   const result = evaluateBrihatJataka(natalEphem);
 
-  // 1. Karma Jeeva
+  // 1. Karma Jeeva & Tri-Lagna
   assert.ok(result.karmaJeeva.tenthHouseFromLagnaSign);
   assert.ok(result.karmaJeeva.tenthLordFromLagna);
   assert.ok(result.karmaJeeva.tenthLordNavamshaSign);
@@ -1384,21 +1384,43 @@ test("Classical Varahamihira Brihat Jataka Engine Verification", async () => {
   assert.ok(result.karmaJeeva.recommendedIndustries.length > 0);
   assert.ok(result.karmaJeeva.varahamihiraDictum.length > 20);
 
-  // 2. 36 Drekkanas
+  assert.ok(result.triLagnaKarma.fromLagna.navamshaDispositor);
+  assert.ok(result.triLagnaKarma.fromMoon.navamshaDispositor);
+  assert.ok(result.triLagnaKarma.fromSun.navamshaDispositor);
+  assert.ok(result.triLagnaKarma.synthesis.length > 20);
+
+  // 2. Chandra Yogas (Ch. 13)
+  assert.ok(result.chandraYogas.length > 0);
+  for (const cy of result.chandraYogas) {
+    assert.ok(cy.yogaName);
+    assert.ok(cy.sanskritName);
+    assert.ok(typeof cy.isAuspicious === "boolean");
+    assert.ok(cy.description.length > 15);
+  }
+
+  // 3. Pravrajya Sannyasa Yogas (Ch. 15)
+  assert.ok(typeof result.pravrajyaYoga.isActive === "boolean");
+  assert.ok(result.pravrajyaYoga.initiatorPlanet);
+  assert.ok(result.pravrajyaYoga.sanskritLineage.length > 5);
+  assert.ok(result.pravrajyaYoga.spiritualOrder.length > 10);
+  assert.ok(result.pravrajyaYoga.philosophicalDrive.length > 10);
+  assert.ok(result.pravrajyaYoga.varahaSutra.length > 15);
+
+  // 4. 36 Drekkanas
   assert.ok(result.drekkanas.lagnaDrekkana.archetype);
   assert.ok(result.drekkanas.lagnaDrekkana.icon);
   assert.ok(result.drekkanas.lagnaDrekkana.decanateNumber >= 1 && result.drekkanas.lagnaDrekkana.decanateNumber <= 3);
   assert.ok(result.drekkanas.moonDrekkana.archetype);
   assert.ok(result.drekkanas.sunDrekkana.archetype);
 
-  // 3. 32 Nabhasa Yogas
+  // 5. 32 Nabhasa Yogas
   assert.ok(result.nabhasaYoga.activeYogaName);
   assert.ok(result.nabhasaYoga.sanskritName);
   assert.ok(result.nabhasaYoga.yogaCategory);
   assert.ok(result.nabhasaYoga.occupiedSignsCount >= 1 && result.nabhasaYoga.occupiedSignsCount <= 7);
   assert.ok(result.nabhasaYoga.lifelongPhala.length > 15);
 
-  // 4. Gateways & Master Synthesis
+  // 6. Gateways & Master Synthesis
   assert.ok(result.nishekaInsight.length > 15);
   assert.ok(result.niryanaInsight.length > 15);
   assert.ok(result.masterVarahamihiraSynthesis.length > 25);

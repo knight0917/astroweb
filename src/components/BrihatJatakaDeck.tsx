@@ -6,11 +6,13 @@ import { evaluateBrihatJataka, BrihatJatakaReport } from "../engine/brihatJataka
 
 export default function BrihatJatakaDeck() {
   const { ephemeris } = useAstroStore();
-  const [activeTab, setActiveTab] = useState<"karma" | "drekkanas" | "nabhasa" | "gateways">("karma");
+  const [activeTab, setActiveTab] = useState<"karma" | "chandra" | "pravrajya" | "drekkanas" | "nabhasa" | "gateways">("karma");
 
   const report: BrihatJatakaReport = useMemo(() => {
     return evaluateBrihatJataka(ephemeris);
   }, [ephemeris]);
+
+  const activeChandraYoga = report.chandraYogas[0];
 
   return (
     <div className="glass-panel p-6 rounded-2xl border border-slate-800 shadow-2xl flex flex-col gap-6">
@@ -20,32 +22,41 @@ export default function BrihatJatakaDeck() {
           <div className="flex items-center gap-2">
             <span className="text-2xl">👑</span>
             <h2 className="text-lg font-bold text-slate-100">
-              Acharya Varahamihira: Brihat Jataka Master Suite
+              The Brihat Jataka of Acharya Varahamihira (वराहमिहिर बृहज्जातक — 28 Chapters)
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Classical Crest-Jewel (6th Century CE) — Karma Jeeva (10th Lord D9 Dispositor), 36 Drekkanas & 32 Nabhasa Yogas.
+            Classical Crest-Jewel (6th Century CE) — Tri-Lagna Karma Jeeva, Chandra Yogas, Pravrajya Sannyasa, 36 Drekkanas & 32 Nabhasa Yogas.
           </p>
         </div>
 
         {/* Primary Karma Dispositor Badge */}
-        <div className="bg-gradient-to-r from-amber-950/50 to-slate-900 px-4 py-2 rounded-xl border border-amber-500/40 text-center sm:text-right">
-          <div className="text-[10px] text-amber-400 uppercase tracking-wider font-bold">Karma Jeeva Dispositor</div>
-          <div className="text-sm font-black text-slate-100 flex items-center gap-1.5 justify-center sm:justify-end">
-            <span>💼</span>
-            <span>{report.karmaJeeva.navamshaDispositor} (D9 Lord of H10)</span>
+        <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
+          <div className="bg-gradient-to-r from-amber-950/50 to-slate-900 px-3 py-1.5 rounded-xl border border-amber-500/40 text-center">
+            <div className="text-[9px] text-amber-400 uppercase tracking-wider font-bold">Karma Dispositor</div>
+            <div className="text-xs font-black text-slate-100 flex items-center gap-1 justify-center">
+              <span>💼</span>
+              <span>{report.karmaJeeva.navamshaDispositor} (D9 Lord)</span>
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-cyan-950/50 to-slate-900 px-3 py-1.5 rounded-xl border border-cyan-500/40 text-center">
+            <div className="text-[9px] text-cyan-400 uppercase tracking-wider font-bold">Chandra Yoga</div>
+            <div className="text-xs font-black text-slate-100 flex items-center gap-1 justify-center">
+              <span>🌙</span>
+              <span>{activeChandraYoga?.yogaName || "Lunar Yoga"}</span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Karma Jeeva Hero Card */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-5 rounded-2xl border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-xl">
+      <div className="bg-gradient-to-r from-slate-950 via-amber-950/20 to-slate-950 p-5 rounded-2xl border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-xl">
         <div className="space-y-2">
           <div>
             <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">
               {report.karmaJeeva.sanskritTradeTitle}
             </span>
-            <h3 className="text-lg font-black text-slate-100">
+            <h3 className="text-lg font-black text-slate-100 mt-0.5">
               Primary Artha Source: {report.karmaJeeva.navamshaDispositor} Dispositorship
             </h3>
           </div>
@@ -81,7 +92,27 @@ export default function BrihatJatakaDeck() {
               : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
           }`}
         >
-          💼 Karma Jeeva (Vocational Sutra)
+          💼 Tri-Lagna Karma Jeeva
+        </button>
+        <button
+          onClick={() => setActiveTab("chandra")}
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "chandra"
+              ? "bg-amber-500 text-slate-950 shadow"
+              : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
+          }`}
+        >
+          🌙 Chandra Yogas (Ch. 13)
+        </button>
+        <button
+          onClick={() => setActiveTab("pravrajya")}
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "pravrajya"
+              ? "bg-amber-500 text-slate-950 shadow"
+              : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
+          }`}
+        >
+          🧘 Pravrajya / Sannyasa (Ch. 15)
         </button>
         <button
           onClick={() => setActiveTab("drekkanas")}
@@ -91,7 +122,7 @@ export default function BrihatJatakaDeck() {
               : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
           }`}
         >
-          🛡️ 36 Drekkanas Decanate Inspector
+          🛡️ 36 Drekkanas (Ch. 27)
         </button>
         <button
           onClick={() => setActiveTab("nabhasa")}
@@ -101,7 +132,7 @@ export default function BrihatJatakaDeck() {
               : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
           }`}
         >
-          🌌 32 Nabhasa Yogas
+          🌌 32 Nabhasa Yogas (Ch. 12)
         </button>
         <button
           onClick={() => setActiveTab("gateways")}
@@ -111,144 +142,209 @@ export default function BrihatJatakaDeck() {
               : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
           }`}
         >
-          🚪 Nisheka & Niryana Gateways
+          ✨ Nisheka & Niryana
         </button>
       </div>
 
-      {/* Tab 1: Karma Jeeva */}
+      {/* TAB 1: TRI-LAGNA KARMA JEEVA */}
       {activeTab === "karma" && (
-        <div className="bg-slate-900/90 p-5 rounded-2xl border border-slate-800 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-300">
-            <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800 space-y-1">
-              <span className="text-slate-400 block text-[10px]">10th House from Lagna:</span>
-              <span className="text-base font-black text-amber-300">
-                {report.karmaJeeva.tenthHouseFromLagnaSign} (Lord: {report.karmaJeeva.tenthLordFromLagna})
-              </span>
-            </div>
-            <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800 space-y-1">
-              <span className="text-slate-400 block text-[10px]">10th Lord's D9 Navamsha Sign:</span>
-              <span className="text-base font-black text-purple-300">
-                {report.karmaJeeva.tenthLordNavamshaSign}
-              </span>
-            </div>
-            <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800 space-y-1">
-              <span className="text-slate-400 block text-[10px]">Navamshadhipati (Prime Ruler):</span>
-              <span className="text-base font-black text-emerald-300">
-                {report.karmaJeeva.navamshaDispositor}
-              </span>
-            </div>
+        <div className="space-y-4">
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+            <span className="text-[10px] text-amber-400 uppercase font-bold tracking-wider">Tri-Lagna Livelihood Synthesis</span>
+            <p className="text-xs text-slate-200 mt-1 leading-relaxed">{report.triLagnaKarma.synthesis}</p>
           </div>
 
-          <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed">
-            <strong className="text-amber-300 block mb-1">Varahamihira Sloka 10.1 Dictum:</strong>
-            {report.karmaJeeva.varahamihiraDictum}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* From Lagna */}
+            <div className="p-4 rounded-2xl bg-slate-950 border border-amber-500/40 space-y-3">
+              <div className="border-b border-slate-800 pb-2">
+                <span className="text-[10px] text-amber-400 uppercase font-bold">From Ascendant (Lagna)</span>
+                <h4 className="text-sm font-black text-slate-100 mt-0.5">Dispositor: {report.triLagnaKarma.fromLagna.navamshaDispositor}</h4>
+                <div className="text-[10px] text-slate-400 mt-0.5">{report.triLagnaKarma.fromLagna.sanskritTradeTitle}</div>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">{report.triLagnaKarma.fromLagna.varahamihiraDictum}</p>
+            </div>
+
+            {/* From Moon */}
+            <div className="p-4 rounded-2xl bg-slate-950 border border-cyan-500/40 space-y-3">
+              <div className="border-b border-slate-800 pb-2">
+                <span className="text-[10px] text-cyan-400 uppercase font-bold">From Chandra (Mind Career)</span>
+                <h4 className="text-sm font-black text-slate-100 mt-0.5">Dispositor: {report.triLagnaKarma.fromMoon.navamshaDispositor}</h4>
+                <div className="text-[10px] text-slate-400 mt-0.5">{report.triLagnaKarma.fromMoon.sanskritTradeTitle}</div>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">{report.triLagnaKarma.fromMoon.varahamihiraDictum}</p>
+            </div>
+
+            {/* From Sun */}
+            <div className="p-4 rounded-2xl bg-slate-950 border border-rose-500/40 space-y-3">
+              <div className="border-b border-slate-800 pb-2">
+                <span className="text-[10px] text-rose-400 uppercase font-bold">From Surya (Status Career)</span>
+                <h4 className="text-sm font-black text-slate-100 mt-0.5">Dispositor: {report.triLagnaKarma.fromSun.navamshaDispositor}</h4>
+                <div className="text-[10px] text-slate-400 mt-0.5">{report.triLagnaKarma.fromSun.sanskritTradeTitle}</div>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">{report.triLagnaKarma.fromSun.varahamihiraDictum}</p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Tab 2: 36 Drekkanas */}
-      {activeTab === "drekkanas" && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            report.drekkanas.lagnaDrekkana,
-            report.drekkanas.moonDrekkana,
-            report.drekkanas.sunDrekkana,
-          ].map((d) => (
-            <div key={d.pointName} className="p-5 rounded-2xl border border-slate-800 bg-slate-900/80 flex flex-col justify-between gap-4">
-              <div>
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{d.icon}</span>
-                    <div>
-                      <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">
-                        Decanate #{d.decanateNumber} ({d.decanateDegrees})
-                      </span>
-                      <h4 className="text-sm font-black text-slate-100">{d.pointName}</h4>
-                    </div>
+      {/* TAB 2: CHANDRA YOGAS */}
+      {activeTab === "chandra" && (
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-sm font-black text-slate-100">Chandra Yogas (चन्द्र योगाध्याय — Brihat Jataka Ch. 13)</h4>
+            <p className="text-xs text-slate-400">
+              Varahamihira's primary lunar formations: Sunapha, Anapha, Duradhara, Kemadruma, and Chandradhi Yoga.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {report.chandraYogas.map((cy, idx) => (
+              <div
+                key={idx}
+                className={`p-5 rounded-2xl border space-y-3 ${
+                  cy.isAuspicious
+                    ? "bg-slate-950 border-emerald-500/40 shadow-lg"
+                    : "bg-slate-950/70 border-slate-800"
+                }`}
+              >
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <div>
+                    <h4 className="text-sm font-black text-slate-100">{cy.yogaName}</h4>
+                    <span className="text-[10px] text-amber-300 font-semibold">{cy.sanskritName}</span>
                   </div>
-                  <span className="text-xs font-bold text-slate-200 px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
-                    {d.signName}
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                      cy.isAuspicious
+                        ? "bg-emerald-950 text-emerald-300 border-emerald-800"
+                        : "bg-slate-900 text-slate-400 border-slate-800"
+                    }`}
+                  >
+                    {cy.isAuspicious ? "Auspicious (शुभ)" : "Neutralized (भंग)"}
                   </span>
                 </div>
 
-                <div className="space-y-2 text-xs text-slate-300 mt-3">
-                  <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/80">
-                    <strong className="text-amber-300 block text-[10px] uppercase">Archetype:</strong>
-                    <span className="font-bold text-slate-100">{d.archetype}</span>
-                  </div>
-                  <p className="leading-relaxed">
-                    <strong className="text-purple-300">Psychological Trait:</strong> {d.psychologicalTrait}
-                  </p>
-                </div>
-              </div>
+                <p className="text-xs text-slate-300 leading-relaxed">{cy.description}</p>
 
-              <div className="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-400">
-                <strong className="text-rose-400">Somatic Sensitivity:</strong> {d.somaticVulnerability}
+                {cy.planetsInvolved.length > 0 && (
+                  <div className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-[10px] text-emerald-400 font-bold">
+                    Participating Planets: {cy.planetsInvolved.join(", ")}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Tab 3: 32 Nabhasa Yogas */}
-      {activeTab === "nabhasa" && (
-        <div className="bg-slate-900/90 p-5 rounded-2xl border border-slate-800 space-y-4">
+      {/* TAB 3: PRAVRAJYA / SANNYASA YOGA */}
+      {activeTab === "pravrajya" && (
+        <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🌌</span>
-              <div>
-                <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                  {report.nabhasaYoga.yogaCategory} ({report.nabhasaYoga.sanskritName})
-                </span>
-                <h3 className="text-base font-black text-slate-100">
-                  {report.nabhasaYoga.activeYogaName}
-                </h3>
-              </div>
+            <div>
+              <span className="text-[10px] text-amber-400 uppercase font-bold">Brihat Jataka Chapter 15</span>
+              <h4 className="text-base font-black text-slate-100 mt-0.5">
+                Pravrajya Yoga & Sannyasa Orders (प्रव्रज्यायोगाध्याय)
+              </h4>
             </div>
-            <span className="px-3 py-1 rounded-xl text-xs font-bold bg-purple-950 text-purple-300 border border-purple-800">
-              {report.nabhasaYoga.occupiedSignsCount} Signs Distribution
+            <span className="text-xs font-bold px-2.5 py-1 rounded-xl bg-amber-950/60 text-amber-300 border border-amber-800/60">
+              Initiator: {report.pravrajyaYoga.initiatorPlanet}
             </span>
           </div>
 
-          <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 space-y-1 text-xs text-slate-300 leading-relaxed">
-            <strong className="text-slate-400 block text-[10px] uppercase">Classical Definition:</strong>
-            <p>{report.nabhasaYoga.classicalDefinition}</p>
+          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+            <span className="text-amber-300 font-bold text-xs block">
+              Spiritual Lineage: {report.pravrajyaYoga.sanskritLineage}
+            </span>
+            <p className="text-xs text-slate-200 leading-relaxed">
+              <strong className="text-slate-400">Order Description: </strong>
+              {report.pravrajyaYoga.spiritualOrder}
+            </p>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              <strong className="text-slate-400">Philosophical Drive: </strong>
+              {report.pravrajyaYoga.philosophicalDrive}
+            </p>
           </div>
 
-          <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed">
-            <strong className="text-emerald-400 block mb-1">Lifelong Phala (Unconditional Operating Fruit):</strong>
-            {report.nabhasaYoga.lifelongPhala}
+          <p className="text-xs text-slate-400 font-mono">
+            {report.pravrajyaYoga.varahaSutra}
+          </p>
+        </div>
+      )}
+
+      {/* TAB 4: 36 DREKKANAS */}
+      {activeTab === "drekkanas" && (
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-sm font-black text-slate-100">36 Drekkanas Decanate Inspector (Brihat Jataka Ch. 27)</h4>
+            <p className="text-xs text-slate-400">
+              Varahamihira's 36 visual decanate forms and psychosomatic archetypes.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[report.drekkanas.lagnaDrekkana, report.drekkanas.moonDrekkana, report.drekkanas.sunDrekkana].map((d, idx) => (
+              <div key={idx} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <div>
+                    <span className="text-xs font-black text-slate-100">{d.pointName}</span>
+                    <div className="text-[10px] text-slate-400">{d.signName} ({d.decanateDegrees})</div>
+                  </div>
+                  <span className="text-xl">{d.icon}</span>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[10px] text-amber-400 uppercase font-bold block">Archetype: {d.archetype}</span>
+                  <p className="text-xs text-slate-300 leading-relaxed">{d.psychologicalTrait}</p>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-[10px] text-rose-300">
+                  <span className="font-bold">Constitutional Vigilance: </span>{d.somaticVulnerability}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Tab 4: Gateways */}
-      {activeTab === "gateways" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-300">
-          <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/80 space-y-2.5">
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
-              <span className="text-xl">🌱</span>
-              <div>
-                <span className="text-[10px] text-amber-400 uppercase font-bold">Chapter 4</span>
-                <h4 className="text-sm font-bold text-slate-100">Nisheka (Cosmic Conception Time)</h4>
-              </div>
+      {/* TAB 5: 32 NABHASA YOGAS */}
+      {activeTab === "nabhasa" && (
+        <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+          <div className="border-b border-slate-800 pb-3">
+            <span className="text-[10px] text-amber-400 uppercase font-bold">Brihat Jataka Chapter 12</span>
+            <h4 className="text-base font-black text-slate-100 mt-0.5">
+              {report.nabhasaYoga.activeYogaName} ({report.nabhasaYoga.sanskritName})
+            </h4>
+            <div className="text-xs text-slate-400 mt-0.5">
+              Category: {report.nabhasaYoga.yogaCategory} • Occupied Signs: {report.nabhasaYoga.occupiedSignsCount}
             </div>
-            <p className="leading-relaxed text-slate-300">
-              {report.nishekaInsight}
-            </p>
           </div>
 
-          <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/80 space-y-2.5">
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
-              <span className="text-xl">🕊️</span>
-              <div>
-                <span className="text-[10px] text-amber-400 uppercase font-bold">Chapter 23</span>
-                <h4 className="text-sm font-bold text-slate-100">Niryana (Death Gateway & Elemental Shift)</h4>
-              </div>
-            </div>
-            <p className="leading-relaxed text-slate-300">
-              {report.niryanaInsight}
-            </p>
+          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1 text-xs">
+            <span className="text-amber-400 font-bold block">Definition:</span>
+            <p className="text-slate-200">{report.nabhasaYoga.classicalDefinition}</p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1 text-xs">
+            <span className="text-emerald-400 font-bold block">Lifelong Fruits (Phala):</span>
+            <p className="text-slate-200 leading-relaxed">{report.nabhasaYoga.lifelongPhala}</p>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 6: NISHEKA & NIRYANA */}
+      {activeTab === "gateways" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+            <span className="text-[10px] text-amber-400 uppercase font-bold">Ch. 4: Nisheka (Prenatal Epoch)</span>
+            <h4 className="text-sm font-black text-slate-100">Cosmic Conception Alignment</h4>
+            <p className="text-xs text-slate-300 leading-relaxed">{report.nishekaInsight}</p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+            <span className="text-[10px] text-rose-400 uppercase font-bold">Ch. 21: Niryana (Longevity Gateway)</span>
+            <h4 className="text-sm font-black text-slate-100">8th House Transition</h4>
+            <p className="text-xs text-slate-300 leading-relaxed">{report.niryanaInsight}</p>
           </div>
         </div>
       )}
