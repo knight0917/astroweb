@@ -47,9 +47,104 @@ import BenchmarkHoroscopesDeck from "./BenchmarkHoroscopesDeck";
 import PrasnaTantraDeck from "./PrasnaTantraDeck";
 import PatelAshtakavargaDeck from "./PatelAshtakavargaDeck";
 
+type DeckCategory = "all" | "foundations" | "nadi" | "classics" | "divisional" | "timing" | "prasna" | "research";
+
+interface DeckModule {
+  id: string;
+  name: string;
+  category: DeckCategory;
+  icon: string;
+}
+
+const DECK_CATEGORIES: { id: DeckCategory; label: string; icon: string }[] = [
+  { id: "all", label: "All Decks", icon: "🌐" },
+  { id: "foundations", label: "Foundations & BPHS", icon: "🏛️" },
+  { id: "nadi", label: "Nadi & Stellar", icon: "🌿" },
+  { id: "classics", label: "Sanskrit Classics", icon: "📜" },
+  { id: "divisional", label: "Divisional & Jaimini", icon: "📐" },
+  { id: "timing", label: "Transits & Dashas", icon: "🏰" },
+  { id: "prasna", label: "Prasna & Remedies", icon: "🔮" },
+  { id: "research", label: "Titans & Research", icon: "👑" },
+];
+
+const DECK_MODULES: DeckModule[] = [
+  // 1. Foundations & BPHS
+  { id: "bars", name: "Potency Bars", category: "foundations", icon: "📊" },
+  { id: "stacked", name: "Component Breakdown", category: "foundations", icon: "📑" },
+  { id: "table", name: "Detailed Table", category: "foundations", icon: "📋" },
+  { id: "judgement", name: "Raman 12 Bhavas Judgement", category: "foundations", icon: "🏛️" },
+  { id: "bphs", name: "BPHS Core Principles", category: "foundations", icon: "📖" },
+  { id: "jataka", name: "Brihat Jataka (Varahamihira)", category: "foundations", icon: "📜" },
+  { id: "samhita", name: "Brihat Samhita (Varahamihira)", category: "foundations", icon: "🌟" },
+
+  // 2. Nadi & Stellar
+  { id: "bhrigu", name: "Bhrigu Nadi & BSP", category: "nadi", icon: "📜" },
+  { id: "keralam", name: "Deva Keralam 150 Nadi Amshas", category: "nadi", icon: "🌿" },
+  { id: "suka", name: "Suka Nadi (Shukacharya)", category: "nadi", icon: "🦜" },
+  { id: "kcil", name: "Cuspal Interlinks (KCIL S.P. Khullar)", category: "nadi", icon: "📐" },
+  { id: "nadimaster", name: "Nadi Master Suite (Meena, Tattvam, Padma)", category: "nadi", icon: "📜" },
+
+  // 3. Sanskrit Classics
+  { id: "alankara", name: "Jataka Alankara (1613 CE)", category: "classics", icon: "👑" },
+  { id: "nirnay", name: "Dr. B.V. Raman Jatak Nirnay", category: "classics", icon: "🔍" },
+  { id: "parijata", name: "Jataka Parijata (Vaidyanatha)", category: "classics", icon: "🪷" },
+  { id: "saravali", name: "Saravali (Kalyana Varma)", category: "classics", icon: "📜" },
+  { id: "phaladeepika", name: "Phaladeepika (Mantreswara)", category: "classics", icon: "✨" },
+  { id: "chintamani", name: "Sarvartha Chintamani", category: "classics", icon: "💎" },
+  { id: "sanketanidhi", name: "Sanketanidhi (9 Sanketas)", category: "classics", icon: "📜" },
+  { id: "samhitaskandha", name: "Samhita Skandha (Mundane)", category: "classics", icon: "🌐" },
+  { id: "strijataka", name: "Stri Jataka (Female Horoscopy)", category: "classics", icon: "🌸" },
+  { id: "satyajataka", name: "Satya Jataka (Dhruva Nadi)", category: "classics", icon: "📜" },
+  { id: "uttarakalamrita", name: "Uttara Kalamrita (Kalidasa)", category: "classics", icon: "🪶" },
+  { id: "chandrika", name: "Jataka Chandrika (Laghu Parashari)", category: "classics", icon: "🌙" },
+  { id: "ratnakara", name: "Bhavartha Ratnakara (Ramanujacharya)", category: "classics", icon: "📖" },
+  { id: "raman300", name: "Raman 300 Yogas & Lal Kitab", category: "classics", icon: "🌟" },
+
+  // 4. Divisional & Jaimini
+  { id: "jaimini", name: "Jaimini Upadesha Sutras", category: "divisional", icon: "📐" },
+  { id: "crux", name: "Crux of Vedic Astrology (Sanjay Rath)", category: "divisional", icon: "🌐" },
+  { id: "shashtiamshabcp", name: "D-60 Deities & BCP Wheel", category: "divisional", icon: "💎" },
+
+  // 5. Transits & Dashas
+  { id: "dtp", name: "Double Transit & PAC-DARES", category: "timing", icon: "⚡" },
+  { id: "dashas", name: "Vimshottari & Conditional Dashas", category: "timing", icon: "⏳" },
+  { id: "predictions", name: "Vedic Event Forecasting", category: "timing", icon: "🎯" },
+  { id: "kotachakra", name: "Kota Chakra & Transits", category: "timing", icon: "🏰" },
+  { id: "patelashtakavarga", name: "Patel Ashtakavarga & Kakshyas", category: "timing", icon: "📐" },
+
+  // 6. Prasna & Remedies
+  { id: "prasnamarga", name: "Prasna Marga & Arudha", category: "prasna", icon: "🧭" },
+  { id: "chappanna", name: "Chappanna Prasna (56 Questions)", category: "prasna", icon: "🔮" },
+  { id: "prasnatantra", name: "Prasna Tantra & Sahams", category: "prasna", icon: "🔮" },
+  { id: "patanjaliyoga", name: "Patanjali Yoga & Chakras", category: "prasna", icon: "🧘" },
+  { id: "gayatri", name: "Gayatri Jyotish & 5 Koshas", category: "prasna", icon: "🕉️" },
+  { id: "bhrigusamhita", name: "Bhrigu Samhita (Karmic Debts)", category: "prasna", icon: "📜" },
+  { id: "sugam", name: "Sugam Everyday Remedies", category: "prasna", icon: "🌿" },
+
+  // 7. Titans & Research
+  { id: "benchmarks", name: "Benchmark Titan Horoscopes", category: "research", icon: "🏛️" },
+  { id: "marriage", name: "Timing of Marriage (K.N. Rao)", category: "research", icon: "💍" },
+  { id: "education", name: "Education & Career Streams", category: "research", icon: "📚" },
+  { id: "karma", name: "Karma & Rebirth (K.N. Rao)", category: "research", icon: "☸️" },
+  { id: "techniques", name: "K.N. Rao Research Techniques", category: "research", icon: "🔬" },
+];
+
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
   const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas" | "bphs" | "jataka" | "samhita" | "keralam" | "suka" | "jaimini" | "gayatri" | "alankara" | "nirnay" | "parijata" | "saravali" | "phaladeepika" | "prasnamarga" | "samhitaskandha" | "sanketanidhi" | "chintamani" | "strijataka" | "satyajataka" | "sugam" | "uttarakalamrita" | "predictions" | "chandrika" | "chappanna" | "bhrigusamhita" | "ratnakara" | "crux" | "kcil" | "nadimaster" | "shashtiamshabcp" | "patanjaliyoga" | "kotachakra" | "raman300" | "benchmarks" | "prasnatantra" | "patelashtakavarga">("bars");
+  const [selectedCategory, setSelectedCategory] = useState<DeckCategory>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const filteredModules = useMemo(() => {
+    return DECK_MODULES.filter((m) => {
+      const matchCat = selectedCategory === "all" || m.category === selectedCategory;
+      const matchSearch =
+        !searchQuery.trim() ||
+        m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.id.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchCat && matchSearch;
+    });
+  }, [selectedCategory, searchQuery]);
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -90,468 +185,82 @@ export default function BhavaBalaView() {
           </p>
         </div>
 
-        {/* View Mode Switcher */}
-        <div className="flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs">
-          <button
-            onClick={() => setDisplayMode("bars")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-              displayMode === "bars"
-                ? "bg-amber-500 text-slate-950 shadow"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <span>Potency Bars</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("stacked")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-              displayMode === "stacked"
-                ? "bg-amber-500 text-slate-950 shadow"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <span>Component Breakdown</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("table")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-              displayMode === "table"
-                ? "bg-amber-500 text-slate-950 shadow"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <span>Detailed Table</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("judgement")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "judgement"
-                ? "bg-purple-600 text-white shadow"
-                : "text-purple-300 hover:text-white bg-purple-950/30 border border-purple-800/40"
-            }`}
-          >
-            <span>🏛️ Raman 12 Bhavas Judgement</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("bhrigu")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "bhrigu"
-                ? "bg-amber-600 text-slate-950 shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>📜 Bhrigu Nadi & BSP</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("karma")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "karma"
-                ? "bg-emerald-600 text-slate-950 shadow"
-                : "text-emerald-300 hover:text-white bg-emerald-950/30 border border-emerald-800/40"
-            }`}
-          >
-            <span>☸️ Karma & Rebirth (K.N. Rao)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("dtp")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "dtp"
-                ? "bg-purple-600 text-white shadow"
-                : "text-purple-300 hover:text-white bg-purple-950/30 border border-purple-800/40"
-            }`}
-          >
-            <span>⚡ Double Transit & PAC-DARES</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("marriage")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "marriage"
-                ? "bg-rose-600 text-white shadow"
-                : "text-rose-300 hover:text-white bg-rose-950/30 border border-rose-800/40"
-            }`}
-          >
-            <span>💍 Timing of Marriage (K.N. Rao)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("techniques")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "techniques"
-                ? "bg-amber-600 text-slate-950 shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>🌟 Advanced Rao Techniques</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("education")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "education"
-                ? "bg-cyan-600 text-white shadow"
-                : "text-cyan-300 hover:text-white bg-cyan-950/30 border border-cyan-800/40"
-            }`}
-          >
-            <span>🎓 Planets & Education (K.N. Rao)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("dashas")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "dashas"
-                ? "bg-purple-600 text-white shadow"
-                : "text-purple-300 hover:text-white bg-purple-950/30 border border-purple-800/40"
-            }`}
-          >
-            <span>⏳ Multi-Dasha & Yogini (Classical)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("bphs")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "bphs"
-                ? "bg-amber-600 text-slate-950 shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>📜 BPHS Classical Core (Parashara)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("jataka")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "jataka"
-                ? "bg-rose-600 text-white shadow"
-                : "text-rose-300 hover:text-white bg-rose-950/30 border border-rose-800/40"
-            }`}
-          >
-            <span>👑 Brihat Jataka (Varahamihira)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("samhita")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "samhita"
-                ? "bg-teal-600 text-white shadow"
-                : "text-teal-300 hover:text-white bg-teal-950/30 border border-teal-800/40"
-            }`}
-          >
-            <span>🐢 Brihat Samhita (Varahamihira)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("keralam")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "keralam"
-                ? "bg-purple-600 text-white shadow"
-                : "text-purple-300 hover:text-white bg-purple-950/30 border border-purple-800/40"
-            }`}
-          >
-            <span>📜 Deva Keralam (150 Nadi Amshas)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("suka")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "suka"
-                ? "bg-emerald-600 text-white shadow"
-                : "text-emerald-300 hover:text-white bg-emerald-950/30 border border-emerald-800/40"
-            }`}
-          >
-            <span>🦜 Suka Nadi (Shukacharya)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("jaimini")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "jaimini"
-                ? "bg-amber-600 text-white shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>📜 Jaimini Sutras (Complete)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("gayatri")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "gayatri"
-                ? "bg-amber-500 text-white shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>☀️ Gayatri Jyotish (गायत्री)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("alankara")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "alankara"
-                ? "bg-amber-600 text-white shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>🏛️ Jataka Alankara (Ganesh Kavi)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("nirnay")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "nirnay"
-                ? "bg-indigo-600 text-white shadow"
-                : "text-indigo-300 hover:text-white bg-indigo-950/30 border border-indigo-800/40"
-            }`}
-          >
-            <span>📖 Jatak Nirnay (B.V. Raman 1 & 2)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("parijata")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "parijata"
-                ? "bg-rose-600 text-white shadow"
-                : "text-rose-300 hover:text-white bg-rose-950/30 border border-rose-800/40"
-            }`}
-          >
-            <span>🌺 Jataka Parijata (Vaidyanatha 1–3)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("saravali")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "saravali"
-                ? "bg-amber-600 text-white shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>📜 Saravali (Kalyana Varma)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("phaladeepika")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "phaladeepika"
-                ? "bg-cyan-600 text-white shadow"
-                : "text-cyan-300 hover:text-white bg-cyan-950/30 border border-cyan-800/40"
-            }`}
-          >
-            <span>📖 Phaladeepika (Mantreswara)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("prasnamarga")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "prasnamarga"
-                ? "bg-amber-600 text-white shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>🔮 Prasna Marga (Kerala 32 Adhyayas)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("samhitaskandha")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "samhitaskandha"
-                ? "bg-cyan-600 text-white shadow"
-                : "text-cyan-300 hover:text-white bg-cyan-950/30 border border-cyan-800/40"
-            }`}
-          >
-            <span>🌧️ Samhita Skandha (Sadananda)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("sanketanidhi")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "sanketanidhi"
-                ? "bg-amber-600 text-white shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>📜 Sanketanidhi (Ramadayalu 9 Sanketas)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("chintamani")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "chintamani"
-                ? "bg-cyan-600 text-white shadow"
-                : "text-cyan-300 hover:text-white bg-cyan-950/30 border border-cyan-800/40"
-            }`}
-          >
-            <span>💎 Sarvartha Chintamani (13 Adhyayas)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("strijataka")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "strijataka"
-                ? "bg-rose-600 text-white shadow"
-                : "text-rose-300 hover:text-white bg-rose-950/30 border border-rose-800/40"
-            }`}
-          >
-            <span>🌺 Stri Jataka (Female Horoscopy)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("satyajataka")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "satyajataka"
-                ? "bg-amber-600 text-white shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>⭐ Satya Jataka (Dhruva Nadi)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("sugam")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "sugam"
-                ? "bg-emerald-600 text-white shadow"
-                : "text-emerald-300 hover:text-white bg-emerald-950/30 border border-emerald-800/40"
-            }`}
-          >
-            <span>🌿 Sugam Jyotish (Practical Predictive)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("uttarakalamrita")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "uttarakalamrita"
-                ? "bg-amber-600 text-white shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>📜 Uttara Kalamrita (Kalidasa)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("predictions")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "predictions"
-                ? "bg-cyan-600 text-white shadow"
-                : "text-cyan-300 hover:text-white bg-cyan-950/30 border border-cyan-800/40"
-            }`}
-          >
-            <span>🎯 Vedic Predictions (Event Timing)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("chandrika")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "chandrika"
-                ? "bg-amber-600 text-white shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>🌙 Jataka Chandrika (Laghu Parashari)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("chappanna")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "chappanna"
-                ? "bg-purple-600 text-white shadow"
-                : "text-purple-300 hover:text-white bg-purple-950/30 border border-purple-800/40"
-            }`}
-          >
-            <span>🔮 Chappanna Prasna (56 Questions)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("bhrigusamhita")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "bhrigusamhita"
-                ? "bg-amber-600 text-white shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>📜 Bhrigu Samhita (Karmic Debts)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("ratnakara")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "ratnakara"
-                ? "bg-amber-600 text-white shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>📖 Bhavartha Ratnakara (B.V. Raman)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("crux")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "crux"
-                ? "bg-blue-600 text-white shadow"
-                : "text-blue-300 hover:text-white bg-blue-950/30 border border-blue-800/40"
-            }`}
-          >
-            <span>🌐 Crux of Vedic Astrology (Pt. Sanjay Rath)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("kcil")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "kcil"
-                ? "bg-emerald-600 text-white shadow"
-                : "text-emerald-300 hover:text-white bg-emerald-950/30 border border-emerald-800/40"
-            }`}
-          >
-            <span>📐 Cuspal Interlinks (KCIL — S.P. Khullar)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("nadimaster")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "nadimaster"
-                ? "bg-amber-600 text-white shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>📜 Nadi Master Suite (Meena, Tattvam, Padma)</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("shashtiamshabcp")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "shashtiamshabcp"
-                ? "bg-emerald-600 text-white shadow"
-                : "text-emerald-300 hover:text-white bg-emerald-950/30 border border-emerald-800/40"
-            }`}
-          >
-            <span>💎 D-60 Deities & BCP Wheel</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("patanjaliyoga")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "patanjaliyoga"
-                ? "bg-violet-600 text-white shadow"
-                : "text-violet-300 hover:text-white bg-violet-950/30 border border-violet-800/40"
-            }`}
-          >
-            <span>🧘 Patanjali Yoga & Chakras</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("kotachakra")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "kotachakra"
-                ? "bg-amber-600 text-white shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>🏰 Kota Chakra & Transits</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("raman300")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "raman300"
-                ? "bg-amber-500 text-slate-950 shadow"
-                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
-            }`}
-          >
-            <span>🌟 Raman 300 Yogas & Lal Kitab</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("benchmarks")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "benchmarks"
-                ? "bg-cyan-600 text-white shadow"
-                : "text-cyan-300 hover:text-white bg-cyan-950/30 border border-cyan-800/40"
-            }`}
-          >
-            <span>🏛️ Benchmark Titan Horoscopes</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("prasnatantra")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "prasnatantra"
-                ? "bg-violet-600 text-white shadow"
-                : "text-violet-300 hover:text-white bg-violet-950/30 border border-violet-800/40"
-            }`}
-          >
-            <span>🔮 Prasna Tantra & Sahams</span>
-          </button>
-          <button
-            onClick={() => setDisplayMode("patelashtakavarga")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              displayMode === "patelashtakavarga"
-                ? "bg-emerald-600 text-white shadow"
-                : "text-emerald-300 hover:text-white bg-emerald-950/30 border border-emerald-800/40"
-            }`}
-          >
-            <span>📐 Patel Ashtakavarga & Kakshyas</span>
-          </button>
+        {/* Categorized Master Deck Selector & Search */}
+        <div className="w-full flex flex-col gap-3 bg-slate-900/90 p-4 rounded-2xl border border-slate-800 text-xs">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
+              {DECK_CATEGORIES.map((cat) => {
+                const count = cat.id === "all" ? DECK_MODULES.length : DECK_MODULES.filter((m) => m.category === cat.id).length;
+                const isSelected = selectedCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      setSelectedCategory(cat.id);
+                      setSearchQuery("");
+                    }}
+                    className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap text-xs ${
+                      isSelected
+                        ? "bg-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/20"
+                        : "bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800 hover:border-slate-700"
+                    }`}
+                  >
+                    <span>{cat.icon}</span>
+                    <span>{cat.label}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                      isSelected ? "bg-slate-950/30 text-slate-950" : "bg-slate-800 text-slate-400"
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="relative w-full md:w-64">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search 46 classical decks..."
+                className="w-full bg-slate-950 border border-slate-800 focus:border-amber-400 rounded-xl px-3 py-1.5 pl-8 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none transition-colors"
+              />
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs">🔍</span>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5 max-h-48 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-800">
+            {filteredModules.map((mod) => {
+              const isActive = displayMode === mod.id;
+              return (
+                <button
+                  key={mod.id}
+                  onClick={() => setDisplayMode(mod.id as any)}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 text-xs whitespace-nowrap ${
+                    isActive
+                      ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black shadow-md shadow-amber-500/20 scale-[1.02]"
+                      : "bg-slate-950/80 text-slate-300 hover:text-white border border-slate-800/80 hover:border-slate-700 hover:bg-slate-900"
+                  }`}
+                >
+                  <span>{mod.icon}</span>
+                  <span>{mod.name}</span>
+                </button>
+              );
+            })}
+            {filteredModules.length === 0 && (
+              <div className="text-xs text-slate-500 py-2 italic">
+                No classical decks matching "{searchQuery}"
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

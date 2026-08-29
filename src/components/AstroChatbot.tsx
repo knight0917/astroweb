@@ -18,7 +18,7 @@ const DEFAULT_GEMINI_KEY =
   process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
   (typeof atob === "function" ? atob(FALLBACK_B64) : "");
 
-type ConsultationCategory = "all" | "career" | "marriage" | "sadesati" | "health" | "gemstones" | "education";
+type ConsultationCategory = "all" | "career" | "marriage" | "sadesati" | "health" | "gemstones" | "education" | "benchmarks" | "prasna" | "ashtakavarga" | "remedies";
 
 interface CategoryMeta {
   id: ConsultationCategory;
@@ -210,6 +210,82 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
         icon: "💡",
         title: "Creative & Intellectual Talents",
         prompt: "What innate creative, analytical, or occult talents are promised in my 5th house and Navamsha?",
+      },
+    ],
+  },
+  {
+    id: "benchmarks",
+    name: "Titan Archetypes",
+    hindiName: "महापुरुष समानता",
+    icon: "🏛️",
+    description: "Compare your chart against 21 historical giants across 5 primary life spheres",
+    prompts: [
+      {
+        icon: "🏛️",
+        title: "Soul Resonance with Titans",
+        prompt: "Which historical titan archetype (Swami Vivekananda, Albert Einstein, Dhirubhai Ambani, Mahatma Gandhi, Rabindranath Tagore) does my planetary blueprint resonate with most closely?",
+      },
+      {
+        icon: "⚡",
+        title: "Karmic Potential Emulation",
+        prompt: "Based on my Lagna, 10th house, and major Mahapurusha yogas, how can I best activate the structural strengths of my closest historical titan match?",
+      },
+    ],
+  },
+  {
+    id: "prasna",
+    name: "Prashna & Sahams",
+    hindiName: "प्रश्न एवं सहम",
+    icon: "🔮",
+    description: "16 Classical Tajik Yogas (Ithasala, Ishrafa) & 12 Sensitive Arabic Sahams",
+    prompts: [
+      {
+        icon: "🔮",
+        title: "Instant Horary Query Verdict",
+        prompt: "Evaluating the 16 Tajik Yogas (Ithasala, Ishrafa, Nakta, Yamaya) for my question moment, what is the exact fruition verdict and timing?",
+      },
+      {
+        icon: "📐",
+        title: "Punya & Karma Saham Analysis",
+        prompt: "Where are my Punya Saham, Karma Saham, and Yashas Saham anchored, and what do they reveal about my fortune and professional breakthroughs?",
+      },
+    ],
+  },
+  {
+    id: "ashtakavarga",
+    name: "Patel Ashtakavarga",
+    hindiName: "अष्टकवर्ग एवं कक्ष्य",
+    icon: "📐",
+    description: "C.S. Patel Shodhya Pinda, Trikona reductions, and 8 Kakshyas micro-transits",
+    prompts: [
+      {
+        icon: "💎",
+        title: "Shodhya Pinda Karmic Vitality",
+        prompt: "What are my planetary Shodhya Pinda scores after complete Trikona and Ekadhipatya reductions, and which planet yields supreme karmic strength?",
+      },
+      {
+        icon: "🎯",
+        title: "8 Kakshyas Transit Activation",
+        prompt: "Which of the 8 Kakshya corridors (3°45') are currently energized by transits, and when will my positive bindus trigger tangible results?",
+      },
+    ],
+  },
+  {
+    id: "remedies",
+    name: "Multi-Tier Remedies",
+    hindiName: "उपाय एवं साधना",
+    icon: "🌿",
+    description: "Sugam everyday pariharas, Patanjali Chakra sadhana, and Sri Margabandhu shield",
+    prompts: [
+      {
+        icon: "🌿",
+        title: "Sugam Everyday Pariharas",
+        prompt: "What simple, daily, zero-cost Vedic rituals (Surya Arghya in copper vessel, Gau-seva, Peepal lamp) are prescribed to dissolve my current planetary obstacles?",
+      },
+      {
+        icon: "🛡️",
+        title: "Margabandhu Shield & Sadhana",
+        prompt: "Which Chakra and Ashtanga Yoga protocol is recommended for my Lagna lord, and how does Sri Margabandhu Stotram protect my travels and transitions?",
       },
     ],
   },
