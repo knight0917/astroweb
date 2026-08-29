@@ -134,6 +134,8 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *Kala Empirical Charts Database*: Mathematical affinity algorithms mapping natal planetary placements against 21 historical benchmark titan archetypes (Philosophers: *Swami Vivekananda, Ramana Maharshi*; Scientists: *Albert Einstein, Nikola Tesla*; Business Tycoons: *Dhirubhai Ambani, Bill Gates*; Rulers: *Mahatma Gandhi, Abraham Lincoln*; Artists: *Rabindranath Tagore*).
     - 🔮 **Sri Neelakanta Prasna Tantra & 12 Tajik Sahams**:
       - *Prasna Tantra (Sri Neelakanta Daivajna & Dr. B.V. Raman)*: 16 Classical Tajik Horary Yogas (Ithasala applying aspect, Ishrafa separating, Nakta/Yamaya mediation, Manahoo frustration, Radda reversal). 12 Classical Tajik Sahams (Punya, Yashas, Karma, Vivaha, Putra, Vidya Sahams) with Sri Margabandhu Stotram path and travel protection.
+    - 📐 **C.S. Patel & Aiyar Ashtakavarga Shodhana & 8 Kakshyas**:
+      - *Ashtakavarga (1957 Ed. by C.S. Patel & C.A.S. Aiyar)*: Precision Trikona Shodhana, Ekadhipatya Shodhana, Rashi/Graha Gunakaras, Shodhya Pinda longevity/karmic multipliers, and the 8 Kakshyas ($3^\circ 45'$ micro-transit corridors).
 
 4. **CLASSICAL REMEDY DIFFERENTIATION PROTOCOL (HOW TO CHOOSE THE RIGHT REMEDY)**:
    When recommending remedies in Section 4, strictly differentiate by classical purpose:

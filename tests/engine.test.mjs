@@ -3050,6 +3050,67 @@ test("Sri Neelakanta Prasna Tantra 16 Tajik Yogas, 12 Sahams & Margabandhu Shiel
   assert.ok(mb.masterMargabandhuSynthesis.length > 20);
 });
 
+test("C.S. Patel & Aiyar Ashtakavarga Shodhana, Shodhya Pinda & 8 Kakshyas Engine Verification", async () => {
+  const { evaluatePatelAshtakavarga, applyTrikonaShodhana, applyEkadhipatyaShodhana, RASHI_GUNAKARAS, GRAHA_GUNAKARAS, KAKSHYA_LORDS } = await import("../src/engine/patelAshtakavarga.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Constants verification
+  assert.strictEqual(RASHI_GUNAKARAS.length, 12);
+  assert.strictEqual(RASHI_GUNAKARAS[0], 7); // Aries = 7
+  assert.strictEqual(RASHI_GUNAKARAS[11], 12); // Pisces = 12
+  assert.strictEqual(GRAHA_GUNAKARAS.Sun, 5);
+  assert.strictEqual(GRAHA_GUNAKARAS.Jupiter, 10);
+  assert.strictEqual(KAKSHYA_LORDS.length, 8);
+
+  // 2. Trikona & Ekadhipatya Shodhana logic tests
+  const testBindus = [5, 4, 3, 6, 5, 2, 4, 3, 2, 6, 5, 4];
+  const trikonaRes = applyTrikonaShodhana(testBindus);
+  assert.strictEqual(trikonaRes.length, 12);
+  // Aries(0)=5, Leo(4)=5, Sag(8)=2 -> min=2 -> reduced: 3, 3, 0
+  assert.strictEqual(trikonaRes[0], 3);
+  assert.strictEqual(trikonaRes[4], 3);
+  assert.strictEqual(trikonaRes[8], 0);
+
+  const ekadhipatyaRes = applyEkadhipatyaShodhana(trikonaRes, new Set([0, 2]));
+  assert.strictEqual(ekadhipatyaRes.length, 12);
+
+  // 3. Full Patel Ashtakavarga Evaluation
+  const pa = evaluatePatelAshtakavarga(natalEphem);
+  assert.ok(Array.isArray(pa.shodhyaPindas));
+  assert.strictEqual(pa.shodhyaPindas.length, 7);
+  for (const p of pa.shodhyaPindas) {
+    assert.ok(p.planetName);
+    assert.strictEqual(p.rawBindus.length, 12);
+    assert.strictEqual(p.trikonaReducedBindus.length, 12);
+    assert.strictEqual(p.ekadhipatyaReducedBindus.length, 12);
+    assert.ok(p.rashiPinda >= 0);
+    assert.ok(p.grahaPinda >= 0);
+    assert.strictEqual(p.shodhyaPinda, p.rashiPinda + p.grahaPinda);
+    assert.ok(p.longevityAyurContributionYears >= 0);
+  }
+
+  assert.ok(pa.sarvashtakaShodhyaPindaTotal > 100);
+  assert.ok(Array.isArray(pa.vitalPlanetaryPindas));
+  assert.strictEqual(pa.vitalPlanetaryPindas.length, 7);
+
+  // 4. 8 Kakshyas System
+  assert.ok(Array.isArray(pa.kakshyas));
+  assert.strictEqual(pa.kakshyas.length, 8);
+  for (const k of pa.kakshyas) {
+    assert.ok(k.kakshyaNumber >= 1 && k.kakshyaNumber <= 8);
+    assert.ok(k.degreeSpan);
+    assert.ok(k.governingLord);
+    assert.strictEqual(typeof k.hasBeneficBindu, "boolean");
+    assert.ok(Array.isArray(k.currentTransitingPlanets));
+    assert.ok(k.transitActivationStatus.length > 10);
+  }
+  assert.ok(pa.masterPatelSynthesis.length > 25);
+});
+
+
 
 
 

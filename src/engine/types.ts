@@ -1676,6 +1676,39 @@ export interface MargabandhuAnalysis {
   masterMargabandhuSynthesis: string;
 }
 
+// ==========================================
+// 62. C.S. PATEL & AIYAR ASHTAKAVARGA & KAKSHYA ENGINE
+// ==========================================
+
+export interface ShodhyaPindaReport {
+  planetName: string;
+  rawBindus: number[]; // 12 signs
+  trikonaReducedBindus: number[]; // 12 signs
+  ekadhipatyaReducedBindus: number[]; // 12 signs
+  rashiPinda: number;
+  grahaPinda: number;
+  shodhyaPinda: number; // Rashi Pinda + Graha Pinda
+  longevityAyurContributionYears: number;
+}
+
+export interface KakshyaZoneItem {
+  kakshyaNumber: number; // 1 to 8
+  degreeSpan: string; // e.g. "0°00' - 3°45'"
+  governingLord: string; // Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon, Lagna
+  hasBeneficBindu: boolean;
+  currentTransitingPlanets: string[];
+  transitActivationStatus: string;
+}
+
+export interface PatelAshtakavargaAnalysis {
+  shodhyaPindas: ShodhyaPindaReport[];
+  sarvashtakaShodhyaPindaTotal: number;
+  kakshyas: KakshyaZoneItem[];
+  vitalPlanetaryPindas: { planet: string; pinda: number; strengthTier: string }[];
+  masterPatelSynthesis: string;
+}
+
+
 
 
 

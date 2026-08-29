@@ -63,6 +63,7 @@ import { evaluateKotaChakra, evaluateDashaLordTransit } from "./kotaChakra";
 import { evaluateRaman300Combinations, evaluateLalKitabTeva, evaluateNarayanaKavacham } from "./raman300Combinations";
 import { evaluateBenchmarkResonance } from "./benchmarkHoroscopes";
 import { evaluatePrasnaTantra, evaluateMargabandhuStotram } from "./prasnaTantra";
+import { evaluatePatelAshtakavarga } from "./patelAshtakavarga";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -1217,6 +1218,22 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 60. C.S. Patel & Aiyar Ashtakavarga Shodhana, Shodhya Pinda & 8 Kakshyas
+  let patelAshtakavargaSummary = "";
+  try {
+    const pa = evaluatePatelAshtakavarga(natalEphemeris);
+    const pindasStr = pa.shodhyaPindas.map((p) => `  - **${p.planetName}:** **${p.shodhyaPinda} Shodhya Pinda** (Rashi: ${p.rashiPinda}, Graha: ${p.grahaPinda}) -> ~${p.longevityAyurContributionYears} Ayur Units`).join("\n");
+    const activeKakshya = pa.kakshyas.find((k) => k.currentTransitingPlanets.length > 0) || pa.kakshyas[0];
+
+    patelAshtakavargaSummary = [
+      `- **Total Sarvashtaka Shodhya Pinda:** **${pa.sarvashtakaShodhyaPindaTotal} Points**`,
+      `- **Active Transit Kakshya:** Kakshya #${activeKakshya.kakshyaNumber} (${activeKakshya.governingLord} — ${activeKakshya.degreeSpan})`,
+      "- **7 Planetary Shodhya Pindas (Post Trikona & Ekadhipatya Shodhana):**",
+      pindasStr,
+      "- **Master Patel Synthesis:** " + pa.masterPatelSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1506,6 +1523,9 @@ export function buildAstroDossier(
     "",
     "#### 🔮 59. SRI NEELAKANTA PRASNA TANTRA 16 TAJIK YOGAS & 12 SAHAMS DOSSIER:",
     prasnaTantraSummary,
+    "",
+    "#### 📐 60. C.S. PATEL ASHTAKAVARGA SHODHANA & 8 KAKSHYAS DOSSIER:",
+    patelAshtakavargaSummary,
   ];
 
   if (matchmakingSummary) {
