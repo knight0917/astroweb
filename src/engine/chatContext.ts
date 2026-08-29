@@ -35,6 +35,7 @@ import { evaluateJaiminiSutrasComplete } from "./jaiminiSutras";
 import { evaluateGayatriJyotish } from "./gayatriJyotish";
 import { evaluateJatakaAlankara } from "./jatakaAlankara";
 import { evaluateJatakNirnay } from "./jatakNirnay";
+import { evaluateJatakaParijata } from "./jatakaParijata";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -589,6 +590,36 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 29. Vaidyanatha Dikshita Jataka Parijata (Volumes 1-3, 18 Adhyayas) Suite
+  let parijataSummary = "";
+  try {
+    const jp = evaluateJatakaParijata(natalEphemeris);
+    const activeYogas = jp.shodashaYogas.filter((y) => y.isFormed);
+    const yogasStr = activeYogas.length > 0
+      ? activeYogas.map((y) => `- 👑 **${y.yogaName}:** ${y.description} -> *${y.classicalShlokaEffect}*`).join("\n")
+      : "- Baseline planetary configuration in the 16 Shodasha Yogas.";
+    const topMastery = [...jp.bhavaMastery].sort((a, b) => b.parijataScore - a.parijataScore).slice(0, 4);
+    const topMasteryStr = topMastery.map((b) => `- **House ${b.bhavaNum} (${b.sanskritTitle.split(" ")[0]}):** ${b.parijataScore}% (${b.masteryGrade}) • Lord: ${b.lordName} in H${b.lordPlacementHouse} -> ${b.classicalPhala}`).join("\n");
+
+    parijataSummary = [
+      "- **Formed Shodasha Parijata Yogas (षोडश पारिजात योगाः):**",
+      yogasStr,
+      "- **64th Navamsha & 22nd Drekkana (Kharesh Engine):**",
+      "  - 64th Navamsha from Moon: **" + jp.khareshAndNavamsha.navamsha64Moon.signName + "** (Lord: " + jp.khareshAndNavamsha.navamsha64Moon.lord + ", Range: " + jp.khareshAndNavamsha.navamsha64Moon.degreeRange + ")",
+      "  - 64th Navamsha from Lagna: **" + jp.khareshAndNavamsha.navamsha64Lagna.signName + "** (Lord: " + jp.khareshAndNavamsha.navamsha64Lagna.lord + ")",
+      "  - 22nd Drekkana Kharesh Lord: **" + jp.khareshAndNavamsha.drekkana22Kharesh.khareshLord + "** (Governs House 8 vulnerability)",
+      "  - Gulika Position: House " + jp.khareshAndNavamsha.gulika.house + " in " + jp.khareshAndNavamsha.gulika.signName + " (" + jp.khareshAndNavamsha.gulika.longitude + "°)",
+      "  - Protection: " + jp.khareshAndNavamsha.protectionGuidelines,
+      "- **Kalachakra Dasha Deha & Jeeva Diagnostic (" + jp.kalachakraDiagnostics.group + "):**",
+      "  - Deha (Body) Sign: **" + jp.kalachakraDiagnostics.dehaRashi + "** (Lord: " + jp.kalachakraDiagnostics.dehaLord + ")",
+      "  - Jeeva (Life Force) Sign: **" + jp.kalachakraDiagnostics.jeevaRashi + "** (Lord: " + jp.kalachakraDiagnostics.jeevaLord + ")",
+      "  - Diagnostic Status: " + jp.kalachakraDiagnostics.vitalityAlert,
+      "- **Leading 12 Bhavas Parijata Mastery Hierarchy:**",
+      topMasteryStr,
+      "- **Master Jataka Parijata Synthesis:** " + jp.masterParijataSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -793,11 +824,14 @@ export function buildAstroDossier(
     "",
     "#### 📖 30. DR. B.V. RAMAN JATAK NIRNAY (HOW TO JUDGE A HOROSCOPE 1 & 2) DOSSIER:",
     nirnaySummary,
+    "",
+    "#### 🌺 31. VAIDYANATHA DIKSHITA JATAKA PARIJATA (VOLS 1-3, 18 ADHYAYAS) DOSSIER:",
+    parijataSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 31. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 32. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

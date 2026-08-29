@@ -495,6 +495,58 @@ export interface JatakNirnayAnalysis {
   masterNirnaySynthesis: string;
 }
 
+export interface ParijataYoga {
+  yogaName: string;
+  sanskritName: string;
+  category: "Parijata Raja Yoga" | "Mahapurusha Yoga" | "Parijata Dhana Yoga" | "Parijata Jnana Yoga";
+  isFormed: boolean;
+  participatingPlanets: string[];
+  description: string;
+  classicalShlokaEffect: string;
+  adhyayaRef: string;
+}
+
+export interface ParijataKhareshNavamsha {
+  navamsha64Moon: { signName: string; navamshaIndex: number; degreeRange: string; lord: string };
+  navamsha64Lagna: { signName: string; navamshaIndex: number; degreeRange: string; lord: string };
+  drekkana22Kharesh: { signName: string; drekkanaIndex: number; khareshLord: string; vulnerabilityHouse: number };
+  gulika: { longitude: number; signName: string; house: number; rashiLord: string };
+  protectionGuidelines: string;
+}
+
+export interface ParijataKalachakra {
+  group: "Savya (Direct Cycle)" | "Apasavya (Reverse Cycle)";
+  dehaRashi: string;
+  dehaLord: string;
+  jeevaRashi: string;
+  jeevaLord: string;
+  dehaAfflicted: boolean;
+  jeevaAfflicted: boolean;
+  vitalityAlert: string;
+}
+
+export interface ParijataBhavaMastery {
+  bhavaNum: number; // 1 to 12
+  sanskritTitle: string;
+  signName: string;
+  lordName: string;
+  lordPlacementHouse: number;
+  occupants: string[];
+  parijataScore: number; // 0-100%
+  masteryGrade: "Uttama Parijata" | "Madhyama Parijata" | "Alpa Parijata";
+  classicalPhala: string;
+  adhyayaCitation: string;
+}
+
+export interface JatakaParijataAnalysis {
+  shodashaYogas: ParijataYoga[];
+  khareshAndNavamsha: ParijataKhareshNavamsha;
+  kalachakraDiagnostics: ParijataKalachakra;
+  bhavaMastery: ParijataBhavaMastery[];
+  masterParijataSynthesis: string;
+}
+
+
 
 
 

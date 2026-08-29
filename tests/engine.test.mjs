@@ -1751,6 +1751,56 @@ test("Classical Dr. B.V. Raman Jatak Nirnay (How to Judge a Horoscope 1 & 2) Ver
   assert.ok(result.masterNirnaySynthesis.length > 30);
 });
 
+test("Classical Vaidyanatha Dikshita Jataka Parijata (Vols 1, 2, 3 - 18 Adhyayas) Verification", async () => {
+  const { evaluateJatakaParijata } = await import("../src/engine/jatakaParijata.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateJatakaParijata(natalEphem);
+
+  // 1. 16 Shodasha Parijata Yogas
+  assert.strictEqual(result.shodashaYogas.length, 13); // 8 classic named + 5 Pancha Mahapurusha
+  for (const y of result.shodashaYogas) {
+    assert.ok(y.yogaName);
+    assert.ok(y.sanskritName);
+    assert.ok(y.category);
+    assert.ok(y.description.length > 10);
+    assert.ok(y.classicalShlokaEffect.length > 15);
+    assert.ok(y.adhyayaRef.includes("Jataka Parijata"));
+  }
+
+  // 2. 64th Navamsha & 22nd Drekkana / Kharesh
+  assert.ok(result.khareshAndNavamsha.navamsha64Moon.signName);
+  assert.ok(result.khareshAndNavamsha.navamsha64Moon.lord);
+  assert.ok(result.khareshAndNavamsha.navamsha64Lagna.signName);
+  assert.ok(result.khareshAndNavamsha.drekkana22Kharesh.khareshLord);
+  assert.ok(result.khareshAndNavamsha.gulika.signName);
+  assert.ok(result.khareshAndNavamsha.protectionGuidelines.length > 20);
+
+  // 3. Kalachakra Dasha Deha & Jeeva
+  assert.ok(result.kalachakraDiagnostics.group);
+  assert.ok(result.kalachakraDiagnostics.dehaRashi);
+  assert.ok(result.kalachakraDiagnostics.jeevaRashi);
+  assert.ok(result.kalachakraDiagnostics.vitalityAlert.length > 20);
+
+  // 4. 12 Bhavas Parijata Mastery
+  assert.strictEqual(result.bhavaMastery.length, 12);
+  for (const b of result.bhavaMastery) {
+    assert.ok(b.sanskritTitle);
+    assert.ok(b.signName);
+    assert.ok(b.lordName);
+    assert.ok(b.parijataScore >= 0 && b.parijataScore <= 100);
+    assert.ok(["Uttama Parijata", "Madhyama Parijata", "Alpa Parijata"].includes(b.masteryGrade));
+    assert.ok(b.classicalPhala.length > 15);
+  }
+
+  // 5. Master Synthesis
+  assert.ok(result.masterParijataSynthesis.length > 30);
+});
+
+
 
 
 
