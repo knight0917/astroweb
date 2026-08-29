@@ -38,10 +38,11 @@ import BhriguSamhitaDeck from "./BhriguSamhitaDeck";
 import BhavarthaRatnakaraDeck from "./BhavarthaRatnakaraDeck";
 import CruxOfAstrologyDeck from "./CruxOfAstrologyDeck";
 import CuspalInterlinksDeck from "./CuspalInterlinksDeck";
+import NadiMasterDeck from "./NadiMasterDeck";
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas" | "bphs" | "jataka" | "samhita" | "keralam" | "suka" | "jaimini" | "gayatri" | "alankara" | "nirnay" | "parijata" | "saravali" | "phaladeepika" | "prasnamarga" | "samhitaskandha" | "sanketanidhi" | "chintamani" | "strijataka" | "satyajataka" | "sugam" | "uttarakalamrita" | "predictions" | "chandrika" | "chappanna" | "bhrigusamhita" | "ratnakara" | "crux" | "kcil">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas" | "bphs" | "jataka" | "samhita" | "keralam" | "suka" | "jaimini" | "gayatri" | "alankara" | "nirnay" | "parijata" | "saravali" | "phaladeepika" | "prasnamarga" | "samhitaskandha" | "sanketanidhi" | "chintamani" | "strijataka" | "satyajataka" | "sugam" | "uttarakalamrita" | "predictions" | "chandrika" | "chappanna" | "bhrigusamhita" | "ratnakara" | "crux" | "kcil" | "nadimaster">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -464,6 +465,16 @@ export default function BhavaBalaView() {
           >
             <span>📐 Cuspal Interlinks (KCIL — S.P. Khullar)</span>
           </button>
+          <button
+            onClick={() => setDisplayMode("nadimaster")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              displayMode === "nadimaster"
+                ? "bg-amber-600 text-white shadow"
+                : "text-amber-300 hover:text-white bg-amber-950/30 border border-amber-800/40"
+            }`}
+          >
+            <span>📜 Nadi Master Suite (Meena, Tattvam, Padma)</span>
+          </button>
         </div>
       </div>
 
@@ -642,8 +653,13 @@ export default function BhavaBalaView() {
         <CuspalInterlinksDeck />
       )}
 
+      {/* Nadi Master Suite View */}
+      {displayMode === "nadimaster" && (
+        <NadiMasterDeck />
+      )}
+
       {/* Hero House Leaderboard (1st to 12th Rank Cards) */}
-      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && displayMode !== "dashas" && displayMode !== "bphs" && displayMode !== "jataka" && displayMode !== "samhita" && displayMode !== "keralam" && displayMode !== "suka" && displayMode !== "jaimini" && displayMode !== "gayatri" && displayMode !== "alankara" && displayMode !== "nirnay" && displayMode !== "parijata" && displayMode !== "saravali" && displayMode !== "phaladeepika" && displayMode !== "prasnamarga" && displayMode !== "samhitaskandha" && displayMode !== "sanketanidhi" && displayMode !== "chintamani" && displayMode !== "strijataka" && displayMode !== "satyajataka" && displayMode !== "sugam" && displayMode !== "uttarakalamrita" && displayMode !== "predictions" && displayMode !== "chandrika" && displayMode !== "chappanna" && displayMode !== "bhrigusamhita" && displayMode !== "ratnakara" && displayMode !== "crux" && displayMode !== "kcil" && (
+      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && displayMode !== "dashas" && displayMode !== "bphs" && displayMode !== "jataka" && displayMode !== "samhita" && displayMode !== "keralam" && displayMode !== "suka" && displayMode !== "jaimini" && displayMode !== "gayatri" && displayMode !== "alankara" && displayMode !== "nirnay" && displayMode !== "parijata" && displayMode !== "saravali" && displayMode !== "phaladeepika" && displayMode !== "prasnamarga" && displayMode !== "samhitaskandha" && displayMode !== "sanketanidhi" && displayMode !== "chintamani" && displayMode !== "strijataka" && displayMode !== "satyajataka" && displayMode !== "sugam" && displayMode !== "uttarakalamrita" && displayMode !== "predictions" && displayMode !== "chandrika" && displayMode !== "chappanna" && displayMode !== "bhrigusamhita" && displayMode !== "ratnakara" && displayMode !== "crux" && displayMode !== "kcil" && displayMode !== "nadimaster" && (
         <>
         <div className="space-y-3">
         <div className="flex items-center justify-between">

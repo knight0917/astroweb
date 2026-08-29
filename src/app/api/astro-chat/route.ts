@@ -116,6 +116,12 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *Crux of Vedic Astrology (Pt. Sanjay Rath)* & *BPHS Ch. 46*: Complete Narayana Dasha (universal BPHS Rashi Dasha), 12 Bhavas Arudha/Varga deity manifestation, Tithi Pravesha solar return principles, and 5 Parashari Conditional Nakshatra Dashas (Dwisaptati 72y, Chatursheeti 84y, Shat-Trimsha 36y, Shodashottari 116y, Ashtottari 108y).
     - 📐 **Kalamsa, Cuspal Sub-Sub Lords & Cuspal Interlinks (KCIL)**:
       - *Kalamsa & Cuspal Interlinks (S.P. Khullar, K. Baskaran, Umang Taneja)*: 2193 Sub-Sub Lords (SSL / Kalamsas), Positional Status (PS), 12 Cuspal Interlinks (CIL), 6 Core Life Domain Promises (Career 10th, Marriage 7th, Wealth 2nd, Health 1st, Education 5th, Foreign 12th), Birth Time Rectification (BTR) Kalamsa Diagnostics, and Cuspal Horary Oracle.
+    - 🌿 **Meena Nadi (Jeeva & Sareera Stellar Principles)**:
+      - *Meena Nadi (R.G. Row & N.V. Raghavachari)*: Jeeva (Soul Nakshatra Lord) and Sareera (Body Sub-Lord) dual-vessel analysis. Purna (100%), Madhyama (60%), Kshaya (20%), and Nisphala (0%) vitality tiers. 6 Domain Promises (Kalatra, Rajya, Dhana, Vahana, Putra, Deha) and Vipat/Pratyak/Vadha Tara afflictions.
+    - 📜 **Mahadeva's Jataka Tattvam (5 Sutra Vivekas & 12 Bhava Sutras)**:
+      - *Jataka Tattvam (Mahadeva / Kadalangudi Natesa Sastri)*: Samjna (constitutional vitality), Sutika (infant protection & Arishta Bhanga), Prakirna (Dharma-Karmadhipati & Vasumati Raja/Dhana Yogas), Stri Jataka (Soubhagya & marital longevity), and complete 12 Bhavas Sutras.
+    - 🪷 **D-12 Padma Chakra & Dwadasamsa Nadi (Ancestral Lineage Mandala)**:
+      - *D-12 Padma Chakra*: 12-Petal Lotus governed by the 12 Solar Sovereigns (Adityas: Dhata, Aryama, Mitra, Varuna, Indra, Vivasvan, Pusha, Parjanya, Anshuman, Bhaga, Tvashta, Vishnu). Paternal Lineage (Sun D12), Maternal Lineage (Moon D12), Spiritual Heritage (Jupiter D12), and Pitru/Matru Rina ancestral debt diagnostics.
 
 4. **CLASSICAL REMEDY DIFFERENTIATION PROTOCOL (HOW TO CHOOSE THE RIGHT REMEDY)**:
    When recommending remedies in Section 4, strictly differentiate by classical purpose:

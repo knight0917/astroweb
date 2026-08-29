@@ -54,6 +54,9 @@ import { evaluateBhavarthaRatnakara } from "./bhavarthaRatnakara";
 import { evaluateJaiminiRangacharya } from "./jaiminiRangacharya";
 import { evaluateCruxOfAstrology } from "./cruxOfVedicAstrology";
 import { evaluateCuspalInterlinks } from "./cuspalInterlinks";
+import { evaluateMeenaNadi } from "./meenaNadi";
+import { evaluateJatakaTattvam } from "./jatakaTattvam";
+import { evaluatePadmaChakra } from "./padmaChakra";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -1049,6 +1052,51 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 51. Meena Nadi (Jeeva & Sareera Stellar Theory)
+  let meenaNadiSummary = "";
+  try {
+    const mn = evaluateMeenaNadi(natalEphemeris);
+    const planetsStr = Object.values(mn.planets).slice(0, 7).map((p) => `  - **${p.planetName}:** Jeeva: ${p.jeevaPlanet} (H${p.jeevaHouse}) | Sareera: ${p.sareeraPlanet} (H${p.sareeraHouse}) -> **${p.vitalityGrade}** (${p.fruitOutcome})`).join("\n");
+    const domainsStr = mn.domainPromises.map((d) => `  - **${d.domain}:** ${d.promiseGrade} (${d.nadiGuidance})`).join("\n");
+    meenaNadiSummary = [
+      "- **Planetary Jeeva-Sareera Status:**",
+      planetsStr,
+      "- **6 Life Domain Promises:**",
+      domainsStr,
+      "- **Master Meena Synthesis:** " + mn.masterMeenaSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
+  // 52. Mahadeva's Jataka Tattvam (5 Sutra Vivekas)
+  let jatakaTattvamSummary = "";
+  try {
+    const jt = evaluateJatakaTattvam(natalEphemeris);
+    const activeSutrasStr = jt.activeSutras.filter((s) => s.isActivated).slice(0, 5).map((s) => `  - **${s.id} (${s.viveka}):** *"${s.sanskritSutra}"* -> ${s.englishTranslation}`).join("\n");
+    const bhavaScoresStr = jt.bhavaScores.slice(0, 6).map((b) => `H${b.bhavaNumber} (${b.bhavaName}): ${b.compositeHealth}%`).join(", ");
+    jatakaTattvamSummary = [
+      "- **Bhava Composite Health Index:** " + bhavaScoresStr,
+      "- **Activated Classical Sutras:**",
+      activeSutrasStr,
+      "- **Prakirna Raja/Dhana Yogas:** " + (jt.prakirnaRajaYogas.join(" | ") || "Standard"),
+      "- **Master Jataka Tattvam Synthesis:** " + jt.masterJatakaTattvamSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
+  // 53. D-12 Padma Chakra & Dwadasamsa Nadi
+  let padmaChakraSummary = "";
+  try {
+    const pc = evaluatePadmaChakra(natalEphemeris);
+    const petalsStr = pc.petals.slice(0, 6).map((p) => `  - **Petal ${p.petalNumber} (${p.solarAditya}):** ${p.ancestralKarmicType} (${p.lifeBlessing})`).join("\n");
+    padmaChakraSummary = [
+      `- **Ancestral Grace Index:** **${pc.ancestralBlessingScore}%**`,
+      `- **Ascendant Lotus Anchor:** ${pc.lagnaPetalAditya}`,
+      `- **Paternal Lineage (Sun D12):** ${pc.sunFatherLineagePetal} | **Maternal Lineage (Moon D12):** ${pc.moonMotherLineagePetal}`,
+      "- **Key Petals & Lineage Blessings:**",
+      petalsStr,
+      "- **Master Padma Chakra Synthesis:** " + pc.masterPadmaChakraSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1311,6 +1359,15 @@ export function buildAstroDossier(
     "",
     "#### 📐 49. KALAMSA & CUSPAL INTERLINKS THEORY (KCIL — S.P. KHULLAR) DOSSIER:",
     cuspalInterlinksSummary,
+    "",
+    "#### 🌿 51. MEENA NADI (JEEVA & SAREERA STELLAR THEORY) DOSSIER:",
+    meenaNadiSummary,
+    "",
+    "#### 📜 52. MAHADEVA'S JATAKA TATTVAM (5 SUTRA VIVEKAS & 12 BHAVAS) DOSSIER:",
+    jatakaTattvamSummary,
+    "",
+    "#### 🪷 53. D-12 PADMA CHAKRA (DWADASAMSA ANCESTRAL NADI & 12 ADITYAS) DOSSIER:",
+    padmaChakraSummary,
   ];
 
   if (matchmakingSummary) {

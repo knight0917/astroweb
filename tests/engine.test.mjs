@@ -2660,6 +2660,118 @@ test("Classical Kalamsa and Cuspal Interlinks Theory (KCIL - S.P. Khullar) Verif
   assert.ok(result.masterKcilSynthesis.length > 30);
 });
 
+test("Classical Meena Nadi (Jeeva & Sareera Stellar Theory) Engine Verification", async () => {
+  const { evaluateMeenaNadi } = await import("../src/engine/meenaNadi.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateMeenaNadi(natalEphem);
+
+  // 1. Planets Jeeva & Sareera
+  assert.ok(result.planets);
+  assert.strictEqual(Object.keys(result.planets).length, 9);
+
+  for (const p of Object.values(result.planets)) {
+    assert.ok(p.planetName);
+    assert.ok(p.nakshatraName);
+    assert.ok(p.jeevaPlanet);
+    assert.ok(p.jeevaHouse >= 1 && p.jeevaHouse <= 12);
+    assert.ok(p.sareeraPlanet);
+    assert.ok(p.sareeraHouse >= 1 && p.sareeraHouse <= 12);
+    assert.ok(p.vitalityGrade);
+    assert.ok(p.potencyScore >= 0 && p.potencyScore <= 100);
+    assert.ok(p.fruitOutcome.length > 10);
+  }
+
+  // 2. Domain Promises
+  assert.strictEqual(result.domainPromises.length, 6);
+  for (const dp of result.domainPromises) {
+    assert.ok(dp.domain);
+    assert.ok(dp.primaryKaraka);
+    assert.ok(dp.jeevaLord);
+    assert.ok(dp.sareeraLord);
+    assert.ok(dp.promiseGrade);
+    assert.ok(dp.nadiGuidance.length > 15);
+  }
+
+  // 3. Synthesis
+  assert.ok(Array.isArray(result.vipatPratyakVadhaAfflictions));
+  assert.ok(result.masterMeenaSynthesis.length > 25);
+});
+
+test("Classical Mahadeva's Jataka Tattvam (5 Sutra Vivekas & 12 Bhavas) Verification", async () => {
+  const { evaluateJatakaTattvam } = await import("../src/engine/jatakaTattvam.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateJatakaTattvam(natalEphem);
+
+  // 1. Active Sutras
+  assert.ok(Array.isArray(result.activeSutras));
+  assert.ok(result.activeSutras.length >= 10);
+
+  for (const s of result.activeSutras) {
+    assert.ok(s.id);
+    assert.ok(s.viveka);
+    assert.ok(s.sanskritSutra);
+    assert.ok(s.englishTranslation);
+    assert.strictEqual(typeof s.isActivated, "boolean");
+    assert.ok(s.potencyScore >= 0 && s.potencyScore <= 100);
+    assert.ok(s.lifeSignification.length > 10);
+  }
+
+  // 2. Bhava Scores
+  assert.strictEqual(result.bhavaScores.length, 12);
+  for (const b of result.bhavaScores) {
+    assert.ok(b.bhavaNumber >= 1 && b.bhavaNumber <= 12);
+    assert.ok(b.bhavaName);
+    assert.ok(b.bhavaLord);
+    assert.ok(b.compositeHealth >= 0 && b.compositeHealth <= 100);
+    assert.ok(b.verdict);
+  }
+
+  // 3. Raja Yogas & Insights
+  assert.ok(Array.isArray(result.prakirnaRajaYogas));
+  assert.ok(Array.isArray(result.striJatakaInsights));
+  assert.ok(result.masterJatakaTattvamSynthesis.length > 25);
+});
+
+test("Classical D-12 Padma Chakra (Dwadasamsa Nadi & 12 Adityas) Verification", async () => {
+  const { evaluatePadmaChakra } = await import("../src/engine/padmaChakra.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluatePadmaChakra(natalEphem);
+
+  // 1. 12 Petals
+  assert.strictEqual(result.petals.length, 12);
+  for (const petal of result.petals) {
+    assert.ok(petal.petalNumber >= 1 && petal.petalNumber <= 12);
+    assert.ok(petal.rashiName);
+    assert.ok(petal.solarAditya);
+    assert.ok(petal.adityaSignification);
+    assert.ok(Array.isArray(petal.occupyingPlanets));
+    assert.ok(petal.ancestralKarmicType);
+    assert.ok(petal.petalScore >= 0 && petal.petalScore <= 100);
+    assert.ok(petal.lifeBlessing.length > 10);
+  }
+
+  // 2. Lineage Anchors
+  assert.ok(result.lagnaPetalAditya);
+  assert.ok(result.sunFatherLineagePetal);
+  assert.ok(result.moonMotherLineagePetal);
+  assert.ok(result.ancestralBlessingScore >= 0 && result.ancestralBlessingScore <= 100);
+  assert.ok(Array.isArray(result.pitruMatruRinaDiagnostics));
+  assert.ok(result.masterPadmaChakraSynthesis.length > 25);
+});
+
+
 
 
 

@@ -1275,6 +1275,110 @@ export interface CuspalInterlinksAnalysis {
   masterKcilSynthesis: string;
 }
 
+// ==========================================
+// 51. MEENA NADI (JEEVA & SAREERA STELLAR THEORY)
+// ==========================================
+
+export type MeenaNadiGrade =
+  | "Purna (पूर्ण - 100%)"
+  | "Madhyama (मध्यम - 60%)"
+  | "Kshaya (क्षीण - 20%)"
+  | "Nisphala (निष्फल - 0%)";
+
+export interface MeenaNadiPlanetResult {
+  planetName: string;
+  signName: string;
+  degree: string;
+  nakshatraName: string;
+  nakshatraLord: string; // Jeeva (Soul / Life-force)
+  jeevaPlanet: string;
+  jeevaSign: string;
+  jeevaHouse: number;
+  jeevaDignity: string;
+  sareeraPlanet: string; // Sareera (Body / Physical Vessel - Sub-Lord or Dispositor)
+  sareeraSign: string;
+  sareeraHouse: number;
+  sareeraDignity: string;
+  vitalityGrade: MeenaNadiGrade;
+  potencyScore: number; // 0-100%
+  stellarRole: string;
+  fruitOutcome: string;
+}
+
+export interface MeenaNadiDomainPromise {
+  domain: "Marriage (Kalatra)" | "Career (Rajya)" | "Wealth (Dhana)" | "Property/Vehicles (Vahana)" | "Progeny (Putra)" | "Health (Deha)";
+  primaryKaraka: string;
+  jeevaLord: string;
+  sareeraLord: string;
+  promiseGrade: MeenaNadiGrade;
+  nadiGuidance: string;
+}
+
+export interface MeenaNadiAnalysis {
+  planets: Record<string, MeenaNadiPlanetResult>;
+  domainPromises: MeenaNadiDomainPromise[];
+  vipatPratyakVadhaAfflictions: string[];
+  masterMeenaSynthesis: string;
+}
+
+// ==========================================
+// 52. JATAKA TATTVAM (MAHADEVA'S 5 VIVEKAS)
+// ==========================================
+
+export interface JatakaTattvamSutra {
+  id: string;
+  viveka: "Samjna (संज्ञा)" | "Sutika (सूतिका)" | "Prakirna (प्रकीर्ण)" | "Stri (स्त्री)" | "Bhava (भाव)";
+  bhavaNumber?: number;
+  sanskritSutra: string;
+  englishTranslation: string;
+  isActivated: boolean;
+  potencyScore: number; // 0-100%
+  lifeSignification: string;
+}
+
+export interface JatakaTattvamBhavaScore {
+  bhavaNumber: number;
+  bhavaName: string;
+  bhavaLord: string;
+  activeSutrasCount: number;
+  compositeHealth: number; // 0-100%
+  verdict: string;
+}
+
+export interface JatakaTattvamAnalysis {
+  activeSutras: JatakaTattvamSutra[];
+  bhavaScores: JatakaTattvamBhavaScore[];
+  prakirnaRajaYogas: string[];
+  striJatakaInsights: string[];
+  masterJatakaTattvamSynthesis: string;
+}
+
+// ==========================================
+// 53. D-12 PADMA CHAKRA (DWADASAMSA ANCESTRAL NADI)
+// ==========================================
+
+export interface PadmaChakraPetal {
+  petalNumber: number; // 1 to 12
+  rashiName: string;
+  solarAditya: string; // 12 Adityas: Dhata, Aryama, Mitra, Varuna, Indra, Vivasvan, Pusha, Parjanya, Anshuman, Bhaga, Tvashta, Vishnu
+  adityaSignification: string;
+  occupyingPlanets: string[];
+  ancestralKarmicType: "Paternal Lineage (पितृ कृपा)" | "Maternal Lineage (मातृ कृपा)" | "Spiritual Heritage (कुल गुरु)" | "Karmic Debt (ऋण)" | "Neutral";
+  petalScore: number; // 0-100%
+  lifeBlessing: string;
+}
+
+export interface PadmaChakraAnalysis {
+  petals: PadmaChakraPetal[];
+  lagnaPetalAditya: string;
+  sunFatherLineagePetal: string;
+  moonMotherLineagePetal: string;
+  ancestralBlessingScore: number; // 0-100%
+  pitruMatruRinaDiagnostics: string[];
+  masterPadmaChakraSynthesis: string;
+}
+
+
 
 
 
