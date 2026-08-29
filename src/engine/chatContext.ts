@@ -66,6 +66,7 @@ import { evaluatePrasnaTantra, evaluateMargabandhuStotram } from "./prasnaTantra
 import { evaluatePatelAshtakavarga } from "./patelAshtakavarga";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
+import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
 import { GeoLocation } from "./types";
 import { RASHI_NAMES } from "./constants";
 
@@ -1321,6 +1322,8 @@ export function buildAstroDossier(
     } catch (_) {}
   }
 
+  const decisionGates = calculatePredictiveDecisionGates(natalEphemeris);
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -1328,6 +1331,37 @@ export function buildAstroDossier(
     "- **Astronomical Calculation Epoch (UTC):** " + birthDate.toUTCString(),
     "- **Birth Location:** " + location.cityName + (location.country ? ", " + location.country : "") + " (Lat: " + location.latitude.toFixed(2) + "°, Lon: " + location.longitude.toFixed(2) + "°)",
     "- **Ayanamsha Model:** " + natalEphemeris.ayanamshaType + " (" + natalEphemeris.ayanamshaValue.toFixed(3) + "°)",
+    "",
+    "#### 🎯 0. EXECUTIVE PRE-COMPUTED PREDICTIVE DECISION GATES (VERIFIED MATHEMATICAL TRUTHS):",
+    "- 💼 **CAREER & WEALTH GATE:**",
+    "  - 10th House: " + decisionGates.careerGate.tenthHouseSign + " | 10th Lord: " + decisionGates.careerGate.tenthLord + " in House " + decisionGates.careerGate.tenthLordHouse + " (" + decisionGates.careerGate.tenthLordDignity + ") | Occupants: " + (decisionGates.careerGate.tenthHouseOccupants.join(", ") || "None"),
+    "  - Amatyakaraka (AmK): " + decisionGates.careerGate.amatyakaraka.planet + " in " + decisionGates.careerGate.amatyakaraka.rashi + " (House " + decisionGates.careerGate.amatyakaraka.house + ", " + decisionGates.careerGate.amatyakaraka.dignity + ")",
+    "  - D10 Dashamsha 10th Lord: " + decisionGates.careerGate.d10TenthLord + " in " + decisionGates.careerGate.d10TenthLordRashi,
+    "  - Double Transit Active on 10th/10th Lord: " + (decisionGates.careerGate.isDoubleTransitOn10th || decisionGates.careerGate.isDoubleTransitOn10thLord ? "YES (Active Catalyst)" : "NO (Standard)"),
+    "  - Rajya Prapti / Dhana Potential: " + (decisionGates.careerGate.hasRajyaPraptiYoga ? "Strong Rajya Prapti Yoga Present" : "Standard Growth") + " | Active Dhana Houses: " + decisionGates.careerGate.activeDhanaHouses.join(", "),
+    "  - Bhagyodaya Fortune Rise Ages: " + decisionGates.careerGate.primaryBhagyodayaAges.join(", ") + " Years",
+    "  - **Career Verdict & Timing Window:** " + decisionGates.careerGate.careerVerdict + " -> **" + decisionGates.careerGate.timingWindow + "**",
+    "",
+    "- 💍 **MARRIAGE & RELATIONSHIP GATE:**",
+    "  - 7th House: " + decisionGates.marriageGate.seventhHouseSign + " | 7th Lord: " + decisionGates.marriageGate.seventhLord + " in House " + decisionGates.marriageGate.seventhLordHouse + " (" + decisionGates.marriageGate.seventhLordDignity + ") | Occupants: " + (decisionGates.marriageGate.seventhHouseOccupants.join(", ") || "None"),
+    "  - D9 Navamsha Lagna: " + decisionGates.marriageGate.d9LagnaSign + " (Occupants: " + (decisionGates.marriageGate.d9LagnaOccupants.join(", ") || "None") + ") | D9 7th Lord: " + decisionGates.marriageGate.d9SeventhLord + " in " + decisionGates.marriageGate.d9SeventhLordRashi,
+    "  - Chara Darakaraka (DK): " + decisionGates.marriageGate.darakaraka.planet + " in " + decisionGates.marriageGate.darakaraka.rashi + " (House " + decisionGates.marriageGate.darakaraka.house + ") | Upapada Lagna (UL): " + decisionGates.marriageGate.upapadaLagnaRashi,
+    "  - Double Transit Active on 7th/7th Lord: " + (decisionGates.marriageGate.isDoubleTransitOn7th || decisionGates.marriageGate.isDoubleTransitOn7thLord ? "YES (Marriage Gate Active)" : "NO (Maturity Focus)"),
+    "  - Manglik Status: " + (decisionGates.marriageGate.isManglik ? (decisionGates.marriageGate.isManglikCancelled ? "Manglik Cancelled (" + decisionGates.marriageGate.manglikBhangaReason + ")" : "Active Manglik") : "Non-Manglik"),
+    "  - Saturn/Ketu/Mars in D9 Lagna Fact: " + (decisionGates.marriageGate.delayIndicatorSaturnD9Lagna ? "Saturn in D9 Lagna -> Vilamba Vivaha (Delay to Age 28-32+), NOT Denial" : decisionGates.marriageGate.delayIndicatorKetuD9Lagna ? "Ketu in D9 Lagna -> Spiritual Connection" : "Normal Disposition"),
+    "  - **Marriage Promise & Timing Window:** **" + decisionGates.marriageGate.marriagePromiseStatus + "** -> **" + decisionGates.marriageGate.timingWindow + "**",
+    "  - Spouse Archetype: " + decisionGates.marriageGate.spouseProfile.temperament + " • Direction: " + decisionGates.marriageGate.spouseProfile.direction,
+    "",
+    "- 🩺 **HEALTH & VITALITY GATE:**",
+    "  - Lagna Lord: " + decisionGates.healthGate.lagnaLord + " in House " + decisionGates.healthGate.lagnaLordHouse + " (" + decisionGates.healthGate.lagnaLordDignity + ") | Vitality: **" + decisionGates.healthGate.vitalityStatus + "**",
+    "  - Viparita Raja Yogas: Harsha (" + (decisionGates.healthGate.hasHarshaYoga ? "YES" : "NO") + "), Sarala (" + (decisionGates.healthGate.hasSaralaYoga ? "YES" : "NO") + "), Vimala (" + (decisionGates.healthGate.hasVimalaYoga ? "YES" : "NO") + ")",
+    "  - Dominant Tridosha Constitution: " + decisionGates.healthGate.primaryTridoshaDominance,
+    "  - Prescribed Lifestyle Remedy: " + decisionGates.healthGate.vitalityPrescription,
+    "",
+    "- 🎓 **EDUCATION & CAREER STREAMS GATE:**",
+    "  - 5th House Lord: " + decisionGates.educationGate.fifthLord + " in House " + decisionGates.educationGate.fifthLordHouse + " (" + decisionGates.educationGate.fifthLordDignity + ") | D24 5th Lord: " + decisionGates.educationGate.d24FifthLord,
+    "  - Mercury Dignity: " + decisionGates.educationGate.mercuryDignity + " | Jupiter Dignity: " + decisionGates.educationGate.jupiterDignity,
+    "  - Recommended Fields: **" + decisionGates.educationGate.recommendedStreams.join(", ") + "** | Exam Potential: **" + decisionGates.educationGate.competitiveExamPotential + "**",
     "",
     "#### 🌟 1. CORE LAGNA & FUNCTIONAL ROLES:",
     "- **Native Gender (लिंग):** " + (gender === "female" ? "Female (स्त्री) ♀" : "Male (पुरुष) ♂"),

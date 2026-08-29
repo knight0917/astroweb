@@ -48,12 +48,20 @@ NATIVE'S ASTROLOGICAL DOSSIER:
 ${astroDossier || "No specific chart provided."}
 
 STRICT CONSULTATION RULES (MANDATORY):
+0. **MATHEMATICAL TRUTH PRIORITY & CHAIN-OF-CLASSICAL-REASONING (CoCR)**:
+   - Always prioritize **Section 0: EXECUTIVE PRE-COMPUTED PREDICTIVE DECISION GATES** at the top of the dossier. These are pre-verified mathematical proofs (Career, Marriage, Health, Education, Prashna) calculated deterministically by the TypeScript engine with 0% hallucination.
+   - For every question asked, execute this **Internal 4-Step Chain of Classical Reasoning (CoCR)**:
+     1. **Triad Identification**: Identify the House, House Lord, and Natural Karaka (e.g. 7th house, 7th lord, Venus/Jupiter for Marriage; 10th house, 10th lord, Sun/Mercury/Saturn/AmK for Career).
+     2. **Divisional Cross-Verification**: Verify the promise in the relevant divisional chart (D9 for Marriage, D10 for Career, D24 for Education, D12 for Ancestry).
+     3. **Temporal Double Transit & Dasha Verification**: Check if the current Vimshottari Mahadasha/Antardasha lord activates the house, and verify the Double Transit of Jupiter & Saturn.
+     4. **Client-Facing Plain Synthesis & Remedy**: Deliver a direct, warm, plain-English synthesis with 1 practical milestone timing window and 1 everyday remedy without confusing technical jargon.
+
 1. **ACCURATE TEMPORAL GROUNDING (REAL-TIME TIMELINE)**:
    - Today's date is strictly ${todayStr}.
    - When predicting the **"⏳ Timing Window"** (e.g. "Next 4 to 6 Months", "Upcoming Year"), ALWAYS calculate strictly forward from TODAY (${todayStr}).
    - NEVER refer to past years as future timing windows. Cross-reference the active Vimshottari Mahadasha / Antardasha and currently active classical yogas from the dossier.
 2. **GROUNDED ON AUTHENTIC CLASSICAL DOSSIERS & INTELLIGENT DISPATCHING**:
-   - Always honor the **Functional Lordship Matrix** and **Classical Dossiers (Sections 1 to 34)** in the dossier.
+   - Always honor the **Functional Lordship Matrix** and **Classical Dossiers (Sections 0 to 40)** in the dossier.
    - If the user asks about a feared dosha (like Sakata, Kemadruma, Manglik, or Visha Kanya), ALWAYS check the **Cancelled Yogas / Neutralized Doshas (Bhanga Status)** section first. If cancelled, reassure the user with the exact cancellation factor.
 
 3. **WHEN & WHERE TO APPLY EACH CLASSICAL TREATISE (DOMAIN DISPATCHING)**:
@@ -255,7 +263,7 @@ STRICT CONSULTATION RULES (MANDATORY):
             },
             contents,
             generationConfig: {
-              temperature: 0.4,
+              temperature: 0.25,
               topP: 0.95,
               maxOutputTokens: 4096,
             },
@@ -280,7 +288,7 @@ STRICT CONSULTATION RULES (MANDATORY):
                 ...contents,
               ],
               generationConfig: {
-                temperature: 0.4,
+                temperature: 0.25,
                 topP: 0.95,
                 maxOutputTokens: 4096,
               },

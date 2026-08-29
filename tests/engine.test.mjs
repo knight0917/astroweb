@@ -3139,6 +3139,42 @@ test("Classical Ashtakavarga Synastry & Dual Chart Compatibility (C.S. Patel & P
   assert.ok(av.principles.length >= 3);
 });
 
+test("Predictive Decision Gates & Deterministic Shastric Proofs Verification", async () => {
+  const { calculatePredictiveDecisionGates } = await import("../src/engine/predictiveDecisionGates.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const loc = { cityName: "New Delhi", country: "India", latitude: 28.6139, longitude: 77.209, timezoneOffsetHours: 5.5 };
+  const ephem = calculateVedicEphemeris(new Date("1998-05-25T00:16:00Z"), loc, "Lahiri", "WholeSign", "Mean");
+
+  const gates = calculatePredictiveDecisionGates(ephem);
+
+  assert.ok(gates);
+  assert.ok(gates.careerGate);
+  assert.ok(gates.careerGate.tenthLord);
+  assert.ok(gates.careerGate.amatyakaraka.planet);
+  assert.ok(gates.careerGate.timingWindow);
+
+  assert.ok(gates.marriageGate);
+  assert.ok(gates.marriageGate.seventhLord);
+  assert.ok(gates.marriageGate.darakaraka.planet);
+  assert.ok(gates.marriageGate.timingWindow);
+  assert.strictEqual(typeof gates.marriageGate.delayIndicatorSaturnD9Lagna, "boolean");
+
+  assert.ok(gates.healthGate);
+  assert.ok(gates.healthGate.lagnaLord);
+  assert.ok(gates.healthGate.vitalityStatus);
+
+  assert.ok(gates.educationGate);
+  assert.ok(gates.educationGate.fifthLord);
+  assert.ok(gates.educationGate.recommendedStreams.length > 0);
+
+  assert.ok(gates.prasnaGate);
+  assert.ok(gates.prasnaGate.definitiveVerdict);
+
+  assert.ok(Array.isArray(gates.executiveSummary));
+  assert.ok(gates.executiveSummary.length >= 4);
+});
+
 
 
 
