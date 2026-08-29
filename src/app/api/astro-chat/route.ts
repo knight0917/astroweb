@@ -206,30 +206,30 @@ STRICT CONSULTATION RULES (MANDATORY):
    - When the dossier contains Kundli Milan compatibility data, incorporate the active pair data (Groom & Bride) stating 36-Guna score, Nadi/Bhakoot harmony, and synastry guidance in clear, supportive language.
 
 8. **LANGUAGE**: Match the user's inquiry language (English, Hindi हिंदी, or Hinglish).
+
+9. **ZERO PAST-RESPONSE BIAS & FRESH CONTEXT GROUNDING**:
+   - Each query must be evaluated freshly, independently, and objectively against the primary ASTROLOGICAL DOSSIER.
+   - Do NOT let previous answers or prior conversational topics bias, narrow, or pollute your analysis of the user's current question.
+   - If the user asks about a new area (e.g. switching from marriage to career, or asking a fresh Prashna query), ground your response 100% on the relevant planetary houses, Dashas, and classical yogas in the dossier without carrying over unrelated assumptions or past biases.
 `;
 
-    // Convert chat history for Gemini API
+    // Filter chat history to prevent context anchoring and bias
+    const filteredHistory = messages
+      .filter((msg: any) => msg.id !== "welcome" && msg.content && msg.content.trim())
+      .slice(-8);
+
     const contents: any[] = [];
-
-    // System message as developer instruction or first exchange
-    contents.push({
-      role: "user",
-      parts: [{ text: systemInstruction }],
-    });
-    contents.push({
-      role: "model",
-      parts: [
-        {
-          text: "Pranam! I have thoroughly ingested your Vedic Kundli, planetary placements, current Vimshottari Dasha period, and Saturn Gochar transits. How may I guide you on your life's journey today?",
-        },
-      ],
-    });
-
-    // Append conversation history
-    for (const msg of messages) {
+    for (const msg of filteredHistory) {
       contents.push({
         role: msg.role === "assistant" ? "model" : "user",
         parts: [{ text: msg.content }],
+      });
+    }
+
+    if (contents.length === 0) {
+      contents.push({
+        role: "user",
+        parts: [{ text: "Pranam! Please provide my reading based on my birth chart." }],
       });
     }
 
@@ -250,9 +250,12 @@ STRICT CONSULTATION RULES (MANDATORY):
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: systemInstruction }],
+            },
             contents,
             generationConfig: {
-              temperature: 0.5,
+              temperature: 0.4,
               topP: 0.95,
               maxOutputTokens: 4096,
             },
@@ -266,6 +269,30 @@ STRICT CONSULTATION RULES (MANDATORY):
             "I could not synthesize an astrological reading at this moment.";
           return NextResponse.json({ reply: replyText, model: modelName });
         } else {
+          // Fallback if system_instruction is not supported on this specific model
+          const fallbackRes = await fetch(geminiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [
+                { role: "user", parts: [{ text: systemInstruction }] },
+                { role: "model", parts: [{ text: "Understood. Grounding freshly in the astrological dossier without past conversational bias." }] },
+                ...contents,
+              ],
+              generationConfig: {
+                temperature: 0.4,
+                topP: 0.95,
+                maxOutputTokens: 4096,
+              },
+            }),
+          });
+          if (fallbackRes.ok) {
+            const data = await fallbackRes.json();
+            const replyText =
+              data.candidates?.[0]?.content?.parts?.[0]?.text ||
+              "I could not synthesize an astrological reading at this moment.";
+            return NextResponse.json({ reply: replyText, model: modelName });
+          }
           lastError = await res.text();
         }
       } catch (err: any) {

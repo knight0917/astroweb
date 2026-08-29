@@ -477,28 +477,30 @@ STRICT CONSULTATION RULES (MANDATORY):
    - When the dossier contains Kundli Milan compatibility data, incorporate the active pair data (Groom & Bride) stating 36-Guna score, Nadi/Bhakoot harmony, and synastry guidance in clear, supportive language.
 
 8. **LANGUAGE**: Match the user's inquiry language (English, Hindi हिंदी, or Hinglish).
+
+9. **ZERO PAST-RESPONSE BIAS & FRESH CONTEXT GROUNDING**:
+   - Each query must be evaluated freshly, independently, and objectively against the primary ASTROLOGICAL DOSSIER.
+   - Do NOT let previous answers or prior conversational topics bias, narrow, or pollute your analysis of the user's current question.
+   - If the user asks about a new area (e.g. switching from marriage to career, or asking a fresh Prashna query), ground your response 100% on the relevant planetary houses, Dashas, and classical yogas in the dossier without carrying over unrelated assumptions or past biases.
 `;
 
-    const contents: any[] = [
-      {
-        role: "user",
-        parts: [{ text: systemInstruction }],
-      },
-      {
-        role: "model",
-        parts: [
-          {
-            text: "Understood. I will provide direct, clear, plain-language astrological consultations without textbook jargon or theatrical preambles.",
-          },
-        ],
-      },
-    ];
+    // Filter chat history to prevent context anchoring and bias
+    const filteredHistory = allMessages
+      .filter((msg) => msg.id !== "welcome" && msg.content && msg.content.trim())
+      .slice(-8);
 
-    for (const msg of allMessages) {
-      if (!msg.content.trim()) continue;
+    const contents: any[] = [];
+    for (const msg of filteredHistory) {
       contents.push({
         role: msg.role === "assistant" ? "model" : "user",
         parts: [{ text: msg.content }],
+      });
+    }
+
+    if (contents.length === 0) {
+      contents.push({
+        role: "user",
+        parts: [{ text: "Pranam! Please provide my reading based on my birth chart." }],
       });
     }
 
@@ -518,9 +520,12 @@ STRICT CONSULTATION RULES (MANDATORY):
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: systemInstruction }],
+            },
             contents,
             generationConfig: {
-              temperature: 0.5,
+              temperature: 0.4,
               topP: 0.95,
               maxOutputTokens: 4096,
             },
@@ -606,22 +611,6 @@ STRICT CONSULTATION RULES (MANDATORY):
     setMessages(updatedMessages);
     setInputPrompt("");
 
-    const cacheKey = `${currentDate.getTime()}_${query.toLowerCase().trim()}`;
-    if (queryCache.current.has(cacheKey)) {
-      const cachedReply = queryCache.current.get(cacheKey)!;
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: cachedReply,
-          timestamp: new Date(),
-          category: activeCategory,
-        },
-      ]);
-      return;
-    }
-
     const assistantMsgId = (Date.now() + 1).toString();
     // Add placeholder assistant message for real-time streaming
     setMessages((prev) => [
@@ -649,7 +638,6 @@ STRICT CONSULTATION RULES (MANDATORY):
           );
         }
       );
-      queryCache.current.set(cacheKey, reply);
     } catch (err: any) {
       try {
         const response = await fetch("/api/astro-chat", {
@@ -670,7 +658,6 @@ STRICT CONSULTATION RULES (MANDATORY):
           setMessages((prev) =>
             prev.map((m) => (m.id === assistantMsgId ? { ...m, content: data.reply } : m))
           );
-          queryCache.current.set(cacheKey, data.reply);
           return;
         }
       } catch (_) {}
