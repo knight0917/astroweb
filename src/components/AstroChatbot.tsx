@@ -321,6 +321,7 @@ export default function AstroChatbot() {
   const [showSettings, setShowSettings] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Load user API key from localStorage if available
   useEffect(() => {
@@ -610,6 +611,9 @@ STRICT CONSULTATION RULES (MANDATORY):
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInputPrompt("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
 
     const assistantMsgId = (Date.now() + 1).toString();
     // Add placeholder assistant message for real-time streaming
@@ -976,26 +980,43 @@ STRICT CONSULTATION RULES (MANDATORY):
             ))}
           </div>
 
-          {/* Input Box */}
+          {/* Multiline Input Box supporting Shift+Enter */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSendMessage();
             }}
-            className="p-3 bg-slate-900 border-t border-slate-800 flex items-center gap-2"
+            className="p-3 bg-slate-900 border-t border-slate-800 flex items-end gap-2"
           >
-            <input
-              type="text"
-              placeholder={`Ask Acharya in ${selectedCategoryMeta.name}...`}
-              value={inputPrompt}
-              onChange={(e) => setInputPrompt(e.target.value)}
-              disabled={isLoading}
-              className="flex-1 bg-slate-950 border border-slate-700/80 focus:border-amber-400 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none transition-colors"
-            />
+            <div className="flex-1 relative flex flex-col">
+              <textarea
+                ref={textareaRef}
+                rows={1}
+                placeholder={`Ask Acharya in ${selectedCategoryMeta.name}...`}
+                value={inputPrompt}
+                onChange={(e) => {
+                  setInputPrompt(e.target.value);
+                  e.target.style.height = "auto";
+                  e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                disabled={isLoading}
+                className="w-full bg-slate-950 border border-slate-700/80 focus:border-amber-400 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none transition-colors resize-none max-h-32 min-h-[40px] leading-relaxed scrollbar-thin scrollbar-thumb-slate-800"
+              />
+              <span className="text-[9px] text-slate-500 mt-1 px-1 flex items-center justify-between">
+                <span>↵ Enter to send</span>
+                <span className="font-mono text-amber-400/80 font-semibold">Shift + ↵ for new line</span>
+              </span>
+            </div>
             <button
               type="submit"
               disabled={isLoading || !inputPrompt.trim()}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition-all cursor-pointer flex items-center gap-1"
+              className="px-4 py-2.5 mb-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition-all cursor-pointer flex items-center gap-1 flex-shrink-0"
             >
               <span>Consult</span>
               <span>🚀</span>
