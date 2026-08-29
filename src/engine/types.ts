@@ -897,6 +897,51 @@ export interface SatyaJatakaAnalysis {
   masterSatyaJatakaSynthesis: string;
 }
 
+export interface SugamBhavaDiagnostic {
+  bhavaNum: number; // 1 to 12
+  sanskritTitle: string;
+  signName: string;
+  lordName: string;
+  karakaPlanet: string;
+  practicalScore: number; // 0 to 100%
+  practicalGrade: "Ati-Uttama (अति उत्तम)" | "Uttama (उत्तम)" | "Madhyama (मध्यम)" | "Samanya (सामान्य)";
+  practicalOutcome: string;
+  actionableAdvice: string;
+}
+
+export interface SugamBaladiAvastha {
+  planetName: string;
+  degreesInSign: number;
+  avasthaName: "Bala (बाल)" | "Kumara (कुमार)" | "Yuva (युवा)" | "Vriddha (वृद्ध)" | "Mrita (मृत)";
+  potencyPercentage: number; // 25, 75, 100, 10, 0
+  manifestationSpeed: string;
+}
+
+export interface SugamKartariAnalysis {
+  focusBhava: string;
+  kartariType: "Subha Kartari (शुभ कर्तरी - Fortified Protection)" | "Papa Kartari (पाप कर्तरी - Afflicted Flanking)" | "Neutral / Open (तटस्थ)";
+  flankingPlanets12th: string[];
+  flankingPlanets2nd: string[];
+  effectSummary: string;
+}
+
+export interface SugamRemedy {
+  grahaName: string;
+  easyRemedy: string;
+  mantra: string;
+  donationItem: string;
+  behavioralParihara: string;
+}
+
+export interface SugamJyotishAnalysis {
+  bhavaDiagnostics: SugamBhavaDiagnostic[];
+  baladiAvasthas: SugamBaladiAvastha[];
+  kartariAnalysis: SugamKartariAnalysis[];
+  practicalRemedies: SugamRemedy[];
+  masterSugamSynthesis: string;
+}
+
+
 
 
 

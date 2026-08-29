@@ -44,6 +44,7 @@ import { evaluateSanketanidhi } from "./sanketanidhi";
 import { evaluateSarvarthaChintamani } from "./sarvarthaChintamani";
 import { evaluateStriJataka } from "./striJataka";
 import { evaluateSatyaJataka } from "./satyaJataka";
+import { evaluateSugamJyotish } from "./sugamJyotish";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -828,6 +829,29 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 38. Sugam Jyotish (Practical Predictive Manual & Everyday Remedies)
+  let sugamJyotishSummary = "";
+  try {
+    const sj = evaluateSugamJyotish(natalEphemeris);
+    const topBhavas = sj.bhavaDiagnostics.filter((b) => b.practicalScore >= 70).slice(0, 4);
+    const bhavasStr = topBhavas.map((b) => `- **${b.sanskritTitle.split(" (")[0]}:** ${b.practicalGrade} (${b.practicalScore}%) -> ${b.practicalOutcome}`).join("\n");
+    const yuvaPlanets = sj.baladiAvasthas.filter((a) => a.avasthaName.includes("Yuva")).map((a) => `${a.planetName} (${a.avasthaName})`).join(", ");
+    const lagnaKartari = sj.kartariAnalysis[0]?.effectSummary || "Open neutral flanking.";
+    const remediesStr = sj.practicalRemedies.slice(0, 3).map((r) => `- **${r.grahaName}:** ${r.easyRemedy} • *Mantra:* ${r.mantra}`).join("\n");
+
+    sugamJyotishSummary = [
+      "- **12 Bhavas Practical Diagnostics (द्वादश भाव व्यावहारिक फल):**",
+      bhavasStr,
+      "- **Baladi Avastha Potency Capacity (ग्रह अवस्था):**",
+      `  - Peak 100% Fruition Grahas (Yuva): **${yuvaPlanets || "All Active"}**`,
+      "- **Kartari Flanking Status (कर्तरी विचार):**",
+      `  - ${lagnaKartari}`,
+      "- **Sugam Everyday Accessible Remedies (दैनिक सरल उपाय):**",
+      remediesStr,
+      "- **Master Sugam Jyotish Synthesis:** " + sj.masterSugamSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1059,11 +1083,14 @@ export function buildAstroDossier(
     "",
     "#### ⭐ 39. MAHARSHI SATYACHARYA SATYA JATAKA (DHRUVA NADI) DOSSIER:",
     satyaJatakaSummary,
+    "",
+    "#### 🌿 40. SUGAM JYOTISH (PRACTICAL PREDICTIVE MANUAL & EVERYDAY REMEDIES) DOSSIER:",
+    sugamJyotishSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 40. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 41. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

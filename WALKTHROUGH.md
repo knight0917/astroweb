@@ -1,53 +1,45 @@
-# Walkthrough: Acharya Venkatesha Sharma's Sarvartha Chintamani Integration
+# Walkthrough: Stri Jataka & Satya Jataka Classical Treatises Integration
 
-We have completed the algorithmic codification and full-stack integration of **Acharya Venkatesha Sharma's Sarvartha Chintamani (सर्वार्थ चिन्तामणि - 13 Adhyayas, Commentary by J.N. Bhasin)** into the calculation engine, UI dashboard, and AI Astrologer Chat Context Dossier.
+We have completed the algorithmic codification and full-stack integration of two classical masterworks:
+1. **Stri Jataka (स्त्रीजातकम् — Classical Female Horoscopy Matrix)**
+2. **Satya Jataka (सत्यजातकम् — Maharshi Satyacharya's Dhruva Nadi Foundation)**
 
 ---
 
-## 1. Calculation Engine ([`src/engine/sarvarthaChintamani.ts`](file:///d:/newWayToAstro/src/engine/sarvarthaChintamani.ts))
+## 1. Calculation Engines
 
-### A. 🏛️ 12 Bhavas Wish-Fulfilling Predictive Matrix (Adhyayas 1–12)
-- Computes wish-fulfillment scores (0–100%) and fulfillment grades (*Uttama, Madhyama, Samanya*) for all 12 houses.
-- Predicts self-made wealth (*Swaryadhitam*), speech eloquence (*Vak Chamatkara*), mansions and luxury vehicles (*Vahana Yoga*), ministerial counsel (*Mantri Yoga*), adversarial triumph (*Shatru Hanta*), conjugal devotion, unearned legacies, and royal executive command (*Rajya Prapti*).
+### A. 🌺 Stri Jataka ([`src/engine/striJataka.ts`](file:///d:/newWayToAstro/src/engine/striJataka.ts))
+- **Lagna & Moon Disposition**: Categorizes *Yugma* (Even - feminine grace, fertility, marital harmony) vs *Ayugma* (Odd - independence, executive drive) signs.
+- **Trimsamsha D-30 Moral & Spiritual Archetypes**: Computes planetary Trimsamsha rulers of Ascendant and Moon (*Mars, Saturn, Jupiter, Mercury, Venus*) and maps moral virtues, fidelity, and spiritual devotion.
+- **Mangalya & Soubhagya Sthanas**: Evaluates 8th house (*Mangalya* - partner longevity) and 9th house (*Soubhagya* - children, auspicious prosperity) indices (0–100%).
+- **Visha Kanya Sanctuary & Cancellation Shield**: Evaluates birth combination hazards and applies *Guru Kendra Kavacha* and benefic aspectual shields.
 
-### B. 👑 Special Classical Yogas of Sarvartha Chintamani
-- Evaluates the 8 monumental planetary combinations:
-  - **Chamara Yoga (चामर योग)**: Lagna lord in Kendra aspected by Jupiter $\rightarrow$ Royal honors, eloquent scholarship, leadership over thousands.
-  - **Dhenu Yoga (धेनु योग)**: 2nd lord in Kendra/Trikona with strong Venus $\rightarrow$ Inexhaustible wealth, flourishing estates, persuasive speech.
-  - **Chhatra Yoga (छत्र योग)**: Benefics in all Kendra pillars $\rightarrow$ Sovereign executive umbrella of state, ministerial rank.
-  - **Bheri Yoga (भेरी योग)**: 9th lord fortified with Jupiter/Venus in Kendras $\rightarrow$ Battle drum of victory, widespread fame.
-  - **Mridanga Yoga (मृदङ्ग योग)**: Exalted/Kendra planets in mutual trines $\rightarrow$ Regal splendor, mastery over fine arts.
-  - **Srinatha Yoga (श्रीनाथ योग)**: 9th lord and exalted Venus in angular harmony $\rightarrow$ Supreme Lakshmi grace, vast landed fortunes.
-  - **Shankha Yoga (शंख योग)**: 5th and 6th lords in mutual Kendras with strong Lagna $\rightarrow$ Supreme philosophical intellect, legal command.
-  - **Kusuma Yoga (कुसुम योग)**: Venus in Kendra, Moon in Trikona, Saturn in 10th $\rightarrow$ Fragrant reputation, beloved by the state.
-
-### C. ⏳ Bhagyodaya Fortune Rise Age Timeline (Adhyaya 9)
-- Maps active planetary age triggers:
-  - Jupiter (Ages 16 & 32), Sun (Age 21), Moon (Age 24), Mars/Venus (Age 28), Mercury/Jupiter (Age 32), Saturn (Age 36), Rahu (Age 42), Ketu/Jupiter (Age 48).
-
-### D. 📐 Tri-Bhaga Bhava Sphuta Potency
-- Tripartite division of key houses into Early (*Prathama Bhaga: 0°-10°*), Peak (*Madhyama Bhaga: 10°-20°*), and Elder (*Uttama Bhaga: 20°-30°*) life manifestation.
+### B. ⭐ Satya Jataka ([`src/engine/satyaJataka.ts`](file:///d:/newWayToAstro/src/engine/satyaJataka.ts))
+- **Satyacharya's Starlord Principle (नक्षत्र स्वामी सिद्धान्त)**: Evaluates each planet's Nakshatra dispositor and determines the manifested Bhavas.
+- **Functional Dignity Rules**: Categorizes *Trikonadhipatis* (Lords of 1, 5, 9 as intrinsically auspicious *Subha*) vs *Trishadayadhipatis* (Lords of 3, 6, 11 as struggle-generating *Asubha*).
+- **9 Janma Tara Matrix (नवतारा चक्र)**: Computes full 9-Tara relationship from natal Moon (*Janma, Sampat, Vipat, Kshema, Pratyak, Sadhaka, Vadha, Mitra, Parama Mitra*).
 
 ---
 
 ## 2. AI Astrologer Chat Context Dossier & Dispatching ([`src/engine/chatContext.ts`](file:///d:/newWayToAstro/src/engine/chatContext.ts), [`src/app/api/astro-chat/route.ts`](file:///d:/newWayToAstro/src/app/api/astro-chat/route.ts))
-- Injected **Section 37: Acharya Venkatesha Sharma Sarvartha Chintamani (13 Adhyayas) Dossier** into the Astro Chat Dossier.
-- Renumbered Kundli Milan to Section 38.
-- The AI Astrologer automatically dispatches to **Sarvartha Chintamani** for financial wealth, real estate, vehicles, executive authority, and fortune rise timing.
+- Injected **Section 38: Stri Jataka Dossier** and **Section 39: Maharshi Satyacharya Satya Jataka Dossier** into the Astro Chat Dossier.
+- Renumbered Kundli Milan to Section 40.
+- The AI Astrologer automatically dispatches to **Stri Jataka** for female horoscopy, Trimsamsha D-30, and Mangalya queries, and to **Satya Jataka** for Nakshatra dispositor deliverers and Janma Tara timing.
 
 ---
 
-## 3. UI Dashboard Component ([`src/components/SarvarthaChintamaniDeck.tsx`](file:///d:/newWayToAstro/src/components/SarvarthaChintamaniDeck.tsx))
-- **Hero Overview Card**: Wish-Fulfillment Score, Primary Bhagyodaya Age, Top Classical Yoga, and Master Synthesis.
-- **Tab 1: 🏛️ 12 Bhavas Chintamani**: Interactive 12-house card grid with wish-fulfillment scores, predictions, and Venkatesha Sharma citations.
-- **Tab 2: 👑 Special Classical Yogas**: Showcase cards for Chamara, Dhenu, Chhatra, Bheri, Mridanga, Srinatha, Shankha, and Kusuma yogas.
-- **Tab 3: ⏳ Bhagyodaya Age Timeline**: Interactive age milestone roadmap (Ages 16 to 48) with fortune elevation triggers.
-- **Tab 4: 📐 Tri-Bhaga Potency**: Prathama, Madhyama, and Uttama house third stage evaluations.
-- Available in the dashboard under the **"💎 Sarvartha Chintamani (13 Adhyayas)"** tab.
+## 3. UI Dashboard Components
+- **[`src/components/StriJatakaDeck.tsx`](file:///d:/newWayToAstro/src/components/StriJatakaDeck.tsx)**:
+  - Hero Card: Mangalya Score, Soubhagya Score, Marital Bliss Grade, and Master Synthesis.
+  - Tabs: Lagna & Moon Disposition, Trimsamsha D-30 Archetypes, Mangalya & Soubhagya Sthanas, Visha Kanya Shields.
+- **[`src/components/SatyaJatakaDeck.tsx`](file:///d:/newWayToAstro/src/components/SatyaJatakaDeck.tsx)**:
+  - Hero Card: Favorable Taras Count, Trikonadhipatis, and Dhruva Nadi Synthesis.
+  - Tabs: Nakshatra Starlord Deliverers, Satyacharya Dignities, 9 Janma Tara Matrix.
+- Available in the dashboard under the **"🌺 Stri Jataka (Female Horoscopy)"** and **"⭐ Satya Jataka (Dhruva Nadi)"** tabs in `BhavaBalaView.tsx`.
 
 ---
 
 ## 4. Verification
-- **Automated Tests**: All **48 test suites** in `tests/engine.test.mjs` passed cleanly (`48/48 pass`).
+- **Automated Tests**: All **50 test suites** in `tests/engine.test.mjs` passed cleanly (`50/50 pass`).
 - **TypeScript & Production Build**: `next build` compiled with 0 errors.
-- **Git Push**: Committed and pushed to `origin/main` (`commit 4eabe70`).
+- **Git Push**: Committed and pushed to `origin/main` (`commit fec6498`).

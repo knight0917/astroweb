@@ -2174,6 +2174,61 @@ test("Classical Maharshi Satyacharya Satya Jataka (Dhruva Nadi) Verification", a
   assert.ok(result.masterSatyaJatakaSynthesis.length > 30);
 });
 
+test("Classical Sugam Jyotish (Practical Predictive Manual & Everyday Remedies) Verification", async () => {
+  const { evaluateSugamJyotish } = await import("../src/engine/sugamJyotish.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Jaipur", country: "India", latitude: 26.9124, longitude: 75.7873, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1998-11-22T14:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateSugamJyotish(natalEphem);
+
+  // 1. 12 Bhavas Practical Diagnostics
+  assert.strictEqual(result.bhavaDiagnostics.length, 12);
+  for (const b of result.bhavaDiagnostics) {
+    assert.ok(b.sanskritTitle);
+    assert.ok(b.signName);
+    assert.ok(b.lordName);
+    assert.ok(b.karakaPlanet);
+    assert.ok(b.practicalScore >= 0 && b.practicalScore <= 100);
+    assert.ok(["Ati-Uttama (अति उत्तम)", "Uttama (उत्तम)", "Madhyama (मध्यम)", "Samanya (सामान्य)"].includes(b.practicalGrade));
+    assert.ok(b.practicalOutcome.length > 15);
+    assert.ok(b.actionableAdvice.length > 15);
+  }
+
+  // 2. Baladi Avasthas
+  assert.strictEqual(result.baladiAvasthas.length, 9);
+  for (const a of result.baladiAvasthas) {
+    assert.ok(a.planetName);
+    assert.ok(a.degreesInSign >= 0 && a.degreesInSign <= 30);
+    assert.ok(["Bala (बाल)", "Kumara (कुमार)", "Yuva (युवा)", "Vriddha (वृद्ध)", "Mrita (मृत)"].includes(a.avasthaName));
+    assert.ok([0, 10, 25, 75, 100].includes(a.potencyPercentage));
+    assert.ok(a.manifestationSpeed.length > 10);
+  }
+
+  // 3. Kartari Analysis
+  assert.ok(result.kartariAnalysis.length > 0);
+  for (const k of result.kartariAnalysis) {
+    assert.ok(k.focusBhava);
+    assert.ok(["Subha Kartari (शुभ कर्तरी - Fortified Protection)", "Papa Kartari (पाप कर्तरी - Afflicted Flanking)", "Neutral / Open (तटस्थ)"].includes(k.kartariType));
+    assert.ok(k.effectSummary.length > 15);
+  }
+
+  // 4. Practical Remedies
+  assert.strictEqual(result.practicalRemedies.length, 9);
+  for (const r of result.practicalRemedies) {
+    assert.ok(r.grahaName);
+    assert.ok(r.easyRemedy.length > 10);
+    assert.ok(r.mantra.length > 10);
+    assert.ok(r.donationItem.length > 10);
+    assert.ok(r.behavioralParihara.length > 10);
+  }
+
+  // 5. Master Synthesis
+  assert.ok(result.masterSugamSynthesis.length > 30);
+});
+
+
 
 
 
