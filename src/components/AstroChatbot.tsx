@@ -235,7 +235,7 @@ export default function AstroChatbot() {
       id: "welcome",
       role: "assistant",
       content:
-        "**Pranam!** 🙏 I am **Acharya Jyotish AI Pro (आचार्य ज्योतिष AI)**.\n\nI have fully ingested your **Lagna, Moon Sign, D9 Navamsha, D10 Dashamsha, Shadbala strengths, Jaimini Karakas, active Vimshottari Dasha, and Saturn Gochar**.\n\nAsk any question about your **Career, Marriage, Kundli Milan, Dasha, Health, Sade Sati, or Gemstones** in English, हिन्दी, or Hinglish!",
+        "**Pranam!** 🙏 I am **Acharya Jyotish AI Pro**.\n\nBefore we begin your consultation, **are you here for the first time with this birth chart?**\n\n* ✨ **Option 1 (Recommended):** *If yes, we will first perform a quick Birth Time Verification (BTR) by examining key past life turning points to ensure your chart clock is 100% accurate down to the minute!*\n* 🔮 **Option 2:** *If no (or already verified), we will proceed directly with your questions regarding Career, Marriage, Wealth, Dasha timing, or Remedies.*",
       timestamp: new Date(),
     },
   ]);
@@ -366,7 +366,7 @@ STRICT CONSULTATION RULES (MANDATORY):
 
 6. **CONSULTATION OUTPUT PROTOCOL & QUERY ROUTING**:
    - **TYPE A: BIRTH TIME ACCURACY & RECTIFICATION (BTR) (OVERRIDES GENERIC FORMAT)**:
-     - Whenever the user asks: *"Is my birth date or time correct?"*, *"Check my DOB/time"*, *"Is my chart accurate?"*, *"I am doubtful about my birth time"*, or asks about birth time verification/rectification:
+     - Whenever the user says "Yes, I am here for the first time. Please verify my birth time first.", "Yes", "First time", "Verify my birth time", *"Is my birth date or time correct?"*, *"Check my DOB/time"*, *"Is my chart accurate?"*, *"I am doubtful about my birth time"*, or asks about birth time verification/rectification:
      - **DO NOT USE TECHNICAL JARGON (NO D9, D60, KCIL, KALAMSA, ETC.)**. Instead, use this **Warm 4-Step Diagnostic Structure**:
      - **🎯 Step 1: Birth Time & Stability Overview (Plain Language)**:
        Confirm their recorded local birth details (e.g., "May 25, 1998 at 00:16 AM") and primary Ascendant sign. Explain in simple, warm terms that while their core personality and main chart are stable, deeper life events—such as marriage timing, major career shifts, and milestone events—can shift with just a couple of minutes of difference on the birth clock.
@@ -710,7 +710,7 @@ STRICT CONSULTATION RULES (MANDATORY):
                       id: "welcome",
                       role: "assistant",
                       content:
-                        "**Chat reset.** Ask your next question based on your birth chart!",
+                        "**Pranam!** 🙏 I am **Acharya Jyotish AI Pro**.\n\nBefore we begin your consultation, **are you here for the first time with this birth chart?**\n\n* ✨ **Option 1 (Recommended):** *If yes, we will first perform a quick Birth Time Verification (BTR) by examining key past life turning points to ensure your chart clock is 100% accurate down to the minute!*\n* 🔮 **Option 2:** *If no (or already verified), we will proceed directly with your questions regarding Career, Marriage, Wealth, Dasha timing, or Remedies.*",
                       timestamp: new Date(),
                     },
                   ])
@@ -810,6 +810,32 @@ STRICT CONSULTATION RULES (MANDATORY):
                   <div className="whitespace-pre-wrap space-y-1.5">
                     {msg.content}
                   </div>
+
+                  {/* Onboarding Options for First-Time Welcome Message */}
+                  {msg.id === "welcome" && messages.length === 1 && (
+                    <div className="flex flex-col sm:flex-row gap-2 mt-3 pt-2.5 border-t border-slate-800/80">
+                      <button
+                        onClick={() =>
+                          handleSendMessage("Yes, I am here for the first time. Please verify my birth time first.")
+                        }
+                        disabled={isLoading}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer"
+                      >
+                        <span>✨</span>
+                        <span>Yes, First Time (Verify Birth Time)</span>
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleSendMessage("No, my birth time is already verified. Let's proceed with my questions.")
+                        }
+                        disabled={isLoading}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition-all cursor-pointer"
+                      >
+                        <span>🔮</span>
+                        <span>No, My Time is Verified</span>
+                      </button>
+                    </div>
+                  )}
 
                   {/* Message Action Bar (Copy & Quick Follow-ups) */}
                   {msg.role === "assistant" && msg.id !== "welcome" && msg.content && (
