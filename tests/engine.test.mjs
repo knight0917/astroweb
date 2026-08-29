@@ -713,8 +713,11 @@ test("Vedic AI Astrologer Chat Context Dossier Verification", async () => {
   assert.ok(dossier.includes("B.V. RAMAN 300 YOGAS"));
   assert.ok(dossier.includes("SHANI SADE SATI"));
   assert.ok(dossier.includes("PANCHANGA AT BIRTH"));
+  assert.ok(dossier.includes("ACHARYA VARAHAMIHIRA BRIHAT SAMHITA DOSSIER"));
+  assert.ok(dossier.includes("Kurma Chakra"));
+  assert.ok(dossier.includes("Ratna Pariksha"));
 
-  // Verify Matchmaking Section 24 inclusion
+  // Verify Matchmaking Section inclusion
   const matchmakingData = {
     boy: {
       name: "Aditya (Groom)",
@@ -736,7 +739,7 @@ test("Vedic AI Astrologer Chat Context Dossier Verification", async () => {
     matchmakingData
   );
 
-  assert.ok(dossierWithMatch.includes("24. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER"));
+  assert.ok(dossierWithMatch.includes("KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER"));
   assert.ok(dossierWithMatch.includes("Aditya (Groom)"));
   assert.ok(dossierWithMatch.includes("Pooja (Bride)"));
   assert.ok(dossierWithMatch.includes("Ashtakoota 36-Guna Scoring"));
@@ -1399,5 +1402,53 @@ test("Classical Varahamihira Brihat Jataka Engine Verification", async () => {
   assert.ok(result.nishekaInsight.length > 15);
   assert.ok(result.niryanaInsight.length > 15);
   assert.ok(result.masterVarahamihiraSynthesis.length > 25);
+});
+
+test("Classical Varahamihira Brihat Samhita Engine Verification", async () => {
+  const { evaluateBrihatSamhita } = await import("../src/engine/brihatSamhita.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateBrihatSamhita(natalEphem);
+
+  // 1. Kurma Chakra (9 directions)
+  assert.ok(result.kurmaChakra);
+  assert.strictEqual(Object.keys(result.kurmaChakra.sectors).length, 9);
+  assert.ok(result.kurmaChakra.mostAfflictedDirection);
+  assert.ok(result.kurmaChakra.mostFortifiedDirection);
+  assert.ok(result.kurmaChakra.cosmicSynthesis.length > 20);
+
+  // Check specific sector
+  const central = result.kurmaChakra.sectors["Central"];
+  assert.ok(central);
+  assert.strictEqual(central.sanskritDirection, "Madhya Desha (मध्य देश)");
+  assert.strictEqual(central.nakshatras.length, 3);
+  assert.ok(central.rulingDeity.includes("Brahma"));
+
+  // 2. Graha Yuddha
+  assert.ok(Array.isArray(result.grahaYuddhas));
+  assert.strictEqual(typeof result.hasActiveGrahaYuddha, "boolean");
+
+  // 3. Ratna Pariksha (9 gems)
+  assert.ok(result.ratnaPariksha.primaryGem);
+  assert.ok(result.ratnaPariksha.primaryGem.gemstoneName);
+  assert.ok(result.ratnaPariksha.primaryGem.metal);
+  assert.ok(result.ratnaPariksha.primaryGem.wearingFinger);
+  assert.ok(result.ratnaPariksha.primaryGem.classicalVedicMantra);
+  assert.strictEqual(result.ratnaPariksha.primaryGem.flawsToAvoid.length, 4);
+  assert.strictEqual(result.ratnaPariksha.primaryGem.virtuesRequired.length, 4);
+  assert.strictEqual(result.ratnaPariksha.allGems.length, 9);
+  assert.ok(result.ratnaPariksha.masterGemGuidance.length > 20);
+
+  // 4. Environmental & Dakargala Hydrology
+  assert.ok(result.environmentalMundane.elementalDominance);
+  assert.ok(result.environmentalMundane.dakargalaGroundWaterIndex >= 0 && result.environmentalMundane.dakargalaGroundWaterIndex <= 100);
+  assert.ok(result.environmentalMundane.dakargalaWaterVerdict.length > 10);
+  assert.ok(result.environmentalMundane.nimittaSignatures.length >= 2);
+
+  // 5. Master Synthesis
+  assert.ok(result.masterBrihatSamhitaSynthesis.length > 30);
 });
 

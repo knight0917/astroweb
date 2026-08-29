@@ -103,3 +103,75 @@ export interface EphemerisResult {
     karana: { name: string; index: number; endTime?: string };
   };
 }
+
+export interface KurmaChakraDirection {
+  direction: "Central" | "East" | "South-East" | "South" | "South-West" | "West" | "North-West" | "North" | "North-East";
+  sanskritDirection: string;
+  rulingDeity: string;
+  nakshatras: string[];
+  planetsPresent: string[];
+  beneficCount: number;
+  maleficCount: number;
+  afflictionScore: number; // 0 to 100%
+  classicalRegions: string;
+  bioFieldAffinity: string;
+  status: "Fortified" | "Balanced" | "Afflicted" | "Severely Vulnerable";
+}
+
+export interface GrahaYuddhaEvent {
+  planet1: string;
+  planet2: string;
+  separationDegrees: number;
+  warfareType: "Bhedana" | "Ullekha" | "Anshumardana" | "Apasavya";
+  warfareTypeSanskrit: string;
+  description: string;
+  victorPlanet: string;
+  defeatedPlanet: string;
+  victorReason: string;
+  mundaneImpact: string;
+  natalImpact: string;
+}
+
+export interface RatnaParikshaGem {
+  planet: string;
+  gemstoneName: string;
+  sanskritName: string;
+  mineralFamily: string;
+  primaryColor: string;
+  icon: string;
+  weightRecommendationRatti: string;
+  metal: string;
+  wearingFinger: string;
+  auspiciousDay: string;
+  classicalVedicMantra: string;
+  flawsToAvoid: string[];
+  virtuesRequired: string[];
+  suitability: "Highly Recommended" | "Benefic Secondary" | "Neutral / Prudent" | "Strictly Prohibited";
+  justification: string;
+}
+
+export interface BrihatSamhitaAnalysis {
+  kurmaChakra: {
+    sectors: Record<string, KurmaChakraDirection>;
+    mostAfflictedDirection: string;
+    mostFortifiedDirection: string;
+    cosmicSynthesis: string;
+  };
+  grahaYuddhas: GrahaYuddhaEvent[];
+  hasActiveGrahaYuddha: boolean;
+  ratnaPariksha: {
+    primaryGem: RatnaParikshaGem;
+    secondaryGem?: RatnaParikshaGem;
+    cautionGems: RatnaParikshaGem[];
+    allGems: RatnaParikshaGem[];
+    masterGemGuidance: string;
+  };
+  environmentalMundane: {
+    elementalDominance: "Agni (Fire)" | "Prithvi (Earth)" | "Vayu (Air)" | "Jala (Water)";
+    vayuMandalaStatus: string;
+    dakargalaGroundWaterIndex: number;
+    dakargalaWaterVerdict: string;
+    nimittaSignatures: string[];
+  };
+  masterBrihatSamhitaSynthesis: string;
+}

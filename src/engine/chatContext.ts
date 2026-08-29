@@ -28,6 +28,7 @@ import { evaluateEducationStream } from "./educationStream";
 import { evaluateMultiDashaSystems } from "./dashaSystems";
 import { evaluateBphsCore } from "./bphsCore";
 import { evaluateBrihatJataka } from "./brihatJataka";
+import { evaluateBrihatSamhita } from "./brihatSamhita";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -405,6 +406,32 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 22. Acharya Varahamihira Brihat Samhita Suite (Kurma Chakra, Graha Yuddha, Ratna Pariksha)
+  let bsSummary = "";
+  try {
+    const bs = evaluateBrihatSamhita(natalEphemeris);
+    const yuddhaStr = bs.grahaYuddhas.length > 0
+      ? bs.grahaYuddhas.map((y) => `- ⚔️ **${y.planet1} vs ${y.planet2} (${y.warfareTypeSanskrit}):** Separation ${y.separationDegrees}° • Victor: **${y.victorPlanet}** (${y.victorReason}) -> ${y.natalImpact}`).join("\n")
+      : "- No active planetary warfare (Graha Yuddha) in natal chart; peaceful celestial rays.";
+
+    const cautionGemsStr = bs.ratnaPariksha.cautionGems.length > 0
+      ? bs.ratnaPariksha.cautionGems.map((g) => `${g.gemstoneName} (${g.planet})`).join(", ")
+      : "None";
+
+    bsSummary = [
+      "- **Kurma Chakra (B.S. Ch. 14 - 9-Directional Spatial Grid):** Highest Fortification in **" + bs.kurmaChakra.sectors[bs.kurmaChakra.mostFortifiedDirection].sanskritDirection + "** (" + bs.kurmaChakra.sectors[bs.kurmaChakra.mostFortifiedDirection].rulingDeity + ") • Most Afflicted Sector: **" + bs.kurmaChakra.sectors[bs.kurmaChakra.mostAfflictedDirection].sanskritDirection + "** (" + bs.kurmaChakra.sectors[bs.kurmaChakra.mostAfflictedDirection].status + ")",
+      "- **Kurma Cosmic Synthesis:** " + bs.kurmaChakra.cosmicSynthesis,
+      "- **Graha Yuddha (B.S. Ch. 17 - Planetary Warfare Status):**",
+      yuddhaStr,
+      "- **Ratna Pariksha (B.S. Ch. 80-83 - 9 Gems Prescription):**",
+      "- **Primary Life Gem (Jeeva Ratna):** **" + bs.ratnaPariksha.primaryGem.gemstoneName + " (" + bs.ratnaPariksha.primaryGem.sanskritName + ")** • Metal: " + bs.ratnaPariksha.primaryGem.metal + " • Finger: " + bs.ratnaPariksha.primaryGem.wearingFinger + " • Mantra: " + bs.ratnaPariksha.primaryGem.classicalVedicMantra,
+      bs.ratnaPariksha.secondaryGem ? "- **Secondary Fortune Gem (Bhagya Ratna):** **" + bs.ratnaPariksha.secondaryGem.gemstoneName + " (" + bs.ratnaPariksha.secondaryGem.sanskritName + ")** • " + bs.ratnaPariksha.secondaryGem.justification : "",
+      "- **Strictly Prohibited Gemstones (Harmful Dusthana Rays):** " + cautionGemsStr,
+      "- **Dakargala & Environmental Hydrology (B.S. Ch. 54):** " + bs.environmentalMundane.dakargalaWaterVerdict + " (Subterranean Water Index: " + bs.environmentalMundane.dakargalaGroundWaterIndex + "%)",
+      "- **Master Brihat Samhita Synthesis:** " + bs.masterBrihatSamhitaSynthesis,
+    ].filter(Boolean).join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -588,11 +615,14 @@ export function buildAstroDossier(
     "",
     "#### 👑 23. ACHARYA VARAHAMIHIRA BRIHAT JATAKA DOSSIER:",
     bjSummary,
+    "",
+    "#### 🐢 24. ACHARYA VARAHAMIHIRA BRIHAT SAMHITA DOSSIER (KURMA CHAKRA & GEMS):",
+    bsSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 24. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 25. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 
