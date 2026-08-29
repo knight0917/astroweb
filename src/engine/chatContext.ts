@@ -31,6 +31,7 @@ import { evaluateBrihatJataka } from "./brihatJataka";
 import { evaluateBrihatSamhita } from "./brihatSamhita";
 import { evaluateDevaKeralam } from "./devaKeralam";
 import { calculateSukaNadi } from "./sukaNadi";
+import { evaluateJaiminiSutrasComplete } from "./jaiminiSutras";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -479,6 +480,33 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 25. Maharshi Jaimini Upadesha Sutras (Complete 4 Adhyayas) Suite
+  let jsSummary = "";
+  try {
+    const js = evaluateJaiminiSutrasComplete(natalEphemeris);
+    const topKLBhavas = js.karakamshaBhavas.filter((b) => [1, 2, 4, 5, 9, 12].includes(b.bhavaNum));
+    const klBhavasStr = topKLBhavas.map((b) => `- **House ${b.bhavaNum} from KL (${b.signName}):** Occupants: ${b.planetsPresent.join(", ") || "None"} | Aspects: ${b.aspectingPlanets.join(", ") || "None"} -> ${b.sutraPhala}`).join("\n");
+
+    jsSummary = [
+      "- **Atmakaraka (AK):** **" + js.atmakarakaPlanet + "** | **Amatyakaraka (AmK):** **" + js.amatyakarakaPlanet + "**",
+      "- **Karakamsha Sign (Navamsha D9 AK):** **" + js.karakamshaSign + "** | **Swamsha:** **" + js.swamshaSign + "**",
+      "- **Ishta Devata & Dharma Devata (12th from KL in " + js.ishtaDevata.twelfthSignFromKL + "):**",
+      "  - Supreme Tutelary Deity: **" + js.ishtaDevata.ishtaDevataName + "** (Primary Graha: " + js.ishtaDevata.primaryIshtaPlanet + ")",
+      "  - Dharma Devata: **" + js.ishtaDevata.dharmaDevataName + "**",
+      "  - Sacred Bija/Mantra: `" + js.ishtaDevata.mantraRecommendation + "`",
+      "  - Spiritual Path: " + js.ishtaDevata.spiritualPath,
+      "- **Key Karakamsha Bhavas (Sage Jaimini Sutras):**",
+      klBhavasStr,
+      "- **Jaimini Chara Dasha System (" + js.charaDasha.progressionDirection + "):**",
+      "  - Active Chara Mahadasha: **" + js.charaDasha.activeMahadasha.signName + "** (" + js.charaDasha.activeMahadasha.durationYears + " Years, " + js.charaDasha.activeMahadasha.startDate + " to " + js.charaDasha.activeMahadasha.endDate + ") — Lord: " + js.charaDasha.activeMahadasha.lord,
+      "  - Dasha Significations: " + js.charaDasha.activeMahadasha.keySignifications,
+      "- **Jaimini 3-Pair Longevity (Ayurdaya):** **" + js.longevity.compositeLongevity + "** (Rudra: " + js.longevity.rudraGraha + ", Brahma: " + js.longevity.brahmaGraha + ")",
+      "- **Upapada Lagna (UL - 12th Arudha in " + js.upapada.upapadaSign + "):** Harmony Score: " + js.upapada.maritalHarmonyScore + "/100 • " + js.upapada.spouseProfile + " • " + js.upapada.maritalLongevityVerdict,
+      "- **Jaimini Raja Yogas:** " + js.jaiminiRajaYogas.join(" • "),
+      "- **Master Jaimini Synthesis:** " + js.masterJaiminiSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -671,11 +699,14 @@ export function buildAstroDossier(
     "",
     "#### 🦜 26. DOCTRINES OF SUKA NADI (MAHARSHI SHUKACHARYA) DOSSIER:",
     sukaSummary,
+    "",
+    "#### 📜 27. MAHARSHI JAIMINI UPADESHA SUTRAS (COMPLETE 4 ADHYAYAS) DOSSIER:",
+    jsSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 27. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 28. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

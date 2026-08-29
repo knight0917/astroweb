@@ -1550,5 +1550,59 @@ test("Classical Doctrines of Suka Nadi (Maharshi Shukacharya) Verification", asy
   assert.ok(result.masterSukaSynthesis.length > 30);
 });
 
+test("Classical Maharshi Jaimini Upadesha Sutras (Complete 4 Adhyayas) Verification", async () => {
+  const { evaluateJaiminiSutrasComplete, getRashiDrishtiSigns } = await import("../src/engine/jaiminiSutras.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 1. Verify Rashi Drishti (Adhyaya 1)
+  // Aries (Movable = 0) aspects Fixed signs (1, 4, 7, 10) except adjacent (1 = Taurus) -> [4, 7, 10] (Leo, Scorpio, Aquarius)
+  const ariesDrishti = getRashiDrishtiSigns(0);
+  assert.deepStrictEqual(ariesDrishti, [4, 7, 10]);
+
+  // Taurus (Fixed = 1) aspects Movable signs (0, 3, 6, 9) except adjacent (0 = Aries) -> [3, 6, 9] (Cancer, Libra, Capricorn)
+  const taurusDrishti = getRashiDrishtiSigns(1);
+  assert.deepStrictEqual(taurusDrishti, [3, 6, 9]);
+
+  // Gemini (Dual = 2) aspects other Dual signs (5, 8, 11) -> [5, 8, 11] (Virgo, Sagittarius, Pisces)
+  const geminiDrishti = getRashiDrishtiSigns(2);
+  assert.deepStrictEqual(geminiDrishti, [5, 8, 11]);
+
+  // 2. Full Jaimini Evaluator
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateJaiminiSutrasComplete(natalEphem, new Date("2026-08-24T00:00:00Z"));
+
+  // Adhyaya 2: Karakamsha & Ishta Devata
+  assert.ok(result.atmakarakaPlanet);
+  assert.ok(result.amatyakarakaPlanet);
+  assert.ok(result.karakamshaSign);
+  assert.strictEqual(result.karakamshaBhavas.length, 12);
+  assert.ok(result.ishtaDevata.ishtaDevataName);
+  assert.ok(result.ishtaDevata.dharmaDevataName);
+  assert.ok(result.ishtaDevata.mantraRecommendation.length > 5);
+
+  // Adhyaya 1: Chara Dasha System
+  assert.strictEqual(result.charaDasha.periods.length, 12);
+  assert.ok(result.charaDasha.activeMahadasha);
+  assert.ok(result.charaDasha.activeMahadasha.signName);
+  assert.ok(result.charaDasha.activeMahadasha.durationYears >= 1 && result.charaDasha.activeMahadasha.durationYears <= 12);
+
+  // Adhyaya 3: 3-Pair Longevity
+  assert.ok(result.longevity.compositeLongevity);
+  assert.ok(result.longevity.rudraGraha);
+  assert.ok(result.longevity.brahmaGraha);
+  assert.ok(result.longevity.longevitySummary.length > 20);
+
+  // Adhyaya 4: Upapada Lagna & Raja Yogas
+  assert.ok(result.upapada.upapadaSign);
+  assert.ok(result.upapada.maritalHarmonyScore >= 0 && result.upapada.maritalHarmonyScore <= 100);
+  assert.ok(result.upapada.spouseProfile.length > 15);
+  assert.ok(result.upapada.jaiminiRemedies.length > 15);
+  assert.ok(result.jaiminiRajaYogas.length > 0);
+  assert.ok(result.masterJaiminiSynthesis.length > 30);
+});
+
+
 
 

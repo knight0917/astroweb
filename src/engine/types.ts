@@ -274,3 +274,75 @@ export interface SukaNadiAnalysis {
   masterSukaSynthesis: string;
 }
 
+export interface JaiminiKarakamshaBhava {
+  bhavaNum: number; // 1 to 12
+  signName: string;
+  planetsPresent: string[];
+  aspectingPlanets: string[]; // Rashi Drishti
+  signification: string;
+  sutraPhala: string;
+}
+
+export interface JaiminiIshtaDevata {
+  twelfthSignFromKL: string;
+  occupyingPlanets: string[];
+  aspectingPlanets: string[];
+  primaryIshtaPlanet: string;
+  ishtaDevataName: string;
+  dharmaDevataName: string;
+  mantraRecommendation: string;
+  spiritualPath: string;
+}
+
+export interface JaiminiCharaDashaPeriod {
+  signName: string;
+  durationYears: number;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  lord: string;
+  keySignifications: string;
+}
+
+export interface JaiminiLongevityAnalysis {
+  pair1Verdict: "Alpayu (Short)" | "Madhyayu (Medium)" | "Purnayu (Long)";
+  pair2Verdict: "Alpayu (Short)" | "Madhyayu (Medium)" | "Purnayu (Long)";
+  pair3Verdict: "Alpayu (Short)" | "Madhyayu (Medium)" | "Purnayu (Long)";
+  compositeLongevity: "Alpayu (0-32 Years)" | "Madhyayu (33-66 Years)" | "Purnayu (67-100+ Years)";
+  rudraGraha: string;
+  brahmaGraha: string;
+  maheshwaraGraha: string;
+  longevitySummary: string;
+}
+
+export interface JaiminiUpapadaAnalysis {
+  upapadaSign: string;
+  secondFromUpapadaSign: string;
+  beneficAspectsToUL: string[];
+  maleficAspectsToUL: string[];
+  maritalHarmonyScore: number; // 0-100
+  spouseProfile: string;
+  maritalLongevityVerdict: string;
+  jaiminiRemedies: string;
+}
+
+export interface JaiminiSutrasCompleteAnalysis {
+  atmakarakaPlanet: string;
+  amatyakarakaPlanet: string;
+  karakamshaSign: string;
+  swamshaSign: string;
+  karakamshaBhavas: JaiminiKarakamshaBhava[];
+  ishtaDevata: JaiminiIshtaDevata;
+  charaDasha: {
+    activeMahadasha: JaiminiCharaDashaPeriod;
+    activeAntardasha?: JaiminiCharaDashaPeriod;
+    periods: JaiminiCharaDashaPeriod[];
+    progressionDirection: "Direct (Savya)" | "Indirect (Apasavya)";
+  };
+  longevity: JaiminiLongevityAnalysis;
+  upapada: JaiminiUpapadaAnalysis;
+  jaiminiRajaYogas: string[];
+  masterJaiminiSynthesis: string;
+}
+
+
