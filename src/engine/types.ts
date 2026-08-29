@@ -597,6 +597,57 @@ export interface SaravaliAnalysis {
   masterSaravaliSynthesis: string;
 }
 
+export interface PhaladeepikaViparitaYoga {
+  yogaName: "Harsha Yoga" | "Sarala Yoga" | "Vimala Yoga";
+  sanskritName: string;
+  houseLord: number; // 6, 8, 12
+  placementHouse: number; // 6, 8, 12
+  planetName: string;
+  isFormed: boolean;
+  description: string;
+  classicalShlokaEffect: string;
+  adhyayaCitation: string;
+}
+
+export interface PhaladeepikaNeechaBhanga {
+  debilitatedPlanet: string;
+  debilitatedSign: string;
+  isCancelled: boolean;
+  cancellationConditionsMet: string[];
+  rajaYogaGrade: "Purna Neecha Bhanga Raja Yoga" | "Partial Neecha Bhanga" | "Uncancelled Debility";
+  classicalPhala: string;
+}
+
+export interface PhaladeepikaAvastha {
+  planetName: string;
+  avasthaName: "Deepta (Exalted)" | "Dina (Debilitated)" | "Svastha (Own Sign)" | "Mudita (Friendly Sign)" | "Shanta (Benefic Vargas)" | "Shakta (Retrograde)" | "Peedita (Afflicted/Combust)" | "Khala (Inimical Sign)";
+  sanskritName: string;
+  potencyPercentage: number;
+  functionalEffect: string;
+}
+
+export interface PhaladeepikaBhavaMastery {
+  bhavaNum: number; // 1 to 12
+  sanskritTitle: string;
+  signName: string;
+  lordName: string;
+  lordPlacementHouse: number;
+  occupants: string[];
+  phaladeepikaScore: number; // 0-100%
+  masteryGrade: "Uttama Phaladeepika" | "Madhyama Phaladeepika" | "Alpa Phaladeepika";
+  classicalPhala: string;
+  adhyayaCitation: string;
+}
+
+export interface PhaladeepikaAnalysis {
+  viparitaRajaYogas: PhaladeepikaViparitaYoga[];
+  neechaBhangaYogas: PhaladeepikaNeechaBhanga[];
+  planetaryAvasthas: PhaladeepikaAvastha[];
+  bhavaMastery: PhaladeepikaBhavaMastery[];
+  masterPhaladeepikaSynthesis: string;
+}
+
+
 
 
 

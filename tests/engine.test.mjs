@@ -1853,6 +1853,51 @@ test("Classical Maharaja Kalyana Varma Saravali (800 CE, 45 Adhyayas) Verificati
   assert.ok(result.masterSaravaliSynthesis.length > 30);
 });
 
+test("Classical Acharya Mantreswara Phaladeepika (28 Adhyayas) Verification", async () => {
+  const { evaluatePhaladeepika } = await import("../src/engine/phaladeepika.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluatePhaladeepika(natalEphem);
+
+  // 1. Viparita Raja Yogas (Harsha, Sarala, Vimala)
+  assert.strictEqual(result.viparitaRajaYogas.length, 3);
+  for (const v of result.viparitaRajaYogas) {
+    assert.ok(v.yogaName);
+    assert.ok(v.sanskritName);
+    assert.ok(v.description.length > 10);
+    assert.ok(v.classicalShlokaEffect.length > 15);
+    assert.ok(v.adhyayaCitation.includes("Phaladeepika"));
+  }
+
+  // 2. 9 Planetary Avasthas
+  assert.strictEqual(result.planetaryAvasthas.length, 9);
+  for (const a of result.planetaryAvasthas) {
+    assert.ok(a.planetName);
+    assert.ok(a.avasthaName);
+    assert.ok(a.sanskritName);
+    assert.ok(a.potencyPercentage >= 0 && a.potencyPercentage <= 100);
+    assert.ok(a.functionalEffect.length > 15);
+  }
+
+  // 3. 12 Bhavas Phaladeepika Mastery
+  assert.strictEqual(result.bhavaMastery.length, 12);
+  for (const b of result.bhavaMastery) {
+    assert.ok(b.sanskritTitle);
+    assert.ok(b.signName);
+    assert.ok(b.lordName);
+    assert.ok(b.phaladeepikaScore >= 0 && b.phaladeepikaScore <= 100);
+    assert.ok(["Uttama Phaladeepika", "Madhyama Phaladeepika", "Alpa Phaladeepika"].includes(b.masteryGrade));
+    assert.ok(b.classicalPhala.length > 15);
+  }
+
+  // 4. Master Synthesis
+  assert.ok(result.masterPhaladeepikaSynthesis.length > 30);
+});
+
+
 
 
 

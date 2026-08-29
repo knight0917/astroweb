@@ -22,10 +22,11 @@ import JatakaAlankaraDeck from "./JatakaAlankaraDeck";
 import JatakNirnayDeck from "./JatakNirnayDeck";
 import JatakaParijataDeck from "./JatakaParijataDeck";
 import SaravaliDeck from "./SaravaliDeck";
+import PhaladeepikaDeck from "./PhaladeepikaDeck";
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas" | "bphs" | "jataka" | "samhita" | "keralam" | "suka" | "jaimini" | "gayatri" | "alankara" | "nirnay" | "parijata" | "saravali">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas" | "bphs" | "jataka" | "samhita" | "keralam" | "suka" | "jaimini" | "gayatri" | "alankara" | "nirnay" | "parijata" | "saravali" | "phaladeepika">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -288,6 +289,16 @@ export default function BhavaBalaView() {
           >
             <span>📜 Saravali (Kalyana Varma)</span>
           </button>
+          <button
+            onClick={() => setDisplayMode("phaladeepika")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              displayMode === "phaladeepika"
+                ? "bg-cyan-600 text-white shadow"
+                : "text-cyan-300 hover:text-white bg-cyan-950/30 border border-cyan-800/40"
+            }`}
+          >
+            <span>📖 Phaladeepika (Mantreswara)</span>
+          </button>
         </div>
       </div>
 
@@ -386,8 +397,13 @@ export default function BhavaBalaView() {
         <SaravaliDeck />
       )}
 
+      {/* Phaladeepika View */}
+      {displayMode === "phaladeepika" && (
+        <PhaladeepikaDeck />
+      )}
+
       {/* Hero House Leaderboard (1st to 12th Rank Cards) */}
-      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && displayMode !== "dashas" && displayMode !== "bphs" && displayMode !== "jataka" && displayMode !== "samhita" && displayMode !== "keralam" && displayMode !== "suka" && displayMode !== "jaimini" && displayMode !== "gayatri" && displayMode !== "alankara" && displayMode !== "nirnay" && displayMode !== "parijata" && displayMode !== "saravali" && (
+      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && displayMode !== "dashas" && displayMode !== "bphs" && displayMode !== "jataka" && displayMode !== "samhita" && displayMode !== "keralam" && displayMode !== "suka" && displayMode !== "jaimini" && displayMode !== "gayatri" && displayMode !== "alankara" && displayMode !== "nirnay" && displayMode !== "parijata" && displayMode !== "saravali" && displayMode !== "phaladeepika" && (
         <>
         <div className="space-y-3">
         <div className="flex items-center justify-between">

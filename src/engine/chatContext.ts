@@ -37,6 +37,7 @@ import { evaluateJatakaAlankara } from "./jatakaAlankara";
 import { evaluateJatakNirnay } from "./jatakNirnay";
 import { evaluateJatakaParijata } from "./jatakaParijata";
 import { evaluateSaravali } from "./saravali";
+import { evaluatePhaladeepika } from "./phaladeepika";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -652,6 +653,36 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 31. Acharya Mantreswara Phaladeepika (28 Adhyayas) Suite
+  let phaladeepikaSummary = "";
+  try {
+    const pd = evaluatePhaladeepika(natalEphemeris);
+    const activeViparita = pd.viparitaRajaYogas.filter((v) => v.isFormed);
+    const viparitaStr = activeViparita.length > 0
+      ? activeViparita.map((v) => `- ⚡ **${v.yogaName} (${v.sanskritName}):** ${v.description} -> *${v.classicalShlokaEffect}*`).join("\n")
+      : "- Baseline planetary placements in 6th, 8th, 12th houses (no Viparita Raja Yoga).";
+
+    const neechaStr = pd.neechaBhangaYogas.length > 0
+      ? pd.neechaBhangaYogas.map((n) => `- 👑 **Neecha Bhanga (${n.debilitatedPlanet} in ${n.debilitatedSign}):** ${n.rajaYogaGrade} -> ${n.classicalPhala} (Conditions: ${n.cancellationConditionsMet.join("; ")})`).join("\n")
+      : "- No debilitated planets in natal chart (all Grahas possess natural strength).";
+
+    const avasthasStr = pd.planetaryAvasthas.map((a) => `${a.planetName}: ${a.avasthaName} (${a.potencyPercentage}%)`).join(", ");
+
+    const topBhavas = [...pd.bhavaMastery].sort((a, b) => b.phaladeepikaScore - a.phaladeepikaScore).slice(0, 4);
+    const topBhavasStr = topBhavas.map((b) => `- **House ${b.bhavaNum} (${b.sanskritTitle.split(" ")[0]}):** ${b.phaladeepikaScore}% (${b.masteryGrade}) • Lord: ${b.lordName} in H${b.lordPlacementHouse} -> ${b.classicalPhala}`).join("\n");
+
+    phaladeepikaSummary = [
+      "- **Mantreswara Viparita Raja Yogas (विपरीत राजयोग - Shloka 63):**",
+      viparitaStr,
+      "- **5-Fold Neecha Bhanga Raja Yoga Diagnostics (Shlokas 26-30):**",
+      neechaStr,
+      "- **9 Classical Planetary Avasthas (Adhyaya 3):** " + avasthasStr,
+      "- **Top 12 Bhavas Phaladeepika Mastery Hierarchy:**",
+      topBhavasStr,
+      "- **Master Phaladeepika Synthesis:** " + pd.masterPhaladeepikaSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -862,11 +893,14 @@ export function buildAstroDossier(
     "",
     "#### 📜 32. MAHARAJA KALYANA VARMA SARAVALI (45 ADHYAYAS) DOSSIER:",
     saravaliSummary,
+    "",
+    "#### 📖 33. ACHARYA MANTRESWARA PHALADEEPIKA (28 ADHYAYAS) DOSSIER:",
+    phaladeepikaSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 33. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 34. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 
