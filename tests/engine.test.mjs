@@ -2250,6 +2250,66 @@ test("Classical Sugam Jyotish (Practical Predictive Manual & Everyday Remedies) 
   assert.ok(result.masterSugamSynthesis.length > 30);
 });
 
+test("Classical Mahakavi Kalidasa Uttara Kalamrita (VRY, Shukra-Shani Paradox & Karakatva) Verification", async () => {
+  const { evaluateUttaraKalamrita } = await import("../src/engine/uttaraKalamrita.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Ujjain", country: "India", latitude: 23.1765, longitude: 75.7885, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1993-07-14T09:45:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateUttaraKalamrita(natalEphem);
+
+  // 1. Viparita Raja Yogas (Harsha, Sarala, Vimala)
+  assert.strictEqual(result.viparitaRajaYogas.length, 3);
+  for (const v of result.viparitaRajaYogas) {
+    assert.ok(v.yogaName);
+    assert.ok(typeof v.isActive === "boolean");
+    assert.ok(v.dusthanaLord);
+    assert.ok(v.participatingPlanet);
+    assert.ok(["Pure Classical VRY (अति प्रबल)", "Moderate VRY (मध्यम)", "Inactive"].includes(v.potency));
+    assert.ok(v.kalidasaDictum.includes("Khanda 4"));
+    assert.ok(v.effects.length > 15);
+  }
+
+  // 2. Shukra-Shani Dasha Paradox
+  assert.ok(result.shukraShaniParadox.venusDignity);
+  assert.ok(result.shukraShaniParadox.saturnDignity);
+  assert.ok(["Ascetic Detachment / Hidden Friction (अपेक्षित फल विपरीतता)", "Sudden Mundane Wealth / Unexpected Rise (अप्रत्याशित धन लाभ)", "Balanced Interplay (संतुलित फल)"].includes(result.shukraShaniParadox.paradoxType));
+  assert.ok(result.shukraShaniParadox.mutualDashaEffect.length > 20);
+  assert.ok(result.shukraShaniParadox.kalidasaRule.includes("Khanda 4"));
+
+  // 3. Node Mechanics
+  assert.strictEqual(result.nodeMechanics.length, 2);
+  for (const n of result.nodeMechanics) {
+    assert.ok(n.nodeName);
+    assert.ok(n.house >= 1 && n.house <= 12);
+    assert.ok(n.dispositor);
+    assert.ok(typeof n.isYogakaraka === "boolean");
+    assert.ok(n.fruitionPattern.length > 15);
+  }
+
+  // 4. Vakra Graha Potency
+  assert.strictEqual(result.vakraPotencies.length, 5);
+  for (const vp of result.vakraPotencies) {
+    assert.ok(vp.planetName);
+    assert.ok(typeof vp.isRetrograde === "boolean");
+    assert.ok(typeof vp.uchchaEquivalence === "boolean");
+    assert.ok(vp.potencyScore > 0);
+    assert.ok(vp.effectDescription.length > 15);
+  }
+
+  // 5. Karakatva Highlights
+  assert.strictEqual(result.karakatvaHighlights.length, 9);
+  for (const kh of result.karakatvaHighlights) {
+    assert.ok(kh.graha);
+    assert.ok(kh.significations.length >= 4);
+  }
+
+  // 6. Master Synthesis
+  assert.ok(result.masterUttaraKalamritaSynthesis.length > 30);
+});
+
+
 
 
 

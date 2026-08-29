@@ -1,46 +1,39 @@
-# Walkthrough: Sugam Jyotish Practical Predictive Suite Integration
+# Walkthrough: The Brihat Jataka of Varahamihira (28 Chapters) Definitive Upgrade
 
-We have completed the algorithmic codification and full-stack integration of **Sugam Jyotish (सुगम ज्योतिष — Practical Predictive Astrology Manual)**.
-
----
-
-## 1. Calculation Engine ([`src/engine/sugamJyotish.ts`](file:///d:/newWayToAstro/src/engine/sugamJyotish.ts))
-- **Sugam 12-Bhava Practical Diagnostics**:
-  - Computes real-world practical success scores (0–100%) and practical grades (*Ati-Uttama, Uttama, Madhyama, Samanya*) for all 12 Bhavas.
-  - Combines Bhava Karakatva, Bhavesha placement, and aspectual dignity.
-  - Generates clear real-world outcomes and actionable everyday advice.
-- **Sugam Baladi Avastha Potency Meter**:
-  - Mathematical percentage capacity calculated for odd and even signs:
-    - *Yuva (युवा)*: 100% full capacity and immediate manifestation.
-    - *Kumara (कुमार)*: 75% adolescent potency and quick activation.
-    - *Bala (बाल)*: 25% infant potency; slow maturation.
-    - *Vriddha (वृद्ध)*: 10% elder maturity; produces wisdom and delayed fruits.
-    - *Mrita (मृत)*: 0% dormant state; requires conscious strengthening.
-- **Subha & Papa Kartari Flanking Analysis**:
-  - Identifies whether the Ascendant and key houses are flanked by benefics (*Subha Kartari* $\rightarrow$ Protection & Ease) or malefics (*Papa Kartari* $\rightarrow$ Pressure & Caution).
-- **Sugam Everyday Accessible Remedies**:
-  - Structured, practical, zero-cost and low-cost pariharas for all 9 Grahas (Surya Arghya in copper vessel, Gau-Seva, Saffron tilak, Hanuman Chalisa, Mustard oil deepam, feeding birds and dogs).
+We have completed the comprehensive classical upgrade and full-stack integration of Acharya Varahamihira's masterwork **The Brihat Jataka (वराहमिहिर बृहज्जातकम् — 28 Chapters)**.
 
 ---
 
-## 2. AI Astrologer Chat Context Dossier & Dispatching ([`src/engine/chatContext.ts`](file:///d:/newWayToAstro/src/engine/chatContext.ts), [`src/app/api/astro-chat/route.ts`](file:///d:/newWayToAstro/src/app/api/astro-chat/route.ts))
-- Injected **Section 40: Sugam Jyotish Dossier** into the Astro Chat Dossier.
-- Renumbered Kundli Milan to Section 41.
-- Updated the Master Dispatching Matrix and the **Classical Remedy Differentiation Protocol** to prioritize accessible daily pariharas from Sugam Jyotish alongside Gemstones, Mantras, and Seva.
+## 1. Upgraded Calculation Engine ([`src/engine/brihatJataka.ts`](file:///d:/newWayToAstro/src/engine/brihatJataka.ts))
+- **Tri-Lagna Karma Jeeva Matrix (Ch. 10)**:
+  - Evaluates 10th lords from **Lagna (Self)**, **Chandra (Mind)**, and **Surya (Status/Soul)** into their Navamsha (D-9) dispositors, unlocking comprehensive modern and classical career trajectories.
+- **Chandra Yogas Suite (Ch. 13)**:
+  - **Sunapha Yoga**: Non-solar planets in 2nd from Moon $\rightarrow$ Self-earned wealth and renown.
+  - **Anapha Yoga**: Non-solar planets in 12th from Moon $\rightarrow$ Bodily health and generous philanthropy.
+  - **Duradhara Yoga**: Non-solar planets in both 2nd and 12th from Moon $\rightarrow$ Boundless vehicles and continuous prosperity.
+  - **Kemadruma & Kemadruma Bhanga**: Flanking isolation check with Kendra cancellation shields.
+  - **Chandradhi Yoga**: Benefics in 6th, 7th, 8th from Moon $\rightarrow$ Supreme ministerial/executive honor.
+- **Pravrajya Sannyasa Orders (Ch. 15)**:
+  - Detects 4+ planet stelliums and 10th house ascetics, categorizing exact spiritual lineages (*Tapasvi, Vedantin, Kapalika, Shakta, Nirgrantha, Jeevaka, Ekadandi*).
+- **36 Drekkanas (Ch. 27)**:
+  - Decanate visual forms (*Ayudha, Sarpa, Pakshi, Nigala, Saumya, Chathushpada*) with psychosomatic vulnerabilities.
+- **32 Nabhasa Yogas (Ch. 12)**:
+  - *Ashraya Yogas* (Rajju, Musala, Nala), *Dala Yogas*, and *Sankhya Yogas* (Vallaki, Dama, Pasha, Kedara, Shula, Yuga, Gola).
 
 ---
 
-## 3. UI Dashboard Component ([`src/components/SugamJyotishDeck.tsx`](file:///d:/newWayToAstro/src/components/SugamJyotishDeck.tsx))
-- **Hero Card**: Top Practical House, Yuva Potency Grahas, Kartari Status, and Master Synthesis.
-- **Tab 1: 🏛️ 12 Bhavas Practical Diagnostics**: 12 interactive house cards with real-world outcomes, Karaka details, and progress bars.
-- **Tab 2: ⚡ Baladi Avastha Potency Meter**: 9 Graha progress bars (0% to 100% capacity).
-- **Tab 3: 🛡️ Subha/Papa Kartari Shield**: Visual status of flanking protection.
-- **Tab 4: 🌿 Sugam Everyday Remedies**: Practical daily rituals, mantras, and behavioral pariharas for all 9 Grahas.
-- Wired into `BhavaBalaView.tsx` under the **"🌿 Sugam Jyotish (Practical Predictive)"** tab.
+## 2. Upgraded UI Dashboard ([`src/components/BrihatJatakaDeck.tsx`](file:///d:/newWayToAstro/src/components/BrihatJatakaDeck.tsx))
+- **Hero Card**: Primary Karma Dispositor, Active Chandra Yoga, Modern Industries, and Master Synthesis.
+- **Tab 1: 💼 Tri-Lagna Karma Jeeva**: Comparative breakdown of livelihood from Lagna, Moon, and Sun.
+- **Tab 2: 🌙 Chandra Yogas (Ch. 13)**: Active lunar formations with participating planets and effects.
+- **Tab 3: 🧘 Pravrajya / Sannyasa (Ch. 15)**: Spiritual lineage, monastic order, and philosophical drive.
+- **Tab 4: 🛡️ 36 Drekkanas (Ch. 27)**: Lagna, Moon, and Sun decanates with icons and traits.
+- **Tab 5: 🌌 32 Nabhasa Yogas (Ch. 12)**: Lifelong celestial patterns and definition.
+- **Tab 6: ✨ Nisheka & Niryana**: Conception epoch and 8th house longevity gateway.
 
 ---
 
-## 4. Verification
+## 3. Verification
 - **Automated Tests**: All **51 test suites** in `tests/engine.test.mjs` passed cleanly (`51/51 pass`).
 - **TypeScript & Production Build**: `next build` compiled with 0 errors.
-- **Git Push**: Committed and pushed to `origin/main` (`commit 171423c`).
+- **Git Push**: Committed and pushed to `origin/main` (`commit eedb0e5`).

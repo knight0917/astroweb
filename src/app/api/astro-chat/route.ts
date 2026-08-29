@@ -100,6 +100,8 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *Samhita Skandha (Acharya Sadananda)*: Planetary Cabinet of the Year (Raja, Mantri, Senadhipati, Sasyesha), Megha Garbhadhana & Varsha Yoga (Cloud gestation & rainfall forecasting), 4 Seismic Wind Mandalas, and Argha Krama commodity pricing trends (Gold, Silver, Grains, Oil, Tech).
     - 🌿 **Practical Real-World Guidance, Baladi Avasthas & Everyday Remedies**:
       - *Sugam Jyotish*: 12-Bhava practical fruition diagnostics, Baladi Avastha Potency Meter (Yuva 100%, Kumara 75%, Bala 25%, Vriddha 10%, Mrita 0%), Subha & Papa Kartari flanking protection, and accessible everyday daily pariharas.
+    - 👑 **Viparita Raja Yoga, Shukra-Shani Dasha Paradox & Node Mechanics**:
+      - *Uttara Kalamrita (Mahakavi Kalidasa)*: Pure Viparita Raja Yoga (Harsha, Sarala, Vimala), Shukra-Shani Dasha mutual reversal paradox, Rahu & Ketu Kendra/Trikona Yogakaraka mechanics, Vakra Graha (retrograde Uchcha-Sama) strength, and exhaustive Kalidasa Karakatvas.
 
 4. **CLASSICAL REMEDY DIFFERENTIATION PROTOCOL (HOW TO CHOOSE THE RIGHT REMEDY)**:
    When recommending remedies in Section 4, strictly differentiate by classical purpose:

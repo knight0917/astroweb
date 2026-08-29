@@ -941,6 +941,53 @@ export interface SugamJyotishAnalysis {
   masterSugamSynthesis: string;
 }
 
+export interface UttaraViparitaYoga {
+  yogaName: "Harsha Yoga (हर्ष योग)" | "Sarala Yoga (सरल योग)" | "Vimala Yoga (विमल योग)";
+  isActive: boolean;
+  dusthanaLord: string; // "6th Lord", "8th Lord", "12th Lord"
+  participatingPlanet: string;
+  placedHouse: number;
+  potency: "Pure Classical VRY (अति प्रबल)" | "Moderate VRY (मध्यम)" | "Inactive";
+  kalidasaDictum: string;
+  effects: string;
+}
+
+export interface UttaraShukraShaniParadox {
+  venusDignity: string;
+  saturnDignity: string;
+  paradoxType: "Ascetic Detachment / Hidden Friction (अपेक्षित फल विपरीतता)" | "Sudden Mundane Wealth / Unexpected Rise (अप्रत्याशित धन लाभ)" | "Balanced Interplay (संतुलित फल)";
+  mutualDashaEffect: string;
+  kalidasaRule: string;
+}
+
+export interface UttaraNodeMechanics {
+  nodeName: "Rahu" | "Ketu";
+  house: number;
+  dispositor: string;
+  isYogakaraka: boolean;
+  conjoinedPlanets: string[];
+  aspectedBy: string[];
+  fruitionPattern: string;
+}
+
+export interface UttaraVakraPotency {
+  planetName: string;
+  isRetrograde: boolean;
+  uchchaEquivalence: boolean;
+  potencyScore: number;
+  effectDescription: string;
+}
+
+export interface UttaraKalamritaAnalysis {
+  viparitaRajaYogas: UttaraViparitaYoga[];
+  shukraShaniParadox: UttaraShukraShaniParadox;
+  nodeMechanics: UttaraNodeMechanics[];
+  vakraPotencies: UttaraVakraPotency[];
+  karakatvaHighlights: { graha: string; significations: string[] }[];
+  masterUttaraKalamritaSynthesis: string;
+}
+
+
 
 
 

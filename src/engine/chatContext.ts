@@ -45,6 +45,7 @@ import { evaluateSarvarthaChintamani } from "./sarvarthaChintamani";
 import { evaluateStriJataka } from "./striJataka";
 import { evaluateSatyaJataka } from "./satyaJataka";
 import { evaluateSugamJyotish } from "./sugamJyotish";
+import { evaluateUttaraKalamrita } from "./uttaraKalamrita";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -852,6 +853,28 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 39. Uttara Kalamrita (Mahakavi Kalidasa - VRY, Shukra-Shani Paradox & Karakatva)
+  let uttaraKalamritaSummary = "";
+  try {
+    const uk = evaluateUttaraKalamrita(natalEphemeris);
+    const activeVrys = uk.viparitaRajaYogas.filter((v) => v.isActive).map((v) => `- **${v.yogaName}:** ${v.potency} (${v.dusthanaLord} in H${v.placedHouse}) -> ${v.effects}`).join("\n");
+    const retroGrahas = uk.vakraPotencies.filter((v) => v.isRetrograde).map((v) => `${v.planetName} (Uchcha-Sama)`).join(", ");
+    const rahuDispositor = uk.nodeMechanics.find((n) => n.nodeName === "Rahu")?.fruitionPattern || "";
+
+    uttaraKalamritaSummary = [
+      "- **Viparita Raja Yogas (विपरीत राजयोग - Harsha, Sarala, Vimala):**",
+      activeVrys || "  - No pure Dusthana Lord Viparita Raja Yogas active.",
+      "- **Shukra-Shani Mutual Dasha Paradox (शनि-शुक्र परस्पर दशा नियम):**",
+      `  - Paradox Classification: **${uk.shukraShaniParadox.paradoxType}**`,
+      `  - Fruition Mechanism: ${uk.shukraShaniParadox.mutualDashaEffect}`,
+      "- **Rahu & Ketu Shadow Dispositor & Yogakaraka Engine:**",
+      `  - ${rahuDispositor}`,
+      "- **Vakra Graha Exaltation-Equivalence Potency (वक्र ग्रह बल):**",
+      `  - Retrograde Potent Grahas: **${retroGrahas || "None (All Direct)"}**`,
+      "- **Master Uttara Kalamrita Synthesis:** " + uk.masterUttaraKalamritaSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1086,11 +1109,14 @@ export function buildAstroDossier(
     "",
     "#### 🌿 40. SUGAM JYOTISH (PRACTICAL PREDICTIVE MANUAL & EVERYDAY REMEDIES) DOSSIER:",
     sugamJyotishSummary,
+    "",
+    "#### 📜 41. MAHAKAVI KALIDASA UTTARA KALAMRITA (VRY, SHUKRA-SHANI PARADOX & KARAKATVA) DOSSIER:",
+    uttaraKalamritaSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 41. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 42. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 
