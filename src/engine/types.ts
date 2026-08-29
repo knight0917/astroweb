@@ -546,6 +546,58 @@ export interface JatakaParijataAnalysis {
   masterParijataSynthesis: string;
 }
 
+export interface SaravaliYoga {
+  yogaName: string;
+  sanskritName: string;
+  category: "Maharaja Yoga" | "Vasumati / Dhana Yoga" | "Adhi Yoga" | "Chandra Yoga";
+  isFormed: boolean;
+  participatingPlanets: string[];
+  description: string;
+  classicalShlokaEffect: string;
+  adhyayaRef: string;
+}
+
+export interface SaravaliConjunction {
+  conjunctionType: "2-Planet (Dwi-Graha)" | "3-Planet (Tri-Graha)" | "4-Planet (Chatur-Graha)";
+  planets: string[];
+  house: number;
+  signName: string;
+  yogaTitle: string;
+  saravaliPhala: string;
+  adhyayaCitation: string;
+}
+
+export interface SaravaliStriJataka {
+  trimsamshaLord: string;
+  trimsamshaSign: string;
+  trimsamshaNature: string;
+  vishaKanyaDetected: boolean;
+  vishaKanyaBhanga: boolean;
+  maritalAndMoralDisposition: string;
+}
+
+export interface SaravaliBhavaPotency {
+  bhavaNum: number; // 1 to 12
+  sanskritTitle: string;
+  signName: string;
+  lordName: string;
+  lordPlacementHouse: number;
+  occupants: string[];
+  saravaliScore: number; // 0-100%
+  royalGrade: "Maharaja Grade (Uttama)" | "Samanta Grade (Madhyama)" | "Alpa Grade (Heena)";
+  classicalPhala: string;
+  adhyayaCitation: string;
+}
+
+export interface SaravaliAnalysis {
+  royalYogas: SaravaliYoga[];
+  conjunctions: SaravaliConjunction[];
+  striJataka: SaravaliStriJataka;
+  bhavaPotency: SaravaliBhavaPotency[];
+  masterSaravaliSynthesis: string;
+}
+
+
 
 
 

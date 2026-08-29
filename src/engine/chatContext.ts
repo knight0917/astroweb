@@ -36,6 +36,7 @@ import { evaluateGayatriJyotish } from "./gayatriJyotish";
 import { evaluateJatakaAlankara } from "./jatakaAlankara";
 import { evaluateJatakNirnay } from "./jatakNirnay";
 import { evaluateJatakaParijata } from "./jatakaParijata";
+import { evaluateSaravali } from "./saravali";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -620,6 +621,37 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 30. Maharaja Kalyana Varma Saravali (800 CE, 45 Adhyayas) Suite
+  let saravaliSummary = "";
+  try {
+    const sv = evaluateSaravali(natalEphemeris);
+    const activeYogas = sv.royalYogas.filter((y) => y.isFormed);
+    const yogasStr = activeYogas.length > 0
+      ? activeYogas.map((y) => `- 👑 **${y.yogaName}:** ${y.description} -> *${y.classicalShlokaEffect}*`).join("\n")
+      : "- Baseline planetary dispositions in Saravali royal combinations.";
+
+    const conjStr = sv.conjunctions.length > 0
+      ? sv.conjunctions.map((c) => `- 🪐 **${c.yogaTitle} (House ${c.house}, ${c.signName}):** ${c.planets.join(" + ")} -> ${c.saravaliPhala}`).join("\n")
+      : "- No multi-planet conjunctions in natal chart.";
+
+    const topBhavas = [...sv.bhavaPotency].sort((a, b) => b.saravaliScore - a.saravaliScore).slice(0, 4);
+    const topBhavasStr = topBhavas.map((b) => `- **House ${b.bhavaNum} (${b.sanskritTitle.split(" ")[0]}):** ${b.saravaliScore}% (${b.royalGrade}) • Lord: ${b.lordName} in H${b.lordPlacementHouse} -> ${b.classicalPhala}`).join("\n");
+
+    saravaliSummary = [
+      "- **Active Saravali Sovereign & Dhana Yogas (महाराज एवं वसुमती योगाः):**",
+      yogasStr,
+      "- **Multi-Graha Conjunction Matrix (Adhyayas 15-21):**",
+      conjStr,
+      "- **Stri Jataka & Trimsamsha Disposition (Adhyaya 43):**",
+      "  - Lagna Trimsamsha Lord: **" + sv.striJataka.trimsamshaLord + "** (" + sv.striJataka.trimsamshaSign + ")",
+      "  - Moral Disposition: " + sv.striJataka.trimsamshaNature,
+      "  - Visha Kanya Evaluation: " + (sv.striJataka.vishaKanyaDetected ? (sv.striJataka.vishaKanyaBhanga ? "Formed but Neutralized by Kendra Benefics (Visha Kanya Bhanga)" : "Active (Shiva Shanti Required)") : "None Formed"),
+      "- **Top 12 Bhavas Saravali Royal Potency Hierarchy:**",
+      topBhavasStr,
+      "- **Master Saravali Synthesis:** " + sv.masterSaravaliSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -827,11 +859,14 @@ export function buildAstroDossier(
     "",
     "#### 🌺 31. VAIDYANATHA DIKSHITA JATAKA PARIJATA (VOLS 1-3, 18 ADHYAYAS) DOSSIER:",
     parijataSummary,
+    "",
+    "#### 📜 32. MAHARAJA KALYANA VARMA SARAVALI (45 ADHYAYAS) DOSSIER:",
+    saravaliSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 32. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 33. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

@@ -1800,6 +1800,60 @@ test("Classical Vaidyanatha Dikshita Jataka Parijata (Vols 1, 2, 3 - 18 Adhyayas
   assert.ok(result.masterParijataSynthesis.length > 30);
 });
 
+test("Classical Maharaja Kalyana Varma Saravali (800 CE, 45 Adhyayas) Verification", async () => {
+  const { evaluateSaravali } = await import("../src/engine/saravali.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateSaravali(natalEphem);
+
+  // 1. Royal & Prosperity Yogas (Vasumati, Adhi, Chandra Yogas)
+  assert.ok(result.royalYogas.length >= 3);
+  for (const y of result.royalYogas) {
+    assert.ok(y.yogaName);
+    assert.ok(y.sanskritName);
+    assert.ok(y.category);
+    assert.ok(y.description.length > 10);
+    assert.ok(y.classicalShlokaEffect.length > 15);
+    assert.ok(y.adhyayaRef.includes("Saravali"));
+  }
+
+  // 2. Conjunctions
+  assert.ok(result.conjunctions.length >= 0);
+  for (const c of result.conjunctions) {
+    assert.ok(c.conjunctionType);
+    assert.ok(c.planets.length >= 2);
+    assert.ok(c.yogaTitle);
+    assert.ok(c.saravaliPhala.length > 15);
+    assert.ok(c.adhyayaCitation.includes("Saravali"));
+  }
+
+  // 3. Stri Jataka & Trimsamsha
+  assert.ok(result.striJataka.trimsamshaLord);
+  assert.ok(result.striJataka.trimsamshaSign);
+  assert.ok(result.striJataka.trimsamshaNature.length > 15);
+  assert.ok(typeof result.striJataka.vishaKanyaDetected === "boolean");
+  assert.ok(typeof result.striJataka.vishaKanyaBhanga === "boolean");
+  assert.ok(result.striJataka.maritalAndMoralDisposition.length > 15);
+
+  // 4. 12 Bhavas Saravali Potency
+  assert.strictEqual(result.bhavaPotency.length, 12);
+  for (const b of result.bhavaPotency) {
+    assert.ok(b.sanskritTitle);
+    assert.ok(b.signName);
+    assert.ok(b.lordName);
+    assert.ok(b.saravaliScore >= 0 && b.saravaliScore <= 100);
+    assert.ok(["Maharaja Grade (Uttama)", "Samanta Grade (Madhyama)", "Alpa Grade (Heena)"].includes(b.royalGrade));
+    assert.ok(b.classicalPhala.length > 15);
+  }
+
+  // 5. Master Synthesis
+  assert.ok(result.masterSaravaliSynthesis.length > 30);
+});
+
+
 
 
 
