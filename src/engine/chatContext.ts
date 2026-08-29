@@ -39,6 +39,7 @@ import { evaluateJatakaParijata } from "./jatakaParijata";
 import { evaluateSaravali } from "./saravali";
 import { evaluatePhaladeepika } from "./phaladeepika";
 import { evaluatePrasnaMarga } from "./prasnaMarga";
+import { evaluateSamhitaSkandha } from "./samhitaSkandha";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -712,6 +713,30 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 33. Acharya Sadananda Samhita Skandha (Mundane & Astrometeorology)
+  let samhitaSummary = "";
+  try {
+    const ss = evaluateSamhitaSkandha(natalEphemeris);
+    const commoditiesStr = ss.arghaCommodities.map((c) => `- **${c.commodityName}:** ${c.trend} -> ${c.classicalArghaReasoning}`).join("\n");
+    const seismicStr = ss.seismicMandalas.map((m) => `- **${m.mandalaName}:** ${m.riskLevel} (${m.geographicVulnerability})`).join("\n");
+
+    samhitaSummary = [
+      "- **Planetary Cabinet of the Year (संवत्सराधिपति एवं मन्त्रीमण्डल):**",
+      `  - King of the Year (Raja): **${ss.planetaryCabinet.kingPlanet}** -> ${ss.planetaryCabinet.kingEffect}`,
+      `  - Prime Minister (Mantri): **${ss.planetaryCabinet.ministerPlanet}** -> ${ss.planetaryCabinet.ministerEffect}`,
+      `  - Commander (Senadhipati): **${ss.planetaryCabinet.commanderPlanet}** • Lord of Agriculture (Sasyesha): **${ss.planetaryCabinet.sasyeshaPlanet}**`,
+      "- **Astrometeorology & Varsha Monsoon Index (मेघ गर्भाधान एवं वर्षा):**",
+      `  - Rainfall Score: **${ss.varshaAstrology.rainfallScore}%** (${ss.varshaAstrology.precipitationGrade})`,
+      `  - Cloud Gestation (Megha Garbha): ${ss.varshaAstrology.meghaGarbhaStatus}`,
+      `  - Solar Ingress Outlook: ${ss.varshaAstrology.rohiniIngressEffect} • ${ss.varshaAstrology.ardraIngressEffect}`,
+      "- **4 Earthly Seismic & Wind Mandalas (भूकमक एवं उत्पात):**",
+      seismicStr,
+      "- **Argha Krama Commodity Market Trends (धातु एवं धान्य भाव):**",
+      commoditiesStr,
+      "- **Master Samhita Synthesis:** " + ss.masterSamhitaSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -928,11 +953,14 @@ export function buildAstroDossier(
     "",
     "#### 🔮 34. PRASNA MARGA (32 ADHYAYAS) & PRASNA ARUDHA PHALA DOSSIER:",
     prasnaMargaSummary,
+    "",
+    "#### 🌧️ 35. ACHARYA SADANANDA SAMHITA SKANDHA (MUNDANE & ASTROMETEOROLOGY) DOSSIER:",
+    samhitaSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 35. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 36. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

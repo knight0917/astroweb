@@ -698,6 +698,53 @@ export interface PrasnaMargaAnalysis {
   masterPrasnaVerdict: string;
 }
 
+export interface SamhitaCabinet {
+  kingPlanet: string; // Raja
+  kingEffect: string;
+  ministerPlanet: string; // Mantri
+  ministerEffect: string;
+  commanderPlanet: string; // Senadhipati
+  commanderEffect: string;
+  sasyeshaPlanet: string; // Agriculture lord
+  sasyeshaEffect: string;
+  governingYearRuler: string;
+}
+
+export interface SamhitaVarshaAstrometeorology {
+  rainfallScore: number; // 0-100%
+  precipitationGrade: "Abundant Monsoon (अतिवृष्टि)" | "Normal Bountiful (सुवृष्टि)" | "Moderate Selective (मध्यम)" | "Deficit Drought Risk (अनावृष्टि)";
+  meghaGarbhaStatus: string;
+  rohiniIngressEffect: string;
+  ardraIngressEffect: string;
+  classicalShloka: string;
+}
+
+export interface SamhitaSeismicMandala {
+  mandalaName: "Vayavya Mandala (Wind)" | "Agneya Mandala (Fire/Volcanic)" | "Varuna Mandala (Water/Hydrological)" | "Aindra Mandala (Tectonic)";
+  sanskritTitle: string;
+  governingPlanets: string[];
+  riskLevel: "High Alert" | "Elevated Risk" | "Low / Serene";
+  geographicVulnerability: string;
+  phenomenonDescription: string;
+}
+
+export interface SamhitaCommodityTrend {
+  commodityName: string; // Gold, Silver, Crude Oil, Grains, Copper, Tech
+  governingPlanet: string;
+  trend: "Strongly Bullish (तेजी / Rises)" | "Mild Uptrend (स्थिर लाभ)" | "Bearish (मंदी / Drops)" | "Volatile (चंचल)";
+  projectedPriceFactor: number;
+  classicalArghaReasoning: string;
+}
+
+export interface SamhitaSkandhaAnalysis {
+  planetaryCabinet: SamhitaCabinet;
+  varshaAstrology: SamhitaVarshaAstrometeorology;
+  seismicMandalas: SamhitaSeismicMandala[];
+  arghaCommodities: SamhitaCommodityTrend[];
+  masterSamhitaSynthesis: string;
+}
+
+
 
 
 

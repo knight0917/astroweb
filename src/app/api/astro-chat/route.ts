@@ -90,6 +90,8 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *Brihat Samhita (Varahamihira)*: Ratna Pariksha (Authentic gemstone weights, metals, purification), Kurma Chakra geography, Graha Yuddha.
     - 🔮 **Instant Horary Queries, Lost Objects, Urgent Decisions & Deva Prashna**:
       - *Prasna Marga (32 Adhyayas)* & *Prasna Arudha Phala*: Tri-Lagna horary oracle (Udaya, Arudha, Chatra), Pancha Sutras (Jeeva, Roga, Mrityu, Utpanna, Nashana), Ashtamangala query sanctity score, and Deva/Abhichara Prashna diagnostics.
+    - 🌧️ **Mundane Astrology, Weather/Rainfall, Commodity Markets & Geopolitics**:
+      - *Samhita Skandha (Acharya Sadananda)*: Planetary Cabinet of the Year (Raja, Mantri, Senadhipati, Sasyesha), Megha Garbhadhana & Varsha Yoga (Cloud gestation & rainfall forecasting), 4 Seismic Wind Mandalas, and Argha Krama commodity pricing trends (Gold, Silver, Grains, Oil, Tech).
 
 4. **CLASSICAL REMEDY DIFFERENTIATION PROTOCOL (HOW TO CHOOSE THE RIGHT REMEDY)**:
    When recommending remedies in Section 4, strictly differentiate by classical purpose:

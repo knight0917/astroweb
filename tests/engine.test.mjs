@@ -1946,6 +1946,53 @@ test("Classical Prasna Marga (32 Adhyayas) & Prasna Arudha Phala Verification", 
   assert.ok(result.masterPrasnaVerdict.length > 30);
 });
 
+test("Classical Acharya Sadananda Samhita Skandha (Mundane & Astrometeorology) Verification", async () => {
+  const { evaluateSamhitaSkandha } = await import("../src/engine/samhitaSkandha.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Ujjain", country: "India", latitude: 23.1765, longitude: 75.7885, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateSamhitaSkandha(natalEphem);
+
+  // 1. Planetary Cabinet
+  assert.ok(result.planetaryCabinet.kingPlanet);
+  assert.ok(result.planetaryCabinet.ministerPlanet);
+  assert.ok(result.planetaryCabinet.commanderPlanet);
+  assert.ok(result.planetaryCabinet.sasyeshaPlanet);
+  assert.ok(result.planetaryCabinet.kingEffect.length > 15);
+
+  // 2. Varsha Astrometeorology
+  assert.ok(result.varshaAstrology.rainfallScore >= 0 && result.varshaAstrology.rainfallScore <= 100);
+  assert.ok(["Abundant Monsoon (अतिवृष्टि)", "Normal Bountiful (सुवृष्टि)", "Moderate Selective (मध्यम)", "Deficit Drought Risk (अनावृष्टि)"].includes(result.varshaAstrology.precipitationGrade));
+  assert.ok(result.varshaAstrology.meghaGarbhaStatus.length > 15);
+  assert.ok(result.varshaAstrology.classicalShloka.includes("Samhita Skandha"));
+
+  // 3. Seismic Mandalas
+  assert.strictEqual(result.seismicMandalas.length, 4);
+  for (const m of result.seismicMandalas) {
+    assert.ok(m.mandalaName);
+    assert.ok(m.sanskritTitle);
+    assert.ok(m.governingPlanets.length > 0);
+    assert.ok(["High Alert", "Elevated Risk", "Low / Serene"].includes(m.riskLevel));
+    assert.ok(m.geographicVulnerability.length > 15);
+  }
+
+  // 4. Argha Commodities
+  assert.strictEqual(result.arghaCommodities.length, 6);
+  for (const c of result.arghaCommodities) {
+    assert.ok(c.commodityName);
+    assert.ok(c.governingPlanet);
+    assert.ok(["Strongly Bullish (तेजी / Rises)", "Mild Uptrend (स्थिर लाभ)", "Bearish (मंदी / Drops)", "Volatile (चंचल)"].includes(c.trend));
+    assert.ok(c.projectedPriceFactor > 0);
+    assert.ok(c.classicalArghaReasoning.length > 15);
+  }
+
+  // 5. Master Synthesis
+  assert.ok(result.masterSamhitaSynthesis.length > 30);
+});
+
+
 
 
 
