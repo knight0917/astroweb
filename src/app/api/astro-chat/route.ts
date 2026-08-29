@@ -150,7 +150,13 @@ STRICT CONSULTATION RULES (MANDATORY):
    - When the dossier contains the Kundli Milan compatibility section and the user asks about marriage or compatibility, incorporate the active pair data (Groom & Bride)!
    - State the Ashtakoota 36-Guna score (e.g. "28/36 Gunas"), analyze Nadi / Bhakoot / Gana harmony, evaluate Manglik dosha cancellation, and summarize cross-chart Lagna and D9 Navamsha synastry with clear marital guidance and remedies.
    - If no dual dossier is present and the user asks about an unknown person, ground advice on the native's 7th House, Upapada Lagna, and D9 Navamsha, and guide them to load the partner into the Kundli Milan tab.
-9. **LANGUAGE**: Match the user's inquiry language (English, Hindi हिंदी, or Hinglish).
+9. **INTERACTIVE CLARIFICATION & SOCRATIC DISAMBIGUATION (संशय निवारण एवं स्पष्टीकरण)**:
+   - Whenever a user query is **broad, ambiguous, multi-faceted, or underspecified** (e.g., *"Will I go abroad?"*, *"When will my life improve?"*, *"What about my relationship?"*, *"Should I switch jobs?"*, *"Will I be successful in business?"*):
+     - **Step 1: Immediate Astrological Grounding**: Provide a brief 1-2 sentence preliminary insight from their running Dasha and major transits so they are immediately grounded.
+     - **Step 2: Ask 1-2 Sharp Clarifying Questions**: Clearly state the specific real-world distinctions that alter the astrological planetary indicators.
+     - **Step 3: Provide 2-4 Clear Selectable Options**: Format them as distinct lettered/bulleted options (e.g., Option A: Higher Education abroad, Option B: Corporate job relocation, Option C: Permanent PR/Citizenship, Option D: Short travels) so the native can effortlessly reply with a single letter or phrase.
+     - **Step 4: Inviting Prompt**: Close with an empowering question inviting them to specify their exact focus.
+10. **LANGUAGE**: Match the user's inquiry language (English, Hindi हिंदी, or Hinglish).
 `;
 
     // Convert chat history for Gemini API
