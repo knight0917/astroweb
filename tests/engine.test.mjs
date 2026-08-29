@@ -1452,3 +1452,56 @@ test("Classical Varahamihira Brihat Samhita Engine Verification", async () => {
   assert.ok(result.masterBrihatSamhitaSynthesis.length > 30);
 });
 
+test("Classical Deva Keralam (Chandra Kala Nadi) 150 Nadi Amshas Verification", async () => {
+  const { calculateNadiAmsha, evaluateDevaKeralam } = await import("../src/engine/devaKeralam.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 1. Test Modality Directionality for 150 Nadi Amshas
+  // Chara (Movable - Aries = 0): 0.05° -> slot 0 -> Nadi #1 (Vasudha), Purvabhaga
+  const chara1 = calculateNadiAmsha(0.05);
+  assert.strictEqual(chara1.index, 1);
+  assert.strictEqual(chara1.name, "Vasudha");
+  assert.strictEqual(chara1.halfBhaga, "Purvabhaga");
+
+  // Chara (Aries): 0.15° -> slot 0 -> Nadi #1 (Vasudha), Uttarabhaga
+  const chara2 = calculateNadiAmsha(0.15);
+  assert.strictEqual(chara2.index, 1);
+  assert.strictEqual(chara2.name, "Vasudha");
+  assert.strictEqual(chara2.halfBhaga, "Uttarabhaga");
+
+  // Sthira (Fixed - Taurus = 30° + 0.05° = 30.05°): slot 0 -> Nadi #150 (Kula), Purvabhaga
+  const sthira1 = calculateNadiAmsha(30.05);
+  assert.strictEqual(sthira1.index, 150);
+  assert.strictEqual(sthira1.name, "Kula");
+
+  // Dwiswabhava (Dual - Gemini = 60° + 0.05° = 60.05°): slot 0 -> Nadi #76
+  const dual1 = calculateNadiAmsha(60.05);
+  assert.strictEqual(dual1.index, 76);
+
+  // 2. Full Deva Keralam Evaluator
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date("2026-08-24T00:00:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateDevaKeralam(natalEphem, transitEphem);
+
+  assert.ok(result.lagnaNadi.index >= 1 && result.lagnaNadi.index <= 150);
+  assert.ok(result.lagnaNadi.name);
+  assert.ok(result.lagnaNadi.sanskritName);
+  assert.ok(result.lagnaNadi.rulingDeity);
+  assert.ok(result.lagnaNadi.archetype);
+  assert.ok(result.lagnaNadi.classicalSutra);
+
+  assert.ok(result.moonNadi.index >= 1 && result.moonNadi.index <= 150);
+  assert.ok(result.sunNadi.index >= 1 && result.sunNadi.index <= 150);
+  assert.ok(Object.keys(result.planetsNadi).length >= 7);
+
+  assert.ok(Array.isArray(result.dhanaYogas));
+  assert.ok(result.dhanaYogas.length > 0);
+  assert.ok(Array.isArray(result.rajaYogas));
+  assert.ok(result.kulaAndVamshaPhala.length > 20);
+  assert.ok(result.ayurdayaInsight.length > 20);
+  assert.ok(result.masterDevaKeralamSynthesis.length > 30);
+});
+
+

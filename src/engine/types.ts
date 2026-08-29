@@ -175,3 +175,48 @@ export interface BrihatSamhitaAnalysis {
   };
   masterBrihatSamhitaSynthesis: string;
 }
+
+export interface NadiAmshaInfo {
+  index: number; // 1 to 150
+  name: string;
+  sanskritName: string;
+  degreeStart: number;
+  degreeEnd: number;
+  degreeInSign: number;
+  halfBhaga: "Purvabhaga" | "Uttarabhaga";
+  halfBhagaSanskrit: string;
+  rulingDeity: string;
+  nature: "Auspicious (Shubha)" | "Neutral (Mishra)" | "Challenging (Kshudra)";
+  archetype: string;
+  classicalSutra: string;
+  careerAndWealthPhala: string;
+  karmicLesson: string;
+}
+
+export interface DevaKeralamPlanetNadi {
+  planet: string;
+  signName: string;
+  degreeInSign: number;
+  nadiAmsha: NadiAmshaInfo;
+}
+
+export interface NadiTransitTrigger {
+  transitPlanet: string;
+  natalPoint: string;
+  status: "Active Direct Transit" | "Approaching" | "Dormant";
+  karmicEffect: string;
+  shantiRemedy: string;
+}
+
+export interface DevaKeralamAnalysis {
+  lagnaNadi: NadiAmshaInfo;
+  moonNadi: NadiAmshaInfo;
+  sunNadi: NadiAmshaInfo;
+  planetsNadi: Record<string, DevaKeralamPlanetNadi>;
+  activeTransitTriggers: NadiTransitTrigger[];
+  dhanaYogas: string[];
+  rajaYogas: string[];
+  kulaAndVamshaPhala: string;
+  ayurdayaInsight: string;
+  masterDevaKeralamSynthesis: string;
+}

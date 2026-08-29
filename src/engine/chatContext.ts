@@ -29,6 +29,7 @@ import { evaluateMultiDashaSystems } from "./dashaSystems";
 import { evaluateBphsCore } from "./bphsCore";
 import { evaluateBrihatJataka } from "./brihatJataka";
 import { evaluateBrihatSamhita } from "./brihatSamhita";
+import { evaluateDevaKeralam } from "./devaKeralam";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -432,6 +433,29 @@ export function buildAstroDossier(
     ].filter(Boolean).join("\n");
   } catch (_) {}
 
+  // 23. Deva Keralam (Chandra Kala Nadi) 150 Nadi Amshas Suite
+  let dkSummary = "";
+  try {
+    const dk = evaluateDevaKeralam(natalEphemeris, transitEphemeris);
+    const triggersStr = dk.activeTransitTriggers.length > 0
+      ? dk.activeTransitTriggers.map((t) => `- 🪐 **${t.transitPlanet} Transit over ${t.natalPoint}:** ${t.status} • ${t.karmicEffect} -> **Shanti:** ${t.shantiRemedy}`).join("\n")
+      : "- No critical adverse Nadi degree transit crossings active at present.";
+
+    dkSummary = [
+      "- **Ascendant (Lagna) Nadi Amsha:** **" + dk.lagnaNadi.name + " (" + dk.lagnaNadi.sanskritName + " — #" + dk.lagnaNadi.index + ")** in " + dk.lagnaNadi.halfBhagaSanskrit + " (" + dk.lagnaNadi.nature + ")",
+      "- **Lagna Nadi Deity & Archetype:** Deity: " + dk.lagnaNadi.rulingDeity + " • Archetype: **" + dk.lagnaNadi.archetype + "**",
+      "- **Classical Deva Keralam Sutra:** *" + dk.lagnaNadi.classicalSutra + "*",
+      "- **Career & Wealth Phala:** " + dk.lagnaNadi.careerAndWealthPhala,
+      "- **Karmic Lesson:** " + dk.lagnaNadi.karmicLesson,
+      "- **Moon (Chandra) Nadi Amsha:** **" + dk.moonNadi.name + " (" + dk.moonNadi.sanskritName + " — #" + dk.moonNadi.index + ")** in " + dk.moonNadi.halfBhagaSanskrit,
+      "- **Sun (Surya) Nadi Amsha:** **" + dk.sunNadi.name + " (" + dk.sunNadi.sanskritName + " — #" + dk.sunNadi.index + ")** in " + dk.sunNadi.halfBhagaSanskrit,
+      "- **Deva Keralam Dhana & Raja Yogas:** " + [...dk.dhanaYogas, ...dk.rajaYogas].slice(0, 3).join(" • "),
+      "- **Active Nadi Transit Triggers (Gochar over Nadi Points):**",
+      triggersStr,
+      "- **Master Deva Keralam Synthesis:** " + dk.masterDevaKeralamSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -618,11 +642,14 @@ export function buildAstroDossier(
     "",
     "#### 🐢 24. ACHARYA VARAHAMIHIRA BRIHAT SAMHITA DOSSIER (KURMA CHAKRA & GEMS):",
     bsSummary,
+    "",
+    "#### 📜 25. DEVA KERALAM (CHANDRA KALA NADI) 150 NADI AMSHAS DOSSIER:",
+    dkSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 25. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 26. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 
