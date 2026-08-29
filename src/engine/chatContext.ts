@@ -238,11 +238,23 @@ export function buildAstroDossier(
     .map(([graha, role]) => "- **" + graha + ":** " + role)
     .join("\n");
 
+  const pastDashaWindows: string[] = [];
+  const nowMs = evaluationDate.getTime();
+  for (const md of dasha.mahadashas) {
+    for (const ad of md.antardashas) {
+      if (ad.endDate.getTime() <= nowMs && ad.startDate.getTime() >= birthDate.getTime()) {
+        pastDashaWindows.push(md.lord.name + "-" + ad.lord.name + " (" + ad.startDate.getFullYear() + "-" + ad.endDate.getFullYear() + ")");
+      }
+    }
+  }
+  const recentPastPeriods = pastDashaWindows.slice(-6).join(", ");
+
   const activeDashaSection = activeDasha
     ? [
         "- **Active Mahadasha (MD):** " + activeDasha.mahadasha.name + " (" + activeDasha.mahadasha.hindiName + ") [" + activeDasha.mdStart.toLocaleDateString() + " to " + activeDasha.mdEnd.toLocaleDateString() + "]",
         "- **Active Antardasha (AD):** " + activeDasha.antardasha.name + " (" + activeDasha.antardasha.hindiName + ") [" + activeDasha.adStart.toLocaleDateString() + " to " + activeDasha.adEnd.toLocaleDateString() + "]",
         "- **Active Pratyantardasha (PD):** " + activeDasha.pratyantardasha.name + " (" + activeDasha.pratyantardasha.hindiName + ") [" + activeDasha.pdStart.toLocaleDateString() + " to " + activeDasha.pdEnd.toLocaleDateString() + "]",
+        "- **Recent Past Dasha Windows (For BTR & Past Event Verification):** " + (recentPastPeriods || "Early childhood"),
         "- **Dasha Progress:** " + activeDasha.percentageCompleteMD + "% of MD and " + activeDasha.percentageCompleteAD + "% of AD completed.",
         "- **Dominant Operational Theme:** " + yogaActivation.dominantLifeTheme,
       ].join("\n")
