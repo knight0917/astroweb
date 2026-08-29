@@ -92,7 +92,7 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *Doctrines of Suka Nadi*: Purva Janma Rina (Past-life debt diagnostics), Shukacharya age triggers (16, 24, 32, 40, 48, 56).
       - *Gayatri Jyotish*: 24 Gayatri Aksharas, 9 Graha Gayatri Mantras, Savita Surya Arghya, Anushthana Planner.
       - *K.N. Rao Karma & Rebirth*: 5th & 9th house karmic axis, D20 Vimsamsha.
-      - *Jaimini Sutras*: Atmakaraka (AK), Ishta Devata / Dharma Peetha.
+      - *Jaimini Sutras & Iranganti Rangacharya Master Suite*: Atmakaraka (AK), Ishta Devata, Varnada Lagna & Padas (V1-V12), Shoola Dasha (9-year health crisis clock), Brahma/Rudra longevity determinators, and 12 Arudha Padas with BPHS exception rules.
     - 💎 **Gemstones, Planetary Warfare, Geography & Environmental Timing**:
       - *Brihat Samhita (Varahamihira)*: Ratna Pariksha (Authentic gemstone weights, metals, purification), Kurma Chakra geography, Graha Yuddha.
     - 🔮 **Instant Horary Queries, Lost Objects, Urgent Decisions & Deva Prashna**:

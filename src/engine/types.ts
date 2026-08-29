@@ -1142,6 +1142,55 @@ export interface BhavarthaRatnakaraAnalysis {
   masterRatnakaraSynthesis: string;
 }
 
+export interface JaiminiVarnadaPada {
+  bhava: number;
+  name: string; // "VL (Varnada Lagna)", "V2 (Dhana Varnada)", ..., "V12"
+  signIndex: number;
+  signName: string;
+  vitalityImpact: string;
+}
+
+export interface JaiminiShoolaPeriod {
+  signIndex: number;
+  signName: string;
+  startYear: number;
+  endYear: number;
+  ageRange: string;
+  isMarakaOrRudra: boolean;
+  healthCrisisVulnerability: string;
+}
+
+export interface JaiminiBrahmaRudra {
+  brahmaPlanet: string;
+  brahmaSign: string;
+  rudraPlanet: string;
+  rudraSign: string;
+  maheshwaraPlanet: string;
+  maheshwaraSign: string;
+  longevityAssessment: string;
+}
+
+export interface JaiminiArudhaWithException {
+  houseNum: number;
+  code: string; // "AL/A1", "A2", ..., "UL/A12"
+  houseName: string;
+  signIndex: number;
+  signName: string;
+  isExceptionApplied: boolean;
+  exceptionRuleNote: string;
+}
+
+export interface JaiminiRangacharyaAnalysis {
+  varnadaLagnaSign: string;
+  varnadaPadas: JaiminiVarnadaPada[];
+  shoolaDashaPeriods: JaiminiShoolaPeriod[];
+  brahmaRudra: JaiminiBrahmaRudra;
+  arudhaPadasWithExceptions: JaiminiArudhaWithException[];
+  arudhaRajaYogas: string[];
+  masterRangacharyaSynthesis: string;
+}
+
+
 
 
 

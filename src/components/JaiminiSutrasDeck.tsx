@@ -3,15 +3,20 @@
 import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { evaluateJaiminiSutrasComplete } from "../engine/jaiminiSutras";
-import { JaiminiSutrasCompleteAnalysis } from "../engine/types";
+import { evaluateJaiminiRangacharya } from "../engine/jaiminiRangacharya";
+import { JaiminiSutrasCompleteAnalysis, JaiminiRangacharyaAnalysis } from "../engine/types";
 
 export default function JaiminiSutrasDeck() {
   const { ephemeris } = useAstroStore();
-  const [activeTab, setActiveTab] = useState<"karakamsha" | "charadasha" | "upapada" | "longevity">("karakamsha");
+  const [activeTab, setActiveTab] = useState<"karakamsha" | "charadasha" | "varnada" | "shoola" | "arudha" | "upapada" | "longevity">("karakamsha");
   const [selectedBhavaNum, setSelectedBhavaNum] = useState<number>(1);
 
   const report: JaiminiSutrasCompleteAnalysis = useMemo(() => {
     return evaluateJaiminiSutrasComplete(ephemeris);
+  }, [ephemeris]);
+
+  const rangacharyaReport: JaiminiRangacharyaAnalysis = useMemo(() => {
+    return evaluateJaiminiRangacharya(ephemeris);
   }, [ephemeris]);
 
   const activeBhava = report.karakamshaBhavas.find((b) => b.bhavaNum === selectedBhavaNum) || report.karakamshaBhavas[0];
@@ -24,11 +29,11 @@ export default function JaiminiSutrasDeck() {
           <div className="flex items-center gap-2">
             <span className="text-2xl">📜</span>
             <h2 className="text-lg font-bold text-slate-100">
-              Maharshi Jaimini Upadesha Sutras (जैमिनि उपदेश सूत्राणि)
+              Maharshi Jaimini Upadesha Sutras & Master Suite (जैमिनि सर्वस्वम्)
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Complete 4 Adhyayas — Rashi Drishti, Karakamsha 12 Bhavas, Ishta Devata, Chara Dasha System, 3-Pair Longevity (Ayurdaya) & Upapada Lagna.
+            Complete 4 Adhyayas, Iranganti Rangacharya Manual, Shoola Dasha, Varnada Lagna & 12 Arudha Padas with Exception Rules.
           </p>
         </div>
 
@@ -39,6 +44,13 @@ export default function JaiminiSutrasDeck() {
             <div className="text-xs font-black text-slate-100 flex items-center gap-1 justify-center">
               <span>👑</span>
               <span>{report.atmakarakaPlanet} in {report.karakamshaSign} (D9)</span>
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-emerald-950/50 to-slate-900 px-3 py-1.5 rounded-xl border border-emerald-500/40 text-center">
+            <div className="text-[9px] text-emerald-400 uppercase tracking-wider font-bold">Varnada Lagna (VL)</div>
+            <div className="text-xs font-black text-slate-100 flex items-center gap-1 justify-center">
+              <span>🌿</span>
+              <span>{rangacharyaReport.varnadaLagnaSign}</span>
             </div>
           </div>
           <div className="bg-gradient-to-r from-purple-950/50 to-slate-900 px-3 py-1.5 rounded-xl border border-purple-500/40 text-center">
@@ -107,6 +119,36 @@ export default function JaiminiSutrasDeck() {
           ⏳ Chara Dasha Timeline
         </button>
         <button
+          onClick={() => setActiveTab("varnada")}
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "varnada"
+              ? "bg-amber-600 text-white shadow"
+              : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
+          }`}
+        >
+          🌿 Varnada Lagna & 12 Padas
+        </button>
+        <button
+          onClick={() => setActiveTab("shoola")}
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "shoola"
+              ? "bg-amber-600 text-white shadow"
+              : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
+          }`}
+        >
+          ⚡ Shoola Dasha (Ayurdaya)
+        </button>
+        <button
+          onClick={() => setActiveTab("arudha")}
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "arudha"
+              ? "bg-amber-600 text-white shadow"
+              : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
+          }`}
+        >
+          🔮 12 Arudha Padas & Exceptions
+        </button>
+        <button
           onClick={() => setActiveTab("upapada")}
           className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             activeTab === "upapada"
@@ -124,7 +166,7 @@ export default function JaiminiSutrasDeck() {
               : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
           }`}
         >
-          🛡️ 3-Pairs Longevity & Raja Yogas
+          🛡️ Brahma, Rudra & Longevity
         </button>
       </div>
 
@@ -138,70 +180,59 @@ export default function JaiminiSutrasDeck() {
             </span>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2">
               {report.karakamshaBhavas.map((b) => {
-                const isSelected = selectedBhavaNum === b.bhavaNum;
+                const isSel = b.bhavaNum === selectedBhavaNum;
                 return (
-                  <div
+                  <button
                     key={b.bhavaNum}
                     onClick={() => setSelectedBhavaNum(b.bhavaNum)}
-                    className={`p-2.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
-                      isSelected
-                        ? "bg-amber-600/20 border-amber-400 shadow-lg ring-1 ring-amber-400"
-                        : "bg-slate-950/60 border-slate-800 hover:bg-slate-900"
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      isSel
+                        ? "bg-amber-950/60 border-amber-500/80 text-white shadow"
+                        : "bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-slate-100">House {b.bhavaNum}</span>
-                      <span className="text-[10px] text-amber-400 font-bold">{b.signName.slice(0, 3)}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-amber-400">Bhava {b.bhavaNum}</span>
+                      <span className="text-[10px] text-slate-500">{b.signName.slice(0, 3)}</span>
                     </div>
-                    <div className="text-[10px] text-slate-400 truncate mt-1">
-                      {b.planetsPresent.length ? b.planetsPresent.join(", ") : "Empty"}
-                    </div>
-                  </div>
+                    <div className="text-xs font-black text-slate-100 truncate mt-0.5">{b.signification}</div>
+                  </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Detailed Bhava Inspector */}
-          <div className="lg:col-span-2 bg-slate-950/90 p-5 rounded-2xl border border-slate-800 space-y-4">
-            <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
+          {/* Active Karakamsha Bhava Details */}
+          <div className="lg:col-span-2 p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
-                <span className="text-[10px] text-amber-400 uppercase tracking-wider font-bold">
-                  Karakamsha Bhava Analysis (Sage Jaimini Sutras)
+                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">
+                  House {activeBhava.bhavaNum} from Karakamsha ({report.karakamshaSign})
                 </span>
-                <h4 className="text-base font-black text-slate-100 mt-0.5">
-                  House {activeBhava.bhavaNum} from KL: {activeBhava.signName}
-                </h4>
-                <div className="text-xs text-amber-300 font-medium mt-0.5">
-                  {activeBhava.signification}
-                </div>
+                <h3 className="text-base font-black text-slate-100 mt-0.5">
+                  {activeBhava.signification} ({activeBhava.signName})
+                </h3>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-slate-400 uppercase block font-bold">Karakamsha Base</span>
-                <span className="text-xs font-black text-amber-300">{report.atmakarakaPlanet} in {report.karakamshaSign}</span>
-              </div>
-            </div>
-
-            {/* Occupants & Rashi Drishti Aspects */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                <span className="text-[10px] text-slate-400 block font-bold">Planets Occupying (Navamsha D9):</span>
-                <span className="text-xs font-bold text-slate-100 mt-0.5 block">
-                  {activeBhava.planetsPresent.length ? activeBhava.planetsPresent.join(", ") : "None (Empty)"}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                <span className="text-[10px] text-slate-400 block font-bold">Aspecting Planets (Rashi Drishti):</span>
-                <span className="text-xs font-bold text-amber-300 mt-0.5 block">
-                  {activeBhava.aspectingPlanets.length ? activeBhava.aspectingPlanets.join(", ") : "None"}
+                <span className="text-[10px] text-slate-400 block">Occupying Grahas</span>
+                <span className="text-xs font-black text-amber-300">
+                  {activeBhava.planetsPresent.length > 0 ? activeBhava.planetsPresent.join(", ") : "None (Vacant)"}
                 </span>
               </div>
             </div>
 
-            {/* Sutra Phala */}
-            <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30 space-y-1 text-xs">
-              <span className="text-amber-300 font-bold block">📜 Classical Jaimini Sutra Phala:</span>
-              <p className="text-slate-200 leading-relaxed">{activeBhava.sutraPhala}</p>
+            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
+              <span className="text-[10px] text-slate-400 uppercase font-bold">Rashi Drishti Aspecting Grahas:</span>
+              <p className="text-xs text-slate-200 leading-relaxed">
+                {activeBhava.aspectingPlanets.length > 0 ? activeBhava.aspectingPlanets.join(", ") : "None"}
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
+              <span className="text-[10px] text-emerald-400 uppercase font-bold">Classical Jaimini Sutra Phala:</span>
+              <p className="text-xs text-slate-300 leading-relaxed font-serif">
+                {activeBhava.sutraPhala}
+              </p>
             </div>
           </div>
         </div>
@@ -210,206 +241,215 @@ export default function JaiminiSutrasDeck() {
       {/* TAB 2: CHARA DASHA TIMELINE */}
       {activeTab === "charadasha" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-            <div>
-              <h4 className="text-sm font-black text-slate-100">Jaimini Chara Dasha Master Cycle</h4>
-              <p className="text-xs text-slate-400">
-                Progression Direction: <strong className="text-amber-300">{report.charaDasha.progressionDirection}</strong>
-              </p>
-            </div>
-            <span className="text-[10px] bg-amber-950 text-amber-300 px-2.5 py-1 rounded-lg border border-amber-800 font-bold">
-              Sign-Based Timing
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-slate-400 font-bold">
+              Progression Mode: <strong className="text-slate-100">{report.charaDasha.progressionDirection}</strong>
+            </span>
+            <span className="text-xs text-purple-400 font-bold">
+              Active: {report.charaDasha.activeMahadasha.signName} (until {new Date(report.charaDasha.activeMahadasha.endDate).getFullYear()})
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {report.charaDasha.periods.map((p, idx) => (
-              <div
-                key={idx}
-                className={`p-4 rounded-xl border transition-all flex flex-col justify-between ${
-                  p.isActive
-                    ? "bg-amber-950/40 border-amber-400 shadow-xl ring-1 ring-amber-400"
-                    : "bg-slate-950 border-slate-800"
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-black text-slate-100">{p.signName}</span>
-                      {p.isActive && (
-                        <span className="text-[9px] bg-emerald-500 text-slate-950 font-black px-1.5 py-0.5 rounded">
-                          CURRENT
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[10px] text-amber-300 font-mono font-bold">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {report.charaDasha.periods.map((p, idx) => {
+              const isActive = p.signName === report.charaDasha.activeMahadasha.signName;
+              return (
+                <div
+                  key={idx}
+                  className={`p-3.5 rounded-xl border transition-all ${
+                    isActive
+                      ? "bg-purple-950/40 border-purple-500/80 text-white shadow-lg ring-1 ring-purple-500"
+                      : "bg-slate-950 border-slate-800 text-slate-400"
+                  }`}
+                >
+                  <div className="flex justify-between items-center border-b border-slate-800/80 pb-1.5">
+                    <span className="text-xs font-black text-slate-100">{p.signName}</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-purple-300">
                       {p.durationYears} Years
                     </span>
                   </div>
-
-                  <div className="mt-2 space-y-1 text-xs">
-                    <div className="text-[11px] text-slate-400 font-mono">
-                      {p.startDate} ➔ {p.endDate}
-                    </div>
-                    <div className="text-[11px] text-slate-300">
-                      <strong>Sign Lord:</strong> {p.lord}
-                    </div>
-                    <p className="text-slate-300 text-[11px] leading-tight pt-1">
-                      {p.keySignifications}
-                    </p>
+                  <div className="text-[10px] text-slate-400 mt-2">
+                    {new Date(p.startDate).getFullYear()} - {new Date(p.endDate).getFullYear()}
+                  </div>
+                  <div className="text-[10px] text-slate-300 mt-1 line-clamp-2">
+                    {p.keySignifications}
                   </div>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: VARNADA LAGNA & 12 PADAS (PANDIT IRANGANTI RANGACHARYA) */}
+      {activeTab === "varnada" && (
+        <div className="space-y-4">
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] text-emerald-400 uppercase font-bold">Iranganti Rangacharya System</span>
+              <h4 className="text-sm font-bold text-slate-100 mt-0.5">
+                Varnada Lagna (VL): {rangacharyaReport.varnadaLagnaSign}
+              </h4>
+            </div>
+            <span className="text-xs text-slate-400 max-w-md text-right">
+              Varnada Padas diagnose societal eminence, vitality, and vulnerability cycles across the 12 houses.
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {rangacharyaReport.varnadaPadas.map((vp, idx) => (
+              <div key={idx} className="p-3.5 rounded-xl bg-slate-950 border border-emerald-500/30 space-y-1.5">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                  <span className="text-xs font-black text-slate-100 truncate">{vp.name.split(" - ")[0]}</span>
+                  <span className="text-[10px] font-bold text-emerald-400 px-1.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-800">
+                    {vp.signName}
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-300 font-medium">{vp.name.split(" - ")[1]}</div>
+                <div className="text-[9px] text-slate-400">{vp.vitalityImpact}</div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* TAB 3: UPAPADA LAGNA & MARRIAGE */}
-      {activeTab === "upapada" && (
+      {/* TAB 4: SHOOLA DASHA (AYURDAYA CYCLES) */}
+      {activeTab === "shoola" && (
         <div className="space-y-4">
-          <div>
-            <h4 className="text-sm font-black text-slate-100">Upapada Lagna (UL) & Marital Longevity Engine</h4>
-            <p className="text-xs text-slate-400">
-              Sage Jaimini's definitive sutras on spouse characteristics, marital stability, and remedy prescriptions.
-            </p>
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] text-purple-400 uppercase font-bold">Jaimini Ayurdaya Health Clock</span>
+              <h4 className="text-sm font-bold text-slate-100 mt-0.5">
+                Shoola Dasha (9-Year Sign Health Cycles)
+              </h4>
+            </div>
+            <span className="text-xs text-slate-400 max-w-md text-right">
+              Evaluates physical resilience, immunity windows, and Maraka/Rudra vulnerability phases.
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {rangacharyaReport.shoolaDashaPeriods.map((sp, idx) => (
+              <div
+                key={idx}
+                className={`p-3.5 rounded-xl border space-y-1.5 ${
+                  sp.isMarakaOrRudra
+                    ? "bg-rose-950/20 border-rose-500/40 text-slate-100"
+                    : "bg-slate-950 border-slate-800 text-slate-300"
+                }`}
+              >
+                <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                  <span className="text-xs font-black text-slate-100">{sp.signName}</span>
+                  <span className="text-[10px] font-bold text-purple-400">{sp.ageRange}</span>
+                </div>
+                <div className="text-[10px] text-slate-400">{sp.startYear} - {sp.endYear}</div>
+                <div className="text-[9px] text-slate-300">{sp.healthCrisisVulnerability}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: 12 ARUDHA PADAS & EXCEPTION RULES */}
+      {activeTab === "arudha" && (
+        <div className="space-y-4">
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <span className="text-[10px] text-amber-400 uppercase font-bold">BPHS & Jaimini Canon Exception Protocol</span>
+              <h4 className="text-sm font-bold text-slate-100 mt-0.5">
+                12 Arudha Padas (A1/AL to UL/A12)
+              </h4>
+            </div>
+            <div className="text-xs text-amber-300">
+              {rangacharyaReport.arudhaRajaYogas.join(" • ") || "Standard Arudha alignments active."}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {rangacharyaReport.arudhaPadasWithExceptions.map((ap, idx) => (
+              <div
+                key={idx}
+                className={`p-3.5 rounded-xl border space-y-1.5 ${
+                  ap.isExceptionApplied
+                    ? "bg-amber-950/20 border-amber-500/50"
+                    : "bg-slate-950 border-slate-800"
+                }`}
+              >
+                <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                  <span className="text-xs font-black text-slate-100">{ap.code}</span>
+                  <span className="text-[10px] font-bold text-amber-400 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800">
+                    {ap.signName}
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-300 font-medium">{ap.houseName}</div>
+                <div className="text-[9px] text-slate-400">{ap.exceptionRuleNote}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 6: UPAPADA LAGNA (UL) */}
+      {activeTab === "upapada" && (
+        <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <span className="text-[10px] text-pink-400 font-bold uppercase">Upapada Lagna (UL - 12th House Arudha)</span>
+              <h3 className="text-base font-black text-slate-100 mt-0.5">
+                UL Sign: {report.upapada.upapadaSign} (Second from UL: {report.upapada.secondFromUpapadaSign})
+              </h3>
+            </div>
+            <span className="text-xs font-bold px-2 py-0.5 rounded bg-pink-950 text-pink-300 border border-pink-800">
+              Harmony: {report.upapada.maritalHarmonyScore}%
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* UL Overview Card */}
-            <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3 shadow-xl flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <div>
-                    <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">
-                      12th Arudha (A12)
-                    </span>
-                    <h4 className="text-base font-black text-slate-100 mt-0.5">
-                      Upapada: {report.upapada.upapadaSign}
-                    </h4>
-                  </div>
-                  <span className="text-xs font-mono font-bold bg-slate-900 text-slate-300 px-2 py-0.5 rounded border border-slate-800">
-                    2nd from UL: {report.upapada.secondFromUpapadaSign}
-                  </span>
-                </div>
-
-                <div className="mt-3 space-y-2 text-xs">
-                  <div>
-                    <span className="text-slate-400 font-bold block mb-0.5">Benefic Rays to UL (Rashi Drishti):</span>
-                    <span className="text-emerald-300 font-bold">
-                      {report.upapada.beneficAspectsToUL.length ? report.upapada.beneficAspectsToUL.join(", ") : "None"}
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-slate-400 font-bold block mb-0.5">Malefic Rays to UL:</span>
-                    <span className="text-rose-300 font-bold">
-                      {report.upapada.maleficAspectsToUL.length ? report.upapada.maleficAspectsToUL.join(", ") : "None"}
-                    </span>
-                  </div>
-
-                  <p className="text-slate-200 text-[11px] leading-relaxed pt-1 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-                    {report.upapada.spouseProfile}
-                  </p>
-                </div>
-              </div>
-
-              {/* Harmony Score Bar */}
-              <div className="space-y-1.5 pt-2">
-                <div className="flex justify-between text-xs font-bold">
-                  <span className="text-slate-400">Marital Harmony Index:</span>
-                  <span className="text-amber-400">{report.upapada.maritalHarmonyScore}%</span>
-                </div>
-                <div className="w-full bg-slate-900 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-amber-500 to-emerald-500 h-2 rounded-full transition-all"
-                    style={{ width: `${report.upapada.maritalHarmonyScore}%` }}
-                  ></div>
-                </div>
-              </div>
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+              <span className="text-[10px] text-slate-400 uppercase font-bold">Spouse Disposition & Profile:</span>
+              <p className="text-xs text-slate-200 leading-relaxed">{report.upapada.spouseProfile}</p>
             </div>
-
-            {/* Verdict & Remedies */}
-            <div className="bg-slate-950 p-5 rounded-2xl border border-amber-500/40 space-y-3 shadow-xl flex flex-col justify-between">
-              <div className="space-y-2 text-xs">
-                <span className="text-[10px] text-amber-400 uppercase font-bold tracking-wider block">
-                  Marital Longevity Verdict (Jaimini Adhyaya 4)
-                </span>
-                <p className="text-slate-200 text-xs leading-relaxed font-semibold">
-                  {report.upapada.maritalLongevityVerdict}
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs space-y-1">
-                <strong className="text-amber-300 block mb-0.5">🕊️ Classical Jaimini Upapada Remedy:</strong>
-                <p className="leading-relaxed">{report.upapada.jaiminiRemedies}</p>
-              </div>
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+              <span className="text-[10px] text-pink-400 uppercase font-bold">Jaimini Marital Remedy:</span>
+              <p className="text-xs text-pink-200 leading-relaxed">{report.upapada.jaiminiRemedies}</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* TAB 4: 3-PAIRS LONGEVITY & RAJA YOGAS */}
+      {/* TAB 7: BRAHMA, RUDRA & LONGEVITY */}
       {activeTab === "longevity" && (
-        <div className="space-y-4">
-          <div>
-            <h4 className="text-sm font-black text-slate-100">Jaimini 3-Pair Longevity (Ayurdaya) & Raja Yogas</h4>
-            <p className="text-xs text-slate-400">
-              Sage Jaimini's mathematical longevity modality pairings and executive leadership Raja Yogas.
-            </p>
+        <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+          <div className="border-b border-slate-800 pb-3">
+            <span className="text-[10px] text-amber-400 uppercase font-bold">Jaimini 3-Pairs & Vital Determinators</span>
+            <h3 className="text-base font-black text-slate-100 mt-0.5">
+              Ayurdaya Composite: {report.longevity.compositeLongevity}
+            </h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* 3-Pair Ayurdaya Card */}
-            <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3 shadow-xl">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="text-xs font-black text-slate-100">3-Pairs Modality Calculator</span>
-                <span className="text-xs font-bold text-amber-300 bg-amber-950 px-2 py-0.5 rounded border border-amber-800">
-                  {report.longevity.compositeLongevity}
-                </span>
-              </div>
-
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between p-2 rounded bg-slate-900 border border-slate-800">
-                  <span className="text-slate-400">Pair 1 (Lagna Lord & 8th Lord):</span>
-                  <span className="font-bold text-slate-200">{report.longevity.pair1Verdict}</span>
-                </div>
-                <div className="flex justify-between p-2 rounded bg-slate-900 border border-slate-800">
-                  <span className="text-slate-400">Pair 2 (Lagna & Moon):</span>
-                  <span className="font-bold text-slate-200">{report.longevity.pair2Verdict}</span>
-                </div>
-                <div className="flex justify-between p-2 rounded bg-slate-900 border border-slate-800">
-                  <span className="text-slate-400">Pair 3 (Lagna & Hora Lagna):</span>
-                  <span className="font-bold text-slate-200">{report.longevity.pair3Verdict}</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
-                  <div className="p-2 rounded bg-slate-900/60 border border-slate-800">
-                    <strong className="text-slate-400 block">Rudra Graha:</strong>
-                    <span className="text-rose-400 font-bold">{report.longevity.rudraGraha}</span>
-                  </div>
-                  <div className="p-2 rounded bg-slate-900/60 border border-slate-800">
-                    <strong className="text-slate-400 block">Brahma Graha:</strong>
-                    <span className="text-emerald-400 font-bold">{report.longevity.brahmaGraha}</span>
-                  </div>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+              <span className="text-[10px] text-amber-400 uppercase font-bold block">Brahma (Prana Sustainer)</span>
+              <span className="text-xs font-black text-slate-100 block mt-1">
+                {rangacharyaReport.brahmaRudra.brahmaPlanet} in {rangacharyaReport.brahmaRudra.brahmaSign}
+              </span>
             </div>
-
-            {/* Raja Yogas Card */}
-            <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3 shadow-xl">
-              <div className="border-b border-slate-800 pb-2">
-                <span className="text-xs font-black text-slate-100">Classical Jaimini Raja Yogas</span>
-              </div>
-
-              <div className="space-y-2 text-xs">
-                {report.jaiminiRajaYogas.map((yoga, idx) => (
-                  <div key={idx} className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-200 leading-relaxed">
-                    {yoga}
-                  </div>
-                ))}
-              </div>
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+              <span className="text-[10px] text-rose-400 uppercase font-bold block">Rudra (Karmic Destroyer)</span>
+              <span className="text-xs font-black text-slate-100 block mt-1">
+                {rangacharyaReport.brahmaRudra.rudraPlanet} in {rangacharyaReport.brahmaRudra.rudraSign}
+              </span>
             </div>
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+              <span className="text-[10px] text-purple-400 uppercase font-bold block">Maheshwara (AK 8th Lord)</span>
+              <span className="text-xs font-black text-slate-100 block mt-1">
+                {rangacharyaReport.brahmaRudra.maheshwaraPlanet} in {rangacharyaReport.brahmaRudra.maheshwaraSign}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-300 leading-relaxed">
+            {report.longevity.longevitySummary}
           </div>
         </div>
       )}

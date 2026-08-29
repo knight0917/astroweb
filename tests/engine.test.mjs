@@ -2518,6 +2518,58 @@ test("Classical Sri Ramanujacharya Bhavartha Ratnakara (Dr. B.V. Raman) Verifica
   assert.ok(result.masterRatnakaraSynthesis.length > 30);
 });
 
+test("Classical Jaimini Master Suite (Iranganti Rangacharya & Arudha Exceptions) Verification", async () => {
+  const { evaluateJaiminiRangacharya } = await import("../src/engine/jaiminiRangacharya.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-24T18:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateJaiminiRangacharya(natalEphem);
+
+  // 1. Varnada Lagna & 12 Padas
+  assert.ok(result.varnadaLagnaSign);
+  assert.strictEqual(result.varnadaPadas.length, 12);
+  for (const vp of result.varnadaPadas) {
+    assert.ok(vp.bhava >= 1 && vp.bhava <= 12);
+    assert.ok(vp.name);
+    assert.ok(vp.signName);
+    assert.ok(vp.vitalityImpact.length > 5);
+  }
+
+  // 2. Shoola Dasha 9-year cycles
+  assert.strictEqual(result.shoolaDashaPeriods.length, 12);
+  for (const sp of result.shoolaDashaPeriods) {
+    assert.ok(sp.signName);
+    assert.ok(sp.startYear < sp.endYear);
+    assert.strictEqual(sp.endYear - sp.startYear, 9);
+    assert.ok(sp.ageRange);
+    assert.ok(typeof sp.isMarakaOrRudra === "boolean");
+    assert.ok(sp.healthCrisisVulnerability.length > 5);
+  }
+
+  // 3. Brahma, Rudra & Maheshwara
+  assert.ok(result.brahmaRudra.brahmaPlanet);
+  assert.ok(result.brahmaRudra.rudraPlanet);
+  assert.ok(result.brahmaRudra.maheshwaraPlanet);
+  assert.ok(result.brahmaRudra.longevityAssessment.length > 20);
+
+  // 4. 12 Arudha Padas with Exceptions
+  assert.strictEqual(result.arudhaPadasWithExceptions.length, 12);
+  for (const ap of result.arudhaPadasWithExceptions) {
+    assert.ok(ap.houseNum >= 1 && ap.houseNum <= 12);
+    assert.ok(ap.code);
+    assert.ok(ap.signName);
+    assert.ok(typeof ap.isExceptionApplied === "boolean");
+    assert.ok(ap.exceptionRuleNote.length > 10);
+  }
+
+  // 5. Arudha Raja Yogas & Master Synthesis
+  assert.ok(Array.isArray(result.arudhaRajaYogas));
+  assert.ok(result.masterRangacharyaSynthesis.length > 30);
+});
+
+
 
 
 

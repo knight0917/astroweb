@@ -51,6 +51,7 @@ import { evaluateJatakaChandrika } from "./jatakaChandrika";
 import { evaluateChappannaPrasna } from "./chappannaPrasna";
 import { evaluateBhriguSamhita } from "./bhriguSamhita";
 import { evaluateBhavarthaRatnakara } from "./bhavarthaRatnakara";
+import { evaluateJaiminiRangacharya } from "./jaiminiRangacharya";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -965,6 +966,25 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 47. Jaimini Master Suite (Iranganti Rangacharya & Arudha Exceptions)
+  let jaiminiRangacharyaSummary = "";
+  try {
+    const jr = evaluateJaiminiRangacharya(natalEphemeris);
+    const padasStr = jr.varnadaPadas.slice(0, 6).map((p) => `  - **${p.name}:** Sign: ${p.signName} (${p.vitalityImpact})`).join("\n");
+    const arudhaExcStr = jr.arudhaPadasWithExceptions.filter((a) => a.isExceptionApplied).map((a) => `  - **${a.code} (${a.houseName}):** Sign: ${a.signName} -> *${a.exceptionRuleNote}*`).join("\n");
+
+    jaiminiRangacharyaSummary = [
+      `- **Varnada Lagna (VL):** ${jr.varnadaLagnaSign} (Determining societal status, endurance & bodily vitality)`,
+      `- **Brahma, Rudra & Maheshwara:** ${jr.brahmaRudra.longevityAssessment}`,
+      "- **Key Varnada Padas (V1 to V6):**",
+      padasStr,
+      "- **Arudha Pada Exception Adjustments (BPHS & Jaimini Canon):**",
+      arudhaExcStr || "  - Standard 12 Arudha projections apply.",
+      "- **Active Arudha Raja & Dhana Yogas:** " + (jr.arudhaRajaYogas.join(" | ") || "None active in standard alignment."),
+      "- **Master Jaimini Synthesis:** " + jr.masterRangacharyaSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1217,11 +1237,14 @@ export function buildAstroDossier(
     "",
     "#### 📖 46. BHAVARTHA RATNAKARA (SRI RAMANUJACHARYA / DR. B.V. RAMAN) DOSSIER:",
     bhavarthaRatnakaraSummary,
+    "",
+    "#### 🌿 47. JAIMINI MASTER SUITE (VARNADA LAGNA, SHOOLA DASHA, BRAHMA/RUDRA & ARUDHA EXCEPTIONS) DOSSIER:",
+    jaiminiRangacharyaSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 47. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 48. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 
