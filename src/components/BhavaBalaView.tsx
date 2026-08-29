@@ -15,10 +15,11 @@ import BphsCoreDeck from "./BphsCoreDeck";
 import BrihatJatakaDeck from "./BrihatJatakaDeck";
 import BrihatSamhitaDeck from "./BrihatSamhitaDeck";
 import DevaKeralamDeck from "./DevaKeralamDeck";
+import SukaNadiDeck from "./SukaNadiDeck";
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas" | "bphs" | "jataka" | "samhita" | "keralam">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas" | "bphs" | "jataka" | "samhita" | "keralam" | "suka">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -211,6 +212,16 @@ export default function BhavaBalaView() {
           >
             <span>📜 Deva Keralam (150 Nadi Amshas)</span>
           </button>
+          <button
+            onClick={() => setDisplayMode("suka")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              displayMode === "suka"
+                ? "bg-emerald-600 text-white shadow"
+                : "text-emerald-300 hover:text-white bg-emerald-950/30 border border-emerald-800/40"
+            }`}
+          >
+            <span>🦜 Suka Nadi (Shukacharya)</span>
+          </button>
         </div>
       </div>
 
@@ -274,8 +285,13 @@ export default function BhavaBalaView() {
         <DevaKeralamDeck />
       )}
 
+      {/* Doctrines of Suka Nadi View */}
+      {displayMode === "suka" && (
+        <SukaNadiDeck />
+      )}
+
       {/* Hero House Leaderboard (1st to 12th Rank Cards) */}
-      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && displayMode !== "dashas" && displayMode !== "bphs" && displayMode !== "jataka" && displayMode !== "samhita" && displayMode !== "keralam" && (
+      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && displayMode !== "dashas" && displayMode !== "bphs" && displayMode !== "jataka" && displayMode !== "samhita" && displayMode !== "keralam" && displayMode !== "suka" && (
         <>
         <div className="space-y-3">
         <div className="flex items-center justify-between">

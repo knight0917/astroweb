@@ -30,6 +30,7 @@ import { evaluateBphsCore } from "./bphsCore";
 import { evaluateBrihatJataka } from "./brihatJataka";
 import { evaluateBrihatSamhita } from "./brihatSamhita";
 import { evaluateDevaKeralam } from "./devaKeralam";
+import { calculateSukaNadi } from "./sukaNadi";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -456,6 +457,28 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 24. Doctrines of Suka Nadi (Maharshi Shukacharya) Suite
+  let sukaSummary = "";
+  try {
+    const suka = calculateSukaNadi(natalEphemeris);
+    const topTrine = suka.directionalTrines.sort((a, b) => b.strengthScore - a.strengthScore)[0];
+    const pastLifeStr = suka.pastLifeKarma.length > 0
+      ? suka.pastLifeKarma.map((k) => `- ☸️ **${k.sanskritTitle} (${k.karmaPattern}):** ${k.manifestationInPresentLife} -> **Suka Parihara:** ${k.classicalSukaParihara}`).join("\n")
+      : "- High Deva Punya; auspicious karmic continuity.";
+
+    sukaSummary = [
+      "- **Jeeva Karaka (Jupiter — Soul & Life Path):** Situated in " + suka.jeevaKaraka.signName + " (" + suka.jeevaKaraka.degrees + "°) • Archetype: **" + suka.jeevaKaraka.primaryArchetype + "** • Trine Connections: " + (suka.jeevaKaraka.trinePlanets.join(", ") || "None") + " • 2nd Feeder: " + (suka.jeevaKaraka.secondHousePlanets.join(", ") || "None"),
+      "- **Jeeva Nadi Synthesis:** " + suka.jeevaKaraka.synthesis,
+      "- **Karma Karaka (Saturn — Professional Destiny):** Situated in " + suka.karmaKaraka.signName + " (" + suka.karmaKaraka.degrees + "°) • Archetype: **" + suka.karmaKaraka.primaryArchetype + "** • Connections: " + ([...suka.karmaKaraka.conjoinedPlanets, ...suka.karmaKaraka.trinePlanets, ...suka.karmaKaraka.secondHousePlanets].join(", ") || "Independent") + " • Career Impact: " + suka.karmaKaraka.careerAndDestinyImpact,
+      "- **Bhoga Karaka (Venus — Prosperity & Harmony):** " + suka.bhogaKaraka.signName + " • " + suka.bhogaKaraka.primaryArchetype,
+      "- **Dominant Directional Trine (1-5-9 Matrix):** **" + topTrine.sanskritName + "** (" + topTrine.direction + ") with " + topTrine.planetsPresent.join(", ") + " • " + topTrine.lifeSignification,
+      "- **Past Life Karma Diagnosis & Classical Suka Pariharas:**",
+      pastLifeStr,
+      "- **Special Suka Nadi Yogas:** " + suka.specialYogas.join(" • "),
+      "- **Master Suka Nadi Synthesis:** " + suka.masterSukaSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -645,11 +668,14 @@ export function buildAstroDossier(
     "",
     "#### 📜 25. DEVA KERALAM (CHANDRA KALA NADI) 150 NADI AMSHAS DOSSIER:",
     dkSummary,
+    "",
+    "#### 🦜 26. DOCTRINES OF SUKA NADI (MAHARSHI SHUKACHARYA) DOSSIER:",
+    sukaSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 26. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 27. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

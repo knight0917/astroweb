@@ -1504,4 +1504,51 @@ test("Classical Deva Keralam (Chandra Kala Nadi) 150 Nadi Amshas Verification", 
   assert.ok(result.masterDevaKeralamSynthesis.length > 30);
 });
 
+test("Classical Doctrines of Suka Nadi (Maharshi Shukacharya) Verification", async () => {
+  const { calculateSukaNadi } = await import("../src/engine/sukaNadi.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = calculateSukaNadi(natalEphem);
+
+  // 1. Karakatwa Blends
+  assert.ok(result.jeevaKaraka);
+  assert.strictEqual(result.jeevaKaraka.planet, "Jupiter");
+  assert.ok(result.jeevaKaraka.primaryArchetype.length > 5);
+  assert.ok(result.jeevaKaraka.synthesis.length > 20);
+  assert.ok(result.jeevaKaraka.careerAndDestinyImpact.length > 10);
+
+  assert.ok(result.karmaKaraka);
+  assert.strictEqual(result.karmaKaraka.planet, "Saturn");
+  assert.ok(result.karmaKaraka.primaryArchetype.length > 5);
+
+  assert.ok(result.bhogaKaraka);
+  assert.strictEqual(result.bhogaKaraka.planet, "Venus");
+
+  // 2. Directional Trines (4 Groups)
+  assert.strictEqual(result.directionalTrines.length, 4);
+  for (const dt of result.directionalTrines) {
+    assert.strictEqual(dt.signs.length, 3);
+    assert.ok(dt.sanskritName);
+    assert.ok(dt.lifeSignification.length > 15);
+  }
+
+  // 3. Past Life Karma
+  assert.ok(result.pastLifeKarma.length > 0);
+  assert.ok(result.pastLifeKarma[0].karmaPattern);
+  assert.ok(result.pastLifeKarma[0].classicalSukaParihara.length > 15);
+
+  // 4. Age Progression Cycles
+  assert.ok(result.ageCycles.length >= 6);
+  assert.ok(result.ageCycles[0].ageWindow);
+  assert.ok(result.ageCycles[0].karmicMilestone);
+
+  // 5. Special Yogas & Master Synthesis
+  assert.ok(result.specialYogas.length > 0);
+  assert.ok(result.masterSukaSynthesis.length > 30);
+});
+
+
 

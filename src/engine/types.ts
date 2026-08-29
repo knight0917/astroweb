@@ -220,3 +220,57 @@ export interface DevaKeralamAnalysis {
   ayurdayaInsight: string;
   masterDevaKeralamSynthesis: string;
 }
+
+export interface SukaNadiKarakaBlend {
+  karakaName: string; // e.g. "Jeeva Karaka (Jupiter)"
+  planet: string;
+  signName: string;
+  degrees: number;
+  conjoinedPlanets: string[];
+  trinePlanets: string[]; // 1-5-9
+  secondHousePlanets: string[]; // 2nd (feeder)
+  twelfthHousePlanets: string[]; // 12th (obstacle/subconscious)
+  seventhHousePlanets: string[]; // 7th (opposition/mirror)
+  synthesis: string;
+  primaryArchetype: string;
+  careerAndDestinyImpact: string;
+}
+
+export interface SukaDirectionalTrine {
+  direction: "East (Dharma / Fire)" | "South (Artha / Earth)" | "West (Kama / Air)" | "North (Moksha / Water)";
+  sanskritName: string;
+  signs: string[];
+  planetsPresent: string[];
+  dominantPlanet: string;
+  strengthScore: number;
+  lifeSignification: string;
+}
+
+export interface SukaPastLifeKarma {
+  karmaPattern: string;
+  sanskritTitle: string;
+  primaryPlanetaryCause: string;
+  manifestationInPresentLife: string;
+  classicalSukaParihara: string;
+}
+
+export interface SukaAgeCycle {
+  ageWindow: string;
+  cycleType: "Jupiter 12-Year Round" | "Saturn 30-Year Round";
+  activatedHouses: string;
+  karmicMilestone: string;
+  guidance: string;
+}
+
+export interface SukaNadiAnalysis {
+  jeevaKaraka: SukaNadiKarakaBlend;
+  karmaKaraka: SukaNadiKarakaBlend;
+  bhogaKaraka: SukaNadiKarakaBlend;
+  otherKarakas: Record<string, SukaNadiKarakaBlend>;
+  directionalTrines: SukaDirectionalTrine[];
+  pastLifeKarma: SukaPastLifeKarma[];
+  ageCycles: SukaAgeCycle[];
+  specialYogas: string[];
+  masterSukaSynthesis: string;
+}
+
