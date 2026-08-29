@@ -62,6 +62,7 @@ import { evaluatePatanjaliYoga } from "./patanjaliYoga";
 import { evaluateKotaChakra, evaluateDashaLordTransit } from "./kotaChakra";
 import { evaluateRaman300Combinations, evaluateLalKitabTeva, evaluateNarayanaKavacham } from "./raman300Combinations";
 import { evaluateBenchmarkResonance } from "./benchmarkHoroscopes";
+import { evaluatePrasnaTantra, evaluateMargabandhuStotram } from "./prasnaTantra";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -1197,6 +1198,25 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 59. Sri Neelakanta Prasna Tantra 16 Tajik Yogas, 12 Sahams & Margabandhu Shield
+  let prasnaTantraSummary = "";
+  try {
+    const pt = evaluatePrasnaTantra(natalEphemeris);
+    const mb = evaluateMargabandhuStotram(natalEphemeris);
+    const sahamsStr = pt.sahams.slice(0, 6).map((s) => `  - **${s.sahamName.split(" ")[0]} Saham (${s.sanskritTitle}):** ${s.signName} ${s.degreesInSign}° (H${s.houseNumber}) -> ${s.significance}`).join("\n");
+    const activeYogasStr = pt.activeYogas.map((y) => `  - **${y.yogaName} (${y.sanskritTitle}):** [${y.aspectType}] -> ${y.horaryFruitionVerdict}`).join("\n");
+
+    prasnaTantraSummary = [
+      `- **Query Success Potency:** **${pt.querySuccessScore}%** (${pt.primaryIthasalaStatus})`,
+      "- **Active Classical Tajik Yogas:**",
+      activeYogasStr || "  - Operating via secondary aspects.",
+      "- **Key 6 Classical Tajik Sahams (Sensitive Points):**",
+      sahamsStr,
+      `- **Sri Margabandhu Journey Shield:** Active (${mb.shieldActivationScore}% Strength) -> Protective Kavacham for all travels and transitions.`,
+      "- **Master Prasna Verdict:** " + pt.masterPrasnaVerdict + " " + mb.masterMargabandhuSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1483,6 +1503,9 @@ export function buildAstroDossier(
     "",
     "#### 🏛️ 58. EMPIRICAL BENCHMARK HOROSCOPES & ARCHETYPAL RESONANCE DOSSIER:",
     benchmarkSummary,
+    "",
+    "#### 🔮 59. SRI NEELAKANTA PRASNA TANTRA 16 TAJIK YOGAS & 12 SAHAMS DOSSIER:",
+    prasnaTantraSummary,
   ];
 
   if (matchmakingSummary) {

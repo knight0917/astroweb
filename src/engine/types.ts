@@ -1623,6 +1623,60 @@ export interface BenchmarkAnalysis {
   masterBenchmarkSynthesis: string;
 }
 
+// ==========================================
+// 61. SRI NEELAKANTA PRASNA TANTRA & TAJIK SAHAMS
+// ==========================================
+
+export interface TajikYogaItem {
+  yogaNumber: number; // 1 to 16
+  yogaName: string;
+  sanskritTitle: string;
+  fasterPlanet: string;
+  slowerPlanet: string;
+  aspectType: "Conjunction (1st)" | "Sextile (3rd/11th - 60°)" | "Trine (5th/9th - 120°)" | "Square (4th/10th - 90°)" | "Opposition (7th - 180°)" | "No Aspect";
+  isWithinDeeptamsha: boolean;
+  isApplying: boolean;
+  isActive: boolean;
+  horaryFruitionVerdict: "Guaranteed Swift Success" | "Success through Mediation" | "Reversal / Friction" | "Delayed / Obstacles" | "Matter Concluded / Past";
+  classicalFormula: string;
+}
+
+export interface TajikSahamItem {
+  sahamNumber: number; // 1 to 12
+  sahamName: string;
+  sanskritTitle: string;
+  longitude: number;
+  signName: string;
+  degreesInSign: number;
+  houseNumber: number;
+  significance: string;
+  calculationRule: string;
+}
+
+export interface PrasnaTantraAnalysis {
+  tajikYogas: TajikYogaItem[];
+  activeYogas: TajikYogaItem[];
+  sahams: TajikSahamItem[];
+  primaryIthasalaStatus: string;
+  querySuccessScore: number; // 0-100%
+  masterPrasnaVerdict: string;
+}
+
+export interface MargabandhuStotramItem {
+  verseNumber: number;
+  deityInvoked: string;
+  sanskritShloka: string;
+  englishMeaning: string;
+  travelProtectionDomain: string;
+}
+
+export interface MargabandhuAnalysis {
+  verses: MargabandhuStotramItem[];
+  shieldActivationScore: number; // 0-100%
+  masterMargabandhuSynthesis: string;
+}
+
+
 
 
 

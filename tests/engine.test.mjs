@@ -2988,6 +2988,69 @@ test("Empirical Benchmark Horoscopes & Archetypal Karmic Resonance Engine Verifi
   assert.ok(result.masterBenchmarkSynthesis.length > 25);
 });
 
+test("Sri Neelakanta Prasna Tantra 16 Tajik Yogas, 12 Sahams & Margabandhu Shield Engine Verification", async () => {
+  const { evaluatePrasnaTantra, evaluateMargabandhuStotram, DEEPTAMSHAS, PLANET_SPEED_RANK } = await import("../src/engine/prasnaTantra.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Constants check
+  assert.strictEqual(DEEPTAMSHAS.Sun, 15);
+  assert.strictEqual(DEEPTAMSHAS.Moon, 12);
+  assert.strictEqual(PLANET_SPEED_RANK.Moon, 1);
+
+  // 2. 16 Tajik Yogas & Horary
+  const pt = evaluatePrasnaTantra(natalEphem);
+  assert.ok(Array.isArray(pt.tajikYogas));
+  assert.ok(pt.tajikYogas.length >= 7);
+  for (const y of pt.tajikYogas) {
+    assert.ok(y.yogaNumber >= 1 && y.yogaNumber <= 16);
+    assert.ok(y.yogaName);
+    assert.ok(y.sanskritTitle);
+    assert.ok(y.fasterPlanet);
+    assert.ok(y.slowerPlanet);
+    assert.ok(y.aspectType);
+    assert.strictEqual(typeof y.isWithinDeeptamsha, "boolean");
+    assert.strictEqual(typeof y.isActive, "boolean");
+    assert.ok(y.horaryFruitionVerdict);
+    assert.ok(y.classicalFormula.length > 10);
+  }
+  assert.ok(pt.primaryIthasalaStatus.length > 10);
+  assert.ok(pt.querySuccessScore >= 0 && pt.querySuccessScore <= 100);
+  assert.ok(pt.masterPrasnaVerdict.length > 25);
+
+  // 3. 12 Tajik Sahams
+  assert.ok(Array.isArray(pt.sahams));
+  assert.strictEqual(pt.sahams.length, 12);
+  for (const s of pt.sahams) {
+    assert.ok(s.sahamNumber >= 1 && s.sahamNumber <= 12);
+    assert.ok(s.sahamName);
+    assert.ok(s.sanskritTitle);
+    assert.ok(s.longitude >= 0 && s.longitude < 360);
+    assert.ok(s.signName);
+    assert.ok(s.degreesInSign >= 0 && s.degreesInSign < 30);
+    assert.ok(s.houseNumber >= 1 && s.houseNumber <= 12);
+    assert.ok(s.significance.length > 10);
+    assert.ok(s.calculationRule.length > 5);
+  }
+
+  // 4. Margabandhu Stotram Shield
+  const mb = evaluateMargabandhuStotram(natalEphem);
+  assert.ok(Array.isArray(mb.verses));
+  assert.strictEqual(mb.verses.length, 3);
+  for (const v of mb.verses) {
+    assert.ok(v.verseNumber >= 1);
+    assert.ok(v.deityInvoked);
+    assert.ok(v.sanskritShloka);
+    assert.ok(v.englishMeaning);
+    assert.ok(v.travelProtectionDomain.length > 10);
+  }
+  assert.ok(mb.shieldActivationScore >= 0 && mb.shieldActivationScore <= 100);
+  assert.ok(mb.masterMargabandhuSynthesis.length > 20);
+});
+
+
 
 
 

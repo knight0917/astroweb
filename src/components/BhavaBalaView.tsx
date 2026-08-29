@@ -44,10 +44,11 @@ import PatanjaliYogaDeck from "./PatanjaliYogaDeck";
 import KotaChakraDeck from "./KotaChakraDeck";
 import Raman300CombinationsDeck from "./Raman300CombinationsDeck";
 import BenchmarkHoroscopesDeck from "./BenchmarkHoroscopesDeck";
+import PrasnaTantraDeck from "./PrasnaTantraDeck";
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas" | "bphs" | "jataka" | "samhita" | "keralam" | "suka" | "jaimini" | "gayatri" | "alankara" | "nirnay" | "parijata" | "saravali" | "phaladeepika" | "prasnamarga" | "samhitaskandha" | "sanketanidhi" | "chintamani" | "strijataka" | "satyajataka" | "sugam" | "uttarakalamrita" | "predictions" | "chandrika" | "chappanna" | "bhrigusamhita" | "ratnakara" | "crux" | "kcil" | "nadimaster" | "shashtiamshabcp" | "patanjaliyoga" | "kotachakra" | "raman300" | "benchmarks">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas" | "bphs" | "jataka" | "samhita" | "keralam" | "suka" | "jaimini" | "gayatri" | "alankara" | "nirnay" | "parijata" | "saravali" | "phaladeepika" | "prasnamarga" | "samhitaskandha" | "sanketanidhi" | "chintamani" | "strijataka" | "satyajataka" | "sugam" | "uttarakalamrita" | "predictions" | "chandrika" | "chappanna" | "bhrigusamhita" | "ratnakara" | "crux" | "kcil" | "nadimaster" | "shashtiamshabcp" | "patanjaliyoga" | "kotachakra" | "raman300" | "benchmarks" | "prasnatantra">("bars");
 
   const bhavaBalaResult = useMemo(() => {
     return calculateBhavaBala(ephemeris);
@@ -530,6 +531,16 @@ export default function BhavaBalaView() {
           >
             <span>🏛️ Benchmark Titan Horoscopes</span>
           </button>
+          <button
+            onClick={() => setDisplayMode("prasnatantra")}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              displayMode === "prasnatantra"
+                ? "bg-violet-600 text-white shadow"
+                : "text-violet-300 hover:text-white bg-violet-950/30 border border-violet-800/40"
+            }`}
+          >
+            <span>🔮 Prasna Tantra & Sahams</span>
+          </button>
         </div>
       </div>
 
@@ -738,8 +749,13 @@ export default function BhavaBalaView() {
         <BenchmarkHoroscopesDeck />
       )}
 
+      {/* Prasna Tantra & Sahams View */}
+      {displayMode === "prasnatantra" && (
+        <PrasnaTantraDeck />
+      )}
+
       {/* Hero House Leaderboard (1st to 12th Rank Cards) */}
-      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && displayMode !== "dashas" && displayMode !== "bphs" && displayMode !== "jataka" && displayMode !== "samhita" && displayMode !== "keralam" && displayMode !== "suka" && displayMode !== "jaimini" && displayMode !== "gayatri" && displayMode !== "alankara" && displayMode !== "nirnay" && displayMode !== "parijata" && displayMode !== "saravali" && displayMode !== "phaladeepika" && displayMode !== "prasnamarga" && displayMode !== "samhitaskandha" && displayMode !== "sanketanidhi" && displayMode !== "chintamani" && displayMode !== "strijataka" && displayMode !== "satyajataka" && displayMode !== "sugam" && displayMode !== "uttarakalamrita" && displayMode !== "predictions" && displayMode !== "chandrika" && displayMode !== "chappanna" && displayMode !== "bhrigusamhita" && displayMode !== "ratnakara" && displayMode !== "crux" && displayMode !== "kcil" && displayMode !== "nadimaster" && displayMode !== "shashtiamshabcp" && displayMode !== "patanjaliyoga" && displayMode !== "kotachakra" && displayMode !== "raman300" && displayMode !== "benchmarks" && (
+      {displayMode !== "judgement" && displayMode !== "bhrigu" && displayMode !== "karma" && displayMode !== "dtp" && displayMode !== "marriage" && displayMode !== "techniques" && displayMode !== "education" && displayMode !== "dashas" && displayMode !== "bphs" && displayMode !== "jataka" && displayMode !== "samhita" && displayMode !== "keralam" && displayMode !== "suka" && displayMode !== "jaimini" && displayMode !== "gayatri" && displayMode !== "alankara" && displayMode !== "nirnay" && displayMode !== "parijata" && displayMode !== "saravali" && displayMode !== "phaladeepika" && displayMode !== "prasnamarga" && displayMode !== "samhitaskandha" && displayMode !== "sanketanidhi" && displayMode !== "chintamani" && displayMode !== "strijataka" && displayMode !== "satyajataka" && displayMode !== "sugam" && displayMode !== "uttarakalamrita" && displayMode !== "predictions" && displayMode !== "chandrika" && displayMode !== "chappanna" && displayMode !== "bhrigusamhita" && displayMode !== "ratnakara" && displayMode !== "crux" && displayMode !== "kcil" && displayMode !== "nadimaster" && displayMode !== "shashtiamshabcp" && displayMode !== "patanjaliyoga" && displayMode !== "kotachakra" && displayMode !== "raman300" && displayMode !== "benchmarks" && displayMode !== "prasnatantra" && (
         <>
         <div className="space-y-3">
         <div className="flex items-center justify-between">
