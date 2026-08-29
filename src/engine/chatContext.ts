@@ -61,6 +61,7 @@ import { evaluateShashtiamsha, evaluateBcpWheel, evaluateSuryaRemedies } from ".
 import { evaluatePatanjaliYoga } from "./patanjaliYoga";
 import { evaluateKotaChakra, evaluateDashaLordTransit } from "./kotaChakra";
 import { evaluateRaman300Combinations, evaluateLalKitabTeva, evaluateNarayanaKavacham } from "./raman300Combinations";
+import { evaluateBenchmarkResonance } from "./benchmarkHoroscopes";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -1181,6 +1182,21 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 58. Empirical Benchmark Horoscopes & Archetypal Karmic Resonance
+  let benchmarkSummary = "";
+  try {
+    const bm = evaluateBenchmarkResonance(natalEphemeris);
+    const archetypesStr = bm.archetypes.map((a) => `  - **${a.category}:** **${a.resonancePercentage}% Affinity** (Closest Titans: ${a.closestTitanMatch}) -> ${a.karmicTakeaway}`).join("\n");
+
+    benchmarkSummary = [
+      `- **Primary Dominant Archetype:** **${bm.topArchetype.category}** (**${bm.topArchetype.resonancePercentage}% Resonance**)`,
+      `- **Closest Historical Titan Match:** **${bm.topTitanMatch.name}** (${bm.topTitanMatch.destinyMilestone})`,
+      "- **Archetypal Affinity Across 5 Life Spheres:**",
+      archetypesStr,
+      "- **Master Benchmark Synthesis:** " + bm.masterBenchmarkSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1464,6 +1480,9 @@ export function buildAstroDossier(
     "",
     "#### 🌟 57. DR. B.V. RAMAN 300 IMPORTANT COMBINATIONS & LAL KITAB TEVA DOSSIER:",
     raman300Summary,
+    "",
+    "#### 🏛️ 58. EMPIRICAL BENCHMARK HOROSCOPES & ARCHETYPAL RESONANCE DOSSIER:",
+    benchmarkSummary,
   ];
 
   if (matchmakingSummary) {

@@ -2948,6 +2948,47 @@ test("Classical Dr. B.V. Raman 300 Important Combinations, Lal Kitab Tevas & Nar
   assert.ok(nk.masterKavachamSynthesis.length > 20);
 });
 
+test("Empirical Benchmark Horoscopes & Archetypal Karmic Resonance Engine Verification", async () => {
+  const { evaluateBenchmarkResonance, BENCHMARK_TITANS } = await import("../src/engine/benchmarkHoroscopes.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Titans Database
+  assert.ok(Array.isArray(BENCHMARK_TITANS));
+  assert.ok(BENCHMARK_TITANS.length >= 8);
+  for (const t of BENCHMARK_TITANS) {
+    assert.ok(t.id);
+    assert.ok(t.name);
+    assert.ok(t.category);
+    assert.ok(t.birthData);
+    assert.ok(t.lagnaSign);
+    assert.ok(t.moonSign);
+    assert.ok(t.keyPlanetarySignature.length > 10);
+    assert.ok(Array.isArray(t.paramountYogas));
+    assert.ok(t.paramountYogas.length >= 2);
+    assert.ok(t.destinyMilestone.length > 15);
+  }
+
+  // 2. Resonance Analysis
+  const result = evaluateBenchmarkResonance(natalEphem);
+  assert.ok(Array.isArray(result.archetypes));
+  assert.strictEqual(result.archetypes.length, 5);
+  for (const a of result.archetypes) {
+    assert.ok(a.category);
+    assert.ok(a.resonancePercentage >= 0 && a.resonancePercentage <= 100);
+    assert.ok(a.closestTitanMatch);
+    assert.ok(a.sharedAstrologicalBlueprint.length > 10);
+    assert.ok(a.karmicTakeaway.length > 10);
+  }
+  assert.ok(result.topArchetype);
+  assert.ok(result.topTitanMatch);
+  assert.ok(result.overallResonanceProfile.length > 20);
+  assert.ok(result.masterBenchmarkSynthesis.length > 25);
+});
+
+
 
 
 

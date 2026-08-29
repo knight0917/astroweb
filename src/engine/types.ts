@@ -1591,6 +1591,39 @@ export interface NarayanaKavachamAnalysis {
   masterKavachamSynthesis: string;
 }
 
+// ==========================================
+// 60. EMPIRICAL BENCHMARK HOROSCOPES & ARCHETYPAL RESONANCE
+// ==========================================
+
+export interface BenchmarkHoroscopeItem {
+  id: string;
+  name: string;
+  category: string;
+  birthData: { date: string; time: string; place: string };
+  lagnaSign: string;
+  moonSign: string;
+  keyPlanetarySignature: string;
+  paramountYogas: string[];
+  destinyMilestone: string;
+}
+
+export interface ArchetypeResonanceScore {
+  category: string;
+  resonancePercentage: number; // 0-100%
+  closestTitanMatch: string;
+  sharedAstrologicalBlueprint: string;
+  karmicTakeaway: string;
+}
+
+export interface BenchmarkAnalysis {
+  archetypes: ArchetypeResonanceScore[];
+  topArchetype: ArchetypeResonanceScore;
+  topTitanMatch: BenchmarkHoroscopeItem;
+  overallResonanceProfile: string;
+  masterBenchmarkSynthesis: string;
+}
+
+
 
 
 
