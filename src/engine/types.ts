@@ -1121,6 +1121,28 @@ export interface NadiAgeProgressionCycle {
   keyMilestones: string;
 }
 
+export interface BhavarthaRatnakaraYoga {
+  yogaName: string;
+  adhyayaNumber: number; // 1 to 14
+  category: "Lagna Specific Raja Yoga" | "Special Dhana Yoga" | "Dasha Exception / Override" | "Functional Rule";
+  participatingPlanets: string[];
+  isActive: boolean;
+  classicalSlokaSummary: string;
+  drBvRamanCommentary: string;
+  fruitionStrength: "High (तीव्र)" | "Moderate (मध्यम)" | "Latent / Inactive (सुप्त)";
+}
+
+export interface BhavarthaRatnakaraAnalysis {
+  ascendantSign: string;
+  lagnawiseRulesCount: number;
+  activeYogas: BhavarthaRatnakaraYoga[];
+  dhanaYogas: BhavarthaRatnakaraYoga[];
+  dashaExceptions: BhavarthaRatnakaraYoga[];
+  premierRatnakaraYogakaraka: string;
+  masterRatnakaraSynthesis: string;
+}
+
+
 
 
 

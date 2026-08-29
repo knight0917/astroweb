@@ -50,6 +50,7 @@ import { evaluateVedicPredictions } from "./vedicPredictions";
 import { evaluateJatakaChandrika } from "./jatakaChandrika";
 import { evaluateChappannaPrasna } from "./chappannaPrasna";
 import { evaluateBhriguSamhita } from "./bhriguSamhita";
+import { evaluateBhavarthaRatnakara } from "./bhavarthaRatnakara";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { GeoLocation } from "./types";
@@ -948,6 +949,22 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 44. Sri Ramanujacharya Bhavartha Ratnakara (Dr. B.V. Raman)
+  let bhavarthaRatnakaraSummary = "";
+  try {
+    const br = evaluateBhavarthaRatnakara(natalEphemeris);
+    const activeYogasStr = [...br.activeYogas, ...br.dhanaYogas, ...br.dashaExceptions]
+      .map((y) => `  - **${y.yogaName}** (Adhyaya ${y.adhyayaNumber}, ${y.fruitionStrength}): ${y.classicalSlokaSummary} -> ${y.drBvRamanCommentary}`)
+      .join("\n");
+
+    bhavarthaRatnakaraSummary = [
+      `- **Ascendant Disposition (${br.ascendantSign} Lagna):** Premier Yogakaraka: **${br.premierRatnakaraYogakaraka}**`,
+      "- **Active Bhavartha Ratnakara Yogas & Dasha Exceptions:**",
+      activeYogasStr || "  - Standard Parashari principles apply.",
+      "- **Master Ratnakara Synthesis:** " + br.masterRatnakaraSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
   if (matchmaking && matchmaking.boy && matchmaking.girl) {
@@ -1197,11 +1214,14 @@ export function buildAstroDossier(
     "",
     "#### 📜 45. MAHARSHI BHRIGU SAMHITA (KARMIC DEBTS, PAST LIFE SINS & PARIHARAS) DOSSIER:",
     bhriguSamhitaSummary,
+    "",
+    "#### 📖 46. BHAVARTHA RATNAKARA (SRI RAMANUJACHARYA / DR. B.V. RAMAN) DOSSIER:",
+    bhavarthaRatnakaraSummary,
   ];
 
   if (matchmakingSummary) {
     lines.push("");
-    lines.push("#### 💍 46. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
+    lines.push("#### 💍 47. KUNDLI MILAN & 36-GUNA COMPATIBILITY DOSSIER (ACTIVE PARTNERSHIP):");
     lines.push(matchmakingSummary);
   }
 

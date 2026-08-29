@@ -1,51 +1,56 @@
-# Walkthrough: Jataka Chandrika & Chappanna Prasna Sastra Integration
+# Walkthrough: Maharshi Bhrigu Canon & R.G. Rao Nadi Master Suite Integration
 
-All three classical masterworks in `D:\ASTROLOGY-BOOKS-DATABASE-master\Books by Authors\b Suryanarain Rao` are now fully codified and integrated into the platform:
-1. **Sarvartha Chintamani** (Acharya Venkatesha Sharma / Prof. B. Suryanarain Rao)
-2. **Jataka Chandrika (Laghu Parashari)** (Prof. B. Suryanarain Rao, 1900)
-3. **Chappanna or Prasna Sastra (56 Questions Horary Oracle)** (Prof. B. Suryanarain Rao, 1946)
-
----
-
-## 1. Jataka Chandrika Engine ([`src/engine/jatakaChandrika.ts`](file:///d:/newWayToAstro/src/engine/jatakaChandrika.ts))
-- **Lagnawise Functional Matrix**:
-  - *Premier Yogakarakas*: Single planet ruling both Kendra and Trikona (Saturn for Taurus/Libra, Mars for Cancer/Leo, Venus for Capricorn/Aquarius).
-  - *Trikona Benefics (1, 5, 9)* vs *Trishadaya Malefics (3, 6, 11)*.
-  - *Kendradhipati Dosha*: Natural benefics (Jupiter, Venus, Mercury, Moon) owning Kendras lose their natural beneficence.
-  - *Maraka Lords*: 2nd and 7th house rulers.
-  - *4-Fold Sambandha Raja Yogas*: Parivartana (Exchange), Mutual Drishti (Aspect), Eka Drishti, and Conjunction.
+All classical masterworks in `D:\ASTROLOGY-BOOKS-DATABASE-master\Books by Authors\Bhrigu` are now fully codified and integrated into the platform:
+1. **Bhrigu Nandi Nadi (BNN)** (Sri R.G. Rao)
+2. **Bhrigu Saral Paddhati (BSP)** (Saptarishis Astrology Research)
+3. **Maharshi Bhrigu Samhita** (Dr. T.M. Rao / Maharshi Bhrigu)
+4. **Bhrigu Prashna Nadi** (Sri R.G. Rao)
+5. **Essence of Nadi Astrology** (Sri R.G. Rao)
+6. **Bhrigu Nadi Sangraha** (Sri R.G. Rao)
 
 ---
 
-## 2. Chappanna Prasna Sastra Engine ([`src/engine/chappannaPrasna.ts`](file:///d:/newWayToAstro/src/engine/chappannaPrasna.ts))
-- **56 Exhaustive Question Archetypes across 8 Life Spheres**:
-  1. *Health & Longevity* (Q1 - Q7)
-  2. *Litigation & Disputes* (Q8 - Q14)
-  3. *Travel & Missing Persons* (Q15 - Q21)
-  4. *Stolen & Lost Objects* (Q22 - Q28)
-  5. *Trade & Financial Profit* (Q29 - Q35)
-  6. *Career & Honours* (Q36 - Q42)
-  7. *Marriage & Children* (Q43 - Q49)
-  8. *Agriculture & Property* (Q50 - Q56)
-- **Real-Time Oracle Engine**: Evaluates query Lagna, Lagnesha, Karya Bhava, Karyesh, and Moon (*Prasna Manas*) to calculate outcome probability (0–100%) and *Kala Pramana* timing of fruition.
+## 1. Maharshi Bhrigu Samhita Engine ([`src/engine/bhriguSamhita.ts`](file:///d:/newWayToAstro/src/engine/bhriguSamhita.ts))
+- **6 Past-Life Karmic Debts (*Purva Janma Rinas*)**:
+  - *Pitru Rina* (Paternal Debt / Sun-Rahu afflictions).
+  - *Matru Rina* (Maternal Debt / Moon-Ketu afflictions).
+  - *Bhratri Rina* (Sibling Debt / Mars-Rahu afflictions).
+  - *Stri Rina* (Spouse/Female Debt / Venus afflictions).
+  - *Brahma Hatya Rina* (Guru/Scholar Debt / Jupiter afflictions).
+  - *Sarpa Rina* (Serpent Curse / Kaala Sarpa hemming).
+- **12 Bhavas Karmic Readings**: House-by-house past-life imprints and Maharshi Bhrigu's classical dictums.
+- **Classical Bhrigu Samhita Pariharas**: Scriptural remedies, Tarpan, Annadaanam, Kanya Seva, and Peepal tree worship.
+
+---
+
+## 2. Upgraded Bhrigu Nadi & R.G. Rao Suite ([`src/engine/bhriguNadi.ts`](file:///d:/newWayToAstro/src/engine/bhriguNadi.ts))
+- **Bhrigu Prashna Nadi Oracle**: Instant directional Karaka horary oracle evaluating East (1, 5, 9), South (2, 6, 10), West (3, 7, 11), and North (4, 8, 12) directional linkages across Career, Finance, Marriage, Health, Travel, and Property.
+- **12-Year Jupiter (Jeeva) Age Progression Cycles**:
+  - Round 1 (Ages 1–12): Infancy & Education.
+  - Round 2 (Ages 13–24): Higher Learning & Skills.
+  - Round 3 (Ages 25–36): Career & Conjugal Union.
+  - Round 4 (Ages 37–48): Executive Pinnacle & Status.
+  - Round 5 (Ages 49–60): Legacy Consolidation & Dharma.
+  - Round 6 (Ages 61–72+): Moksha & Spiritual Enlightenment.
+- **Nadi Sangraha Rare Planetary Yogas**: High-potency linkages (*Guru-Chandra, Guru-Shukra, Shani-Rahu, Mangala-Ketu*).
 
 ---
 
 ## 3. AI Astrologer Chat Context Dossier & Dispatching ([`src/engine/chatContext.ts`](file:///d:/newWayToAstro/src/engine/chatContext.ts), [`src/app/api/astro-chat/route.ts`](file:///d:/newWayToAstro/src/app/api/astro-chat/route.ts))
-- Injected **Section 43: Jataka Chandrika Dossier** and **Section 44: Chappanna Prasna Sastra Dossier** into the Chat Dossier.
-- Renumbered Kundli Milan to Section 45.
-- Updated Master Dispatching Matrix for functional Lagnawise analysis and 56 Horary question predictions.
+- Injected **Section 45: Maharshi Bhrigu Samhita (Karmic Debts, Past Life Sins & Pariharas) Dossier**.
+- Renumbered Kundli Milan to Section 46.
+- Updated Master Dispatching Matrix for Bhrigu Samhita Karmic Debts, Bhrigu Prashna Nadi, and 12-Year Nadi Age Progressions.
 
 ---
 
 ## 4. UI Dashboard Components
-- **[`src/components/JatakaChandrikaDeck.tsx`](file:///d:/newWayToAstro/src/components/JatakaChandrikaDeck.tsx)**: Functional Matrix, Sambandha Yogas, Kendradhipati Dosha, Maraka Meter.
-- **[`src/components/ChappannaPrasnaDeck.tsx`](file:///d:/newWayToAstro/src/components/ChappannaPrasnaDeck.tsx)**: Interactive 56-Question Horary Browser, Instant Oracle Judgement, 8 Life Categories, Timing of Fruition.
-- Wired into `BhavaBalaView.tsx` under **"🌙 Jataka Chandrika (Laghu Parashari)"** and **"🔮 Chappanna Prasna (56 Questions)"**.
+- **[`src/components/BhriguSamhitaDeck.tsx`](file:///d:/newWayToAstro/src/components/BhriguSamhitaDeck.tsx)**: 6 Past-Life Karmic Debts, 12 Bhavas Karmic Readings, Scriptural Pariharas.
+- **[`src/components/BhriguNadiDeck.tsx`](file:///d:/newWayToAstro/src/components/BhriguNadiDeck.tsx)**: Upgraded with Bhrigu Prashna Oracle, 12-Year Nadi Age Progressions, and Nadi Sangraha Yogas.
+- Wired into `BhavaBalaView.tsx` under **"📜 Bhrigu Samhita (Karmic Debts)"** and **"📜 Bhrigu Nadi (BNN & BSP)"**.
 
 ---
 
 ## 5. Verification
-- **Automated Tests**: All **55 test suites** in `tests/engine.test.mjs` passed cleanly (`55/55 pass`).
+- **Automated Tests**: All **56 test suites** in `tests/engine.test.mjs` passed cleanly (`56/56 pass`).
 - **TypeScript & Production Build**: `next build` compiled with 0 errors.
-- **Git Push**: Committed and pushed to `origin/main` (`commit b1a8bd2`).
+- **Git Push**: Committed and pushed to `origin/main` (`commit e8b27ef`).

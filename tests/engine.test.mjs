@@ -2487,6 +2487,38 @@ test("Classical Maharshi Bhrigu Samhita (Karmic Debts, Past Life Sins & Parihara
   assert.ok(result.masterSamhitaSynthesis.length > 30);
 });
 
+test("Classical Sri Ramanujacharya Bhavartha Ratnakara (Dr. B.V. Raman) Verification", async () => {
+  const { evaluateBhavarthaRatnakara } = await import("../src/engine/bhavarthaRatnakara.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Bangalore", country: "India", latitude: 12.9716, longitude: 77.5946, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1988-08-12T05:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const result = evaluateBhavarthaRatnakara(natalEphem);
+
+  // 1. Basic properties
+  assert.ok(result.ascendantSign);
+  assert.ok(result.premierRatnakaraYogakaraka);
+  assert.ok(result.lagnawiseRulesCount >= 0);
+
+  // 2. Yogas & Dasha Exceptions
+  assert.ok(Array.isArray(result.activeYogas));
+  assert.ok(Array.isArray(result.dhanaYogas));
+  assert.ok(Array.isArray(result.dashaExceptions));
+
+  for (const y of [...result.activeYogas, ...result.dhanaYogas, ...result.dashaExceptions]) {
+    assert.ok(y.yogaName);
+    assert.ok(y.adhyayaNumber >= 1 && y.adhyayaNumber <= 14);
+    assert.ok(y.classicalSlokaSummary.length > 10);
+    assert.ok(y.drBvRamanCommentary.length > 10);
+    assert.ok(["High (तीव्र)", "Moderate (मध्यम)", "Latent / Inactive (सुप्त)"].includes(y.fruitionStrength));
+  }
+
+  // 3. Master Synthesis
+  assert.ok(result.masterRatnakaraSynthesis.length > 30);
+});
+
+
 
 
 
