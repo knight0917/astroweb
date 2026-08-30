@@ -67,6 +67,7 @@ import { evaluatePatelAshtakavarga } from "./patelAshtakavarga";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
+import { calculateDayMuhurta } from "./muhurta";
 import { GeoLocation } from "./types";
 import { RASHI_NAMES } from "./constants";
 
@@ -1322,11 +1323,54 @@ export function buildAstroDossier(
     } catch (_) {}
   }
 
+  // Real-Time Live Panchanga & Muhurta for Active Consultation Location (e.g. Rome)
+  let livePanchangaSummary = "";
+  try {
+    const transitLoc = transitEphemeris.location || location;
+    const transitTzOffset = transitLoc.timezoneOffsetHours ?? 0;
+    const transitTzSign = transitTzOffset >= 0 ? "+" : "-";
+    const transitTzAbsH = Math.floor(Math.abs(transitTzOffset));
+    const transitTzAbsM = Math.round((Math.abs(transitTzOffset) - transitTzAbsH) * 60);
+    const transitTzFormatted = `UTC${transitTzSign}${String(transitTzAbsH).padStart(2, "0")}:${String(transitTzAbsM).padStart(2, "0")}`;
+
+    const muhurta = calculateDayMuhurta(evaluationDate, transitLoc);
+    const abhijit = muhurta.auspiciousSlots.find((s) => s.type === "Abhijit");
+    const rahu = muhurta.inauspiciousSlots.find((s) => s.type === "RahuKaal");
+    const gulika = muhurta.inauspiciousSlots.find((s) => s.type === "GulikaKaal");
+    const yamaganda = muhurta.inauspiciousSlots.find((s) => s.type === "Yamaganda");
+
+    const formatTime = (d: Date) => {
+      const localD = new Date(d.getTime() + transitTzOffset * 3600 * 1000);
+      const hh = String(localD.getUTCHours()).padStart(2, "0");
+      const mm = String(localD.getUTCMinutes()).padStart(2, "0");
+      return `${hh}:${mm}`;
+    };
+
+    const transitMoon = transitEphemeris.planets.Moon;
+    const transitSun = transitEphemeris.planets.Sun;
+
+    livePanchangaSummary = [
+      "- 📍 **Active Consultation / Current Transit Location:** **" + transitLoc.cityName + (transitLoc.country ? ", " + transitLoc.country : "") + "** (Lat: " + transitLoc.latitude.toFixed(2) + "°, Lon: " + transitLoc.longitude.toFixed(2) + "°, Timezone: " + transitTzFormatted + ")",
+      "- 📅 **Current Real-Time Date & Time (Local City Time):** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " at " + formatTime(evaluationDate) + " (" + transitTzFormatted + ")",
+      "- 🌖 **Today's Live Tithi:** **" + transitEphemeris.panchanga.tithi.name + " (" + transitEphemeris.panchanga.tithi.paksha + " Paksha)**" + (transitEphemeris.panchanga.tithi.endTime ? " • Ends at: " + transitEphemeris.panchanga.tithi.endTime + (transitEphemeris.panchanga.tithi.remainingFormatted ? " (" + transitEphemeris.panchanga.tithi.remainingFormatted + " remaining)" : "") : ""),
+      "- ⭐ **Today's Live Nakshatra:** **" + transitEphemeris.panchanga.nakshatra.sanskritName + " (Pada " + transitEphemeris.panchanga.nakshatra.pada + ")** • Lord: **" + transitEphemeris.panchanga.nakshatra.lord + "** • Deity: " + transitEphemeris.panchanga.nakshatra.deity + (transitEphemeris.panchanga.nakshatra.endTime ? " • Ends at: " + transitEphemeris.panchanga.nakshatra.endTime : ""),
+      "- 🌅 **Today's Live Vara (Day):** **" + transitEphemeris.panchanga.vara.name + "** (Day Lord: **" + transitEphemeris.panchanga.vara.lord + "**)",
+      "- 🧘 **Today's Live Yoga:** **" + transitEphemeris.panchanga.yoga.name + "** | **Karana:** **" + transitEphemeris.panchanga.karana.name + "**",
+      "- 🌞 **Sunrise & Sunset at " + transitLoc.cityName + ":** Sunrise: **" + formatTime(muhurta.sunrise) + "** | Sunset: **" + formatTime(muhurta.sunset) + "**",
+      "- 👑 **Abhijit Muhurta (Most Auspicious Window Today):** " + (abhijit ? "**" + formatTime(abhijit.startTime) + " – " + formatTime(abhijit.endTime) + "**" : "N/A"),
+      "- ⚠️ **Rahu Kalam (Inauspicious Window to Avoid Today):** " + (rahu ? "**" + formatTime(rahu.startTime) + " – " + formatTime(rahu.endTime) + "**" : "N/A"),
+      "- ⏱️ **Yamaganda:** " + (yamaganda ? formatTime(yamaganda.startTime) + " – " + formatTime(yamaganda.endTime) : "N/A") + " | **Gulika Kalam:** " + (gulika ? formatTime(gulika.startTime) + " – " + formatTime(gulika.endTime) : "N/A"),
+      "- 🌙 **Current Live Moon Transit (Chandra Gochar):** In **" + (transitMoon?.rashi.englishName || "") + "** (" + (((transitMoon?.siderealLongitude || 0) % 30).toFixed(2)) + "°) | Nakshatra: **" + (transitMoon?.nakshatra.sanskritName || "") + "**",
+      "- ☀️ **Current Live Sun Transit (Surya Gochar):** In **" + (transitSun?.rashi.englishName || "") + "** (" + (((transitSun?.siderealLongitude || 0) % 30).toFixed(2)) + "°)",
+    ].join("\n");
+  } catch (_) {}
+
   const decisionGates = calculatePredictiveDecisionGates(natalEphemeris);
 
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
+    "- **Active Consultation / Current Transit Location:** " + (transitEphemeris.location?.cityName || location.cityName) + ((transitEphemeris.location?.country || location.country) ? ", " + (transitEphemeris.location?.country || location.country) : "") + " (Lat: " + (transitEphemeris.location?.latitude || location.latitude).toFixed(2) + "°, Lon: " + (transitEphemeris.location?.longitude || location.longitude).toFixed(2) + "°)",
     "- **Date & Time of Birth (Local Civil Time / जन्म समय):** " + localBirthStr,
     "- **Astronomical Calculation Epoch (UTC):** " + birthDate.toUTCString(),
     "- **Birth Location:** " + location.cityName + (location.country ? ", " + location.country : "") + " (Lat: " + location.latitude.toFixed(2) + "°, Lon: " + location.longitude.toFixed(2) + "°)",
@@ -1428,12 +1472,15 @@ export function buildAstroDossier(
     gochar.sadeSati.totalCompletionFormatted ? "- Total Sade Sati Ends: " + gochar.sadeSati.totalCompletionFormatted : "",
     gochar.sadeSati.nextCycleStartFormatted ? "- Next Cycle Begins: " + gochar.sadeSati.nextCycleStartFormatted : "",
     "",
-    "#### 📅 15. PANCHANGA AT BIRTH & TRANSIT MOMENT:",
-    `- **Tithi:** ${natalEphemeris.panchanga.tithi.name} (${natalEphemeris.panchanga.tithi.paksha} Paksha)${natalEphemeris.panchanga.tithi.endTime ? ` (Ends at: ${natalEphemeris.panchanga.tithi.endTime}${natalEphemeris.panchanga.tithi.remainingFormatted ? `, ${natalEphemeris.panchanga.tithi.remainingFormatted}` : ""})` : ""}`,
-    `- **Nakshatra:** ${natalEphemeris.panchanga.nakshatra.sanskritName} Pada ${natalEphemeris.panchanga.nakshatra.pada} (Lord: ${natalEphemeris.panchanga.nakshatra.lord})${natalEphemeris.panchanga.nakshatra.endTime ? ` (Ends at: ${natalEphemeris.panchanga.nakshatra.endTime})` : ""}`,
-    "- **Vara (Weekday):** " + natalEphemeris.panchanga.vara.name + " (Ruler: " + natalEphemeris.panchanga.vara.lord + ")",
-    "- **Yoga:** " + natalEphemeris.panchanga.yoga.name,
-    "- **Karana:** " + natalEphemeris.panchanga.karana.name,
+    "#### 📅 15. REAL-TIME TODAY'S LIVE PANCHANGA & MUHURTA (FOR ACTIVE CURRENT LOCATION):",
+    livePanchangaSummary,
+    "",
+    "#### 👶 15B. NATAL PANCHANGA AT BIRTH (HISTORICAL BIRTH RECORD):",
+    `- **Birth Tithi:** ${natalEphemeris.panchanga.tithi.name} (${natalEphemeris.panchanga.tithi.paksha} Paksha)${natalEphemeris.panchanga.tithi.endTime ? ` (Ends at: ${natalEphemeris.panchanga.tithi.endTime}${natalEphemeris.panchanga.tithi.remainingFormatted ? `, ${natalEphemeris.panchanga.tithi.remainingFormatted}` : ""})` : ""}`,
+    `- **Birth Nakshatra:** ${natalEphemeris.panchanga.nakshatra.sanskritName} Pada ${natalEphemeris.panchanga.nakshatra.pada} (Lord: ${natalEphemeris.panchanga.nakshatra.lord})${natalEphemeris.panchanga.nakshatra.endTime ? ` (Ends at: ${natalEphemeris.panchanga.nakshatra.endTime})` : ""}`,
+    "- **Birth Vara (Weekday):** " + natalEphemeris.panchanga.vara.name + " (Ruler: " + natalEphemeris.panchanga.vara.lord + ")",
+    "- **Birth Yoga:** " + natalEphemeris.panchanga.yoga.name,
+    "- **Birth Karana:** " + natalEphemeris.panchanga.karana.name,
     "",
     "#### ☸️ 16. K.N. RAO KARMA, REBIRTH & PURVA PUNYA DOSSIER:",
     karmaSummary,
