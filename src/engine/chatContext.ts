@@ -134,15 +134,14 @@ export function buildAstroDossier(
     d10Summary.push(e.name + ": " + e.vargaRashi.englishName + " (H" + e.house + ")");
   });
 
-  // 4. Shadbala Planetary Strengths
+  // 4. Shadbala Planetary Strengths (% Requirement Ratio Standard Hierarchy)
   let shadbalaSummary = "Shadbala calculated.";
   try {
     const shadbalaResult = calculateShadbala(natalEphemeris);
-    const sorted = Object.values(shadbalaResult.planets).sort((a, b) => b.totalRupas - a.totalRupas);
-    shadbalaSummary = sorted
+    shadbalaSummary = shadbalaResult.rankedPlanets
       .map(
-        (p) =>
-          "- " + p.name + ": " + p.totalRupas.toFixed(2) + " Rupas (" + p.percentageEfficiency.toFixed(0) + "% req) • " + (p.isBalavan ? "Strong (बलवान)" : "Moderate / Weak")
+        (p, idx) =>
+          `#${idx + 1} ${p.name}: **${p.percentageEfficiency}% Strength** (${p.strengthRatio.toFixed(2)}x Quota • ${p.totalRupas.toFixed(2)} R / ${p.requiredRupas.toFixed(1)} R req) • [${p.isBalavan ? "Balavan / Strong (बलवान)" : "Deficient / Requires Upaya"}]`
       )
       .join("\n");
   } catch (_) {}

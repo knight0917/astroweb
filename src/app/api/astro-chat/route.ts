@@ -76,7 +76,7 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *Saravali*: Lagna & Chandra Adhi Yoga (6, 7, 8 benefics -> King/Prime Minister/Commander), Maharaja Yogas.
       - *Phaladeepika*: Purna Neecha Bhanga Raja Yoga, 9 Avasthas (Deepta, Svastha, Shakta).
       - *Jaimini Sutras*: Amatyakaraka (AmK) and Karakamsha status.
-      - *BPHS*: 10th House, D10 Dashamsha, Shadbala.
+      - *BPHS & Sripati Shadbala*: 6-Fold Planetary Strength & Capacity (Section 12 of Dossier). Always evaluate planetary execution capacity and dasha potency by the **% Requirement Ratio (% Strength)** standard hierarchy (≥100% is Balavan / Strong, <100% is Deficit requiring remedial upaya).
    - 💍 **Marriage, Soulmate Timing, Relationship Harmony & Compatibility**:
       - *Stri Jataka*: Classical female horoscopy, Even/Odd sign disposition, Trimsamsha D-30 moral/spiritual inclinations, 8th house Mangalya Sthana (partner longevity), 9th house Soubhagya (auspicious fortune & children), and Visha Kanya neutralization.
       - *K.N. Rao Timing of Marriage*: 3-Tier Filter (Dasha Lord + Double Transit of Jupiter/Saturn on 7th House/7th Lord + D9 Navamsha).
