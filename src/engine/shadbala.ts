@@ -57,7 +57,9 @@ export interface PlanetShadbala {
   strengthRatio: number; // Actual / Required
   percentageEfficiency: number;
   isBalavan: boolean; // >= 1.0 Ratio
-  rank: number; // 1 to 7
+  rank: number; // 1 to 7 (by strength ratio)
+  rankByRatio: number; // 1 to 7 (by % of minimum requirement)
+  rankByTotal: number; // 1 to 7 (by total absolute rupas/virupas)
 
   // Phalas (Fruits of Strength - BPHS Ch. 29)
   ishtaPhala: number; // Auspicious Fruit (0..60) = sqrt(Uchcha * Cheshta)
@@ -70,6 +72,7 @@ export interface PlanetShadbala {
 export interface ShadbalaResult {
   planets: Record<ShadbalaPlanetId, PlanetShadbala>;
   rankedPlanets: PlanetShadbala[];
+  rankedPlanetsByTotal: PlanetShadbala[];
   strongestPlanet: PlanetShadbala;
   weakestPlanet: PlanetShadbala;
   averageStrengthRatio: number;
@@ -97,14 +100,14 @@ const NAISARGIKA_BALA: Record<ShadbalaPlanetId, number> = {
   Saturn: 8.57,
 };
 
-// 3. Minimum Required Rupas (BPHS Ch. 29)
+// 3. Minimum Required Rupas (BPHS Ch. 29 Verse 28-29)
 export const REQUIRED_SHADBALA_RUPAS: Record<ShadbalaPlanetId, number> = {
+  Sun: 5.0, // 300 Virupas (Classical BPHS Chapter 29 standard)
+  Moon: 6.0, // 360 Virupas
+  Mars: 5.0, // 300 Virupas
   Mercury: 7.0, // 420 Virupas
   Jupiter: 6.5, // 390 Virupas
-  Sun: 6.5, // 390 Virupas (or 5.0 in some traditions)
-  Moon: 6.0, // 360 Virupas
   Venus: 5.5, // 330 Virupas
-  Mars: 5.0, // 300 Virupas
   Saturn: 5.0, // 300 Virupas
 };
 
@@ -518,18 +521,25 @@ export function calculateShadbala(ephem: EphemerisResult): ShadbalaResult {
       percentageEfficiency,
       isBalavan,
       rank: 1, // Will assign after sorting
+      rankByRatio: 1,
+      rankByTotal: 1,
       ishtaPhala,
       kashtaPhala,
       statusText,
     };
   });
 
-  // Sort by strength ratio descending
+  // 1. Sort by strength ratio descending (% of required minimum)
   const rankedPlanets = Object.values(planets).sort((a, b) => b.strengthRatio - a.strengthRatio);
-
-  // Assign ranks 1 to 7
   rankedPlanets.forEach((p, idx) => {
     p.rank = idx + 1;
+    p.rankByRatio = idx + 1;
+  });
+
+  // 2. Sort by total absolute Virupas / Rupas descending
+  const rankedPlanetsByTotal = [...rankedPlanets].sort((a, b) => b.totalVirupas - a.totalVirupas);
+  rankedPlanetsByTotal.forEach((p, idx) => {
+    p.rankByTotal = idx + 1;
   });
 
   const totalRatios = rankedPlanets.reduce((acc, p) => acc + p.strengthRatio, 0);
@@ -538,6 +548,7 @@ export function calculateShadbala(ephem: EphemerisResult): ShadbalaResult {
   return {
     planets,
     rankedPlanets,
+    rankedPlanetsByTotal,
     strongestPlanet: rankedPlanets[0],
     weakestPlanet: rankedPlanets[rankedPlanets.length - 1],
     averageStrengthRatio,

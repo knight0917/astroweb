@@ -7,10 +7,15 @@ import { calculateShadbala, ShadbalaPlanetId, PlanetShadbala } from "../engine/s
 export default function ShadbalaView() {
   const { ephemeris, selectedEntityId, setSelectedEntityId } = useAstroStore();
   const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table">("bars");
+  const [sortBy, setSortBy] = useState<"ratio" | "total">("ratio");
 
   const shadbalaResult = useMemo(() => {
     return calculateShadbala(ephemeris);
   }, [ephemeris]);
+
+  const displayedPlanets = useMemo(() => {
+    return sortBy === "ratio" ? shadbalaResult.rankedPlanets : shadbalaResult.rankedPlanetsByTotal;
+  }, [shadbalaResult, sortBy]);
 
   const [activePlanetId, setActivePlanetId] = useState<ShadbalaPlanetId>(
     (selectedEntityId as ShadbalaPlanetId) && shadbalaResult.planets[selectedEntityId as ShadbalaPlanetId]
@@ -86,20 +91,46 @@ export default function ShadbalaView() {
 
       {/* Hero Rank Leaderboard Cards (7 Classical Grahas) */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-extrabold text-xs text-slate-200 uppercase tracking-wider flex items-center gap-2">
-            <span>🏆</span>
-            <span>Planetary Strength Hierarchy (बल क्रम Ranking)</span>
-          </h3>
-          <span className="text-[10px] text-slate-500 font-mono">
-            Click any Graha to highlight on bar chart and view mathematical breakdown
-          </span>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <h3 className="font-extrabold text-xs text-slate-200 uppercase tracking-wider flex items-center gap-2">
+              <span>🏆</span>
+              <span>Planetary Strength Hierarchy ({sortBy === "ratio" ? "% Requirement Ratio" : "Total Absolute Rupas"})</span>
+            </h3>
+          </div>
+
+          {/* Ranking Mode Toggle */}
+          <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
+            <button
+              onClick={() => setSortBy("ratio")}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                sortBy === "ratio"
+                  ? "bg-amber-500 text-slate-950 shadow"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+              title="Rank by actual strength divided by BPHS required minimum rupas"
+            >
+              % Req Ratio (Standard)
+            </button>
+            <button
+              onClick={() => setSortBy("total")}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                sortBy === "total"
+                  ? "bg-amber-500 text-slate-950 shadow"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+              title="Rank by raw total Virupas / Rupas"
+            >
+              Total Absolute Rupas
+            </button>
+          </div>
         </div>
 
         <div className="flex md:grid md:grid-cols-7 overflow-x-auto snap-scroll-x no-scrollbar gap-2.5 pb-1.5">
-          {shadbalaResult.rankedPlanets.map((p) => {
+          {displayedPlanets.map((p, idx) => {
             const isSelected = activePlanetId === p.planetId;
-            const rankBadge = getRankBadge(p.rank);
+            const currentRank = sortBy === "ratio" ? p.rankByRatio : p.rankByTotal;
+            const rankBadge = getRankBadge(currentRank);
             const isStrong = p.isBalavan;
 
             return (
@@ -230,7 +261,7 @@ export default function ShadbalaView() {
                   );
                 })}
 
-                {shadbalaResult.rankedPlanets.map((p) => {
+                {displayedPlanets.map((p) => {
                   const isSelected = activePlanetId === p.planetId;
                   const barHeightPercent = Math.min(100, (p.totalRupas / maxRupas) * 100);
                   const reqHeightPercent = Math.min(100, (p.requiredRupas / maxRupas) * 100);
@@ -327,7 +358,7 @@ export default function ShadbalaView() {
 
               {/* Stacked Bars Canvas */}
               <div className="h-64 flex items-end justify-between gap-3 px-2 pt-6 pb-2 bg-slate-900/60 rounded-xl border border-slate-800 relative">
-                {shadbalaResult.rankedPlanets.map((p) => {
+                {displayedPlanets.map((p) => {
                   const isSelected = activePlanetId === p.planetId;
                   const sthanaR = p.sthanaBala.total / 60;
                   const digR = p.digBala / 60;
@@ -430,7 +461,7 @@ export default function ShadbalaView() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
-                  {shadbalaResult.rankedPlanets.map((p) => {
+                  {displayedPlanets.map((p) => {
                     const isSelected = activePlanetId === p.planetId;
                     return (
                       <tr
