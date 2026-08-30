@@ -1118,7 +1118,7 @@ export default function TimeTravelSlider() {
                   required
                   value={newProfileName}
                   onChange={(e) => setNewProfileName(e.target.value)}
-                  placeholder="e.g. Rahul Sharma, Self, Spouse, Child..."
+                  placeholder="Your Name (e.g. Self, Spouse, Child...)"
                   className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl p-2.5 text-xs text-slate-100 font-bold focus:outline-none"
                 />
               </div>
