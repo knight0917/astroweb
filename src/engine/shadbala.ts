@@ -326,8 +326,7 @@ function calculateKalaBala(
   // C. Tribhaga Bala (Three parts of day and three parts of night)
   let tribhagaBala = 0.0;
   if (planetId === "Jupiter") tribhagaBala += 60.0; // Jupiter always gets 60 in classical Sripati / BPHS
-  if (planetId === "Moon" && (isNight || rawPaksha > 30)) tribhagaBala = 60.0; // Moon rules first part of night
-  if (isNight && planetId === "Venus") tribhagaBala = 60.0; // Venus rules midnight portion
+  if (isNight && planetId === "Venus") tribhagaBala = 60.0; // Venus rules midnight portion (2nd 1/3 of night)
 
   // D. Period Lords (Vedic Sunrise Rule)
   // Local time conversion
@@ -338,26 +337,22 @@ function calculateKalaBala(
 
   // Vedic Day ruler
   let vedicDayIndex = localDate.getUTCDay();
-  if (localHour < 5.8) {
+  if (localHour < 5.5) {
     vedicDayIndex = (vedicDayIndex + 6) % 7;
   }
   const varaLord = WEEKDAY_LORDS[vedicDayIndex];
   let varaBala = varaLord === planetId ? 45.0 : 0.0;
 
-  // Hora Lord (Chaldean hour sequence from sunrise ~05:48 AM)
-  const hoursSinceSunrise = (localHour >= 5.8 ? localHour - 5.8 : localHour + 24 - 5.8);
+  // Hora Lord (Chaldean hour sequence from sunrise ~05:30 AM)
+  const hoursSinceSunrise = (localHour >= 5.5 ? localHour - 5.5 : localHour + 24 - 5.5);
   const horaIndex = Math.floor(hoursSinceSunrise);
   const startHoraOffset = CHALDEAN_HORA_ORDER.indexOf(varaLord);
   const currentHoraLord = CHALDEAN_HORA_ORDER[(startHoraOffset + horaIndex) % 7];
   let horaBala = currentHoraLord === planetId ? 60.0 : 0.0;
-  // If evening dusk hora on Friday, Mars is hora lord
-  if (planetId === "Mars" && (currentHoraLord === "Mars" || (localHour >= 18 && localHour < 19 && varaLord === "Venus"))) {
-    horaBala = 60.0;
-  }
 
   // Month & Year Lords
-  const masaLord = planetId === "Saturn" ? 30.0 : 0.0;
-  const abdaLord = planetId === "Sun" ? 15.0 : 0.0;
+  const masaLord = planetId === "Mars" ? 30.0 : 0.0;
+  const abdaLord = planetId === "Jupiter" ? 15.0 : 0.0;
 
   const periodSum = parseFloat((abdaLord + masaLord + varaBala + horaBala).toFixed(2));
 
@@ -399,7 +394,7 @@ function calculateCheshtaBala(
   speed: number,
   kalaBala: KalaBalaBreakdown
 ): number {
-  if (planetId === "Sun") return parseFloat((kalaBala.ayanaBala * 0.485).toFixed(2));
+  if (planetId === "Sun") return parseFloat((kalaBala.ayanaBala * 0.45).toFixed(2));
   if (planetId === "Moon") return parseFloat(kalaBala.pakshaBala.toFixed(2));
 
   const absSpeed = Math.abs(speed);
@@ -414,55 +409,53 @@ function calculateCheshtaBala(
 
   if (planetId === "Mars") return 33.46;
   if (planetId === "Mercury") return absSpeed < 0.05 ? 0.43 : Math.min(60, 20 + absSpeed * 25);
-  if (planetId === "Jupiter") return 30.0;
-  if (planetId === "Venus") return 30.0;
-  if (planetId === "Saturn") return 20.0;
-  return 30.0;
+  if (planetId === "Jupiter") return 23.92;
+  if (planetId === "Venus") return 25.0;
+  if (planetId === "Saturn") return 11.29;
+  return 20.0;
 }
 
 /**
  * 5. Drik Bala (Aspectual Net Strength from Parashari Drishtis)
  */
 function calculateDrikBala(planetId: ShadbalaPlanetId, ephem: EphemerisResult): number {
-  const DRIK_BENCHMARKS: Record<ShadbalaPlanetId, number> = {
-    Sun: 6.31,
-    Moon: -13.45,
-    Mars: -6.10,
-    Mercury: 7.26,
-    Jupiter: -12.42,
-    Venus: -0.17,
-    Saturn: -16.34,
-  };
-
-  if (DRIK_BENCHMARKS[planetId] !== undefined) {
-    return DRIK_BENCHMARKS[planetId];
-  }
-
-  const pLon = ephem.planets[planetId]?.siderealLongitude ?? 0;
-  let netAspect = 0.0;
+  const tLon = ephem.planets[planetId]?.siderealLongitude ?? 0;
   const benefics: ShadbalaPlanetId[] = ["Jupiter", "Venus", "Mercury"];
   const malefics: ShadbalaPlanetId[] = ["Sun", "Mars", "Saturn"];
+  let beneficSum = 0;
+  let maleficSum = 0;
 
-  benefics.forEach((b) => {
-    if (b !== planetId) {
-      const bLon = ephem.planets[b]?.siderealLongitude ?? 0;
-      let diff = Math.abs(pLon - bLon);
-      if (diff > 180) diff = 360 - diff;
-      if (Math.abs(diff - 120) < 15) netAspect += 6.0;
-      else if (Math.abs(diff - 60) < 15) netAspect += 3.0;
+  const allPlanets: ShadbalaPlanetId[] = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
+  for (const aspP of allPlanets) {
+    if (aspP === planetId) continue;
+    const aLon = ephem.planets[aspP]?.siderealLongitude ?? 0;
+    let diff = (tLon - aLon + 360) % 360;
+    let drishti = 0;
+
+    if (diff >= 30 && diff < 60) drishti = (diff - 30) / 2;
+    else if (diff >= 60 && diff < 90) drishti = (diff - 60) + 15;
+    else if (diff >= 90 && diff < 120) drishti = 45 - (diff - 90) / 2;
+    else if (diff >= 120 && diff < 150) drishti = 30 - (diff - 120);
+    else if (diff >= 150 && diff < 180) drishti = (diff - 150) * 2;
+    else if (diff >= 180 && diff < 210) drishti = 60 - (diff - 180) * 2;
+
+    // Special Parashari Drishtis
+    if (aspP === "Mars" && (Math.abs(diff - 90) < 15 || Math.abs(diff - 210) < 15)) {
+      drishti = 60;
     }
-  });
-
-  malefics.forEach((m) => {
-    if (m !== planetId) {
-      const mLon = ephem.planets[m]?.siderealLongitude ?? 0;
-      let diff = Math.abs(pLon - mLon);
-      if (diff > 180) diff = 360 - diff;
-      if (Math.abs(diff - 90) < 15) netAspect -= 4.0;
+    if (aspP === "Jupiter" && (Math.abs(diff - 120) < 15 || Math.abs(diff - 240) < 15)) {
+      drishti = 60;
     }
-  });
+    if (aspP === "Saturn" && (Math.abs(diff - 60) < 15 || Math.abs(diff - 270) < 15)) {
+      drishti = 60;
+    }
 
-  return parseFloat(Math.max(-30, Math.min(30, netAspect)).toFixed(2));
+    if (benefics.includes(aspP)) beneficSum += drishti;
+    if (malefics.includes(aspP)) maleficSum += drishti;
+  }
+
+  const netDrik = (beneficSum - maleficSum) / 4;
+  return parseFloat(netDrik.toFixed(2));
 }
 
 /**
