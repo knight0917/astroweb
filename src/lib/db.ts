@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { supabase } from "./supabase";
 
 export interface StoredBirthChart {
   id: string;
@@ -41,7 +42,7 @@ function ensureDbFile(): void {
   }
 }
 
-function readAllCharts(): StoredBirthChart[] {
+function readAllChartsLocal(): StoredBirthChart[] {
   ensureDbFile();
   try {
     const raw = fs.readFileSync(DB_FILE, "utf-8");
@@ -52,7 +53,7 @@ function readAllCharts(): StoredBirthChart[] {
   }
 }
 
-function writeAllCharts(charts: StoredBirthChart[]): void {
+function writeAllChartsLocal(charts: StoredBirthChart[]): void {
   ensureDbFile();
   try {
     const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
@@ -69,21 +70,63 @@ export function normalizeEmail(email: string): string {
 
 /**
  * Get all charts belonging to a specific email (case-insensitive)
+ * Checks Supabase Cloud Postgres primary, falls back to local DB.
  */
-export function getChartsByEmail(email: string): StoredBirthChart[] {
+export async function getChartsByEmail(email: string): Promise<StoredBirthChart[]> {
   const norm = normalizeEmail(email);
   if (!norm) return [];
-  const all = readAllCharts();
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("birth_charts")
+        .select("*")
+        .eq("user_email", norm)
+        .order("updated_at", { ascending: false });
+
+      if (!error && data) {
+        return data.map((row: any) => ({
+          id: row.id,
+          userEmail: row.user_email,
+          name: row.name,
+          gender: row.gender || "male",
+          dateIso: row.date_iso,
+          dob: row.dob,
+          time: row.time,
+          location: {
+            cityName: row.city_name || "Unknown City",
+            country: row.country || "India",
+            latitude: row.latitude,
+            longitude: row.longitude,
+            elevation: row.elevation || 0,
+            timezoneOffsetHours: row.timezone_offset_hours || 5.5,
+          },
+          ayanamsha: row.ayanamsha || "Lahiri",
+          houseSystem: row.house_system || "WholeSign",
+          isDefault: Boolean(row.is_default),
+          notes: row.notes,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+        }));
+      }
+    } catch (err) {
+      console.warn("Supabase query fallback to local DB:", err);
+    }
+  }
+
+  // Fallback to local DB
+  const all = readAllChartsLocal();
   return all
     .filter((c) => normalizeEmail(c.userEmail) === norm)
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 }
 
 /**
- * Save or update a birth chart for a user
+ * Save or update a birth chart in Supabase and local cache
  */
-export function saveChart(chart: Omit<StoredBirthChart, "createdAt" | "updatedAt"> & { id?: string }): StoredBirthChart {
-  const all = readAllCharts();
+export async function saveChart(
+  chart: Omit<StoredBirthChart, "createdAt" | "updatedAt"> & { id?: string }
+): Promise<StoredBirthChart> {
   const nowIso = new Date().toISOString();
   const normEmail = normalizeEmail(chart.userEmail);
 
@@ -91,47 +134,89 @@ export function saveChart(chart: Omit<StoredBirthChart, "createdAt" | "updatedAt
     throw new Error("A valid email address is required to save a chart.");
   }
 
-  const existingIdx = chart.id ? all.findIndex((c) => c.id === chart.id) : -1;
+  const id = chart.id || `knd_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
-  if (existingIdx !== -1) {
-    // Update existing chart
-    const updatedRecord: StoredBirthChart = {
-      ...all[existingIdx],
-      ...chart,
-      userEmail: normEmail,
-      updatedAt: nowIso,
-    };
-    all[existingIdx] = updatedRecord;
-    writeAllCharts(all);
-    return updatedRecord;
-  } else {
-    // Create new chart
-    const id = chart.id || `knd_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-    const newRecord: StoredBirthChart = {
-      ...chart,
-      id,
-      userEmail: normEmail,
-      createdAt: nowIso,
-      updatedAt: nowIso,
-    };
-    all.push(newRecord);
-    writeAllCharts(all);
-    return newRecord;
+  const record: StoredBirthChart = {
+    ...chart,
+    id,
+    userEmail: normEmail,
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  };
+
+  // 1. Save to Supabase Cloud Postgres
+  if (supabase) {
+    try {
+      const { error } = await supabase.from("birth_charts").upsert({
+        id: record.id,
+        user_email: record.userEmail,
+        name: record.name,
+        gender: record.gender,
+        date_iso: record.dateIso,
+        dob: record.dob,
+        time: record.time,
+        city_name: record.location.cityName,
+        country: record.location.country,
+        latitude: record.location.latitude,
+        longitude: record.location.longitude,
+        elevation: record.location.elevation || 0,
+        timezone_offset_hours: record.location.timezoneOffsetHours || 5.5,
+        ayanamsha: record.ayanamsha || "Lahiri",
+        house_system: record.houseSystem || "WholeSign",
+        is_default: Boolean(record.isDefault),
+        notes: record.notes,
+        updated_at: nowIso,
+      });
+      if (error) {
+        console.warn("Supabase upsert error, saved to local fallback:", error);
+      }
+    } catch (err) {
+      console.warn("Supabase save exception:", err);
+    }
   }
+
+  // 2. Save to local fallback cache
+  try {
+    const all = readAllChartsLocal();
+    const existingIdx = all.findIndex((c) => c.id === id);
+    if (existingIdx !== -1) {
+      all[existingIdx] = record;
+    } else {
+      all.push(record);
+    }
+    writeAllChartsLocal(all);
+  } catch (_) {}
+
+  return record;
 }
 
 /**
- * Delete a chart by ID and Email (security boundary)
+ * Delete a chart by ID and Email from Supabase and local cache
  */
-export function deleteChart(id: string, email: string): boolean {
+export async function deleteChart(id: string, email: string): Promise<boolean> {
   const normEmail = normalizeEmail(email);
-  const all = readAllCharts();
-  const initialLength = all.length;
-  const filtered = all.filter((c) => !(c.id === id && normalizeEmail(c.userEmail) === normEmail));
+  let deletedFromCloud = false;
 
-  if (filtered.length !== initialLength) {
-    writeAllCharts(filtered);
+  if (supabase) {
+    try {
+      const { error } = await supabase
+        .from("birth_charts")
+        .delete()
+        .eq("id", id)
+        .eq("user_email", normEmail);
+      if (!error) deletedFromCloud = true;
+    } catch (err) {
+      console.warn("Supabase delete exception:", err);
+    }
+  }
+
+  // Local fallback cleanup
+  const all = readAllChartsLocal();
+  const filtered = all.filter((c) => !(c.id === id && normalizeEmail(c.userEmail) === normEmail));
+  if (filtered.length !== all.length) {
+    writeAllChartsLocal(filtered);
     return true;
   }
-  return false;
+
+  return deletedFromCloud;
 }

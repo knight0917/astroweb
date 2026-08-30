@@ -10,20 +10,23 @@
     "test": "tsx --test tests/engine.test.mjs"
   },
   "dependencies": {
+    "@react-three/drei": "^10.0.0-rc.2",
+    "@react-three/fiber": "^9.0.0-rc.3",
+    "@supabase/supabase-js": "^2.112.4",
     "astronomy-engine": "^2.1.19",
     "clsx": "^2.1.1",
     "lucide-react": "^1.16.0",
     "next": "^15.2.3",
+    "pg": "^8.23.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.0.2",
     "three": "^0.174.0",
-    "@react-three/fiber": "^9.0.0-rc.3",
-    "@react-three/drei": "^10.0.0-rc.2",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@types/node": "^22.13.9",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@types/three": "^0.174.0",

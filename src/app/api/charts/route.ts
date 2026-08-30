@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const charts = getChartsByEmail(email);
+    const charts = await getChartsByEmail(email);
     return NextResponse.json({ success: true, charts, count: charts.length });
   } catch (err: any) {
     console.error("Error in GET /api/charts:", err);
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     const dob = `${year}-${month}-${day}`;
     const time = `${hours}:${minutes}`;
 
-    const savedRecord = saveChart({
+    const savedRecord = await saveChart({
       id,
       userEmail: normalizeEmail(userEmail),
       name: name.trim(),
@@ -120,7 +120,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const success = deleteChart(id, email);
+    const success = await deleteChart(id, email);
     if (!success) {
       return NextResponse.json(
         { error: "Chart not found or unauthorized." },
