@@ -26,6 +26,10 @@ export default function TimeTravelSlider() {
     resetToLiveTransit,
     gender,
     setGender,
+    userEmail,
+    setUserEmail,
+    syncChartsWithDb,
+    isSyncingDb,
   } = useAstroStore();
 
   const [mounted, setMounted] = useState(false);
@@ -38,6 +42,12 @@ export default function TimeTravelSlider() {
   const [showProfilesDropdown, setShowProfilesDropdown] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [newProfileName, setNewProfileName] = useState("");
+  const [saveEmail, setSaveEmail] = useState("");
+  const [saveGender, setSaveGender] = useState<"male" | "female">("male");
+  const [syncEmailInput, setSyncEmailInput] = useState("");
+  const [isSavingChart, setIsSavingChart] = useState(false);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+  const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
   const [saveToast, setSaveToast] = useState("");
 
   // Location Modal form state
@@ -824,9 +834,9 @@ export default function TimeTravelSlider() {
             <div className="pt-2 border-t border-slate-800 space-y-1.5">
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   handleApplyDateTime();
-                  const prof = saveProfile("My Birth Chart", true);
+                  const prof = await saveProfile("My Birth Chart", true);
                   setSaveToast(`✅ Saved "${prof.name}" as Default on this device!`);
                   setTimeout(() => setSaveToast(""), 3500);
                 }}
@@ -1044,58 +1054,178 @@ export default function TimeTravelSlider() {
       {/* Save Profile Name Dialog Modal via Portal */}
       {mounted && showSaveModal && createPortal(
         <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-          <div className="fixed inset-0" onClick={() => setShowSaveModal(false)}></div>
-          <div className="relative z-10 glass-panel bg-slate-950 border border-slate-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-3.5 my-auto animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <h3 className="font-extrabold text-sm text-slate-100 flex items-center gap-1.5">
-                <span>💾</span>
-                <span>Save Birth Chart Profile</span>
-              </h3>
+          <div className="fixed inset-0" onClick={() => !isSavingChart && setShowSaveModal(false)}></div>
+          <div className="relative z-10 glass-panel bg-slate-950 border border-slate-700 w-full max-w-md rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 my-auto animate-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-400 text-base">
+                  💾
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm sm:text-base text-slate-100 uppercase tracking-wider">
+                    Save Birth Chart (सुरक्षित कुण्डली)
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Stores birth details permanently in the cloud database
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowSaveModal(false)}
+                disabled={isSavingChart}
                 className="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-300 block">
-                Profile / Person Name:
-              </label>
-              <input
-                type="text"
-                value={newProfileName}
-                onChange={(e) => setNewProfileName(e.target.value)}
-                placeholder="e.g. My Birth Chart, Ravi, Spouse, Child..."
-                className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl p-2.5 text-xs text-slate-100 font-bold focus:outline-none"
-              />
-              <div className="p-2 rounded-xl bg-slate-900/70 border border-slate-800 text-[10.5px] text-slate-400 space-y-0.5">
-                <div>Date: <span className="text-amber-300 font-bold">{displayDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })} @ {hour}:{minute}</span></div>
-                <div>City: <span className="text-amber-300 font-bold">{location.cityName} ({location.country || "India"})</span></div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
-              <button
-                type="button"
-                onClick={() => setShowSaveModal(false)}
-                className="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  saveProfile(newProfileName || "My Birth Chart", true);
+            {/* Save Form */}
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setIsSavingChart(true);
+                setSaveSuccessMsg(null);
+                try {
+                  const saved = await saveProfile(
+                    newProfileName || "My Birth Chart",
+                    true,
+                    saveGender,
+                    saveEmail.trim() || undefined
+                  );
+                  if (saveEmail.trim()) {
+                    setUserEmail(saveEmail.trim());
+                  }
+                  setSaveToast(`Birth chart '${saved.name}' successfully saved to database!`);
+                  setTimeout(() => setSaveToast(""), 4000);
                   setShowSaveModal(false);
                   setNewProfileName("");
-                }}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 cursor-pointer"
-              >
-                Save Chart
-              </button>
-            </div>
+                } catch (err: any) {
+                  console.error("Save error:", err);
+                } finally {
+                  setIsSavingChart(false);
+                }
+              }}
+              className="space-y-3.5"
+            >
+              {/* 1. Full Name */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-200 block">
+                  👤 Full Name / Profile Label:
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newProfileName}
+                  onChange={(e) => setNewProfileName(e.target.value)}
+                  placeholder="e.g. Rahul Sharma, Self, Spouse, Child..."
+                  className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl p-2.5 text-xs text-slate-100 font-bold focus:outline-none"
+                />
+              </div>
+
+              {/* 2. Email Address (Passwordless Cloud Sync) */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-200 block">
+                    📧 Email Address (Cloud Vault):
+                  </label>
+                  <span className="text-[10px] text-amber-400 font-bold">🔒 No Password Needed</span>
+                </div>
+                <input
+                  type="email"
+                  value={saveEmail}
+                  onChange={(e) => setSaveEmail(e.target.value)}
+                  placeholder="your.email@gmail.com"
+                  className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl p-2.5 text-xs text-slate-100 font-bold focus:outline-none font-mono"
+                />
+                <p className="text-[10.5px] text-slate-400">
+                  Enter your email to restore your charts automatically on any browser, phone, or laptop!
+                </p>
+              </div>
+
+              {/* 3. Gender Selector */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-200 block">
+                  ⚧️ Gender (लिंग):
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSaveGender("male")}
+                    className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                      saveGender === "male"
+                        ? "bg-sky-950 border-sky-400 text-sky-200 shadow-md"
+                        : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    <span className="text-sm">♂</span>
+                    <span>Male (पुरुष)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSaveGender("female")}
+                    className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                      saveGender === "female"
+                        ? "bg-pink-950 border-pink-400 text-pink-200 shadow-md"
+                        : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    <span className="text-sm">♀</span>
+                    <span>Female (स्त्री)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 4. Current Birth Details Preview Card */}
+              <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs space-y-1 font-mono">
+                <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider block font-sans">
+                  Active Birth Details Confirmation:
+                </span>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span>📅 Date of Birth:</span>
+                  <span className="text-amber-300 font-bold">
+                    {displayDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span>⏰ Time of Birth:</span>
+                  <span className="text-amber-300 font-bold">{hour}:{minute} (Local)</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span>📍 Place of Birth:</span>
+                  <span className="text-amber-300 font-bold">{location.cityName}, {location.country || "India"}</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+                <button
+                  type="button"
+                  disabled={isSavingChart}
+                  onClick={() => setShowSaveModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingChart}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 flex items-center gap-1.5 cursor-pointer"
+                >
+                  {isSavingChart ? (
+                    <>
+                      <span className="animate-spin">⏳</span>
+                      <span>Saving to DB...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>💾</span>
+                      <span>Save & Sync Chart</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>,
         document.body
@@ -1117,7 +1247,7 @@ export default function TimeTravelSlider() {
                     Saved Birth Charts (सुरक्षित कुण्डली)
                   </h3>
                   <p className="text-[11px] text-slate-400">
-                    Switch between saved profiles on this device
+                    Switch or sync profiles across all your devices
                   </p>
                 </div>
               </div>
@@ -1128,6 +1258,74 @@ export default function TimeTravelSlider() {
                 ✕
               </button>
             </div>
+
+            {/* Email Cloud Vault Sync Section */}
+            {userEmail ? (
+              <div className="p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-xs overflow-hidden">
+                  <span className="text-emerald-400 font-black">📧 Vault:</span>
+                  <span className="font-extrabold text-slate-100 font-mono truncate">{userEmail}</span>
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={async () => {
+                      await syncChartsWithDb(userEmail);
+                      setSyncStatusMsg("Synced with Cloud DB!");
+                      setTimeout(() => setSyncStatusMsg(null), 3000);
+                    }}
+                    disabled={isSyncingDb}
+                    className="px-2.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-all"
+                  >
+                    <span>{isSyncingDb ? "⏳" : "🔄"}</span>
+                    <span>{isSyncingDb ? "Syncing..." : "Sync"}</span>
+                  </button>
+                  <button
+                    onClick={() => setUserEmail(null)}
+                    className="text-[10px] text-slate-400 hover:text-rose-400 px-1.5 py-1 rounded cursor-pointer"
+                    title="Disconnect Email"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-200 flex items-center gap-1">
+                    <span>🌐</span>
+                    <span>Restore Charts on this Device:</span>
+                  </span>
+                  <span className="text-[10px] text-amber-400 font-bold">Passwordless</span>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    value={syncEmailInput}
+                    onChange={(e) => setSyncEmailInput(e.target.value)}
+                    placeholder="Enter email to restore charts..."
+                    className="flex-1 bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-1.5 text-xs text-slate-100 font-bold focus:outline-none font-mono"
+                  />
+                  <button
+                    onClick={async () => {
+                      if (syncEmailInput.trim()) {
+                        setUserEmail(syncEmailInput.trim());
+                        setSyncEmailInput("");
+                      }
+                    }}
+                    disabled={isSyncingDb}
+                    className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer flex-shrink-0"
+                  >
+                    {isSyncingDb ? "Syncing..." : "Sync"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {syncStatusMsg && (
+              <p className="text-[11px] text-emerald-400 font-bold text-center animate-in fade-in">
+                {syncStatusMsg}
+              </p>
+            )}
 
             {/* Primary Action: Save Current Details as Chart */}
             <button
@@ -1144,7 +1342,7 @@ export default function TimeTravelSlider() {
             {/* Saved Profiles List */}
             <div className="space-y-2">
               <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
-                Your Saved Charts on this Device:
+                Your Saved Charts ({savedProfiles.length}):
               </span>
 
               <div className="max-h-60 overflow-y-auto space-y-2 custom-scrollbar">
@@ -1175,6 +1373,9 @@ export default function TimeTravelSlider() {
                         >
                           <div className="font-black text-sm text-slate-100 flex items-center gap-2">
                             <span>{p.name}</span>
+                            <span className="text-xs text-slate-400">
+                              {p.gender === "female" ? "♀" : "♂"}
+                            </span>
                             {p.isDefault && (
                               <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold border border-amber-500/40">
                                 Default
@@ -1208,9 +1409,9 @@ export default function TimeTravelSlider() {
                             Load
                           </button>
                           <button
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
-                              deleteProfile(p.id);
+                              await deleteProfile(p.id);
                             }}
                             className="p-1.5 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 text-xs transition-colors cursor-pointer"
                             title="Delete Profile"

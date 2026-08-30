@@ -32,12 +32,16 @@ export type SkyViewType = "ecliptic" | "horizontal";
 
 export interface BirthProfile {
   id: string;
+  userEmail?: string;
   name: string;
+  gender?: "male" | "female";
   dateIso: string;
+  dob?: string;
+  time?: string;
   location: GeoLocation;
   ayanamsha: AyanamshaType;
-  gender?: "male" | "female";
   isDefault?: boolean;
+  notes?: string;
   savedAt: number;
 }
 
@@ -54,6 +58,7 @@ export interface MatchmakingStoreState {
 
 const STORAGE_ACTIVE_KEY = "vedic_active_chart_data";
 const STORAGE_PROFILES_KEY = "vedic_saved_birth_profiles";
+const STORAGE_USER_EMAIL_KEY = "vedic_user_email";
 const STORAGE_MATCHMAKING_KEY = "vedic_matchmaking_active_state";
 
 const defaultMatchmakingState: MatchmakingStoreState = {
@@ -159,6 +164,8 @@ interface AstroState {
   // Profile Management & Persistence
   savedProfiles: BirthProfile[];
   activeProfileName: string | null;
+  userEmail: string | null;
+  isSyncingDb: boolean;
 
   // Matchmaking State (Groom & Bride)
   matchmaking: MatchmakingStoreState;
@@ -171,6 +178,8 @@ interface AstroState {
   setHouseSystem: (sys: HouseSystem) => void;
   setNodeType: (node: NodeType) => void;
   setGender: (gender: "male" | "female") => void;
+  setUserEmail: (email: string | null) => void;
+  syncChartsWithDb: (customEmail?: string) => Promise<BirthProfile[]>;
   setMatchmakingBoy: (data: Partial<MatchmakingProfileData>) => void;
   setMatchmakingGirl: (data: Partial<MatchmakingProfileData>) => void;
   setMatchmakingState: (state: MatchmakingStoreState) => void;
@@ -185,9 +194,15 @@ interface AstroState {
   recompute: () => void;
 
   // Saved Profile Methods
-  saveProfile: (name: string, isDefault?: boolean, gender?: "male" | "female") => BirthProfile;
+  saveProfile: (
+    name: string,
+    isDefault?: boolean,
+    gender?: "male" | "female",
+    email?: string,
+    notes?: string
+  ) => Promise<BirthProfile>;
   loadProfile: (profile: BirthProfile) => void;
-  deleteProfile: (profileId: string) => void;
+  deleteProfile: (profileId: string) => Promise<void>;
   resetToLiveTransit: (customLocation?: GeoLocation) => void;
   initFromStorage: () => void;
 }
@@ -215,6 +230,8 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   selectedEntityId: null,
   savedProfiles: [],
   activeProfileName: null,
+  userEmail: null,
+  isSyncingDb: false,
   matchmaking: defaultMatchmakingState,
   ephemeris: calculateVedicEphemeris(
     defaultDate,
@@ -223,6 +240,67 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     defaultHouseSystem,
     defaultNodeType
   ),
+
+  setUserEmail: (email) => {
+    const clean = email?.trim().toLowerCase() || null;
+    if (typeof window !== "undefined") {
+      if (clean) localStorage.setItem(STORAGE_USER_EMAIL_KEY, clean);
+      else localStorage.removeItem(STORAGE_USER_EMAIL_KEY);
+    }
+    set({ userEmail: clean });
+    if (clean) {
+      get().syncChartsWithDb(clean);
+    }
+  },
+
+  syncChartsWithDb: async (customEmail) => {
+    const targetEmail = customEmail || get().userEmail;
+    if (!targetEmail || typeof window === "undefined") return [];
+
+    set({ isSyncingDb: true });
+    try {
+      const res = await fetch(`/api/charts?email=${encodeURIComponent(targetEmail)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.charts && Array.isArray(data.charts)) {
+          const dbProfiles: BirthProfile[] = data.charts.map((c: any) => ({
+            id: c.id,
+            userEmail: c.userEmail,
+            name: c.name,
+            gender: c.gender || "male",
+            dateIso: c.dateIso,
+            dob: c.dob,
+            time: c.time,
+            location: c.location,
+            ayanamsha: (c.ayanamsha as AyanamshaType) || "Lahiri",
+            isDefault: Boolean(c.isDefault),
+            notes: c.notes,
+            savedAt: new Date(c.updatedAt || c.createdAt).getTime(),
+          }));
+
+          // Merge DB profiles with local profiles
+          const localProfiles = getStoredProfiles();
+          const mergedMap = new Map<string, BirthProfile>();
+
+          // DB profiles take highest precedence
+          dbProfiles.forEach((p) => mergedMap.set(p.id, p));
+          localProfiles.forEach((p) => {
+            if (!mergedMap.has(p.id)) mergedMap.set(p.id, p);
+          });
+
+          const mergedList = Array.from(mergedMap.values()).sort((a, b) => b.savedAt - a.savedAt);
+          saveProfilesToStorage(mergedList);
+          set({ savedProfiles: mergedList, isSyncingDb: false });
+          return mergedList;
+        }
+      }
+    } catch (err) {
+      console.warn("Could not sync with DB:", err);
+    } finally {
+      set({ isSyncingDb: false });
+    }
+    return get().savedProfiles;
+  },
 
   setDate: (date) => {
     const { location, ayanamsha, houseSystem, nodeType, activeProfileName, gender } = get();
@@ -270,35 +348,35 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     });
   },
 
-  setAyanamsha: (type) => {
+  setAyanamsha: (ayanamsha) => {
     const { currentDate, location, houseSystem, nodeType, activeProfileName, gender } = get();
-    saveActiveChartToStorage(currentDate, location, type, activeProfileName, gender);
+    saveActiveChartToStorage(currentDate, location, ayanamsha, activeProfileName, gender);
     set({
-      ayanamsha: type,
-      ephemeris: calculateVedicEphemeris(currentDate, location, type, houseSystem, nodeType),
+      ayanamsha,
+      ephemeris: calculateVedicEphemeris(currentDate, location, ayanamsha, houseSystem, nodeType),
     });
   },
 
-  setHouseSystem: (sys) => {
+  setHouseSystem: (houseSystem) => {
     const { currentDate, location, ayanamsha, nodeType } = get();
     set({
-      houseSystem: sys,
-      ephemeris: calculateVedicEphemeris(currentDate, location, ayanamsha, sys, nodeType),
+      houseSystem,
+      ephemeris: calculateVedicEphemeris(currentDate, location, ayanamsha, houseSystem, nodeType),
     });
   },
 
-  setNodeType: (node) => {
+  setNodeType: (nodeType) => {
     const { currentDate, location, ayanamsha, houseSystem } = get();
     set({
-      nodeType: node,
-      ephemeris: calculateVedicEphemeris(currentDate, location, ayanamsha, houseSystem, node),
+      nodeType,
+      ephemeris: calculateVedicEphemeris(currentDate, location, ayanamsha, houseSystem, nodeType),
     });
   },
 
-  setGender: (g) => {
+  setGender: (gender) => {
     const { currentDate, location, ayanamsha, activeProfileName } = get();
-    saveActiveChartToStorage(currentDate, location, ayanamsha, activeProfileName, g);
-    set({ gender: g });
+    saveActiveChartToStorage(currentDate, location, ayanamsha, activeProfileName, gender);
+    set({ gender });
   },
 
   setMatchmakingBoy: (data) => {
@@ -327,13 +405,13 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   },
 
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
-  setPlaySpeed: (speed) => set({ playSpeed: speed }),
-  setShowModernPlanets: (show) => set({ showModernPlanets: show }),
-  setShowUpagrahas: (show) => set({ showUpagrahas: show }),
-  setShowConstellations: (show) => set({ showConstellations: show }),
-  setViewMode: (mode) => set({ viewMode: mode }),
-  setSkyViewType: (type) => set({ skyViewType: type }),
-  setSelectedEntityId: (id) => set({ selectedEntityId: id }),
+  setPlaySpeed: (playSpeed) => set({ playSpeed }),
+  setShowModernPlanets: (showModernPlanets) => set({ showModernPlanets }),
+  setShowUpagrahas: (showUpagrahas) => set({ showUpagrahas }),
+  setShowConstellations: (showConstellations) => set({ showConstellations }),
+  setViewMode: (viewMode) => set({ viewMode }),
+  setSkyViewType: (skyViewType) => set({ skyViewType }),
+  setSelectedEntityId: (selectedEntityId) => set({ selectedEntityId }),
 
   recompute: () => {
     const { currentDate, location, ayanamsha, houseSystem, nodeType } = get();
@@ -342,19 +420,32 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     });
   },
 
-  saveProfile: (name, isDefault = false, profGender) => {
-    const { currentDate, location, ayanamsha, savedProfiles, gender } = get();
+  saveProfile: async (name, isDefault = false, profGender, email, notes) => {
+    const { currentDate, location, ayanamsha, houseSystem, savedProfiles, gender, userEmail } = get();
     const cleanName = name.trim() || "Saved Birth Chart";
     const chosenGender = profGender || gender;
+    const effectiveEmail = email?.trim().toLowerCase() || userEmail;
+
+    const id = "knd_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6);
+
+    const tzOffset = location.timezoneOffsetHours || 0;
+    const localMs = currentDate.getTime() + tzOffset * 3600 * 1000;
+    const localDate = new Date(localMs);
+    const dob = `${localDate.getUTCFullYear()}-${String(localDate.getUTCMonth() + 1).padStart(2, "0")}-${String(localDate.getUTCDate()).padStart(2, "0")}`;
+    const time = `${String(localDate.getUTCHours()).padStart(2, "0")}:${String(localDate.getUTCMinutes()).padStart(2, "0")}`;
 
     const newProfile: BirthProfile = {
-      id: "profile_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6),
+      id,
+      userEmail: effectiveEmail || undefined,
       name: cleanName,
       dateIso: currentDate.toISOString(),
+      dob,
+      time,
       location: { ...location },
       ayanamsha,
       gender: chosenGender,
       isDefault,
+      notes,
       savedAt: Date.now(),
     };
 
@@ -370,7 +461,34 @@ export const useAstroStore = create<AstroState>((set, get) => ({
       savedProfiles: updatedList,
       activeProfileName: cleanName,
       gender: chosenGender,
+      userEmail: effectiveEmail || userEmail,
     });
+
+    if (effectiveEmail && typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_USER_EMAIL_KEY, effectiveEmail);
+
+      // Async post to server-side DB
+      try {
+        fetch("/api/charts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id,
+            userEmail: effectiveEmail,
+            name: cleanName,
+            gender: chosenGender,
+            dateIso: currentDate.toISOString(),
+            location,
+            ayanamsha,
+            houseSystem,
+            isDefault,
+            notes,
+          }),
+        }).catch((e) => console.warn("Failed to persist chart to server DB:", e));
+      } catch (err) {
+        console.warn("Async save to DB error:", err);
+      }
+    }
 
     return newProfile;
   },
@@ -394,11 +512,23 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     });
   },
 
-  deleteProfile: (profileId) => {
-    const { savedProfiles } = get();
+  deleteProfile: async (profileId) => {
+    const { savedProfiles, userEmail } = get();
+    const target = savedProfiles.find((p) => p.id === profileId);
     const updatedList = savedProfiles.filter((p) => p.id !== profileId);
     saveProfilesToStorage(updatedList);
     set({ savedProfiles: updatedList });
+
+    const effectiveEmail = target?.userEmail || userEmail;
+    if (effectiveEmail && typeof window !== "undefined") {
+      try {
+        fetch(`/api/charts?id=${encodeURIComponent(profileId)}&email=${encodeURIComponent(effectiveEmail)}`, {
+          method: "DELETE",
+        }).catch((e) => console.warn("Failed to delete from DB:", e));
+      } catch (err) {
+        console.warn("Async delete error:", err);
+      }
+    }
   },
 
   resetToLiveTransit: (customLocation?: GeoLocation) => {
@@ -418,6 +548,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     try {
       const profiles = getStoredProfiles();
       const storedMatchmaking = getStoredMatchmaking();
+      const storedEmail = localStorage.getItem(STORAGE_USER_EMAIL_KEY);
       const rawActive = localStorage.getItem(STORAGE_ACTIVE_KEY);
 
       let targetDate: Date = defaultDate;
@@ -452,9 +583,15 @@ export const useAstroStore = create<AstroState>((set, get) => ({
         ayanamsha: targetAya,
         activeProfileName: targetProfileName,
         gender: targetGender,
+        userEmail: storedEmail || null,
         matchmaking: storedMatchmaking,
         ephemeris: calculateVedicEphemeris(targetDate, targetLoc, targetAya, houseSystem, nodeType),
       });
+
+      // Background sync from DB if email is available
+      if (storedEmail) {
+        get().syncChartsWithDb(storedEmail);
+      }
     } catch (_) {}
   },
 }));
