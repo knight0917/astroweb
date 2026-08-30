@@ -8,6 +8,7 @@ export default function ShadbalaView() {
   const { ephemeris, selectedEntityId, setSelectedEntityId } = useAstroStore();
   const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table">("bars");
   const [sortBy, setSortBy] = useState<"ratio" | "total">("ratio");
+  const [barMetric, setBarMetric] = useState<"%" | "rupas">("%");
 
   const shadbalaResult = useMemo(() => {
     return calculateShadbala(ephemeris);
@@ -33,10 +34,15 @@ export default function ShadbalaView() {
     return { icon: `#${rank}`, label: `${rank}th`, color: "bg-slate-800 text-slate-300" };
   };
 
-  // Max Rupas for Bar Chart scaling
+  // Max values for Bar Chart scaling
   const maxRupas = useMemo(() => {
     const maxVal = Math.max(...shadbalaResult.rankedPlanets.map((p) => p.totalRupas));
     return Math.max(10, Math.ceil(maxVal + 1));
+  }, [shadbalaResult]);
+
+  const maxPercentage = useMemo(() => {
+    const maxVal = Math.max(...shadbalaResult.rankedPlanets.map((p) => p.percentageEfficiency));
+    return Math.max(150, Math.ceil(maxVal / 10) * 10);
   }, [shadbalaResult]);
 
   return (
@@ -164,40 +170,44 @@ export default function ShadbalaView() {
                   <span className="text-[10px] text-slate-400 font-semibold">{p.sanskritName}</span>
                 </div>
 
-                {/* Rupas vs Required */}
-                <div className="space-y-1 pt-1 border-t border-slate-800/80">
-                  <div className="flex justify-between text-[11px] font-mono font-bold">
-                    <span className={isStrong ? "text-emerald-400" : "text-rose-400"}>
-                      {p.totalRupas.toFixed(2)} R
+                {/* Percentage Strength vs Required Quota */}
+                <div className="space-y-1.5 pt-1 border-t border-slate-800/80">
+                  <div className="flex justify-between items-baseline">
+                    <span
+                      className={`text-lg font-black font-mono tracking-tight ${
+                        isStrong ? "text-emerald-400" : "text-rose-400"
+                      }`}
+                    >
+                      {p.percentageEfficiency}%
                     </span>
-                    <span className="text-slate-500 font-normal">/ {p.requiredRupas.toFixed(1)} R</span>
+                    <span
+                      className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${
+                        isStrong
+                          ? "bg-emerald-950/80 text-emerald-300 border-emerald-800/60"
+                          : "bg-rose-950/80 text-rose-300 border-rose-800/60"
+                      }`}
+                    >
+                      {isStrong ? "BALAVAN" : "DEFICIT"}
+                    </span>
                   </div>
 
                   {/* Progress Bar */}
                   <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${
-                        p.strengthRatio >= 1.35
+                        p.percentageEfficiency >= 130
                           ? "bg-gradient-to-r from-emerald-400 to-amber-300 shadow-sm"
-                          : p.isBalavan
+                          : isStrong
                           ? "bg-emerald-500"
                           : "bg-rose-500"
                       }`}
-                      style={{ width: `${Math.min(100, p.percentageEfficiency)}%` }}
+                      style={{ width: `${Math.min(100, (p.percentageEfficiency / 150) * 100)}%` }}
                     ></div>
                   </div>
 
-                  <div className="flex justify-between items-center pt-0.5">
-                    <span className="text-[9px] font-bold font-mono text-amber-300">
-                      {p.percentageEfficiency}%
-                    </span>
-                    <span
-                      className={`text-[8px] font-black uppercase px-1 rounded ${
-                        isStrong ? "bg-emerald-950 text-emerald-400" : "bg-rose-950 text-rose-400"
-                      }`}
-                    >
-                      {isStrong ? "BALAVAN" : "WEAK"}
-                    </span>
+                  <div className="flex justify-between text-[10px] font-mono text-slate-400">
+                    <span className="font-semibold text-slate-300">{p.totalRupas.toFixed(2)} R</span>
+                    <span className="text-slate-500">req: {p.requiredRupas.toFixed(1)} R</span>
                   </div>
                 </div>
               </button>
@@ -210,61 +220,110 @@ export default function ShadbalaView() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Interactive Bar Graph / Table View (7 cols) */}
         <div className="lg:col-span-7 glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+          <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-2.5 gap-2">
             <h4 className="font-extrabold text-xs text-slate-200 uppercase tracking-wider flex items-center gap-2">
               <span>{displayMode === "table" ? "📋" : "📊"}</span>
               <span>
                 {displayMode === "bars"
-                  ? "Shadbala Planetary Strength vs Required Threshold (Bar Graph)"
+                  ? barMetric === "%"
+                    ? "Shadbala Planetary Strength (% of Required Quota)"
+                    : "Shadbala Total Strength (Absolute Rupas)"
                   : displayMode === "stacked"
                   ? "Stacked 6-Bala Composition Chart"
-                  : "Master Shadbala Matrix (Values in Rupas)"}
+                  : "Master Shadbala Matrix (% & Rupa Values)"}
               </span>
             </h4>
-            <span className="text-[10px] text-slate-400 font-mono">1 Rupa = 60 Virupas</span>
+
+            {displayMode === "bars" && (
+              <div className="flex items-center gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800 text-[10px] font-bold">
+                <button
+                  onClick={() => setBarMetric("%")}
+                  className={`px-2 py-0.5 rounded cursor-pointer transition-all ${
+                    barMetric === "%" ? "bg-amber-500 text-slate-950 shadow" : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  % Strength
+                </button>
+                <button
+                  onClick={() => setBarMetric("rupas")}
+                  className={`px-2 py-0.5 rounded cursor-pointer transition-all ${
+                    barMetric === "rupas" ? "bg-amber-500 text-slate-950 shadow" : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  Rupas (Raw)
+                </button>
+              </div>
+            )}
           </div>
 
           {/* BAR GRAPH VIEW 1: Direct Comparative Bars with Required Threshold Lines */}
           {displayMode === "bars" && (
             <div className="space-y-4 pt-2">
               {/* Legend */}
-              <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-400 px-2">
+              <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-400 px-2 gap-2">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded bg-emerald-500 inline-block"></span>
-                    <span>Balavan (Surpasses Required)</span>
+                    <span>Balavan (≥ 100% Quota)</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded bg-rose-500 inline-block"></span>
-                    <span>Deficient (Below Required)</span>
+                    <span>Deficient (&lt; 100% Quota)</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 text-amber-400 font-bold">
-                  <span className="w-3 h-0.5 bg-amber-400 inline-block border-t border-dashed border-amber-400"></span>
-                  <span>Required Threshold</span>
+                  <span className="w-4 h-0.5 bg-amber-400 inline-block border-t border-dashed border-amber-400"></span>
+                  <span>{barMetric === "%" ? "100% Minimum Required Quota" : "Required Rupa Threshold"}</span>
                 </div>
               </div>
 
               {/* SVG / Flex Bar Chart Canvas */}
               <div className="h-64 flex items-end justify-between gap-3 px-2 pt-6 pb-2 bg-slate-900/60 rounded-xl border border-slate-800 relative">
                 {/* Horizontal Grid lines */}
-                {[0.25, 0.5, 0.75, 1.0].map((fraction) => {
-                  const rVal = (maxRupas * fraction).toFixed(1);
-                  return (
-                    <div
-                      key={fraction}
-                      className="absolute left-0 right-0 border-b border-slate-800/60 flex items-center justify-end pr-2 text-[9px] font-mono text-slate-600 pointer-events-none"
-                      style={{ bottom: `${fraction * 82}%` }}
-                    >
-                      <span>{rVal} R</span>
-                    </div>
-                  );
-                })}
+                {barMetric === "%" ? (
+                  <>
+                    {[50, 100, 150].map((pct) => {
+                      const bottomPct = (pct / maxPercentage) * 82;
+                      const is100 = pct === 100;
+                      return (
+                        <div
+                          key={pct}
+                          className={`absolute left-0 right-0 border-b flex items-center justify-end pr-2 text-[9px] font-mono pointer-events-none ${
+                            is100 ? "border-amber-400/60 border-dashed text-amber-400 font-bold" : "border-slate-800/60 text-slate-600"
+                          }`}
+                          style={{ bottom: `${bottomPct}%` }}
+                        >
+                          <span>{pct}% {is100 ? "(100% Minimum Quota)" : ""}</span>
+                        </div>
+                      );
+                    })}
+                  </>
+                ) : (
+                  [0.25, 0.5, 0.75, 1.0].map((fraction) => {
+                    const rVal = (maxRupas * fraction).toFixed(1);
+                    return (
+                      <div
+                        key={fraction}
+                        className="absolute left-0 right-0 border-b border-slate-800/60 flex items-center justify-end pr-2 text-[9px] font-mono text-slate-600 pointer-events-none"
+                        style={{ bottom: `${fraction * 82}%` }}
+                      >
+                        <span>{rVal} R</span>
+                      </div>
+                    );
+                  })
+                )}
 
                 {displayedPlanets.map((p) => {
                   const isSelected = activePlanetId === p.planetId;
-                  const barHeightPercent = Math.min(100, (p.totalRupas / maxRupas) * 100);
-                  const reqHeightPercent = Math.min(100, (p.requiredRupas / maxRupas) * 100);
+                  const barHeightPercent =
+                    barMetric === "%"
+                      ? Math.min(100, (p.percentageEfficiency / maxPercentage) * 100)
+                      : Math.min(100, (p.totalRupas / maxRupas) * 100);
+
+                  const reqHeightPercent =
+                    barMetric === "%"
+                      ? Math.min(100, (100 / maxPercentage) * 100)
+                      : Math.min(100, (p.requiredRupas / maxRupas) * 100);
 
                   return (
                     <button
@@ -277,18 +336,18 @@ export default function ShadbalaView() {
                         isSelected ? "scale-105" : "opacity-85 hover:opacity-100"
                       }`}
                     >
-                      {/* Floating Ratio Tooltip */}
-                      <span className="text-[10px] font-mono font-extrabold text-slate-200 mb-1">
-                        {p.totalRupas.toFixed(2)}
+                      {/* Floating Metric Tooltip on top of bar */}
+                      <span className={`text-[11px] font-mono font-black mb-1 ${p.isBalavan ? "text-emerald-400" : "text-rose-400"}`}>
+                        {barMetric === "%" ? `${p.percentageEfficiency}%` : `${p.totalRupas.toFixed(2)} R`}
                       </span>
 
                       {/* Bar Container */}
-                      <div className="w-full max-w-[40px] h-[82%] flex items-end relative bg-slate-800/40 rounded-t-lg">
+                      <div className="w-full max-w-[42px] h-[82%] flex items-end relative bg-slate-800/40 rounded-t-lg">
                         {/* Required Threshold Line Marker */}
                         <div
                           className="absolute left-0 right-0 border-t-2 border-dashed border-amber-400 z-10 pointer-events-none"
                           style={{ bottom: `${reqHeightPercent}%` }}
-                          title={`Required: ${p.requiredRupas} Rupas`}
+                          title={`Required: ${barMetric === "%" ? "100%" : `${p.requiredRupas} Rupas`}`}
                         ></div>
 
                         {/* Actual Value Bar */}
@@ -455,6 +514,7 @@ export default function ShadbalaView() {
                     <th className="p-2.5 text-center">Drik</th>
                     <th className="p-2.5 text-right font-bold text-amber-300">Total (R)</th>
                     <th className="p-2.5 text-right">Req.</th>
+                    <th className="p-2.5 text-right text-amber-300 font-bold">% Strength</th>
                     <th className="p-2.5 text-right">Ratio</th>
                     <th className="p-2.5 text-right text-emerald-400">Ishta</th>
                     <th className="p-2.5 text-right text-rose-400">Kashta</th>
@@ -496,11 +556,14 @@ export default function ShadbalaView() {
                         <td className="p-2.5 text-center text-slate-300">
                           {p.drikBala >= 0 ? `+${(p.drikBala / 60).toFixed(2)}` : (p.drikBala / 60).toFixed(2)}
                         </td>
-                        <td className="p-2.5 text-right font-extrabold text-amber-300">
+                        <td className="p-2.5 text-right font-extrabold text-slate-200">
                           {p.totalRupas.toFixed(2)}
                         </td>
                         <td className="p-2.5 text-right text-slate-400">
                           {p.requiredRupas.toFixed(1)}
+                        </td>
+                        <td className="p-2.5 text-right font-black text-amber-300">
+                          {p.percentageEfficiency}%
                         </td>
                         <td className="p-2.5 text-right font-bold">
                           <span
@@ -552,8 +615,12 @@ export default function ShadbalaView() {
               </div>
 
               <div className="text-right font-mono">
-                <span className="text-base font-black text-amber-300 block">{activePlanet.totalRupas.toFixed(2)} R</span>
-                <span className="text-[9px] text-slate-400 font-bold">{activePlanet.totalVirupas.toFixed(1)} Virupas</span>
+                <span className={`text-xl font-black block ${activePlanet.isBalavan ? "text-emerald-400" : "text-rose-400"}`}>
+                  {activePlanet.percentageEfficiency}%
+                </span>
+                <span className="text-[10px] text-slate-400 font-bold">
+                  {activePlanet.totalRupas.toFixed(2)} R / {activePlanet.requiredRupas.toFixed(1)} R req
+                </span>
               </div>
             </div>
 

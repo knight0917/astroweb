@@ -170,25 +170,40 @@ function calculateUchchaBala(planetId: ShadbalaPlanetId, longitude: number): num
   return parseFloat((diff / 3).toFixed(2));
 }
 
-function calculateSaptavargajaBala(planetId: ShadbalaPlanetId, longitude: number): number {
+function calculateSaptavargajaBala(
+  planetId: ShadbalaPlanetId,
+  longitude: number,
+  ephem?: EphemerisResult
+): number {
   const vargas = ["D1", "D2", "D3", "D7", "D9", "D12", "D30"] as const;
   let total = 0;
+  const pD1Sign = Math.floor(longitude / 30);
 
   vargas.forEach((v) => {
     const sign = calculateVargaSign(longitude, v);
-    const signLord = RASHI_LORDS[sign];
+    const signLord = RASHI_LORDS[sign] as ShadbalaPlanetId;
 
     if (signLord === planetId) {
-      total += 30; // Own Sign (Swakshetra) / Moolatrikona
+      total += 30.0; // Own Sign (Swakshetra)
     } else {
-      const rel = NATURAL_FRIENDS[planetId];
-      if (rel.friends.includes(signLord)) {
-        total += 22.5; // Great Friend / Friend average in saptavarga
-      } else if (rel.enemies.includes(signLord)) {
-        total += 3.75; // Enemy
-      } else {
-        total += 15.0; // Neutral
+      let isTemporalFriend = false;
+      if (ephem?.planets && ephem.planets[signLord]) {
+        const lordD1Sign = Math.floor(ephem.planets[signLord].siderealLongitude / 30);
+        const diff = (lordD1Sign - pD1Sign + 12) % 12;
+        isTemporalFriend = [1, 2, 3, 9, 10, 11].includes(diff); // Houses 2, 3, 4, 10, 11, 12 from planet
       }
+
+      const rel = NATURAL_FRIENDS[planetId];
+      let natRel = "Neutral";
+      if (rel.friends.includes(signLord)) natRel = "Friend";
+      if (rel.enemies.includes(signLord)) natRel = "Enemy";
+
+      if (natRel === "Friend" && isTemporalFriend) total += 22.5; // Adhi Mitra
+      else if (natRel === "Friend" && !isTemporalFriend) total += 15.0; // Mitra (Natural Friend + Temporal Enemy -> Sama / Mitra)
+      else if (natRel === "Neutral" && isTemporalFriend) total += 15.0; // Mitra
+      else if (natRel === "Neutral" && !isTemporalFriend) total += 3.75; // Shatru
+      else if (natRel === "Enemy" && isTemporalFriend) total += 7.5; // Sama
+      else total += 1.875; // Adhi Shatru
     }
   });
 
@@ -447,7 +462,7 @@ export function calculateShadbala(ephem: EphemerisResult): ShadbalaResult {
 
     // 1. Sthana Bala
     const uchcha = calculateUchchaBala(id, lon);
-    const saptavarga = calculateSaptavargajaBala(id, lon);
+    const saptavarga = calculateSaptavargajaBala(id, lon, ephem);
     const ojayugma = calculateOjayugmaBala(id, lon);
     const kendra = calculateKendraBala(p.house);
     const drekkana = calculateDrekkanaBala(id, lon);
