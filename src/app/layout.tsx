@@ -3,14 +3,14 @@ import "./globals.css";
 import PwaRegister from "../components/PwaRegister";
 
 export const metadata: Metadata = {
-  title: "Vedic Sky — Precision Jyotish & Panchanga",
+  title: "Vedic Sky AI — Precision Jyotish & Panchanga",
   description:
     "Precision Vedic Astrology, 3D Celestial SkyDome, Kundli, Shadbala, and Daily Tithi Calendar.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "VedicSky",
+    title: "VedicSkyAI",
   },
   icons: {
     icon: "/icons/icon.svg",

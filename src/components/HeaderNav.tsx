@@ -352,7 +352,7 @@ export default function HeaderNav() {
             </div>
             <div>
               <h1 className="font-black text-sm md:text-base bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent tracking-tight leading-none">
-                VEDIC SKY
+                VEDIC SKY AI
               </h1>
               <p className="text-[8.5px] md:text-[9.5px] text-slate-400 font-medium hidden sm:block mt-0.5">
                 Precision Jyotish Ephemeris
@@ -468,7 +468,7 @@ export default function HeaderNav() {
                   </div>
                   <div>
                     <h3 className="font-bold text-sm text-slate-100 tracking-wide uppercase">
-                      Vedic Sky Jyotish Modules
+                      Vedic Sky AI Jyotish Modules
                     </h3>
                     <p className="text-[10px] text-slate-400 font-medium">
                       Select astrological tool or calculation suite

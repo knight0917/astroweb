@@ -117,7 +117,7 @@ export default function PwaRegister() {
                 New Update Available!
               </h4>
               <p className="text-[10px] text-slate-400">
-                A newer version of Vedic Sky is ready.
+                A newer version of Vedic Sky AI is ready.
               </p>
             </div>
           </div>
@@ -137,7 +137,7 @@ export default function PwaRegister() {
             <span className="text-lg">📲</span>
             <div>
               <h4 className="font-bold text-xs text-slate-100">
-                Install Vedic Sky App
+                Install Vedic Sky AI App
               </h4>
               <p className="text-[10px] text-slate-400">
                 Add to Home Screen for fast offline access

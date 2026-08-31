@@ -261,7 +261,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-900 py-4 px-4 text-center text-xs text-slate-500 flex flex-wrap items-center justify-center gap-4">
-        <span>Vedic Sky Tracker & Planetary Ephemeris Engine • Powered by High-Precision Celestial Mechanics</span>
+        <span>Vedic Sky AI Tracker & Planetary Ephemeris Engine • Powered by High-Precision Celestial Mechanics</span>
         <span className="text-slate-700">•</span>
         <a
           href="https://prasna-tantra-2-eqcdmsstvnm6buvdjcjfad.streamlit.app/"

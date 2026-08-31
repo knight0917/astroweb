@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Vedic Sky — Precision Jyotish & Panchanga",
-    short_name: "VedicSky",
+    name: "Vedic Sky AI — Precision Jyotish & Panchanga",
+    short_name: "VedicSkyAI",
     description: "Precision Vedic Astrology, 3D Celestial SkyDome, Kundli, Shadbala & Daily Tithi Calendar",
     start_url: "/",
     display: "standalone",
