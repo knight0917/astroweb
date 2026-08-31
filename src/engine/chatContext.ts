@@ -67,6 +67,7 @@ import { evaluatePatelAshtakavarga } from "./patelAshtakavarga";
 import { analyzeCareerJobBusiness } from "./careerJobBusiness";
 import { evaluatePushkaraNavamsha } from "./pushkaraNavamsha";
 import { evaluateMarriageMasterSynthesis } from "./marriageMasterSynthesis";
+import { evaluateRelationshipAffairs } from "./relationshipAffairsMaster";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
@@ -1449,6 +1450,22 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 64. Love Affairs, Elopement, Sexual Vitality & Yogini Dasha
+  let relationshipAffairsSummary = "";
+  try {
+    const relRes = evaluateRelationshipAffairs(natalEphemeris, gender);
+    relationshipAffairsSummary = [
+      `- **Love Marriage vs Arranged Marriage:** **${relRes.isLoveMarriageLikely ? "Love Marriage (Gandharva Vivaha) Favored" : "Arranged Marriage Favored"}** (${relRes.loveMarriageSynthesis})`,
+      `- **Secret Marriage & Elopement Risk:** **${relRes.isElopementRiskPresent ? "Active Indicators Present" : "Low / Conventional Path"}** (${relRes.elopementSynthesis})`,
+      `- **Romantic & Sensory Drive Vector:** ${relRes.sexualDesireSynthesis}`,
+      `- **D-9 Affairs & Multiple Union Tendencies:** ${relRes.d9AffairsSynthesis}`,
+      `- **Social Honor & Family Sanskars:** ${relRes.jupiterSocialBindingStatus} • ${relRes.d9SecondHouseSanskar}`,
+      `- **Yogini Dasha Timing Matrix (36-Year Cycle):** Active Yogini Dasha: **${relRes.activeYoginiDasha.name} (${relRes.activeYoginiDasha.sanskritName})** ruled by **${relRes.activeYoginiDasha.lord}** (${relRes.activeYoginiDasha.years} Years)`,
+      `- **Triple Dasha Timing Synthesis:** ${relRes.tripleDashaMarriageConvergence}`,
+      `- **Executive Relationship Synthesis:** ${relRes.executiveRelationshipSummary}`,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -1704,6 +1721,9 @@ export function buildAstroDossier(
     "",
     "#### 💍 63. MASTER MULTI-VARGA MARRIAGE, SPOUSE COMPLEXION & SEPARATION SHIELDS (STRI JATAKA) DOSSIER:",
     marriageMasterSummary,
+    "",
+    "#### 💘 64. LOVE AFFAIRS, ELOPEMENT, SEXUAL VITALITY & YOGINI DASHA (STRI JATAKA) DOSSIER:",
+    relationshipAffairsSummary,
   ];
 
   if (matchmakingSummary) {

@@ -3261,6 +3261,32 @@ test("Master Multi-Varga Marriage & Separation Shields Engine (Stri Jataka) Veri
   assert.ok(marriageReport.executiveMarriageSummary.length > 20);
 });
 
+test("Classical Relationship, Love Affairs, Elopement & Yogini Dasha Engine Verification", async () => {
+  const { evaluateRelationshipAffairs, YOGINI_DASHAS } = await import("../src/engine/relationshipAffairsMaster.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 1. Yogini Dasha static verification (36 years total)
+  assert.strictEqual(YOGINI_DASHAS.length, 8);
+  const totalYears = YOGINI_DASHAS.reduce((sum, y) => sum + y.years, 0);
+  assert.strictEqual(totalYears, 36);
+
+  // 2. Full Chart Evaluator
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const ephem = calculateVedicEphemeris(new Date("1998-05-24T18:46:51.000Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const relReport = evaluateRelationshipAffairs(ephem, "male");
+  assert.ok(relReport);
+  assert.ok(typeof relReport.isLoveMarriageLikely === "boolean");
+  assert.ok(typeof relReport.isElopementRiskPresent === "boolean");
+  assert.ok(relReport.sexualDesireSynthesis.length > 10);
+  assert.ok(relReport.d9AffairsSynthesis.length > 10);
+  assert.ok(relReport.activeYoginiDasha);
+  assert.ok(relReport.activeYoginiDasha.name);
+  assert.ok(relReport.tripleDashaMarriageConvergence.length > 20);
+  assert.ok(relReport.executiveRelationshipSummary.length > 20);
+});
+
+
 
 
 

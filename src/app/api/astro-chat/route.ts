@@ -138,6 +138,22 @@ STRICT CONSULTATION RULES (MANDATORY):
             - Step 3: D-9 7th house mutual harmony.
             - Step 4: D-9 4th house domestic joy.
             - Step 5: Complexion & mental disposition alignment.
+         8. **Love Marriage vs Arranged Marriage (Section 64)**:
+            - 5th Lord influencing 7th house or 1st house in D-1/D-9 (or 5th & 7th lords conjunct / exchanging signs) -> Love Marriage (Gandharva Vivaha).
+            - Benefic influence confirms marriage fruition; malefic creates post-affair separation.
+         9. **Elopement & Secret Marriage Risk (Section 64)**:
+            - Connection of 5th, 7th, and 8th houses in D-1/D-9 with strong 3rd house (willpower) & 12th house (isolation) -> Secret court marriage / elopement.
+         10. **Sensory Drive & Romantic Vitality (Section 64)**:
+            - Mars-Venus conjunction or opposition -> High romantic attraction and intense passion.
+            - Retrograde Mars/Venus with Rahu in D-1/D-9 -> Unconventional / non-traditional desires.
+            - Saturn-Venus mutual relation in D-9 -> Ascetic sensory control / periods of asexuality or detachment.
+         11. **D-9 Affairs & Multiple Unions (Section 64)**:
+            - Benefic in D-9 7th house with afflicted 7th lord -> Multiple marriages.
+            - Malefic in D-9 7th house with benefic 7th lord -> Pre-marital or parallel affairs.
+            - Jupiter in D-9 Kendra (1, 4, 7, 10) -> Unshakeable social binding and honorable reputation.
+         12. **Yogini Dasha Timing (36-Year Cycle)**:
+            - Mangala (Moon, 1y), Pingala (Sun, 2y), Dhanya (Jupiter, 3y), Bhramari (Mars, 4y), Bhadrika (Mercury, 5y), Ulka (Saturn, 6y), Siddha (Venus, 7y), Sankata (Rahu, 8y).
+            - Triangulate marriage timing: Vimshottari + Jaimini Chara Dasha (DK) + Yogini Dasha.
        - *Classical Treatises*:
          - *Stri Jataka*: Classical female horoscopy, Even/Odd sign disposition, Trimsamsha D-30 moral/spiritual inclinations, 8th house Mangalya Sthana (partner longevity), 9th house Soubhagya (auspicious fortune & children), and Visha Kanya neutralization.
          - *K.N. Rao Timing of Marriage*: 3-Tier Filter (Dasha Lord + Double Transit of Jupiter/Saturn on 7th House/7th Lord + D9 Navamsha).
