@@ -3204,6 +3204,45 @@ test("Classical Job vs Business & D-10 Dasamsa Career Engine Verification", asyn
   assert.ok(career.promotionsAndTimingNote.length > 20);
 });
 
+test("Classical Pushkara Navamsha & Pushkara Bhaga Engine (Jataka Parijata) Verification", async () => {
+  const { evaluatePushkaraNavamsha, evaluatePushkaraForLongitude } = await import("../src/engine/pushkaraNavamsha.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 1. Direct Longitude Unit Checks
+  // Aries 21.0° (Fire, 7th Navamsha) -> Pushkara Navamsha (Libra) & Pushkara Bhaga
+  const p1 = evaluatePushkaraForLongitude(21.0, "sun", "Sun", "सूर्य");
+  assert.strictEqual(p1.isPushkaraNavamsha, true);
+  assert.strictEqual(p1.pushkaraNavamshaType, "Fire-Libra");
+  assert.strictEqual(p1.d9RashiName, "Libra");
+  assert.strictEqual(p1.d9RashiLord, "Venus");
+  assert.strictEqual(p1.isPushkaraBhaga, true);
+
+  // Taurus 14.5° (Earth, 5th Navamsha -> Taurus) -> Pushkara Vargottama & Pushkara Bhaga
+  const p2 = evaluatePushkaraForLongitude(30 + 14.5, "moon", "Moon", "चन्द्र");
+  assert.strictEqual(p2.isPushkaraNavamsha, true);
+  assert.strictEqual(p2.isPushkaraVargottama, true);
+  assert.strictEqual(p2.d9RashiName, "Taurus");
+  assert.strictEqual(p2.isPushkaraBhaga, true);
+
+  // Cancer 1.5° (Water, 1st Navamsha -> Cancer) -> Pushkara Vargottama
+  const p3 = evaluatePushkaraForLongitude(90 + 1.5, "jup", "Jupiter", "गुरु");
+  assert.strictEqual(p3.isPushkaraNavamsha, true);
+  assert.strictEqual(p3.isPushkaraVargottama, true);
+  assert.strictEqual(p3.d9RashiName, "Cancer");
+
+  // 2. Full Chart Evaluator
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const ephem = calculateVedicEphemeris(new Date("1998-05-24T18:46:51.000Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const pushkaraRes = evaluatePushkaraNavamsha(ephem);
+  assert.ok(pushkaraRes);
+  assert.ok(typeof pushkaraRes.totalPushkaraEntitiesCount === "number");
+  assert.ok(Array.isArray(pushkaraRes.pushkaraEntities));
+  assert.ok(typeof pushkaraRes.isLagnaInPushkara === "boolean");
+  assert.ok(pushkaraRes.overallPushkaraBlessingSummary.length > 20);
+});
+
+
 
 
 

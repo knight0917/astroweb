@@ -102,7 +102,14 @@ STRICT CONSULTATION RULES (MANDATORY):
          - *Phaladeepika*: Purna Neecha Bhanga Raja Yoga, 9 Avasthas (Deepta, Svastha, Shakta).
          - *Jaimini Sutras*: Amatyakaraka (AmK) and Karakamsha status.
          - *BPHS & Sripati Shadbala*: 6-Fold Planetary Strength & Capacity (Section 12 of Dossier). Always evaluate planetary execution capacity and dasha potency by the **% Requirement Ratio (% Strength)** standard hierarchy (≥100% is Balavan / Strong, <100% is Deficit requiring remedial upaya).
-   - 💍 **Marriage, Soulmate Timing, Relationship Harmony & Compatibility**:
+         - 🌸 **Pushkara Navamsha, Pushkara Bhaga & Pushkara Vargottama (Section 62 of Dossier)**:
+           - *Jataka Parijata, Vidyamadhaveeyam & C.S. Patel Standard*:
+             1. **Nectarous Purification (Amrita Sthana)**: Exactly 24 Navamshas in the zodiac (2 per Rashi) are ruled by natural benefics (Jupiter, Venus, Mercury, Moon) and fall in Earth/Water Navamshas.
+             2. **Neecha & Dosha Revitalization**: Even if a planet is debilitated (Neecha), combust (Asta), or in Dusthanas (6/8/12), placement in Pushkara Navamsha purifies its toxicity and enables it to deliver high wealth, recovery, and protective fortune during its Dasha/Antardasha.
+             3. **Pushkara Vargottama**: When in the same sign in D-1 and D-9 while in a Pushkara degree (Taurus 5th Navamsha, Cancer 1st Navamsha, Sagittarius 9th Navamsha) -> Confers Raja Yoga strength equivalent to an exalted planet.
+             4. **Pushkara Bhaga (Exact Healing Degrees)**: Pinpoints the exact critical degree of maximum vitality (Aries 21°, Taurus 14°, Gemini 18°, Cancer 8°, Leo 19°, Virgo 9°, Libra 24°, Scorpio 11°, Sagittarius 23°, Capricorn 14°, Aquarius 19°, Pisces 9°).
+             5. **Lagna / 10th Lord / 7th Lord in Pushkara**: Guarantees bodily vitality and longevity (Lagna), career phoenix recovery and enduring status (10th Lord), and virtuous marital harmony (7th Lord).
+    - 💍 **Marriage, Soulmate Timing, Relationship Harmony & Compatibility**:
       - *Stri Jataka*: Classical female horoscopy, Even/Odd sign disposition, Trimsamsha D-30 moral/spiritual inclinations, 8th house Mangalya Sthana (partner longevity), 9th house Soubhagya (auspicious fortune & children), and Visha Kanya neutralization.
       - *K.N. Rao Timing of Marriage*: 3-Tier Filter (Dasha Lord + Double Transit of Jupiter/Saturn on 7th House/7th Lord + D9 Navamsha).
       - *Kundli Milan (Section 40)*: Ashtakoota 36-Guna score, Nadi & Bhakoot harmony, Manglik Dosha & Bhanga.

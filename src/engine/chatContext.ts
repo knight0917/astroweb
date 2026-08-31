@@ -65,6 +65,7 @@ import { evaluateBenchmarkResonance } from "./benchmarkHoroscopes";
 import { evaluatePrasnaTantra, evaluateMargabandhuStotram } from "./prasnaTantra";
 import { evaluatePatelAshtakavarga } from "./patelAshtakavarga";
 import { analyzeCareerJobBusiness } from "./careerJobBusiness";
+import { evaluatePushkaraNavamsha } from "./pushkaraNavamsha";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
@@ -1408,6 +1409,26 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 62. Pushkara Navamsha, Pushkara Bhaga & Pushkara Vargottama (Jataka Parijata)
+  let pushkaraSummary = "";
+  try {
+    const pushkaraRes = evaluatePushkaraNavamsha(natalEphemeris);
+    const pushkaraList = pushkaraRes.pushkaraEntities.map((e) => {
+      let tag = `**${e.name}** at ${e.rashiName} ${e.formattedDegree} -> D-9 ${e.d9RashiName} (${e.d9RashiLord})`;
+      if (e.isPushkaraVargottama) tag += ` 👑 **[PUSHKARA VARGOTTAMA]**`;
+      else if (e.isPushkaraBhaga) tag += ` 🌸 **[EXACT PUSHKARA BHAGA (${e.exactPushkaraBhagaDegree}°)]**`;
+      else tag += ` 🛡️ [Pushkara Navamsha (${e.pushkaraNavamshaType})]`;
+      return tag;
+    });
+
+    pushkaraSummary = [
+      `- **Total Pushkara Placements Count:** **${pushkaraRes.totalPushkaraEntitiesCount} Active Placements**`,
+      `- **Pushkara Entities List:** ${pushkaraList.length > 0 ? pushkaraList.join(" | ") : "No direct Pushkara Navamshas"}`,
+      `- **Key Cardinal Indicators:** Lagna in Pushkara: **${pushkaraRes.isLagnaInPushkara ? "YES (Extraordinary Vitality & Charisma)" : "No"}** | Moon: **${pushkaraRes.isMoonInPushkara ? "YES (Emotional Resilience & Wealth)" : "No"}** | Sun: **${pushkaraRes.isSunInPushkara ? "YES (Royal Aura & Public Honor)" : "No"}** | 10th Lord: **${pushkaraRes.is10thLordInPushkara ? "YES (Career Phoenix Recovery & Renown)" : "No"}** | 7th Lord: **${pushkaraRes.is7thLordInPushkara ? "YES (Auspicious Partner & Marital Harmony)" : "No"}**`,
+      `- **Pushkara Blessing Synthesis:** ${pushkaraRes.overallPushkaraBlessingSummary}`,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -1657,6 +1678,9 @@ export function buildAstroDossier(
     "",
     "#### 💼 61. JOB VS BUSINESS, CAREER ORIENTATION & D-10 DASAMSA PHALA DOSSIER (15 CLASSICAL RULES):",
     careerDossierSummary,
+    "",
+    "#### 🌸 62. PUSHKARA NAVAMSHA, PUSHKARA BHAGA & PUSHKARA VARGOTTAMA (JATAKA PARIJATA) DOSSIER:",
+    pushkaraSummary,
   ];
 
   if (matchmakingSummary) {
