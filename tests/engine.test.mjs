@@ -3242,6 +3242,26 @@ test("Classical Pushkara Navamsha & Pushkara Bhaga Engine (Jataka Parijata) Veri
   assert.ok(pushkaraRes.overallPushkaraBlessingSummary.length > 20);
 });
 
+test("Master Multi-Varga Marriage & Separation Shields Engine (Stri Jataka) Verification", async () => {
+  const { evaluateMarriageMasterSynthesis } = await import("../src/engine/marriageMasterSynthesis.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const ephem = calculateVedicEphemeris(new Date("1998-05-24T18:46:51.000Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const marriageReport = evaluateMarriageMasterSynthesis(ephem, "male");
+  assert.ok(marriageReport);
+  assert.ok(["Early Marriage", "Timely Marriage (Auspicious Age)", "Delayed Marriage", "Ascetic / Spiritual Focus"].includes(marriageReport.marriageTimingClassification));
+  assert.ok(typeof marriageReport.qualityOfMarriageScore === "number");
+  assert.ok(marriageReport.qualityOfMarriageScore >= 35 && marriageReport.qualityOfMarriageScore <= 100);
+  assert.ok(["Low / Harmonious", "Moderate / Resolvable via Remedies", "High / Requires Pre-marital Alignment"].includes(marriageReport.divorceSeparationRiskLevel));
+  assert.ok(typeof marriageReport.isForeignSpouseIndicated === "boolean");
+  assert.ok(marriageReport.spouseComplexion.length > 10);
+  assert.ok(marriageReport.spouseArchetypeDetails.length > 10);
+  assert.ok(marriageReport.executiveMarriageSummary.length > 20);
+});
+
+
 
 
 

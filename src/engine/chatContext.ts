@@ -66,6 +66,7 @@ import { evaluatePrasnaTantra, evaluateMargabandhuStotram } from "./prasnaTantra
 import { evaluatePatelAshtakavarga } from "./patelAshtakavarga";
 import { analyzeCareerJobBusiness } from "./careerJobBusiness";
 import { evaluatePushkaraNavamsha } from "./pushkaraNavamsha";
+import { evaluateMarriageMasterSynthesis } from "./marriageMasterSynthesis";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
@@ -1429,6 +1430,25 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 63. Master Multi-Varga Marriage & Separation Shields (Stri Jataka, D-9 & D-30)
+  let marriageMasterSummary = "";
+  try {
+    const marriageMaster = evaluateMarriageMasterSynthesis(natalEphemeris, gender);
+    marriageMasterSummary = [
+      `- **Timing Band & Readiness:** **${marriageMaster.marriageTimingClassification}** (${marriageMaster.timingSynthesisReason})`,
+      `- **Marital Quality & Stability Score:** **${marriageMaster.qualityOfMarriageScore}/100** • Risk Tier: **${marriageMaster.divorceSeparationRiskLevel}**`,
+      `  - *Separation & Divorce Synthesis:* ${marriageMaster.divorceSeparationSynthesis}`,
+      `- **Foreign / Inter-Cultural Marriage Indicators:** **${marriageMaster.isForeignSpouseIndicated ? "YES" : "NO"}**`,
+      `  - *Details:* ${marriageMaster.foreignSpouseReason}`,
+      `- **D-9 4th House Domestic Happiness:** ${marriageMaster.d9FourthHouseHappiness}`,
+      `- **D-30 Trimsamsha Moral & Temperament Disposition:** ${marriageMaster.d30TrimsamshaHarmony}`,
+      `- **Spouse Longevity & Mangalya Sthana:** ${marriageMaster.spouseLongevityNotes}`,
+      `- **Spouse Physical Appearance & Complexion (Classical Matrix):** **${marriageMaster.spouseComplexion}**`,
+      `  - *Archetype Profile:* ${marriageMaster.spouseArchetypeDetails}`,
+      `- **Executive Multi-Varga Verdict:** ${marriageMaster.executiveMarriageSummary}`,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -1681,6 +1701,9 @@ export function buildAstroDossier(
     "",
     "#### 🌸 62. PUSHKARA NAVAMSHA, PUSHKARA BHAGA & PUSHKARA VARGOTTAMA (JATAKA PARIJATA) DOSSIER:",
     pushkaraSummary,
+    "",
+    "#### 💍 63. MASTER MULTI-VARGA MARRIAGE, SPOUSE COMPLEXION & SEPARATION SHIELDS (STRI JATAKA) DOSSIER:",
+    marriageMasterSummary,
   ];
 
   if (matchmakingSummary) {

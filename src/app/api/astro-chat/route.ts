@@ -109,12 +109,41 @@ STRICT CONSULTATION RULES (MANDATORY):
              3. **Pushkara Vargottama**: When in the same sign in D-1 and D-9 while in a Pushkara degree (Taurus 5th Navamsha, Cancer 1st Navamsha, Sagittarius 9th Navamsha) -> Confers Raja Yoga strength equivalent to an exalted planet.
              4. **Pushkara Bhaga (Exact Healing Degrees)**: Pinpoints the exact critical degree of maximum vitality (Aries 21°, Taurus 14°, Gemini 18°, Cancer 8°, Leo 19°, Virgo 9°, Libra 24°, Scorpio 11°, Sagittarius 23°, Capricorn 14°, Aquarius 19°, Pisces 9°).
              5. **Lagna / 10th Lord / 7th Lord in Pushkara**: Guarantees bodily vitality and longevity (Lagna), career phoenix recovery and enduring status (10th Lord), and virtuous marital harmony (7th Lord).
-    - 💍 **Marriage, Soulmate Timing, Relationship Harmony & Compatibility**:
-      - *Stri Jataka*: Classical female horoscopy, Even/Odd sign disposition, Trimsamsha D-30 moral/spiritual inclinations, 8th house Mangalya Sthana (partner longevity), 9th house Soubhagya (auspicious fortune & children), and Visha Kanya neutralization.
-      - *K.N. Rao Timing of Marriage*: 3-Tier Filter (Dasha Lord + Double Transit of Jupiter/Saturn on 7th House/7th Lord + D9 Navamsha).
-      - *Kundli Milan (Section 40)*: Ashtakoota 36-Guna score, Nadi & Bhakoot harmony, Manglik Dosha & Bhanga.
-      - *Jaimini Sutras*: Darakaraka (DK), Upapada Lagna (UL), Darapada (A7).
-      - *Saravali & Jataka Alankara*: Stri Jataka, Trimsamsha D-30 moral disposition, Visha Kanya neutralization.
+    - 💍 **Marriage, Soulmate Timing, Relationship Harmony & Compatibility (Sections 50 & 63 of Dossier)**:
+       - *Core Multi-Varga Marriage & Separation Rules (Handwritten Notes & Stri Jataka)*:
+         1. **Foreign / Inter-Cultural Marriage**:
+            - Jaimini Darakaraka (DK) associated with Saturn, Rahu, or Ketu indicates foreign/cross-cultural spouse.
+            - DK associated with Sun indicates difference in community or social background.
+            - 7th Lord connected to 9th or 12th houses in D-1/D-9 confirms marriage abroad or settling in a foreign land.
+         2. **Separation & Divorce Diagnostics**:
+            - 7th Lord in D-9 afflicted by natural malefics (Mars, Saturn, Rahu, Ketu) or placed in 6/8/12.
+            - Inter-connection between 7th and 8th houses/lords in D-1 and D-9 creates friction unless shielded by benefics.
+            - 7th Lord in D-9 retrograde in dual signs with malefic influence indicates fluctuating relationship dynamics.
+            - Strong benefic Drishti from Jupiter, Venus, or Mercury mitigates and balances the marital outcome.
+         3. **Spouse Longevity & Mangalya Sthana**:
+            - 8th house in D-1 & D-9 (Mangalya Sthana / partner longevity): Check if 8th lord in D-9 is in Paap Kartari or heavily afflicted by malefics.
+         4. **Marriage Timing & Denial Principles**:
+            - *Early Marriage*: Planet placed in or aspecting Lagna in D-1 AND the same planet placed in or aspecting Lagna in D-30 (Trimsamsha) triggers early matrimonial readiness.
+            - *Timely Marriage*: 7th house in D-1 & D-9 unafflicted with at least 1 benefic in 7th.
+            - *Delayed Marriage*: Saturn or heavy discipline in 7th house/D-9 Lagna shifts marriage to mature ages (28-33+).
+            - *Ascetic / Denial*: Triple affliction on 7th in D-1 & D-9 with no benefic aspect, Karaka singly placed in D-9 Lagna with malefic connection, or strong 9th/12th focus directing energy toward spiritual life.
+         5. **D-9 4th House Happiness & D-30 Trimsamsha Moral Tone**:
+            - 4th House in D-9 governs domestic joy and matrimonial happiness.
+            - D-30 Trimsamsha Lagna in Mars/Saturn signs requires cultivation of emotional patience; in benefic signs ensures natural harmony.
+         6. **Spouse Physical Appearance & Complexion Matrix**:
+            - Evaluate D-9 7th House Sign and D-9 7th Lord's classical complexion (Sun: Blood Red, Moon: Fair/White, Mars: Ruddy/Blood Red, Mercury: Olive/Greenish, Jupiter: Golden Yellow, Venus: Variegated/Charming, Saturn: Dark/Wheatish-Black).
+         7. **5-Step Cross-Chart Kundli Milan (Active Matchmaking)**:
+            - Step 1: Groom's birth Vimshottari Dasha lord must connect with Bride's 7th house / 7th lord / Lagna.
+            - Step 2: Placement of each other's D-9 Lagna lords in partner's D-9 (avoiding 6/8/12 Trik placements).
+            - Step 3: D-9 7th house mutual harmony.
+            - Step 4: D-9 4th house domestic joy.
+            - Step 5: Complexion & mental disposition alignment.
+       - *Classical Treatises*:
+         - *Stri Jataka*: Classical female horoscopy, Even/Odd sign disposition, Trimsamsha D-30 moral/spiritual inclinations, 8th house Mangalya Sthana (partner longevity), 9th house Soubhagya (auspicious fortune & children), and Visha Kanya neutralization.
+         - *K.N. Rao Timing of Marriage*: 3-Tier Filter (Dasha Lord + Double Transit of Jupiter/Saturn on 7th House/7th Lord + D9 Navamsha).
+         - *Kundli Milan (Section 40)*: Ashtakoota 36-Guna score, Nadi & Bhakoot harmony, Manglik Dosha & Bhanga.
+         - *Jaimini Sutras*: Darakaraka (DK), Upapada Lagna (UL), Darapada (A7).
+         - *Saravali & Jataka Alankara*: Stri Jataka, Trimsamsha D-30 moral disposition, Visha Kanya neutralization.
     - ⭐ **Nakshatra Dispositor Mechanics, Janma Taras & Dhruva Nadi**:
       - *Satya Jataka (Sage Satyacharya)*: Satyacharya's Starlord Principle (planets deliver fruits of houses owned/occupied by their Nakshatra dispositor), 9 Janma Tara Matrix (Janma, Sampat, Vipat, Kshema, Pratyak, Sadhaka, Vadha, Mitra, Parama Mitra), and functional Trikonadhipati rules.
    - 🩺 **Health, Vitality, Disease Diagnostics & Longevity**:
