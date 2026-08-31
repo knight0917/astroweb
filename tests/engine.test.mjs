@@ -3309,6 +3309,35 @@ test("Classical Bhrigu Nandi Nadi, Vivah Saham & Rashi Tulya Navamsha Engine Ver
   assert.ok(bnnReport.executiveBnnTimingSummary.length > 20);
 });
 
+test("End-to-End Chatbot Astro Dossier (All 65 Sections & Notes) Verification", async () => {
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1998-05-24T18:46:51.000Z"), location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date("2026-08-31T00:00:00.000Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const dossier = buildAstroDossier(natalEphem, transitEphem, new Date("2026-08-31T00:00:00.000Z"), "male");
+  assert.ok(dossier);
+  assert.ok(dossier.length > 10000);
+
+  // Verify all handwritten notes sections are present in the dossier
+  assert.ok(dossier.includes("#### 💼 61. JOB VS BUSINESS, CAREER ORIENTATION & D-10 DASAMSA PHALA DOSSIER (15 CLASSICAL RULES):"), "Section 61 missing");
+  assert.ok(dossier.includes("#### 🌸 62. PUSHKARA NAVAMSHA, PUSHKARA BHAGA & PUSHKARA VARGOTTAMA (JATAKA PARIJATA) DOSSIER:"), "Section 62 missing");
+  assert.ok(dossier.includes("#### 💍 63. MASTER MULTI-VARGA MARRIAGE, SPOUSE COMPLEXION & SEPARATION SHIELDS (STRI JATAKA) DOSSIER:"), "Section 63 missing");
+  assert.ok(dossier.includes("#### 💘 64. LOVE AFFAIRS, ELOPEMENT, SEXUAL VITALITY & YOGINI DASHA (STRI JATAKA) DOSSIER:"), "Section 64 missing");
+  assert.ok(dossier.includes("#### 🕊️ 65. BHRIGU NANDI NADI, VIVAH SAHAM & RASHI TULYA NAVAMSHA DOSSIER:"), "Section 65 missing");
+
+  // Verify key variables and terms inside the dossier
+  assert.ok(dossier.includes("Chart Hemisphere Distribution"), "Hemisphere distribution missing in Section 61");
+  assert.ok(dossier.includes("Pushkara Entities List"), "Pushkara list missing in Section 62");
+  assert.ok(dossier.includes("Spouse Physical Appearance & Complexion"), "Complexion missing in Section 63");
+  assert.ok(dossier.includes("Yogini Dasha Timing Matrix"), "Yogini Dasha missing in Section 64");
+  assert.ok(dossier.includes("Brighu Bindu"), "Brighu Bindu missing in Section 65");
+  assert.ok(dossier.includes("Vivah Saham"), "Vivah Saham missing in Section 65");
+});
+
+
 
 
 
