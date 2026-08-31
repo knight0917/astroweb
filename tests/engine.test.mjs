@@ -3137,6 +3137,16 @@ test("Classical Ashtakavarga Synastry & Dual Chart Compatibility (C.S. Patel & P
   assert.ok(av.verdict);
   assert.ok(Array.isArray(av.principles));
   assert.ok(av.principles.length >= 3);
+
+  // D-1 and D-9 Multi-Varga Synastry verification
+  assert.ok(match.d1d9Synastry);
+  assert.ok(match.d1d9Synastry.boyD9LagnaRashi);
+  assert.ok(match.d1d9Synastry.girlD9LagnaRashi);
+  assert.ok(match.d1d9Synastry.d9LagnaRelationship);
+  assert.ok(typeof match.d1d9Synastry.isD9LagnaLordInTrik === "boolean");
+  assert.ok(match.d1d9Synastry.d9LagnaLordCrossVerdict.length > 10);
+  assert.ok(typeof match.d1d9Synastry.crossSynastryScorePercent === "number");
+  assert.ok(match.d1d9Synastry.synthesis.length > 20);
 });
 
 test("Predictive Decision Gates & Deterministic Shastric Proofs Verification", async () => {

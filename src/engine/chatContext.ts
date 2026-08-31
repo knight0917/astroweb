@@ -1322,6 +1322,13 @@ export function buildAstroDossier(
         "- **Cross-Kundli Synastry:**",
         "  - Lagna-to-Lagna Axis: **" + lagnaAxisName + "**",
         "  - Moon-to-Moon Axis: **" + moonAxisName + "**",
+        "- **D-1 & D-9 Multi-Varga Cross-Synastry (Handwritten Notes & Stri Jataka):**",
+        "  - Overall D1/D9 Cross-Synastry Score: **" + matchRes.d1d9Synastry.crossSynastryScorePercent + "% (" + matchRes.d1d9Synastry.verdict + ")**",
+        "  - D-9 Navamsha Lagna Axis: **" + matchRes.d1d9Synastry.d9LagnaRelationship + "** (Groom D-9: " + matchRes.d1d9Synastry.boyD9LagnaRashi + ", Bride D-9: " + matchRes.d1d9Synastry.girlD9LagnaRashi + ")",
+        "  - D-9 Lagna Lord Cross-Placement: " + matchRes.d1d9Synastry.d9LagnaLordCrossVerdict,
+        "  - D-1 to D-9 Moon Resonance: " + matchRes.d1d9Synastry.moonResonanceDescription,
+        "  - D-9 4th House Domestic Joy: " + matchRes.d1d9Synastry.d9FourthHouseHarmony,
+        "  - Birth Dasha Lord Linkage: " + matchRes.d1d9Synastry.birthDashaLinkDescription,
         "- **Classical Shastric Verdict:** " + matchRes.verdictDescription,
       ].join("\n");
     } catch (_) {}

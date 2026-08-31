@@ -9,6 +9,7 @@
 import { EphemerisResult } from "./types";
 import { RASHI_NAMES } from "./constants";
 import { calculateAshtakavarga } from "./ashtakavarga";
+import { calculateShodashavargaChart } from "./shodashavarga";
 
 export interface KootaScore {
   name: string;
@@ -54,6 +55,35 @@ export interface AshtakavargaCompatibility {
   principles: string[];
 }
 
+export interface D1D9CrossSynastry {
+  // 1. D-9 Lagna Axis
+  boyD9LagnaRashi: string;
+  girlD9LagnaRashi: string;
+  d9LagnaRelationship: "1-1 (Identical Harmony)" | "1-7 (Samasaptaka Soulmate)" | "5-9 (Navapanchama Spiritual)" | "3-11 (Triteeya-Ekadasha Friendly)" | "4-10 (Kendra Dynamic)" | "6-8 (Shashtashtaka Friction)" | "2-12 (Dvidwadasa Growth/Adjustment)";
+  
+  // 2. D-9 Lagna Lord in Partner's D-9 (Image 4 Step 2)
+  boyD9LagnaLordInGirlD9House: number;
+  girlD9LagnaLordInBoyD9House: number;
+  isD9LagnaLordInTrik: boolean;
+  d9LagnaLordCrossVerdict: string;
+
+  // 3. D-1 to D-9 Moon & Lagna Resonance
+  isMoonD1ToD9Resonance: boolean;
+  moonResonanceDescription: string;
+
+  // 4. D-9 4th House Domestic Joy Balance (Image 4 Step 4)
+  d9FourthHouseHarmony: string;
+
+  // 5. Birth Dasha Lord Linkage (Image 4 Step 1)
+  isBirthDashaConnectedToBride: boolean;
+  birthDashaLinkDescription: string;
+
+  // 6. Overall D-1 / D-9 Cross Synastry Score & Verdict
+  crossSynastryScorePercent: number;
+  verdict: "Highly Compatible (उत्कृष्ट नवांश युगल)" | "Compatible (शुभ)" | "Average (साधारण)" | "Karmic Adjustments Required (सावधानी)";
+  synthesis: string;
+}
+
 export interface CompatibilityResult {
   totalScore: number;
   maxScore: 36;
@@ -78,6 +108,7 @@ export interface CompatibilityResult {
     description: string;
   };
   ashtakavargaCompatibility: AshtakavargaCompatibility;
+  d1d9Synastry: D1D9CrossSynastry;
 }
 
 // 1. VARNA DATA (Brahmin 4, Kshatriya 3, Vaishya 2, Shudra 1)
@@ -594,6 +625,129 @@ export function calculateMatchmaking(
     principles: avPrinciples,
   };
 
+  // 5. D-1 and D-9 Multi-Varga Cross-Synastry (Handwritten Notes & Stri Jataka)
+  const boyD1Chart = calculateShodashavargaChart(boyEphem, "D1");
+  const boyD9Chart = calculateShodashavargaChart(boyEphem, "D9");
+  const girlD1Chart = calculateShodashavargaChart(girlEphem, "D1");
+  const girlD9Chart = calculateShodashavargaChart(girlEphem, "D9");
+
+  const boyD9AscSign = boyD9Chart.ascendant.vargaSignIndex;
+  const girlD9AscSign = girlD9Chart.ascendant.vargaSignIndex;
+  const boyD9LagnaRashi = RASHI_NAMES[boyD9AscSign].englishName;
+  const girlD9LagnaRashi = RASHI_NAMES[girlD9AscSign].englishName;
+
+  const d9Diff = ((girlD9AscSign - boyD9AscSign + 12) % 12) + 1;
+  let d9LagnaRelationship: D1D9CrossSynastry["d9LagnaRelationship"] = "1-1 (Identical Harmony)";
+  let d9SynScore = 20;
+
+  if (d9Diff === 1) {
+    d9LagnaRelationship = "1-1 (Identical Harmony)";
+    d9SynScore += 20;
+  } else if (d9Diff === 7) {
+    d9LagnaRelationship = "1-7 (Samasaptaka Soulmate)";
+    d9SynScore += 25;
+  } else if (d9Diff === 5 || d9Diff === 9) {
+    d9LagnaRelationship = "5-9 (Navapanchama Spiritual)";
+    d9SynScore += 25;
+  } else if (d9Diff === 3 || d9Diff === 11) {
+    d9LagnaRelationship = "3-11 (Triteeya-Ekadasha Friendly)";
+    d9SynScore += 18;
+  } else if (d9Diff === 4 || d9Diff === 10) {
+    d9LagnaRelationship = "4-10 (Kendra Dynamic)";
+    d9SynScore += 15;
+  } else if (d9Diff === 6 || d9Diff === 8) {
+    d9LagnaRelationship = "6-8 (Shashtashtaka Friction)";
+    d9SynScore -= 10;
+  } else {
+    d9LagnaRelationship = "2-12 (Dvidwadasa Growth/Adjustment)";
+    d9SynScore += 5;
+  }
+
+  // D-9 Lagna Lord placement in partner's D-9 chart (Image 4 Step 2)
+  const boyD9LagnaLord = RASHI_NAMES[boyD9AscSign].lord;
+  const girlD9LagnaLord = RASHI_NAMES[girlD9AscSign].lord;
+
+  const pBoyLordInGirlD9 = girlD9Chart.entities.find((e) => e.name === boyD9LagnaLord);
+  const pGirlLordInBoyD9 = boyD9Chart.entities.find((e) => e.name === girlD9LagnaLord);
+
+  const boyD9LagnaLordInGirlD9House = pBoyLordInGirlD9?.house ?? 1;
+  const girlD9LagnaLordInBoyD9House = pGirlLordInBoyD9?.house ?? 1;
+
+  const isD9LagnaLordInTrik =
+    [6, 8, 12].includes(boyD9LagnaLordInGirlD9House) ||
+    [6, 8, 12].includes(girlD9LagnaLordInBoyD9House);
+
+  let d9LagnaLordCrossVerdict = "";
+  if (isD9LagnaLordInTrik) {
+    d9SynScore -= 15;
+    d9LagnaLordCrossVerdict = `Caution: D-9 Lagna Lord (${boyD9LagnaLord} / ${girlD9LagnaLord}) occupies Trik House (H${boyD9LagnaLordInGirlD9House} / H${girlD9LagnaLordInBoyD9House}) in partner's D-9 chart. Requires conscious patience and mutual space.`;
+  } else {
+    d9SynScore += 20;
+    d9LagnaLordCrossVerdict = `Auspicious: D-9 Lagna Lords occupy Fortified Houses (Groom: H${boyD9LagnaLordInGirlD9House}, Bride: H${girlD9LagnaLordInBoyD9House}), fulfilling marital desires smoothly.`;
+  }
+
+  // D-1 Moon to D-9 Moon / Lagna
+  const boyD1MoonSign = Math.floor((boyEphem.planets.Moon?.siderealLongitude || 0) / 30);
+  const girlD1MoonSign = Math.floor((girlEphem.planets.Moon?.siderealLongitude || 0) / 30);
+  const isMoonD1ToD9Resonance =
+    boyD1MoonSign === girlD9AscSign ||
+    girlD1MoonSign === boyD9AscSign ||
+    [0, 4, 8].includes((girlD9AscSign - boyD1MoonSign + 12) % 12);
+
+  if (isMoonD1ToD9Resonance) d9SynScore += 15;
+  const moonResonanceDescription = isMoonD1ToD9Resonance
+    ? "D-1 Janma Rashi forms trinal/kendra harmony with partner's D-9 Lagna/Moon -> High subconscious telepathy and emotional devotion."
+    : "Standard emotional interface across D-1 and D-9 levels.";
+
+  // D-9 4th House domestic joy (Image 4 Step 4)
+  const boyD9H4Benefic = boyD9Chart.entities.some((e) => e.house === 4 && ["Jupiter", "Venus", "Mercury"].includes(e.name));
+  const girlD9H4Benefic = girlD9Chart.entities.some((e) => e.house === 4 && ["Jupiter", "Venus", "Mercury"].includes(e.name));
+  if (boyD9H4Benefic && girlD9H4Benefic) d9SynScore += 15;
+  const d9FourthHouseHarmony = (boyD9H4Benefic || girlD9H4Benefic)
+    ? "D-9 4th House holds benefic energies in matrimonial division, securing peaceful domestic sanctuary."
+    : "D-9 4th House reflects disciplined, structured domestic partnership.";
+
+  // Birth Dasha Lord Linkage (Image 4 Step 1)
+  const boyBirthDashaLord = boyEphem.planets.Moon?.nakshatra.lord || "Venus";
+  const girl7thLord = RASHI_NAMES[(Math.floor(girlEphem.ascendant.siderealLongitude / 30) + 6) % 12].lord;
+  const girlLagnaLord = RASHI_NAMES[Math.floor(girlEphem.ascendant.siderealLongitude / 30)].lord;
+
+  const isBirthDashaConnectedToBride =
+    boyBirthDashaLord === girl7thLord ||
+    boyBirthDashaLord === girlLagnaLord ||
+    boyBirthDashaLord === "Jupiter" ||
+    boyBirthDashaLord === "Venus";
+
+  if (isBirthDashaConnectedToBride) d9SynScore += 15;
+  const birthDashaLinkDescription = isBirthDashaConnectedToBride
+    ? `Groom's birth Dasha Lord (${boyBirthDashaLord}) is harmoniously linked with Bride's Lagna/7th Lord (${girlLagnaLord}/${girl7thLord}), confirming initial soul bond.`
+    : `Groom's birth Dasha Lord operates independently; connection develops through mature partnership.`;
+
+  const crossSynastryScorePercent = Math.max(30, Math.min(98, d9SynScore));
+  let d1d9Verdict: D1D9CrossSynastry["verdict"] = "Compatible (शुभ)";
+  if (crossSynastryScorePercent >= 80) d1d9Verdict = "Highly Compatible (उत्कृष्ट नवांश युगल)";
+  else if (crossSynastryScorePercent >= 60) d1d9Verdict = "Compatible (शुभ)";
+  else if (crossSynastryScorePercent >= 45) d1d9Verdict = "Average (साधारण)";
+  else d1d9Verdict = "Karmic Adjustments Required (सावधानी)";
+
+  const d1d9Synastry: D1D9CrossSynastry = {
+    boyD9LagnaRashi,
+    girlD9LagnaRashi,
+    d9LagnaRelationship,
+    boyD9LagnaLordInGirlD9House,
+    girlD9LagnaLordInBoyD9House,
+    isD9LagnaLordInTrik,
+    d9LagnaLordCrossVerdict,
+    isMoonD1ToD9Resonance,
+    moonResonanceDescription,
+    d9FourthHouseHarmony,
+    isBirthDashaConnectedToBride,
+    birthDashaLinkDescription,
+    crossSynastryScorePercent,
+    verdict: d1d9Verdict,
+    synthesis: `D-1 & D-9 Cross-Synastry is ${d1d9Verdict} (${crossSynastryScorePercent}%). D-9 Lagna Axis: ${d9LagnaRelationship}. ${d9LagnaLordCrossVerdict}`,
+  };
+
   return {
     totalScore,
     maxScore: 36,
@@ -618,6 +772,7 @@ export function calculateMatchmaking(
       description: manglikDesc,
     },
     ashtakavargaCompatibility,
+    d1d9Synastry,
   };
 }
 
