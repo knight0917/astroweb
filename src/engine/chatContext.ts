@@ -69,6 +69,7 @@ import { evaluatePushkaraNavamsha } from "./pushkaraNavamsha";
 import { evaluateMarriageMasterSynthesis } from "./marriageMasterSynthesis";
 import { evaluateRelationshipAffairs } from "./relationshipAffairsMaster";
 import { evaluateBhriguNadiMarriageTiming } from "./bhriguNadiMarriageTiming";
+import { calculateAdhanaKundali } from "./adhanaKundali";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
@@ -1492,6 +1493,25 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 66. Adhana Kundali (Garbhadhana / Nisheka Lagna Conception Chart & 10-Month Foetal Gestation)
+  let adhanaSummary = "";
+  try {
+    const adhanaRes = calculateAdhanaKundali(natalEphemeris, birthDate, location);
+    const topMonths = adhanaRes.gestationalMonths.map((m) =>
+      `  - Month ${m.monthNumber} (${m.rulingPlanet} • ${m.sanskritStage}): ${m.stageTranslation} -> Status: **${m.status}** (${m.vitalityScore}% vitality in ${m.planetRashi})`
+    );
+    adhanaSummary = [
+      `- **Estimated Conception Date (Adhana Epoch):** **${adhanaRes.estimatedConceptionDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}** (Gestation: **${adhanaRes.gestationDurationDays} Days / ${adhanaRes.gestationDurationWeeks} Weeks**)`,
+      `- **Adhana Ascendant (Lagna):** **${adhanaRes.adhanaLagnaDegreeStr}** (Lord: **${adhanaRes.adhanaLagnaLord}**) | **Adhana Moon:** **${adhanaRes.adhanaMoonDegreeStr}** (${adhanaRes.adhanaMoonNakshatra})`,
+      `- **Garbha Raksha (Foetal Protection Index):** **${adhanaRes.garbhaRaksha.verdict} (${adhanaRes.garbhaRaksha.protectionScore}% Vitality)**`,
+      `  - *Protective Shields (Garbha Kavacham):* ${adhanaRes.garbhaRaksha.garbhaKavachamFactors.length > 0 ? adhanaRes.garbhaRaksha.garbhaKavachamFactors.join(" | ") : "Balanced constitution"}`,
+      `- **10-Month Foetal Organogenesis Timeline (Brihat Jataka Ch. 4):**`,
+      ...topMonths,
+      `- **Adhana-to-Janma BTR Cross-Check:** ${adhanaRes.btrSummary}`,
+      `- **Executive Adhana Synthesis:** ${adhanaRes.executiveSummary}`,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -1753,6 +1773,9 @@ export function buildAstroDossier(
     "",
     "#### 🕊️ 65. BHRIGU NANDI NADI, VIVAH SAHAM & RASHI TULYA NAVAMSHA DOSSIER:",
     bhriguNadiSummary,
+    "",
+    "#### 🤰 66. ADHANA KUNDALI (CONCEPTION CHART) & 10-MONTH FOETAL GESTATION DOSSIER:",
+    adhanaSummary,
   ];
 
   if (matchmakingSummary) {

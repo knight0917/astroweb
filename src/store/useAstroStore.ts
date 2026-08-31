@@ -26,6 +26,7 @@ export type ViewMode =
   | "matchmaking"
   | "muhurta"
   | "prashna"
+  | "adhana"
   | "table"
   | "dual";
 export type SkyViewType = "ecliptic" | "horizontal";

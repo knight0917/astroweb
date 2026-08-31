@@ -3337,6 +3337,7 @@ test("End-to-End Chatbot Astro Dossier (All 65 Sections & Notes) Verification", 
   assert.ok(dossier.includes("#### 💍 63. MASTER MULTI-VARGA MARRIAGE, SPOUSE COMPLEXION & SEPARATION SHIELDS (STRI JATAKA) DOSSIER:"), "Section 63 missing");
   assert.ok(dossier.includes("#### 💘 64. LOVE AFFAIRS, ELOPEMENT, SEXUAL VITALITY & YOGINI DASHA (STRI JATAKA) DOSSIER:"), "Section 64 missing");
   assert.ok(dossier.includes("#### 🕊️ 65. BHRIGU NANDI NADI, VIVAH SAHAM & RASHI TULYA NAVAMSHA DOSSIER:"), "Section 65 missing");
+  assert.ok(dossier.includes("#### 🤰 66. ADHANA KUNDALI (CONCEPTION CHART) & 10-MONTH FOETAL GESTATION DOSSIER:"), "Section 66 missing");
 
   // Verify key variables and terms inside the dossier
   assert.ok(dossier.includes("Chart Hemisphere Distribution"), "Hemisphere distribution missing in Section 61");
@@ -3345,6 +3346,44 @@ test("End-to-End Chatbot Astro Dossier (All 65 Sections & Notes) Verification", 
   assert.ok(dossier.includes("Yogini Dasha Timing Matrix"), "Yogini Dasha missing in Section 64");
   assert.ok(dossier.includes("Brighu Bindu"), "Brighu Bindu missing in Section 65");
   assert.ok(dossier.includes("Vivah Saham"), "Vivah Saham missing in Section 65");
+  assert.ok(dossier.includes("Estimated Conception Date (Adhana Epoch)"), "Conception date missing in Section 66");
+  assert.ok(dossier.includes("Garbha Raksha"), "Garbha Raksha missing in Section 66");
+});
+
+test("Classical Adhana Kundali (Epoch Conception Chart & 10-Month Foetal Gestation) Verification", async () => {
+  const { calculateAdhanaKundali } = await import("../src/engine/adhanaKundali.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const loc = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1998-05-24T18:46:51.000Z");
+  const natalEphem = calculateVedicEphemeris(birthDate, loc, "Lahiri", "WholeSign", "Mean");
+
+  const adhana = calculateAdhanaKundali(natalEphem, birthDate, loc);
+  assert.ok(adhana);
+  assert.ok(adhana.estimatedConceptionDate instanceof Date);
+  assert.ok(adhana.gestationDurationDays >= 250 && adhana.gestationDurationDays <= 300);
+  assert.ok(adhana.adhanaLagnaSign);
+  assert.ok(adhana.adhanaLagnaLord);
+  assert.ok(adhana.adhanaMoonSign);
+  assert.ok(adhana.adhanaMoonNakshatra);
+  assert.ok(adhana.gestationalMonths.length === 10);
+
+  // Verify Masa Patis
+  assert.strictEqual(adhana.gestationalMonths[0].rulingPlanet, "Venus");
+  assert.strictEqual(adhana.gestationalMonths[1].rulingPlanet, "Mars");
+  assert.strictEqual(adhana.gestationalMonths[2].rulingPlanet, "Jupiter");
+  assert.strictEqual(adhana.gestationalMonths[3].rulingPlanet, "Sun");
+  assert.strictEqual(adhana.gestationalMonths[4].rulingPlanet, "Moon");
+  assert.strictEqual(adhana.gestationalMonths[5].rulingPlanet, "Saturn");
+  assert.strictEqual(adhana.gestationalMonths[6].rulingPlanet, "Mercury");
+  assert.strictEqual(adhana.gestationalMonths[8].rulingPlanet, "Moon");
+  assert.strictEqual(adhana.gestationalMonths[9].rulingPlanet, "Sun");
+
+  // Verify Garbha Raksha & BTR
+  assert.ok(adhana.garbhaRaksha.protectionScore >= 0 && adhana.garbhaRaksha.protectionScore <= 100);
+  assert.ok(adhana.garbhaRaksha.verdict);
+  assert.ok(adhana.btrConfidenceScore >= 50);
+  assert.ok(adhana.executiveSummary.length > 20);
 });
 
 

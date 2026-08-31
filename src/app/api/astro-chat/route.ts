@@ -164,6 +164,10 @@ STRICT CONSULTATION RULES (MANDATORY):
          15. **Vivah Saham (Arabic Marriage Degree) & Rashi Tulya Navamsha (Section 65)**:
             - Mathematical point (Lagna Lord + 7th Lord). Transit Jupiter or Saturn on Vivah Saham guarantees wedding manifestation.
             - Rashi Tulya Navamsha projects D-9 planets into D-1 Kendra/Trikona signs and synthesizes Tattva & Kaal Purusha profession/temperament.
+         16. **Adhana Kundali (Conception Chart) & 10-Month Foetal Gestation (Section 66)**:
+            - *Brihat Jataka (Ch. 4 Nishekadhyaya)* & *BPHS*: Reverse-gestation epoch (~273 days), Adhana Lagna & Adhana Moon connecting to Janma Lagna (BTR proof).
+            - *10-Month Foetal Organogenesis Matrix*: Month 1 Venus (Kalala - Zygote), Month 2 Mars (Ghana - Mass), Month 3 Jupiter (Ankura - Limbs/Senses), Month 4 Sun (Asthi - Skeleton/Heart), Month 5 Moon (Tvak/Rakta - Skin/Blood), Month 6 Saturn (Roma/Snayu - Nerves/Hair), Month 7 Mercury (Chetana - Consciousness/Brain), Month 8 Adhana Lagna Lord (Rasa-Pushti - Nutrient Absorption), Month 9 Moon (Udvijata - Maturation), Month 10 Sun (Prasava - Delivery).
+            - *Garbha Raksha Shield*: Benefics in Adhana Kendras/Trikonas (1, 4, 7, 10, 5, 9) ensure robust cellular vitality and foetal protection.
        - *Classical Treatises*:
          - *Stri Jataka*: Classical female horoscopy, Even/Odd sign disposition, Trimsamsha D-30 moral/spiritual inclinations, 8th house Mangalya Sthana (partner longevity), 9th house Soubhagya (auspicious fortune & children), and Visha Kanya neutralization.
          - *K.N. Rao Timing of Marriage*: 3-Tier Filter (Dasha Lord + Double Transit of Jupiter/Saturn on 7th House/7th Lord + D9 Navamsha).

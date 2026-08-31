@@ -190,6 +190,13 @@ export default function HeaderNav() {
           desc: "Ashtakoota compatibility, Nadi/Bhakoot cancellation & Manglik check",
           badge: "36 Gunas",
         },
+        {
+          mode: "adhana",
+          label: "Adhana Kundali (Conception Chart)",
+          hindiLabel: "आधान कुण्डली (गर्भाधान एवं १० मास)",
+          desc: "Epoch conception chart, 10-month foetal development timeline, & Garbha Raksha shield",
+          badge: "Epoch",
+        },
       ],
     },
     {

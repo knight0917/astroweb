@@ -64,6 +64,7 @@ export default function MobileBottomNav() {
 
   const MORE_MODULES: { mode: ViewMode; label: string; hindiLabel: string; desc: string }[] = [
     { mode: "prashna", label: "Tajik Prashna", hindiLabel: "ताजिक प्रश्न तन्त्र", desc: "16 Tajika Yogas & Horary Yes/No" },
+    { mode: "adhana", label: "Adhana Kundali", hindiLabel: "आधान कुण्डली (गर्भाधान)", desc: "Conception Epoch, 10-Month Timeline & Garbha Raksha" },
     { mode: "muhurta", label: "Muhurta Finder", hindiLabel: "शुभ मुहूर्त शोधन", desc: "Abhijit, Brahma & Event Muhurtas" },
     { mode: "matchmaking", label: "Kundli Milan", hindiLabel: "अष्टकूट ३६ गुण मिलान", desc: "Ashtakoota 36 Gunas & Manglik Check" },
     { mode: "jaimini", label: "Jaimini Suite", hindiLabel: "जैमिनी ज्योतिष", desc: "Arudha Padas, Karakamsha & Chara Dasha" },

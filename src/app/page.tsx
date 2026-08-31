@@ -107,6 +107,11 @@ const PrashnaView = dynamic(() => import("../components/PrashnaView"), {
   loading: () => <ModuleLoadingSkeleton title="Instant Tajik Prashna Horary Engine" />,
 });
 
+const AdhanaKundliView = dynamic(() => import("../components/AdhanaKundliView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Adhana Kundali & Foetal Gestation Engine" />,
+});
+
 const EntityDetailModal = dynamic(() => import("../components/EntityDetailModal"), {
   ssr: false,
 });
@@ -227,6 +232,12 @@ export default function HomePage() {
         {viewMode === "prashna" && (
           <div className="w-full">
             <PrashnaView />
+          </div>
+        )}
+
+        {viewMode === "adhana" && (
+          <div className="w-full">
+            <AdhanaKundliView />
           </div>
         )}
 
