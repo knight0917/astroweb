@@ -663,7 +663,7 @@ export function calculateMatchmaking(
     d9SynScore += 5;
   }
 
-  // D-9 Lagna Lord placement in partner's D-9 chart (Image 4 Step 2)
+  // D-9 Lagna Lord placement in partner's D-9 chart (Stri Jataka & Navamsha Synastry)
   const boyD9LagnaLord = RASHI_NAMES[boyD9AscSign].lord;
   const girlD9LagnaLord = RASHI_NAMES[girlD9AscSign].lord;
 
@@ -699,7 +699,7 @@ export function calculateMatchmaking(
     ? "D-1 Janma Rashi forms trinal/kendra harmony with partner's D-9 Lagna/Moon -> High subconscious telepathy and emotional devotion."
     : "Standard emotional interface across D-1 and D-9 levels.";
 
-  // D-9 4th House domestic joy (Image 4 Step 4)
+  // D-9 4th House domestic joy (Stri Jataka)
   const boyD9H4Benefic = boyD9Chart.entities.some((e) => e.house === 4 && ["Jupiter", "Venus", "Mercury"].includes(e.name));
   const girlD9H4Benefic = girlD9Chart.entities.some((e) => e.house === 4 && ["Jupiter", "Venus", "Mercury"].includes(e.name));
   if (boyD9H4Benefic && girlD9H4Benefic) d9SynScore += 15;
@@ -707,7 +707,7 @@ export function calculateMatchmaking(
     ? "D-9 4th House holds benefic energies in matrimonial division, securing peaceful domestic sanctuary."
     : "D-9 4th House reflects disciplined, structured domestic partnership.";
 
-  // Birth Dasha Lord Linkage (Image 4 Step 1)
+  // Birth Dasha Lord Linkage (Vimshottari Dasha Synastry)
   const boyBirthDashaLord = boyEphem.planets.Moon?.nakshatra.lord || "Venus";
   const girl7thLord = RASHI_NAMES[(Math.floor(girlEphem.ascendant.siderealLongitude / 30) + 6) % 12].lord;
   const girlLagnaLord = RASHI_NAMES[Math.floor(girlEphem.ascendant.siderealLongitude / 30)].lord;

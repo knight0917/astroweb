@@ -705,10 +705,6 @@ export default function MatchmakingView() {
             </span>
           </div>
         </div>
-
-        <div className="bg-indigo-950/30 p-3 rounded-xl border border-indigo-500/30 text-xs text-indigo-200 font-sans leading-relaxed">
-          <strong>Classical Shastric Principle (Image 4 Step 2):</strong> {matchResult.d1d9Synastry.synthesis}
-        </div>
       </div>
 
       {/* Classical Ashtakavarga Synastry (C.S. Patel & Parashara) */}

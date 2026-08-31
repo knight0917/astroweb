@@ -1322,7 +1322,7 @@ export function buildAstroDossier(
         "- **Cross-Kundli Synastry:**",
         "  - Lagna-to-Lagna Axis: **" + lagnaAxisName + "**",
         "  - Moon-to-Moon Axis: **" + moonAxisName + "**",
-        "- **D-1 & D-9 Multi-Varga Cross-Synastry (Handwritten Notes & Stri Jataka):**",
+        "- **D-1 & D-9 Multi-Varga Cross-Synastry (Parashara & Stri Jataka):**",
         "  - Overall D1/D9 Cross-Synastry Score: **" + matchRes.d1d9Synastry.crossSynastryScorePercent + "% (" + matchRes.d1d9Synastry.verdict + ")**",
         "  - D-9 Navamsha Lagna Axis: **" + matchRes.d1d9Synastry.d9LagnaRelationship + "** (Groom D-9: " + matchRes.d1d9Synastry.boyD9LagnaRashi + ", Bride D-9: " + matchRes.d1d9Synastry.girlD9LagnaRashi + ")",
         "  - D-9 Lagna Lord Cross-Placement: " + matchRes.d1d9Synastry.d9LagnaLordCrossVerdict,
