@@ -3193,6 +3193,12 @@ test("Classical Job vs Business & D-10 Dasamsa Career Engine Verification", asyn
   assert.ok(career.d10LagnaLord);
   assert.ok(career.d110thLordInD10);
   assert.ok(typeof career.d110thLordD10House === "number");
+  assert.ok(career.amatyakarakaPlanet);
+  assert.ok(typeof career.savHouse6 === "number");
+  assert.ok(typeof career.savHouse7 === "number");
+  assert.ok(career.bnnCareerArchetype);
+  assert.ok(Array.isArray(career.recommendedVocationStreams));
+  assert.ok(career.recommendedVocationStreams.length > 0);
   assert.ok(career.primaryRecommendation);
   assert.ok(career.executiveSummary.length > 20);
   assert.ok(career.promotionsAndTimingNote.length > 20);

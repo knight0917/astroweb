@@ -1367,7 +1367,7 @@ export function buildAstroDossier(
 
   const decisionGates = calculatePredictiveDecisionGates(natalEphemeris);
 
-  // 61. Job vs Business & D-10 Dasamsa Career Phala (15 Classical Rules)
+  // 61. Job vs Business & D-10 Dasamsa Career Phala (Unified Multi-Book & Handwritten Rules)
   let careerDossierSummary = "";
   try {
     const careerAnalysis = analyzeCareerJobBusiness(natalEphemeris);
@@ -1376,8 +1376,18 @@ export function buildAstroDossier(
       `- **Chart Hemisphere Distribution:** ${careerAnalysis.leftCount} Left (Houses 10-3) vs ${careerAnalysis.rightCount} Right (Houses 4-9) • Dominance: **${careerAnalysis.hemisphereDominance}**`,
       `  - *Hemisphere Synthesis:* ${careerAnalysis.hemisphereSynthesis}`,
       `- **6th House (Service/Job) vs 7th House (Trade/Business):** **${careerAnalysis.verdict6vs7}**`,
-      `  - 6th House Lord: ${careerAnalysis.house6Strength} | 7th House Lord: ${careerAnalysis.house7Strength}`,
-      `- **D-10 Dasamsa In-Depth Diagnostics:**`,
+      `  - 6th House Lord: ${careerAnalysis.house6Strength} (${careerAnalysis.savHouse6} SAV Bindus) | 7th House Lord: ${careerAnalysis.house7Strength} (${careerAnalysis.savHouse7} SAV Bindus)`,
+      `- **Ashtakavarga SAV Career Verdict (C.S. Patel Standard):**`,
+      `  - 6th House: ${careerAnalysis.savHouse6} pts • 7th House: ${careerAnalysis.savHouse7} pts • 10th House: ${careerAnalysis.savHouse10} pts • 11th House: ${careerAnalysis.savHouse11} pts`,
+      `  - *SAV Synthesis:* ${careerAnalysis.ashtakavargaCareerVerdict}`,
+      `- **Jaimini Amatyakaraka (AmK — Career Soul Indicator):**`,
+      `  - Planet: **${careerAnalysis.amatyakarakaPlanet}** in ${careerAnalysis.amatyakarakaRashi} (House ${careerAnalysis.amatyakarakaHouse})`,
+      `  - *AmK Vocation:* ${careerAnalysis.amatyakarakaVocation}`,
+      `- **Bhrigu Nandi Nadi (BNN) Saturn Karma Vector (R.G. Rao):**`,
+      `  - Saturn Vector: ${careerAnalysis.bnnSaturnKarmaVector}`,
+      `  - Archetype: **${careerAnalysis.bnnCareerArchetype}**`,
+      `- **Recommended Professional Streams (K.N. Rao & B.V. Raman):** **${careerAnalysis.recommendedVocationStreams.join(", ")}**`,
+      `- **D-10 Dasamsa In-Depth Diagnostics (Handwritten Notes & Parashara):**`,
       `  - D-10 Lagna: **${careerAnalysis.d10LagnaSign}** (Lord: **${careerAnalysis.d10LagnaLord}** - governs career mindset & purpose)`,
       `  - D-1 10th Lord in D-10: **${careerAnalysis.d110thLordInD10}** placed in **House ${careerAnalysis.d110thLordD10House} of D-10** (${careerAnalysis.d110thLordD10Dignity})`,
       `  - D-10 Lagna Benefic Aspects: ${careerAnalysis.d10AspectOnLagna.length > 0 ? careerAnalysis.d10AspectOnLagna.join(", ") : "Neutral foundation"}`,
@@ -1394,7 +1404,7 @@ export function buildAstroDossier(
       `  - 1st Lord in 6th House: ${careerAnalysis.lord1In6th ? "YES (Overcomes competition; can do job + business hybrid side-hustle)" : "No"}`,
       `- **Saturn & Moon Capacity:** ${careerAnalysis.saturnDignityAndPlacement} | ${careerAnalysis.moonStrengthNote}`,
       `- **Promotion & Acceleration Timing:** ${careerAnalysis.promotionsAndTimingNote}`,
-      `- **Executive Verdict:** ${careerAnalysis.executiveSummary}`,
+      `- **Executive Multi-Book Verdict:** ${careerAnalysis.executiveSummary}`,
     ].join("\n");
   } catch (_) {}
 

@@ -1,15 +1,17 @@
 import { EphemerisResult } from "./types";
 import { calculateShodashavargaChart, calculateVargaSign } from "./shodashavarga";
+import { calculateJaiminiKarakas } from "./jaimini";
+import { calculateAshtakavarga } from "./ashtakavarga";
 import { RASHI_NAMES } from "./constants";
 
 export interface CareerJobBusinessAnalysis {
-  // 1. Hemisphere Balance (Left vs Right)
+  // 1. Hemisphere Balance (Left vs Right) — Handwritten Rule 15 & BPHS
   leftCount: number; // Houses 10, 11, 12, 1, 2, 3 (Eastern/Individual/Job)
   rightCount: number; // Houses 4, 5, 6, 7, 8, 9 (Western/Relational/Business)
   hemisphereDominance: "Left (Service & Self-Execution)" | "Right (Trade, Public & Business)" | "Balanced";
   hemisphereSynthesis: string;
 
-  // 2. 6th House (Job) vs 7th House (Business)
+  // 2. 6th House (Job) vs 7th House (Business) — Handwritten Rule 15 & Phaladeepika
   house6Lord: string;
   house6LordHouse: number;
   house7Lord: string;
@@ -18,7 +20,7 @@ export interface CareerJobBusinessAnalysis {
   house7Strength: string;
   verdict6vs7: "Job / Corporate Service Favored" | "Independent Business / Trade Favored" | "Hybrid / Dual Track";
 
-  // 3. D-10 Dasamsa In-Depth Analysis
+  // 3. D-10 Dasamsa In-Depth Analysis — Handwritten Rules 1 to 10
   d10LagnaSign: string;
   d10LagnaLord: string;
   d10LagnaLordDignity: string;
@@ -30,7 +32,7 @@ export interface CareerJobBusinessAnalysis {
   sunUpachayaWithJupiterAspect: boolean;
   sunInKendras: boolean;
 
-  // 4. Key Career Combinations
+  // 4. Key Career Combinations — Handwritten Rules 8 to 14
   lord10House: number;
   lord10In3rd: boolean;
   lord3WithLord10: boolean;
@@ -41,7 +43,28 @@ export interface CareerJobBusinessAnalysis {
   saturnDignityAndPlacement: string;
   moonStrengthNote: string;
 
-  // 5. Final Master Career Direction
+  // 5. Jaimini Amatyakaraka (AmK) — Jaimini Upadesha Sutras & Dr. Iranganti Rangacharya
+  amatyakarakaPlanet: string;
+  amatyakarakaRashi: string;
+  amatyakarakaHouse: number;
+  amatyakarakaDignity: string;
+  amatyakarakaVocation: string;
+
+  // 6. Ashtakavarga SAV Comparison — C.S. Patel Standard
+  savHouse6: number;
+  savHouse7: number;
+  savHouse10: number;
+  savHouse11: number;
+  ashtakavargaCareerVerdict: string;
+
+  // 7. Bhrigu Nandi Nadi (BNN) Saturn Karma Vector — R.G. Rao
+  bnnSaturnKarmaVector: string;
+  bnnCareerArchetype: string;
+
+  // 8. B.V. Raman & K.N. Rao Tripartite Vocation Stream
+  recommendedVocationStreams: string[];
+
+  // 9. Final Master Career Direction
   primaryRecommendation: "Corporate Job / Executive Service" | "Independent Business / Entrepreneurship" | "Hybrid (Job First, Enterprise Later)";
   executiveSummary: string;
   promotionsAndTimingNote: string;
@@ -112,6 +135,10 @@ export function analyzeCareerJobBusiness(ephem: EphemerisResult): CareerJobBusin
   const jup = getPlanet("Jupiter");
   const sat = getPlanet("Saturn");
   const moon = getPlanet("Moon");
+  const merc = getPlanet("Mercury");
+  const mars = getPlanet("Mars");
+  const ven = getPlanet("Venus");
+  const rahu = getPlanet("Rahu");
 
   const hLord6 = pLord6 ? getHouse(pLord6.siderealLongitude) : 6;
   const hLord7 = pLord7 ? getHouse(pLord7.siderealLongitude) : 7;
@@ -177,6 +204,86 @@ export function analyzeCareerJobBusiness(ephem: EphemerisResult): CareerJobBusin
   const lord10In2nd = hLord10 === 2;
   const lord1In6th = hLord1 === 6;
 
+  // Jaimini Amatyakaraka (AmK)
+  const jaiminiKarakas = calculateJaiminiKarakas(ephem);
+  const amk = jaiminiKarakas.amatyakaraka;
+  const amatyakarakaPlanet = amk.planetName;
+  const amatyakarakaRashi = amk.rashi.englishName;
+  const amatyakarakaHouse = amk.house;
+  const amatyakarakaDignity = `AmK in House ${amk.house} (${amk.rashi.englishName})`;
+
+  let amatyakarakaVocation = "Strategic Executive Leadership";
+  if (amatyakarakaPlanet === "Sun") amatyakarakaVocation = "Government, Administrative Command, Civil Services, High Corporate Governance";
+  else if (amatyakarakaPlanet === "Moon") amatyakarakaVocation = "Public Relations, Human Resources, Hospitality, Psychology, Creative Media";
+  else if (amatyakarakaPlanet === "Mars") amatyakarakaVocation = "Engineering, Defense, Technology, Real Estate, Surgical, Police/Contracting";
+  else if (amatyakarakaPlanet === "Mercury") amatyakarakaVocation = "Trading, Analytics, Software Development, Financial Markets, Accounting, Business Agency";
+  else if (amatyakarakaPlanet === "Jupiter") amatyakarakaVocation = "Banking, Corporate Advisory, Legal, Judicial, Education, Wealth Management, Consulting";
+  else if (amatyakarakaPlanet === "Venus") amatyakarakaVocation = "Design, Luxury Goods, Entertainment, Creative Arts, Marketing, Architecture, Commerce";
+  else if (amatyakarakaPlanet === "Saturn") amatyakarakaVocation = "Heavy Industry, Operations Management, Law, Mining, Construction, Large-Scale Infrastructure";
+
+  // Ashtakavarga SAV Comparison (C.S. Patel standard)
+  const ashtaka = calculateAshtakavarga(ephem);
+  const savHouse6 = ashtaka.sarvaHouseBindus[5];
+  const savHouse7 = ashtaka.sarvaHouseBindus[6];
+  const savHouse10 = ashtaka.sarvaHouseBindus[9];
+  const savHouse11 = ashtaka.sarvaHouseBindus[10];
+
+  let ashtakavargaCareerVerdict = `6th House (Job) holds ${savHouse6} Bindus vs 7th House (Business) holding ${savHouse7} Bindus. `;
+  if (savHouse6 > savHouse7 + 2) {
+    ashtakavargaCareerVerdict += `Higher Bindus in 6th house indicate that Corporate Employment / Service provides smoother financial growth and superior risk protection over speculative trade.`;
+  } else if (savHouse7 > savHouse6 + 2) {
+    ashtakavargaCareerVerdict += `Higher Bindus in 7th house indicate that Independent Business / Commercial Partnerships generate superior cash flow and public market returns.`;
+  } else {
+    ashtakavargaCareerVerdict += `Balanced Bindus across 6th and 7th houses confirm strong capacity to navigate both executive employment and independent business ventures.`;
+  }
+
+  // Bhrigu Nandi Nadi (BNN - R.G. Rao) Saturn Karma Vector
+  const satSignIdx = sat ? Math.floor(sat.siderealLongitude / 30) : 0;
+  const bnnContacts: string[] = [];
+
+  const checkBnnContact = (planetObj: any, name: string) => {
+    if (!planetObj || name === "Saturn") return;
+    const pSignIdx = Math.floor(planetObj.siderealLongitude / 30);
+    const dist = ((pSignIdx - satSignIdx + 12) % 12) + 1;
+    if (dist === 1) bnnContacts.push(`Saturn conjunct ${name} (Direct Karma Blend)`);
+    else if (dist === 5 || dist === 9) bnnContacts.push(`Saturn trine ${name} (1-5-9 Dharmic Harmony)`);
+    else if (dist === 7) bnnContacts.push(`Saturn opposite ${name} (Mutual Aspect)`);
+  };
+
+  checkBnnContact(sun, "Sun");
+  checkBnnContact(moon, "Moon");
+  checkBnnContact(mars, "Mars");
+  checkBnnContact(merc, "Mercury");
+  checkBnnContact(jup, "Jupiter");
+  checkBnnContact(ven, "Venus");
+  checkBnnContact(rahu, "Rahu");
+
+  const bnnSaturnKarmaVector = bnnContacts.length > 0 ? bnnContacts.join(" • ") : "Saturn operates as independent solitary Karma anchor";
+
+  let bnnCareerArchetype = "Professional Specialist & Executor";
+  if (bnnContacts.some((c) => c.includes("Sun"))) bnnCareerArchetype = "State Leadership, Executive Management, Public Sector Authority";
+  else if (bnnContacts.some((c) => c.includes("Mercury"))) bnnCareerArchetype = "Commercial Enterprise, Software/Tech Architecture, Trading & Advisory";
+  else if (bnnContacts.some((c) => c.includes("Jupiter"))) bnnCareerArchetype = "Higher Advisory, Legal/Financial Counselor, Institutional Guide";
+  else if (bnnContacts.some((c) => c.includes("Mars"))) bnnCareerArchetype = "Technical Engineering, Operations Management, Defense & Construction";
+  else if (bnnContacts.some((c) => c.includes("Venus"))) bnnCareerArchetype = "Financial Engineering, Commerce, Luxury Design & Creative Industries";
+  else if (bnnContacts.some((c) => c.includes("Rahu"))) bnnCareerArchetype = "Disruptive Tech, Foreign MNCs, Innovation & High-Tech Startups";
+
+  // Saturn dignity & placement
+  const satHouse = sat ? getHouse(sat.siderealLongitude) : 1;
+  const saturnDignityAndPlacement = `Saturn in House ${satHouse} (${[1, 4, 7, 10].includes(satHouse) ? "Kendra anchor" : [3, 6, 11].includes(satHouse) ? "Strong Upachaya placement" : "Supportive"}) provides capacity to command subordinates, build resilient infrastructure, and maintain organizational endurance.`;
+
+  // Moon note
+  const moonHouse = moon ? getHouse(moon.siderealLongitude) : 1;
+  const moonStrengthNote = `Moon in House ${moonHouse} governs mental enthusiasm and public resonance for work.`;
+
+  // Vocation streams
+  const recommendedVocationStreams: string[] = [];
+  if (amatyakarakaPlanet === "Sun" || sunInKendras) recommendedVocationStreams.push("Government / Civil Services / Executive Management");
+  if (amatyakarakaPlanet === "Mercury" || lord10In3rd || lord3WithLord10) recommendedVocationStreams.push("IT / Software / Analytics / Trading & Business");
+  if (amatyakarakaPlanet === "Jupiter" || lord10In2nd) recommendedVocationStreams.push("Finance / Banking / Corporate Law / Consulting");
+  if (amatyakarakaPlanet === "Mars" || saturnDignityAndPlacement.includes("Kendra")) recommendedVocationStreams.push("Engineering / Tech Infrastructure / Real Estate / Operations");
+  if (recommendedVocationStreams.length === 0) recommendedVocationStreams.push("Corporate Management & Professional Consulting");
+
   // 6th vs 7th house verdict
   let verdict6vs7: "Job / Corporate Service Favored" | "Independent Business / Trade Favored" | "Hybrid / Dual Track" = "Hybrid / Dual Track";
   if ([1, 4, 7, 10, 11].includes(hLord6) && ![1, 4, 7, 10, 11].includes(hLord7)) {
@@ -191,25 +298,17 @@ export function analyzeCareerJobBusiness(ephem: EphemerisResult): CareerJobBusin
 
   // Primary recommendation
   let primaryRecommendation: "Corporate Job / Executive Service" | "Independent Business / Entrepreneurship" | "Hybrid (Job First, Enterprise Later)" = "Hybrid (Job First, Enterprise Later)";
-  if (verdict6vs7 === "Job / Corporate Service Favored" && !lord10In3rd && !lord3WithLord10) {
+  if (verdict6vs7 === "Job / Corporate Service Favored" && !lord10In3rd && !lord3WithLord10 && savHouse6 >= savHouse7) {
     primaryRecommendation = "Corporate Job / Executive Service";
-  } else if (verdict6vs7 === "Independent Business / Trade Favored" && (lord10In3rd || lord3WithLord10 || rightCount > leftCount)) {
+  } else if (verdict6vs7 === "Independent Business / Trade Favored" && (lord10In3rd || lord3WithLord10 || rightCount > leftCount || savHouse7 > savHouse6)) {
     primaryRecommendation = "Independent Business / Entrepreneurship";
   } else {
     primaryRecommendation = "Hybrid (Job First, Enterprise Later)";
   }
 
-  // Saturn dignity
-  const satHouse = sat ? getHouse(sat.siderealLongitude) : 1;
-  const saturnDignityAndPlacement = `Saturn in House ${satHouse} (${[1, 4, 7, 10].includes(satHouse) ? "Kendra anchor" : [3, 6, 11].includes(satHouse) ? "Strong Upachaya placement" : "Supportive"}) provides capacity to command subordinates, build resilient infrastructure, and maintain organizational endurance.`;
+  const executiveSummary = `Multi-Book Synthesis (Handwritten Notes + BPHS + Raman + Jaimini + K.N. Rao + C.S. Patel SAV): 6th House Lord in H${hLord6} (${savHouse6} SAV) vs 7th House Lord in H${hLord7} (${savHouse7} SAV), Jaimini AmK is ${amatyakarakaPlanet} in H${amatyakarakaHouse}, 10th Lord in D-10 is in H${d110thLordD10House} (${d110thLordD10Dignity}), and Hemisphere balance is ${leftCount} Left vs ${rightCount} Right. Master Recommendation: ${primaryRecommendation}.`;
 
-  // Moon note
-  const moonHouse = moon ? getHouse(moon.siderealLongitude) : 1;
-  const moonStrengthNote = `Moon in House ${moonHouse} governs mental enthusiasm and public resonance for work.`;
-
-  const executiveSummary = `Comprehensive synthesis shows: 6th House (Job) lord in H${hLord6}, 7th House (Business) lord in H${hLord7}, 10th Lord in D-10 placed in H${d110thLordD10House} (${d110thLordD10Dignity}), and Hemisphere distribution is ${leftCount} Left vs ${rightCount} Right. Recommendation: ${primaryRecommendation}.`;
-
-  const promotionsAndTimingNote = `Promotions and career leaps trigger during the Vimshottari Mahadasha/Antardasha of 10th Lord (${lord10Name}), Lagna Lord (${lord1Name}), planets occupying D-10 10th House (${d10TenthOccupants.length > 0 ? d10TenthOccupants.join(", ") : "10th lord"}), and Sun/Jupiter auspicious transits.`;
+  const promotionsAndTimingNote = `Promotions and career leaps trigger during the Vimshottari Mahadasha/Antardasha of 10th Lord (${lord10Name}), Lagna Lord (${lord1Name}), Amatyakaraka (${amatyakarakaPlanet}), planets occupying D-10 10th House (${d10TenthOccupants.length > 0 ? d10TenthOccupants.join(", ") : "10th lord"}), and Sun/Jupiter auspicious transits.`;
 
   return {
     leftCount,
@@ -242,6 +341,19 @@ export function analyzeCareerJobBusiness(ephem: EphemerisResult): CareerJobBusin
     lord1In6th,
     saturnDignityAndPlacement,
     moonStrengthNote,
+    amatyakarakaPlanet,
+    amatyakarakaRashi,
+    amatyakarakaHouse,
+    amatyakarakaDignity,
+    amatyakarakaVocation,
+    savHouse6,
+    savHouse7,
+    savHouse10,
+    savHouse11,
+    ashtakavargaCareerVerdict,
+    bnnSaturnKarmaVector,
+    bnnCareerArchetype,
+    recommendedVocationStreams,
     primaryRecommendation,
     executiveSummary,
     promotionsAndTimingNote,
