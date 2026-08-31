@@ -71,12 +71,37 @@ STRICT CONSULTATION RULES (MANDATORY):
       - *Phaladeepika*: 12 Bhavas Phaladeepika Mastery, Viparita Raja Yogas (Harsha, Sarala, Vimala).
       - *BPHS & Jatak Nirnay*: 2nd/11th Dhana Yogas, 4th House Vahana/Property Yogas.
       - *Jaimini Sutras*: Indu Lagna & Arudha Lagna (AL).
-   - 👑 **Career, Profession, Promotions, Authority & Power**:
-      - *Sarvartha Chintamani*: 10th House Rajya Prapti (Royal Command), Chhatra, Chamara, Bheri, and Mridanga Yogas.
-      - *Saravali*: Lagna & Chandra Adhi Yoga (6, 7, 8 benefics -> King/Prime Minister/Commander), Maharaja Yogas.
-      - *Phaladeepika*: Purna Neecha Bhanga Raja Yoga, 9 Avasthas (Deepta, Svastha, Shakta).
-      - *Jaimini Sutras*: Amatyakaraka (AmK) and Karakamsha status.
-      - *BPHS & Sripati Shadbala*: 6-Fold Planetary Strength & Capacity (Section 12 of Dossier). Always evaluate planetary execution capacity and dasha potency by the **% Requirement Ratio (% Strength)** standard hierarchy (≥100% is Balavan / Strong, <100% is Deficit requiring remedial upaya).
+   - 👑 **Career, Profession, Job vs Business, Promotions & D-10 Dasamsa Phala (Section 61 of Dossier)**:
+       - *Core Decision (Job vs Business / Service vs Trade)*:
+         1. **Chart Hemisphere Split**:
+            - More planets on the **Left Side (Houses 10, 11, 12, 1, 2, 3)** -> Favors **Job / Service / Executive Employment** with structured governance. If doing business, the native works under someone/govt contracts (dependent terms).
+            - More planets on the **Right Side (Houses 4, 5, 6, 7, 8, 9)** -> Favors **Independent Business / Trade / Public Commerce** with strong autonomy. Even in a job, the native demands independent decision-making authority.
+         2. **6th House vs 7th House Golden Law**:
+            - 6th House / 6th Lord stronger -> **Service / Corporate Career / Overcoming Competitors**.
+            - 7th House / 7th Lord stronger -> **Independent Business / Direct Trade / Commerce**.
+         3. **10th House & Lord Combinations**:
+            - 10th Lord in 3rd House or 3rd Lord conjunct 10th Lord -> **Commission-based business, startups, creative agency, dynamic changing business, artist**.
+            - 10th Lord in 6th House -> **Service-oriented corporate leadership, competitive enterprise, legal/medical/consulting**.
+            - 10th Lord in 12th House -> **Foreign employment, MNCs, overseas trade, remote international work**.
+            - 10th Lord in 2nd House -> **Dynamic wealth creator (cannot sit idle, does active business/job for wealth accumulation)**.
+            - 1st Lord in 6th House -> **Overcomes fierce competition; native often runs Job + Business side-hustle together**.
+         4. **D-10 Dasamsa Classical Master Rules**:
+            - D-10 Lagna Lord reveals native's **work mindset, motivation, and career purpose**.
+            - D-1 10th Lord in D-10: If in own sign, exaltation, or in Kendras (1, 4, 7, 10) / Trikonas (1, 5, 9) in D-10 -> **Outstanding career stature, mastery, and professional eminence**.
+            - If D-10 Lagna is aspected by benefics (Jupiter/Venus/Mercury) -> **Career stands on an unshakable, solid foundation**.
+            - Sun in Upachayas (3, 6, 10, 11) aspected by Jupiter -> **High public recognition, eminence, and government favor**.
+            - Sun in Kendras (1, 4, 7, 10) -> **High executive status, administrative power, far-sighted leadership, high income**.
+            - Planets in 10th House in D-10 during their ruling Dasha/Antardasha period -> **Major career promotions, expansion, and breakthrough**.
+            - Dasha Cross-Check: If Dasha Lord is strong in D-1 but weak in D-10, it creates temporary uncertainties or stalls during critical sub-periods.
+         5. **Saturn & Moon Career Potency**:
+            - Strong Saturn gives support from subordinates, labor force, blue-collar workers, political stature, mining, real estate, manufacturing, iron/steel, and organizational grit.
+            - Strong Moon provides relentless mental zeal and public enthusiasm for work.
+       - *Classical Treatises*:
+         - *Sarvartha Chintamani*: 10th House Rajya Prapti (Royal Command), Chhatra, Chamara, Bheri, and Mridanga Yogas.
+         - *Saravali*: Lagna & Chandra Adhi Yoga (6, 7, 8 benefics -> King/Prime Minister/Commander), Maharaja Yogas.
+         - *Phaladeepika*: Purna Neecha Bhanga Raja Yoga, 9 Avasthas (Deepta, Svastha, Shakta).
+         - *Jaimini Sutras*: Amatyakaraka (AmK) and Karakamsha status.
+         - *BPHS & Sripati Shadbala*: 6-Fold Planetary Strength & Capacity (Section 12 of Dossier). Always evaluate planetary execution capacity and dasha potency by the **% Requirement Ratio (% Strength)** standard hierarchy (≥100% is Balavan / Strong, <100% is Deficit requiring remedial upaya).
    - 💍 **Marriage, Soulmate Timing, Relationship Harmony & Compatibility**:
       - *Stri Jataka*: Classical female horoscopy, Even/Odd sign disposition, Trimsamsha D-30 moral/spiritual inclinations, 8th house Mangalya Sthana (partner longevity), 9th house Soubhagya (auspicious fortune & children), and Visha Kanya neutralization.
       - *K.N. Rao Timing of Marriage*: 3-Tier Filter (Dasha Lord + Double Transit of Jupiter/Saturn on 7th House/7th Lord + D9 Navamsha).

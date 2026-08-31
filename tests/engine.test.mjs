@@ -3175,6 +3175,30 @@ test("Predictive Decision Gates & Deterministic Shastric Proofs Verification", a
   assert.ok(gates.executiveSummary.length >= 4);
 });
 
+test("Classical Job vs Business & D-10 Dasamsa Career Engine Verification", async () => {
+  const { analyzeCareerJobBusiness } = await import("../src/engine/careerJobBusiness.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Mau", country: "India", latitude: 25.94, longitude: 83.56, timezoneOffsetHours: 5.5 };
+  const ephem = calculateVedicEphemeris(new Date("1998-05-24T18:46:51.000Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const career = analyzeCareerJobBusiness(ephem);
+
+  assert.ok(career);
+  assert.ok(typeof career.leftCount === "number");
+  assert.ok(typeof career.rightCount === "number");
+  assert.strictEqual(career.leftCount + career.rightCount, 9);
+  assert.ok(["Left (Service & Self-Execution)", "Right (Trade, Public & Business)", "Balanced"].includes(career.hemisphereDominance));
+  assert.ok(career.d10LagnaSign);
+  assert.ok(career.d10LagnaLord);
+  assert.ok(career.d110thLordInD10);
+  assert.ok(typeof career.d110thLordD10House === "number");
+  assert.ok(career.primaryRecommendation);
+  assert.ok(career.executiveSummary.length > 20);
+  assert.ok(career.promotionsAndTimingNote.length > 20);
+});
+
+
 
 
 

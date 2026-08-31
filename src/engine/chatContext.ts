@@ -64,6 +64,7 @@ import { evaluateRaman300Combinations, evaluateLalKitabTeva, evaluateNarayanaKav
 import { evaluateBenchmarkResonance } from "./benchmarkHoroscopes";
 import { evaluatePrasnaTantra, evaluateMargabandhuStotram } from "./prasnaTantra";
 import { evaluatePatelAshtakavarga } from "./patelAshtakavarga";
+import { analyzeCareerJobBusiness } from "./careerJobBusiness";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
@@ -1366,6 +1367,37 @@ export function buildAstroDossier(
 
   const decisionGates = calculatePredictiveDecisionGates(natalEphemeris);
 
+  // 61. Job vs Business & D-10 Dasamsa Career Phala (15 Classical Rules)
+  let careerDossierSummary = "";
+  try {
+    const careerAnalysis = analyzeCareerJobBusiness(natalEphemeris);
+    careerDossierSummary = [
+      `- **Primary Career Recommendation:** **${careerAnalysis.primaryRecommendation}**`,
+      `- **Chart Hemisphere Distribution:** ${careerAnalysis.leftCount} Left (Houses 10-3) vs ${careerAnalysis.rightCount} Right (Houses 4-9) • Dominance: **${careerAnalysis.hemisphereDominance}**`,
+      `  - *Hemisphere Synthesis:* ${careerAnalysis.hemisphereSynthesis}`,
+      `- **6th House (Service/Job) vs 7th House (Trade/Business):** **${careerAnalysis.verdict6vs7}**`,
+      `  - 6th House Lord: ${careerAnalysis.house6Strength} | 7th House Lord: ${careerAnalysis.house7Strength}`,
+      `- **D-10 Dasamsa In-Depth Diagnostics:**`,
+      `  - D-10 Lagna: **${careerAnalysis.d10LagnaSign}** (Lord: **${careerAnalysis.d10LagnaLord}** - governs career mindset & purpose)`,
+      `  - D-1 10th Lord in D-10: **${careerAnalysis.d110thLordInD10}** placed in **House ${careerAnalysis.d110thLordD10House} of D-10** (${careerAnalysis.d110thLordD10Dignity})`,
+      `  - D-10 Lagna Benefic Aspects: ${careerAnalysis.d10AspectOnLagna.length > 0 ? careerAnalysis.d10AspectOnLagna.join(", ") : "Neutral foundation"}`,
+      `  - D-10 10th House Occupants: ${careerAnalysis.d10TenthHouseOccupants.length > 0 ? careerAnalysis.d10TenthHouseOccupants.join(", ") : "None (D-10 10th lord active)"}`,
+      `- **Sun & Royal Authority Formations:**`,
+      `  - Sun in Upachaya (3, 6, 10, 11) with Jupiter Aspect: ${careerAnalysis.sunUpachayaWithJupiterAspect ? "YES (Eminence, public recognition & royal favor)" : "Standard"}`,
+      `  - Sun in Angles (Kendras 1, 4, 7, 10): ${careerAnalysis.sunInKendras ? "YES (High status, administrative authority, visionary leadership)" : "Non-kendra"}`,
+      `- **Key Professional Combinations:**`,
+      `  - 10th Lord in 3rd House: ${careerAnalysis.lord10In3rd ? "YES (Favorable for entrepreneurship, media, self-initiative & business)" : "No"}`,
+      `  - 3rd Lord conjunct 10th Lord: ${careerAnalysis.lord3WithLord10 ? "YES (Commission-based business, agency, creative enterprise)" : "No"}`,
+      `  - 10th Lord in 6th House: ${careerAnalysis.lord10In6th ? "YES (Service industry, competitive corporate roles, legal/medical/consulting)" : "No"}`,
+      `  - 10th Lord in 12th House: ${careerAnalysis.lord10In12th ? "YES (MNC, foreign trade, overseas employment, remote tech)" : "No"}`,
+      `  - 10th Lord in 2nd House: ${careerAnalysis.lord10In2nd ? "YES (Dynamic wealth generation through active professional trade)" : "No"}`,
+      `  - 1st Lord in 6th House: ${careerAnalysis.lord1In6th ? "YES (Overcomes competition; can do job + business hybrid side-hustle)" : "No"}`,
+      `- **Saturn & Moon Capacity:** ${careerAnalysis.saturnDignityAndPlacement} | ${careerAnalysis.moonStrengthNote}`,
+      `- **Promotion & Acceleration Timing:** ${careerAnalysis.promotionsAndTimingNote}`,
+      `- **Executive Verdict:** ${careerAnalysis.executiveSummary}`,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -1612,6 +1644,9 @@ export function buildAstroDossier(
     "",
     "#### 📐 60. C.S. PATEL ASHTAKAVARGA SHODHANA & 8 KAKSHYAS DOSSIER:",
     patelAshtakavargaSummary,
+    "",
+    "#### 💼 61. JOB VS BUSINESS, CAREER ORIENTATION & D-10 DASAMSA PHALA DOSSIER (15 CLASSICAL RULES):",
+    careerDossierSummary,
   ];
 
   if (matchmakingSummary) {
