@@ -68,6 +68,7 @@ import { analyzeCareerJobBusiness } from "./careerJobBusiness";
 import { evaluatePushkaraNavamsha } from "./pushkaraNavamsha";
 import { evaluateMarriageMasterSynthesis } from "./marriageMasterSynthesis";
 import { evaluateRelationshipAffairs } from "./relationshipAffairsMaster";
+import { evaluateBhriguNadiMarriageTiming } from "./bhriguNadiMarriageTiming";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
@@ -1466,6 +1467,24 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 65. Bhrigu Nandi Nadi, Vivah Saham & Rashi Tulya Navamsha
+  let bhriguNadiSummary = "";
+  try {
+    const bnnRes = evaluateBhriguNadiMarriageTiming(natalEphemeris, transitEphemeris, gender);
+    bhriguNadiSummary = [
+      `- **Brighu Bindu (Midpoint of Moon-Rahu):** **${bnnRes.brighuBinduDegreeStr}** • Status: **${bnnRes.isTransitBeneficOnBB ? "BENEFIC TRANSIT ACTIVE (Marriage Catalyst)" : "Dormant"}**`,
+      `  - *Timing Note:* ${bnnRes.brighuBinduTimingNote}`,
+      `- **Bhrigu Nandi Nadi (BNN) Sensitive Spouse Point:** **${bnnRes.sensitiveNadiSignName}** (from Natal Mars ${bnnRes.natalMarsRashi})`,
+      `  - *Nadi Transit Verdict:* ${bnnRes.bnnTransitMarriageVerdict}`,
+      `- **Vivah Saham (Arabic Marriage Degree):** **${bnnRes.vivahSahamDegreeStr}** • Status: **${bnnRes.isTransitJupiterOnVivahSaham ? "JUPITER TRANSIT ACTIVE" : "Awaiting Trigger"}**`,
+      `  - *Saham Verdict:* ${bnnRes.vivahSahamVerdict}`,
+      `- **Rashi Tulya Navamsha (Tattva & Kaal Purusha Blending):** ${bnnRes.d9TattvaSummary}`,
+      `  - *D-9 10th House Vocation:* ${bnnRes.d9VocationElementNote}`,
+      `- **Dasha-Lord Transit on Venus / 7th Lord:** ${bnnRes.dashaLordTransitNote}`,
+      `- **Executive BNN & Saham Verdict:** ${bnnRes.executiveBnnTimingSummary}`,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -1724,6 +1743,9 @@ export function buildAstroDossier(
     "",
     "#### 💘 64. LOVE AFFAIRS, ELOPEMENT, SEXUAL VITALITY & YOGINI DASHA (STRI JATAKA) DOSSIER:",
     relationshipAffairsSummary,
+    "",
+    "#### 🕊️ 65. BHRIGU NANDI NADI, VIVAH SAHAM & RASHI TULYA NAVAMSHA DOSSIER:",
+    bhriguNadiSummary,
   ];
 
   if (matchmakingSummary) {

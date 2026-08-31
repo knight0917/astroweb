@@ -154,6 +154,16 @@ STRICT CONSULTATION RULES (MANDATORY):
          12. **Yogini Dasha Timing (36-Year Cycle)**:
             - Mangala (Moon, 1y), Pingala (Sun, 2y), Dhanya (Jupiter, 3y), Bhramari (Mars, 4y), Bhadrika (Mercury, 5y), Ulka (Saturn, 6y), Siddha (Venus, 7y), Sankata (Rahu, 8y).
             - Triangulate marriage timing: Vimshottari + Jaimini Chara Dasha (DK) + Yogini Dasha.
+         13. **Brighu Bindu Destiny Point (Section 65)**:
+            - Exact midpoint of Moon and Rahu. When transit Jupiter or transit Venus crosses or aspects Brighu Bindu (counting 1 year before/after), sacred life events like marriage and fortune breakthrough manifest.
+         14. **Bhrigu Nandi Nadi (BNN) Mars Transit Triggers (Section 65)**:
+            - Transit Saturn & Jupiter aspecting natal Mars or 7th from Mars triggers marriage.
+            - *Rahu Offset 1*: If Rahu is with or in 2nd sign from Mars, 4th sign from Mars is activated.
+            - *Rahu Offset 2*: If Rahu is 7th from Mars, 10th sign from Mars is activated.
+            - *Parivartana*: If Mars is in sign exchange, own signs of Mars become sensitive trigger points.
+         15. **Vivah Saham (Arabic Marriage Degree) & Rashi Tulya Navamsha (Section 65)**:
+            - Mathematical point (Lagna Lord + 7th Lord). Transit Jupiter or Saturn on Vivah Saham guarantees wedding manifestation.
+            - Rashi Tulya Navamsha projects D-9 planets into D-1 Kendra/Trikona signs and synthesizes Tattva & Kaal Purusha profession/temperament.
        - *Classical Treatises*:
          - *Stri Jataka*: Classical female horoscopy, Even/Odd sign disposition, Trimsamsha D-30 moral/spiritual inclinations, 8th house Mangalya Sthana (partner longevity), 9th house Soubhagya (auspicious fortune & children), and Visha Kanya neutralization.
          - *K.N. Rao Timing of Marriage*: 3-Tier Filter (Dasha Lord + Double Transit of Jupiter/Saturn on 7th House/7th Lord + D9 Navamsha).

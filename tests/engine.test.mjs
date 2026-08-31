@@ -3286,6 +3286,30 @@ test("Classical Relationship, Love Affairs, Elopement & Yogini Dasha Engine Veri
   assert.ok(relReport.executiveRelationshipSummary.length > 20);
 });
 
+test("Classical Bhrigu Nandi Nadi, Vivah Saham & Rashi Tulya Navamsha Engine Verification", async () => {
+  const { evaluateBhriguNadiMarriageTiming } = await import("../src/engine/bhriguNadiMarriageTiming.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1998-05-24T18:46:51.000Z"), location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date("2026-08-31T00:00:00.000Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const bnnReport = evaluateBhriguNadiMarriageTiming(natalEphem, transitEphem, "male");
+  assert.ok(bnnReport);
+  assert.ok(typeof bnnReport.brighuBinduLongitude === "number");
+  assert.ok(bnnReport.brighuBinduRashi);
+  assert.ok(bnnReport.brighuBinduDegreeStr);
+  assert.ok(typeof bnnReport.isTransitBeneficOnBB === "boolean");
+  assert.ok(bnnReport.sensitiveNadiSignName);
+  assert.ok(bnnReport.bnnTransitMarriageVerdict.length > 10);
+  assert.ok(typeof bnnReport.vivahSahamLongitude === "number");
+  assert.ok(bnnReport.vivahSahamDegreeStr);
+  assert.ok(typeof bnnReport.rashiTulyaKendraTrikonaCount === "number");
+  assert.ok(bnnReport.d9TattvaSummary.length > 10);
+  assert.ok(bnnReport.executiveBnnTimingSummary.length > 20);
+});
+
+
 
 
 
