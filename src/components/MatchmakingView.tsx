@@ -622,6 +622,170 @@ export default function MatchmakingView() {
         </div>
       </div>
 
+      {/* D-1 & D-9 Multi-Varga Cross-Synastry (Handwritten Notes & Stri Jataka) */}
+      <div className="glass-panel p-6 rounded-2xl border border-indigo-500/30 bg-slate-950/80 shadow-2xl space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🌸</span>
+            <div>
+              <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-wider">
+                D-1 & D-9 Multi-Varga Cross-Synastry (नवांश एवं राशि युगल मिलान)
+              </h3>
+              <p className="text-[11px] text-slate-400 font-sans">
+                Deep soul compatibility, subconscious harmony, and desire fulfillment across Rashi (D-1) and Navamsha (D-9)
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-slate-400">Score:</span>
+            <span
+              className={`px-3 py-1 rounded-xl text-xs uppercase font-black ${
+                matchResult.d1d9Synastry.crossSynastryScorePercent >= 70
+                  ? "bg-indigo-950 text-indigo-300 border border-indigo-500/50"
+                  : matchResult.d1d9Synastry.crossSynastryScorePercent >= 50
+                  ? "bg-sky-950 text-sky-300 border border-sky-500/50"
+                  : "bg-rose-950 text-rose-300 border border-rose-500/50"
+              }`}
+            >
+              {matchResult.d1d9Synastry.crossSynastryScorePercent}% • {matchResult.d1d9Synastry.verdict}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+          {/* 1. D-9 Lagna Axis */}
+          <div className="bg-slate-900/70 p-3.5 rounded-xl border border-slate-800 space-y-1">
+            <span className="text-slate-400 block text-[10px] uppercase font-bold flex items-center gap-1">
+              <span>🏛️</span> D-9 Navamsha Lagna Axis
+            </span>
+            <span className="font-bold text-indigo-300 block text-xs">
+              {matchResult.d1d9Synastry.d9LagnaRelationship}
+            </span>
+            <span className="text-[10px] text-slate-400 font-mono block">
+              Groom: {matchResult.d1d9Synastry.boyD9LagnaRashi} ⇄ Bride: {matchResult.d1d9Synastry.girlD9LagnaRashi}
+            </span>
+          </div>
+
+          {/* 2. D-9 Lagna Lord Cross-Placement */}
+          <div className="bg-slate-900/70 p-3.5 rounded-xl border border-slate-800 space-y-1">
+            <span className="text-slate-400 block text-[10px] uppercase font-bold flex items-center gap-1">
+              <span>👑</span> D-9 Lagna Lord Placement
+            </span>
+            <span className={`font-bold block text-xs ${matchResult.d1d9Synastry.isD9LagnaLordInTrik ? "text-amber-400" : "text-emerald-300"}`}>
+              {matchResult.d1d9Synastry.isD9LagnaLordInTrik ? "⚠️ Trik House Caution" : "✓ Fortified Houses"}
+            </span>
+            <span className="text-[10px] text-slate-400 block font-sans leading-tight">
+              Groom Lord in H{matchResult.d1d9Synastry.boyD9LagnaLordInGirlD9House} • Bride Lord in H{matchResult.d1d9Synastry.girlD9LagnaLordInBoyD9House}
+            </span>
+          </div>
+
+          {/* 3. D-1 to D-9 Moon Resonance */}
+          <div className="bg-slate-900/70 p-3.5 rounded-xl border border-slate-800 space-y-1">
+            <span className="text-slate-400 block text-[10px] uppercase font-bold flex items-center gap-1">
+              <span>🌙</span> D1 to D9 Moon Resonance
+            </span>
+            <span className="font-bold text-sky-300 block text-xs">
+              {matchResult.d1d9Synastry.isMoonD1ToD9Resonance ? "✓ Soul Resonance Active" : "Standard Interface"}
+            </span>
+            <span className="text-[10px] text-slate-400 block font-sans leading-tight">
+              {matchResult.d1d9Synastry.moonResonanceDescription}
+            </span>
+          </div>
+
+          {/* 4. D-9 4th House & Birth Dasha */}
+          <div className="bg-slate-900/70 p-3.5 rounded-xl border border-slate-800 space-y-1">
+            <span className="text-slate-400 block text-[10px] uppercase font-bold flex items-center gap-1">
+              <span>🏡</span> Domestic Joy & Soul Bond
+            </span>
+            <span className="font-bold text-purple-300 block text-xs">
+              {matchResult.d1d9Synastry.isBirthDashaConnectedToBride ? "✓ Dasha Bond Linked" : "Independent Dasha"}
+            </span>
+            <span className="text-[10px] text-slate-400 block font-sans leading-tight">
+              {matchResult.d1d9Synastry.d9FourthHouseHarmony}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-indigo-950/30 p-3 rounded-xl border border-indigo-500/30 text-xs text-indigo-200 font-sans leading-relaxed">
+          <strong>Classical Shastric Principle (Image 4 Step 2):</strong> {matchResult.d1d9Synastry.synthesis}
+        </div>
+      </div>
+
+      {/* Classical Ashtakavarga Synastry (C.S. Patel & Parashara) */}
+      <div className="glass-panel p-6 rounded-2xl border border-teal-500/30 bg-slate-950/80 shadow-2xl space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📐</span>
+            <div>
+              <h3 className="text-sm font-bold text-teal-300 uppercase tracking-wider">
+                Classical Ashtakavarga Synastry (अष्टकवर्ग रेखा मिलान — C.S. Patel Standard)
+              </h3>
+              <p className="text-[11px] text-slate-400 font-sans">
+                Energy distribution across Sarvashtakavarga (SAV) and Bhinnashtakavarga (BAV) bindus
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-slate-400">Score:</span>
+            <span
+              className={`px-3 py-1 rounded-xl text-xs uppercase font-black ${
+                matchResult.ashtakavargaCompatibility.ashtakavargaScore >= 75
+                  ? "bg-teal-950 text-teal-300 border border-teal-500/50"
+                  : matchResult.ashtakavargaCompatibility.ashtakavargaScore >= 50
+                  ? "bg-sky-950 text-sky-300 border border-sky-500/50"
+                  : "bg-amber-950 text-amber-300 border border-amber-500/50"
+              }`}
+            >
+              {matchResult.ashtakavargaCompatibility.ashtakavargaScore}% • {matchResult.ashtakavargaCompatibility.verdict}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div className="bg-slate-900/70 p-3.5 rounded-xl border border-slate-800 space-y-1">
+            <span className="text-slate-400 block text-[10px] font-bold">Lagna SAV Cross-Points</span>
+            <span className="text-slate-200 block text-xs">
+              Groom in Bride SAV: <strong className="text-teal-300">{matchResult.ashtakavargaCompatibility.boyLagnaSAVInGirlChart} pts</strong>
+            </span>
+            <span className="text-slate-200 block text-xs">
+              Bride in Groom SAV: <strong className="text-teal-300">{matchResult.ashtakavargaCompatibility.girlLagnaSAVInBoyChart} pts</strong>
+            </span>
+            <span className="text-[10px] text-slate-400 block font-sans">Standard benchmark is ≥ 28 bindus</span>
+          </div>
+
+          <div className="bg-slate-900/70 p-3.5 rounded-xl border border-slate-800 space-y-1">
+            <span className="text-slate-400 block text-[10px] font-bold">Moon & Venus BAV Resonance</span>
+            <span className="text-slate-200 block text-xs">
+              Groom Moon BAV: <strong className="text-amber-300">{matchResult.ashtakavargaCompatibility.boyMoonBAVInGirl}/8</strong>
+            </span>
+            <span className="text-slate-200 block text-xs">
+              Bride Moon BAV: <strong className="text-amber-300">{matchResult.ashtakavargaCompatibility.girlMoonBAVInBoy}/8</strong>
+            </span>
+            <span className="text-[10px] text-slate-400 block font-sans">Higher BAV indicates emotional peace</span>
+          </div>
+
+          <div className="bg-slate-900/70 p-3.5 rounded-xl border border-slate-800 space-y-1">
+            <span className="text-slate-400 block text-[10px] font-bold">7th House SAV Strength</span>
+            <span className="text-slate-200 block text-xs">
+              Groom 7th House: <strong className="text-sky-300">{matchResult.ashtakavargaCompatibility.boy7thHouseSAV} pts</strong>
+            </span>
+            <span className="text-slate-200 block text-xs">
+              Bride 7th House: <strong className="text-pink-300">{matchResult.ashtakavargaCompatibility.girl7thHouseSAV} pts</strong>
+            </span>
+            <span className="text-[10px] text-slate-400 block font-sans">Stable marital vessel capacity</span>
+          </div>
+        </div>
+
+        <div className="space-y-1.5 pt-1">
+          {matchResult.ashtakavargaCompatibility.principles.map((p, idx) => (
+            <div key={idx} className="text-[11px] text-slate-300 flex items-start gap-1.5">
+              <span className="text-teal-400 font-bold">•</span>
+              <span>{p}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Manglik & Special Dosha Analysis */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Manglik Assessment */}
@@ -682,7 +846,7 @@ export default function MatchmakingView() {
           </div>
 
           <div className="bg-purple-950/30 p-3 rounded-xl border border-purple-500/30 text-xs text-purple-200 font-sans">
-            <strong>Authentic Vedic Rule:</strong> When both charts have verified coordinates, the Moon Nakshatras and Lagna axes establish the foundational energetic harmony required for lifelong matrimonial bliss.
+            <strong>Authentic Vedic Rule:</strong> When both charts have verified coordinates, the Moon Nakshatras, Lagna axes, D-9 Navamsha cross-placements, and Ashtakavarga bindus establish the complete energetic harmony required for lifelong matrimonial bliss.
           </div>
         </div>
       </div>
