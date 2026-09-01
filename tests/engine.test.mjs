@@ -3417,6 +3417,31 @@ test("Classical Vedic Name Decoding & Svara Jyotish Verification", async () => {
   assert.ok(nameRes2.predictedCallingLetters.includes("R") || nameRes2.predictedCallingLetters.includes("A"), "Calling letters should include 'R' or 'A'");
 });
 
+test("Client Reviews & Feedback Database Storage Verification", async () => {
+  const { saveReview, getReviews } = await import("../src/lib/db.ts");
+
+  const testReview = {
+    name: "Aryavrat Sharma",
+    email: "aryavrat@testvedic.com",
+    subject: "Accurate Dasha Timing", // Max 20 chars
+    description: "The BTR and career prediction timing was exceptionally accurate!",
+    rating: 5,
+  };
+
+  const saved = await saveReview(testReview);
+  assert.ok(saved.id.startsWith("rev_"));
+  assert.strictEqual(saved.name, "Aryavrat Sharma");
+  assert.strictEqual(saved.email, "aryavrat@testvedic.com");
+  assert.strictEqual(saved.subject, "Accurate Dasha Timing".slice(0, 20));
+  assert.strictEqual(saved.rating, 5);
+  assert.ok(saved.createdAt);
+
+  const allReviews = await getReviews();
+  assert.ok(Array.isArray(allReviews));
+  const found = allReviews.find((r) => r.id === saved.id);
+  assert.ok(found, "Saved review should be present in getReviews list");
+});
+
 
 
 

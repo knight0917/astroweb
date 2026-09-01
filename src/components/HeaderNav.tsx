@@ -302,6 +302,13 @@ export default function HeaderNav() {
           hindiLabel: "ग्रह स्थिति सारणी",
           desc: "Sidereal degrees, Nakshatras, Padas, Speed & Retrograde status",
         },
+        {
+          mode: "reviews",
+          label: "Client Reviews & Feedback",
+          hindiLabel: "समीक्षा एवं प्रतिक्रिया",
+          desc: "Community feedback, consultation reviews & feature suggestions stored in DB",
+          badge: "DB",
+        },
       ],
     },
   ];

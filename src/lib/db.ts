@@ -26,8 +26,19 @@ export interface StoredBirthChart {
   updatedAt: string;
 }
 
+export interface StoredReview {
+  id: string;
+  name: string;
+  email: string;
+  subject: string; // Max 20 chars
+  description: string;
+  rating?: number; // 1-5
+  createdAt: string;
+}
+
 const DATA_DIR = path.join(process.cwd(), "data");
 const DB_FILE = path.join(DATA_DIR, "charts_db.json");
+const REVIEWS_DB_FILE = path.join(DATA_DIR, "reviews_db.json");
 
 function ensureDbFile(): void {
   try {
@@ -219,4 +230,121 @@ export async function deleteChart(id: string, email: string): Promise<boolean> {
   }
 
   return deletedFromCloud;
+}
+
+/**
+ * Read all reviews from local JSON file
+ */
+function readAllReviewsLocal(): StoredReview[] {
+  ensureDbFile();
+  try {
+    if (!fs.existsSync(REVIEWS_DB_FILE)) {
+      fs.writeFileSync(REVIEWS_DB_FILE, JSON.stringify([]), "utf-8");
+    }
+    const raw = fs.readFileSync(REVIEWS_DB_FILE, "utf-8");
+    return JSON.parse(raw) as StoredReview[];
+  } catch (err) {
+    console.error("Error reading reviews DB:", err);
+    return [];
+  }
+}
+
+/**
+ * Write all reviews to local JSON file
+ */
+function writeAllReviewsLocal(reviews: StoredReview[]): void {
+  ensureDbFile();
+  try {
+    const tempFile = `${REVIEWS_DB_FILE}.tmp.${Date.now()}`;
+    fs.writeFileSync(tempFile, JSON.stringify(reviews, null, 2), "utf-8");
+    fs.renameSync(tempFile, REVIEWS_DB_FILE);
+  } catch (err) {
+    console.error("Error writing reviews DB:", err);
+  }
+}
+
+/**
+ * Get all reviews (ordered newest first)
+ */
+export async function getReviews(): Promise<StoredReview[]> {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        return data.map((row: any) => ({
+          id: row.id,
+          name: row.name,
+          email: row.email,
+          subject: row.subject,
+          description: row.description,
+          rating: row.rating || 5,
+          createdAt: row.created_at,
+        }));
+      }
+    } catch (err) {
+      console.warn("Supabase fetch reviews exception, using local DB:", err);
+    }
+  }
+
+  const local = readAllReviewsLocal();
+  return local.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+/**
+ * Save a new review to Supabase and local JSON fallback
+ */
+export async function saveReview(reviewData: {
+  name: string;
+  email: string;
+  subject: string;
+  description: string;
+  rating?: number;
+}): Promise<StoredReview> {
+  const id = `rev_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const createdAt = new Date().toISOString();
+
+  // Enforce max 20 characters on subject
+  const cleanSubject = reviewData.subject.trim().slice(0, 20);
+
+  const newReview: StoredReview = {
+    id,
+    name: reviewData.name.trim(),
+    email: normalizeEmail(reviewData.email),
+    subject: cleanSubject,
+    description: reviewData.description.trim(),
+    rating: typeof reviewData.rating === "number" ? Math.min(5, Math.max(1, reviewData.rating)) : 5,
+    createdAt,
+  };
+
+  if (supabase) {
+    try {
+      await supabase.from("reviews").insert([
+        {
+          id: newReview.id,
+          name: newReview.name,
+          email: newReview.email,
+          subject: newReview.subject,
+          description: newReview.description,
+          rating: newReview.rating,
+          created_at: newReview.createdAt,
+        },
+      ]);
+    } catch (err) {
+      console.warn("Supabase save review exception, saving locally:", err);
+    }
+  }
+
+  try {
+    const all = readAllReviewsLocal();
+    all.unshift(newReview);
+    writeAllReviewsLocal(all);
+  } catch (err) {
+    console.error("Local save review error:", err);
+  }
+
+  return newReview;
 }

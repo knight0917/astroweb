@@ -112,6 +112,11 @@ const AdhanaKundliView = dynamic(() => import("../components/AdhanaKundliView"),
   loading: () => <ModuleLoadingSkeleton title="Adhana Kundali & Foetal Gestation Engine" />,
 });
 
+const ReviewSection = dynamic(() => import("../components/ReviewSection"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Community Reviews & Feedback" />,
+});
+
 const EntityDetailModal = dynamic(() => import("../components/EntityDetailModal"), {
   ssr: false,
 });
@@ -121,7 +126,7 @@ const AstroChatbot = dynamic(() => import("../components/AstroChatbot"), {
 });
 
 export default function HomePage() {
-  const { viewMode, initFromStorage } = useAstroStore();
+  const { viewMode, setViewMode, initFromStorage } = useAstroStore();
 
   React.useEffect(() => {
     initFromStorage();
@@ -241,6 +246,12 @@ export default function HomePage() {
           </div>
         )}
 
+        {viewMode === "reviews" && (
+          <div className="w-full">
+            <ReviewSection onClose={() => setViewMode("kundli-north")} />
+          </div>
+        )}
+
         {viewMode === "table" && (
           <div className="w-full">
             <PositionsTable />
@@ -273,6 +284,14 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-slate-900 py-4 px-4 text-center text-xs text-slate-500 flex flex-wrap items-center justify-center gap-4">
         <span>Vedic Sky AI Tracker & Planetary Ephemeris Engine • Powered by High-Precision Celestial Mechanics</span>
+        <span className="text-slate-700">•</span>
+        <button
+          onClick={() => setViewMode("reviews")}
+          className="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+        >
+          <span>🌟</span>
+          <span>Community Reviews & Feedback</span>
+        </button>
         <span className="text-slate-700">•</span>
         <a
           href="https://prasna-tantra-2-eqcdmsstvnm6buvdjcjfad.streamlit.app/"

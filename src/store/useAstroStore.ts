@@ -27,6 +27,7 @@ export type ViewMode =
   | "muhurta"
   | "prashna"
   | "adhana"
+  | "reviews"
   | "table"
   | "dual";
 export type SkyViewType = "ecliptic" | "horizontal";
