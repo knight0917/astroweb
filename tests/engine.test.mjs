@@ -3417,12 +3417,18 @@ test("Classical Vedic Name Decoding & Svara Jyotish Verification", async () => {
   assert.ok(nameRes2.predictedCallingLetters.includes("R") || nameRes2.predictedCallingLetters.includes("A"), "Calling letters should include 'R' or 'A'");
 });
 
-test("Client Reviews & Feedback Database Storage Verification", async () => {
-  const { saveReview, getReviews } = await import("../src/lib/db.ts");
+test("Client Reviews & Feedback Database Storage & 1-Day Rate Limit Verification", async () => {
+  const { saveReview, getReviews, hasRecentReviewByEmail } = await import("../src/lib/db.ts");
+
+  const testEmail = `aryavrat_${Date.now()}@testvedic.com`;
+
+  // 1. Initially should be false (no submission in last 24h)
+  const initialCheck = await hasRecentReviewByEmail(testEmail, 24);
+  assert.strictEqual(initialCheck, false, "Initial check should be false");
 
   const testReview = {
     name: "Aryavrat Sharma",
-    email: "aryavrat@testvedic.com",
+    email: testEmail,
     subject: "Accurate Dasha Timing", // Max 20 chars
     description: "The BTR and career prediction timing was exceptionally accurate!",
     rating: 5,
@@ -3431,10 +3437,14 @@ test("Client Reviews & Feedback Database Storage Verification", async () => {
   const saved = await saveReview(testReview);
   assert.ok(saved.id.startsWith("rev_"));
   assert.strictEqual(saved.name, "Aryavrat Sharma");
-  assert.strictEqual(saved.email, "aryavrat@testvedic.com");
+  assert.strictEqual(saved.email, testEmail);
   assert.strictEqual(saved.subject, "Accurate Dasha Timing".slice(0, 20));
   assert.strictEqual(saved.rating, 5);
   assert.ok(saved.createdAt);
+
+  // 2. Immediately after submission, 24-hour rate limit check should be true
+  const afterCheck = await hasRecentReviewByEmail(testEmail, 24);
+  assert.strictEqual(afterCheck, true, "Rate limit check must be true within 24 hours of submission");
 
   const allReviews = await getReviews();
   assert.ok(Array.isArray(allReviews));

@@ -348,3 +348,38 @@ export async function saveReview(reviewData: {
 
   return newReview;
 }
+
+/**
+ * Check if a review has already been submitted by this email in the last `hours` (default 24 hours)
+ */
+export async function hasRecentReviewByEmail(email: string, hours: number = 24): Promise<boolean> {
+  const norm = normalizeEmail(email);
+  if (!norm) return false;
+
+  const thresholdMs = Date.now() - hours * 60 * 60 * 1000;
+  const thresholdIso = new Date(thresholdMs).toISOString();
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("created_at")
+        .eq("email", norm)
+        .gte("created_at", thresholdIso)
+        .limit(1);
+
+      if (!error && data && data.length > 0) {
+        return true;
+      }
+    } catch (err) {
+      console.warn("Supabase check recent review exception, falling back to local DB:", err);
+    }
+  }
+
+  const local = readAllReviewsLocal();
+  const recent = local.find(
+    (r) => normalizeEmail(r.email) === norm && new Date(r.createdAt).getTime() >= thresholdMs
+  );
+
+  return Boolean(recent);
+}

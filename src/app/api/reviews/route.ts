@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getReviews, saveReview, normalizeEmail } from "@/lib/db";
+import { getReviews, saveReview, hasRecentReviewByEmail, normalizeEmail } from "@/lib/db";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -81,7 +81,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 5. Save to Database
+    // 5. Enforce 1 submission per email per 24 hours (1 day rate limit)
+    const hasSubmittedToday = await hasRecentReviewByEmail(email, 24);
+    if (hasSubmittedToday) {
+      return NextResponse.json(
+        {
+          error: "You have already submitted feedback today with this email. Only 1 review per day is allowed.",
+        },
+        { status: 429 }
+      );
+    }
+
+    // 6. Save to Database
     const savedReview = await saveReview({
       name: name.trim(),
       email: normalizeEmail(email),
