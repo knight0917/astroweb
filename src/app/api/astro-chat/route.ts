@@ -342,6 +342,91 @@ STRICT CONSULTATION RULES (MANDATORY):
       .filter((msg: any) => msg.id !== "welcome" && msg.content && msg.content.trim())
       .slice(-8);
 
+    const isSiliconFlow =
+      apiKey.startsWith("sk-") ||
+      Boolean(process.env.SILICONFLOW_API_KEY && (!userApiKey || userApiKey.startsWith("sk-")));
+
+    // 1. SILICONFLOW DEEPSEEK ROUTE (OPENAI-COMPATIBLE)
+    if (isSiliconFlow) {
+      const sfApiKey = apiKey.startsWith("sk-")
+        ? apiKey
+        : process.env.SILICONFLOW_API_KEY || apiKey;
+
+      const sfMessages = [
+        { role: "system", content: systemInstruction },
+        ...filteredHistory.map((m: any) => ({
+          role:
+            m.sender === "bot" || m.role === "assistant" || m.role === "model"
+              ? "assistant"
+              : "user",
+          content: m.content || "",
+        })),
+      ];
+
+      if (sfMessages.length === 1) {
+        sfMessages.push({
+          role: "user",
+          content: "Pranam! Please provide my reading based on my birth chart.",
+        });
+      }
+
+      const siliconCandidateModels = [
+        "deepseek-ai/DeepSeek-V3",
+        "deepseek-ai/DeepSeek-V4-Pro",
+        "deepseek-ai/DeepSeek-R1",
+        "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+        "Qwen/Qwen2.5-7B-Instruct",
+        "THUDM/glm-4-9b-chat",
+      ];
+
+      let sfLastError = "";
+
+      for (const modelName of siliconCandidateModels) {
+        try {
+          const sfRes = await fetch("https://api.siliconflow.cn/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${sfApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: modelName,
+              messages: sfMessages,
+              temperature: 0.3,
+              max_tokens: 4096,
+              stream: false,
+            }),
+          });
+
+          if (sfRes.ok) {
+            const sfData = await sfRes.json();
+            const replyText =
+              sfData.choices?.[0]?.message?.content ||
+              "I could not synthesize an astrological reading at this moment.";
+            return NextResponse.json({
+              reply: replyText,
+              model: modelName,
+              provider: "siliconflow",
+            });
+          } else {
+            sfLastError = await sfRes.text();
+          }
+        } catch (err: any) {
+          sfLastError = err?.message || "SiliconFlow fetch failed";
+        }
+      }
+
+      // If SiliconFlow key failed, don't hard crash if default Gemini key exists
+      console.warn("SiliconFlow failed, falling back to Gemini:", sfLastError);
+    }
+
+    // 2. GOOGLE GEMINI ROUTE (DEFAULT / FALLBACK)
+    const geminiApiKey = apiKey.startsWith("sk-")
+      ? process.env.GEMINI_API_KEY ||
+        process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
+        Buffer.from(FALLBACK_B64, "base64").toString("utf8")
+      : apiKey;
+
     const contents: any[] = [];
     for (const msg of filteredHistory) {
       contents.push({
@@ -369,7 +454,7 @@ STRICT CONSULTATION RULES (MANDATORY):
 
     for (const modelName of candidateModels) {
       try {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiApiKey}`;
         const res = await fetch(geminiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -391,7 +476,7 @@ STRICT CONSULTATION RULES (MANDATORY):
           const replyText =
             data.candidates?.[0]?.content?.parts?.[0]?.text ||
             "I could not synthesize an astrological reading at this moment.";
-          return NextResponse.json({ reply: replyText, model: modelName });
+          return NextResponse.json({ reply: replyText, model: modelName, provider: "gemini" });
         } else {
           // Fallback if system_instruction is not supported on this specific model
           const fallbackRes = await fetch(geminiUrl, {
@@ -415,7 +500,7 @@ STRICT CONSULTATION RULES (MANDATORY):
             const replyText =
               data.candidates?.[0]?.content?.parts?.[0]?.text ||
               "I could not synthesize an astrological reading at this moment.";
-            return NextResponse.json({ reply: replyText, model: modelName });
+            return NextResponse.json({ reply: replyText, model: modelName, provider: "gemini" });
           }
           lastError = await res.text();
         }
@@ -425,7 +510,7 @@ STRICT CONSULTATION RULES (MANDATORY):
     }
 
     return NextResponse.json(
-      { error: "Gemini API Error", details: lastError },
+      { error: "AI API Error", details: lastError },
       { status: 500 }
     );
   } catch (error: any) {

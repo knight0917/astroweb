@@ -530,6 +530,87 @@ STRICT CONSULTATION RULES (MANDATORY):
       });
     }
 
+    // 1. SILICONFLOW DEEPSEEK STREAMING
+    if (apiKey.startsWith("sk-")) {
+      const sfMessages = [
+        { role: "system", content: systemInstruction },
+        ...filteredHistory.map((m) => ({
+          role: m.role === "assistant" ? "assistant" : "user",
+          content: m.content,
+        })),
+      ];
+      if (sfMessages.length === 1) {
+        sfMessages.push({
+          role: "user",
+          content: "Pranam! Please provide my reading based on my birth chart.",
+        });
+      }
+
+      const siliconModels = [
+        "deepseek-ai/DeepSeek-V3",
+        "deepseek-ai/DeepSeek-V4-Pro",
+        "deepseek-ai/DeepSeek-R1",
+        "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+        "Qwen/Qwen2.5-7B-Instruct",
+      ];
+
+      for (const modelName of siliconModels) {
+        try {
+          const sfRes = await fetch("https://api.siliconflow.cn/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: modelName,
+              messages: sfMessages,
+              temperature: 0.3,
+              max_tokens: 4096,
+              stream: true,
+            }),
+          });
+
+          if (sfRes.ok && sfRes.body) {
+            const reader = sfRes.body.getReader();
+            const decoder = new TextDecoder();
+            let fullText = "";
+            let buffer = "";
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buffer += decoder.decode(value, { stream: true });
+
+              const lines = buffer.split("\n");
+              buffer = lines.pop() || "";
+
+              for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed.startsWith("data: ")) {
+                  const dataStr = trimmed.slice(6).trim();
+                  if (dataStr === "[DONE]") continue;
+                  try {
+                    const json = JSON.parse(dataStr);
+                    const delta = json.choices?.[0]?.delta?.content || "";
+                    if (delta) {
+                      fullText += delta;
+                      onChunk(fullText);
+                    }
+                  } catch (_) {}
+                }
+              }
+            }
+
+            if (fullText.trim()) return fullText;
+          }
+        } catch (err: any) {
+          console.warn("SiliconFlow client streaming failed, will try server route:", err);
+        }
+      }
+    }
+
+    // 2. GOOGLE GEMINI STREAMING (DEFAULT / FALLBACK)
     const candidateModels = [
       "gemini-3.6-flash",
       "gemini-3.5-flash",
@@ -747,8 +828,14 @@ STRICT CONSULTATION RULES (MANDATORY):
                   <h3 className="font-black text-sm text-slate-100">
                     Acharya Jyotish AI Pro
                   </h3>
-                  <span className="text-[8.5px] font-extrabold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
-                    Parashari Pro
+                  <span
+                    className={`text-[8.5px] font-extrabold px-1.5 py-0.2 rounded border uppercase ${
+                      userApiKey.startsWith("sk-")
+                        ? "bg-blue-500/20 text-blue-300 border-blue-500/40"
+                        : "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                    }`}
+                  >
+                    {userApiKey.startsWith("sk-") ? "🐳 DeepSeek Pro (1M)" : "Parashari Pro"}
                   </span>
                 </div>
                 <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
@@ -785,13 +872,14 @@ STRICT CONSULTATION RULES (MANDATORY):
               {/* Settings button */}
               <button
                 onClick={() => setShowSettings((prev) => !prev)}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
-                title="API Key Settings"
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-xs transition-colors cursor-pointer ${
+                  userApiKey.startsWith("sk-")
+                    ? "bg-blue-900/40 text-blue-300 hover:bg-blue-800/60 border border-blue-700/50"
+                    : "bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white"
+                }`}
+                title="API Key Settings (SiliconFlow / Gemini)"
               >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
+                ⚙️
               </button>
 
               {/* Clear chat button */}
@@ -826,8 +914,6 @@ STRICT CONSULTATION RULES (MANDATORY):
             </div>
           </div>
 
-
-
           {/* Consultation Categories Bar */}
           <div className="px-2.5 py-1.5 bg-slate-900 border-b border-slate-800/90 flex items-center gap-1 overflow-x-auto no-scrollbar">
             {CONSULTATION_CATEGORIES.map((cat) => (
@@ -848,37 +934,49 @@ STRICT CONSULTATION RULES (MANDATORY):
 
           {/* Settings Drawer Overlay */}
           {showSettings && (
-            <div className="p-3.5 bg-slate-900 border-b border-slate-800 text-xs space-y-2 animate-in slide-in-from-top-2 duration-150">
+            <div className="p-3.5 bg-slate-900 border-b border-slate-800 text-xs space-y-2.5 animate-in slide-in-from-top-2 duration-150">
               <div className="flex items-center justify-between">
-                <span className="font-extrabold text-slate-200">
-                  Custom Google Gemini API Key:
+                <span className="font-extrabold text-slate-200 flex items-center gap-1.5">
+                  <span>⚡</span>
+                  <span>Custom AI Key (SiliconFlow / DeepSeek or Gemini):</span>
                 </span>
-                <a
-                  href="https://aistudio.google.com/app/apikey"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[10px] text-amber-400 hover:underline font-bold"
-                >
-                  Get Free Key →
-                </a>
+                <div className="flex items-center gap-2">
+                  <a
+                    href="https://cloud.siliconflow.cn/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[10px] text-blue-400 hover:underline font-bold"
+                  >
+                    Get SiliconFlow Key (20M Free) →
+                  </a>
+                  <span className="text-slate-600">•</span>
+                  <a
+                    href="https://aistudio.google.com/app/apikey"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[10px] text-amber-400 hover:underline font-bold"
+                  >
+                    Gemini Key →
+                  </a>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <input
                   type="password"
-                  placeholder="Paste custom API Key (Optional)..."
+                  placeholder="Paste SiliconFlow (sk-...) or Gemini API Key..."
                   value={userApiKey}
                   onChange={(e) => setUserApiKey(e.target.value)}
-                  className="flex-1 bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-slate-100 font-mono"
+                  className="flex-1 bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-slate-100 font-mono focus:border-blue-500 focus:outline-none"
                 />
                 <button
                   onClick={() => handleSaveApiKey(userApiKey)}
-                  className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold text-xs cursor-pointer shadow-sm shadow-blue-500/20"
                 >
-                  Save
+                  Save Key
                 </button>
               </div>
-              <p className="text-[10px] text-slate-400">
-                A default free Gemini key is pre-configured. You only need to enter your own key if you wish to use your personal quota.
+              <p className="text-[10px] text-slate-400 leading-relaxed">
+                💡 <strong>Pro Tip:</strong> Enter your free <strong>SiliconFlow API Key (<code className="text-blue-300 font-mono">sk-...</code>)</strong> to unlock <strong>DeepSeek-V4-Pro (1M Context)</strong>, <strong>DeepSeek-V3</strong>, and <strong>DeepSeek-R1</strong> with 20M free tokens! If left empty, default pre-configured key is used.
               </p>
             </div>
           )}
