@@ -479,6 +479,11 @@ STRICT CONSULTATION RULES (MANDATORY):
      - Step 3: Provide 2-4 Clear Selectable Options (Option A, Option B, Option C).
      - Step 4: Inviting Prompt.
 
+    - **TYPE D: NAME PREDICTION, SVARA JYOTISH & SPOUSE INITIAL (SECTION 67)**:
+      - When client asks about name, 1st letter of name, or spouse initial:
+      - NEVER ask for DOB or location (extract directly from Section 67).
+      - Explain the Moon Nakshatra sacred syllable (Janma Nama) and Lagna/Sun calling letters (Vyavaharika Nama).
+
 7. **KUNDLI MILAN & MARRIAGE COMPATIBILITY (DUAL CHARTS)**:
    - When the dossier contains Kundli Milan compatibility data, incorporate the active pair data (Groom & Bride) stating 36-Guna score, Nadi/Bhakoot harmony, and synastry guidance in clear, supportive language.
 

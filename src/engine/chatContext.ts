@@ -70,6 +70,7 @@ import { evaluateMarriageMasterSynthesis } from "./marriageMasterSynthesis";
 import { evaluateRelationshipAffairs } from "./relationshipAffairsMaster";
 import { evaluateBhriguNadiMarriageTiming } from "./bhriguNadiMarriageTiming";
 import { calculateAdhanaKundali } from "./adhanaKundali";
+import { evaluateVedicNameMatrix } from "./nameAnalysis";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
@@ -1512,6 +1513,28 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 67. Vedic Name Decoding, Svara Jyotish & Calling Name Phonetics
+  let nameSummary = "";
+  try {
+    const nameRes = evaluateVedicNameMatrix(natalEphemeris, gender);
+    const dominantList = nameRes.dominantLagnaPlanets.map((d) =>
+      `  - ${d.planet} (${d.role}) -> Svara Group: **${d.varnaGroup.sanskritVarga}** (Letters: **${d.suggestedLetters.join(", ")}**)`
+    );
+    nameSummary = [
+      `- **Sacred Janma / Sankalpa Syllable (Moon Nakshatra Matrix):** **"${nameRes.janmaSyllableEnglish}" (${nameRes.janmaSyllableSanskrit})** • ${nameRes.janmaNakshatraName} Pada ${nameRes.janmaNakshatraPada} (${nameRes.janmaRashiName} Rashi)`,
+      `  - *Classical Example Names:* ${nameRes.janmaExampleNames.join(", ")}`,
+      `- **Surya Nakshatra & Solar Vowel Vibration:** **"${nameRes.suryaSyllableEnglish}"** (${nameRes.suryaNakshatraName} Pada ${nameRes.suryaNakshatraPada}) • ${nameRes.suryaVowelResonance}`,
+      `- **Lagna & Lagnesha Dominant Planetary Imprint (Calling Name Svara Matrix):**`,
+      ...dominantList,
+      `- **Predicted Worldly Calling / Certificate Name Letters:** **${nameRes.predictedCallingLetters.join(", ")}**`,
+      `  - *Calling Name Synthesis:* ${nameRes.primaryCallingLetterSummary}`,
+      `- **Arudha Lagna (AL) Public Name Aura:** ${nameRes.arudhaLagnaSign} (Letters: **${nameRes.arudhaLagnaLetters.join(", ")}**)`,
+      `- **Predicted Spouse Initial Letters (Bhrigu Nandi Nadi Axis):** **${nameRes.predictedSpouseLetters.join(", ")}**`,
+      `  - *Spouse Naming Reasoning:* ${nameRes.spouseNamingReasoning}`,
+      `- **Executive Name Synthesis:** ${nameRes.executiveNameSummary}`,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -1776,6 +1799,9 @@ export function buildAstroDossier(
     "",
     "#### 🤰 66. ADHANA KUNDALI (CONCEPTION CHART) & 10-MONTH FOETAL GESTATION DOSSIER:",
     adhanaSummary,
+    "",
+    "#### 🔤 67. VEDIC NAME DECODING, SVARA JYOTISH & CALLING NAME PHONETICS DOSSIER:",
+    nameSummary,
   ];
 
   if (matchmakingSummary) {

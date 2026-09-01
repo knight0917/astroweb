@@ -3338,6 +3338,7 @@ test("End-to-End Chatbot Astro Dossier (All 65 Sections & Notes) Verification", 
   assert.ok(dossier.includes("#### 💘 64. LOVE AFFAIRS, ELOPEMENT, SEXUAL VITALITY & YOGINI DASHA (STRI JATAKA) DOSSIER:"), "Section 64 missing");
   assert.ok(dossier.includes("#### 🕊️ 65. BHRIGU NANDI NADI, VIVAH SAHAM & RASHI TULYA NAVAMSHA DOSSIER:"), "Section 65 missing");
   assert.ok(dossier.includes("#### 🤰 66. ADHANA KUNDALI (CONCEPTION CHART) & 10-MONTH FOETAL GESTATION DOSSIER:"), "Section 66 missing");
+  assert.ok(dossier.includes("#### 🔤 67. VEDIC NAME DECODING, SVARA JYOTISH & CALLING NAME PHONETICS DOSSIER:"), "Section 67 missing");
 
   // Verify key variables and terms inside the dossier
   assert.ok(dossier.includes("Chart Hemisphere Distribution"), "Hemisphere distribution missing in Section 61");
@@ -3348,6 +3349,8 @@ test("End-to-End Chatbot Astro Dossier (All 65 Sections & Notes) Verification", 
   assert.ok(dossier.includes("Vivah Saham"), "Vivah Saham missing in Section 65");
   assert.ok(dossier.includes("Estimated Conception Date (Adhana Epoch)"), "Conception date missing in Section 66");
   assert.ok(dossier.includes("Garbha Raksha"), "Garbha Raksha missing in Section 66");
+  assert.ok(dossier.includes("Sacred Janma / Sankalpa Syllable"), "Sankalpa syllable missing in Section 67");
+  assert.ok(dossier.includes("Predicted Worldly Calling / Certificate Name Letters"), "Calling letters missing in Section 67");
 });
 
 test("Classical Adhana Kundali (Epoch Conception Chart & 10-Month Foetal Gestation) Verification", async () => {
@@ -3384,6 +3387,34 @@ test("Classical Adhana Kundali (Epoch Conception Chart & 10-Month Foetal Gestati
   assert.ok(adhana.garbhaRaksha.verdict);
   assert.ok(adhana.btrConfidenceScore >= 50);
   assert.ok(adhana.executiveSummary.length > 20);
+});
+
+test("Classical Vedic Name Decoding & Svara Jyotish Verification", async () => {
+  const { evaluateVedicNameMatrix } = await import("../src/engine/nameAnalysis.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // Test Chart 1: 17/09/1999 18:32 Allahabad
+  const loc1 = { cityName: "Allahabad", country: "India", latitude: 25.4358, longitude: 81.8463, timezoneOffsetHours: 5.5 };
+  const dt1 = new Date("1999-09-17T13:02:00.000Z");
+  const ephem1 = calculateVedicEphemeris(dt1, loc1, "Lahiri", "WholeSign", "Mean");
+
+  const nameRes1 = evaluateVedicNameMatrix(ephem1, "male");
+  assert.strictEqual(nameRes1.janmaNakshatraName, "Jyeshtha");
+  assert.strictEqual(nameRes1.janmaNakshatraPada, 4);
+  assert.strictEqual(nameRes1.janmaSyllableEnglish, "Yu");
+  assert.ok(nameRes1.predictedCallingLetters.includes("A"), "Calling letters should include 'A' due to Sun aspect on Lagna");
+  assert.ok(nameRes1.predictedSpouseLetters.length > 0);
+
+  // Test Chart 2: 25/05/1998 14:35 Patna
+  const loc2 = { cityName: "Patna", country: "India", latitude: 25.5941, longitude: 85.1376, timezoneOffsetHours: 5.5 };
+  const dt2 = new Date("1998-05-25T09:05:00.000Z");
+  const ephem2 = calculateVedicEphemeris(dt2, loc2, "Lahiri", "WholeSign", "Mean");
+
+  const nameRes2 = evaluateVedicNameMatrix(ephem2, "male");
+  assert.strictEqual(nameRes2.janmaNakshatraName, "Krittika");
+  assert.strictEqual(nameRes2.janmaNakshatraPada, 3);
+  assert.strictEqual(nameRes2.janmaSyllableEnglish, "U / Oo");
+  assert.ok(nameRes2.predictedCallingLetters.includes("R") || nameRes2.predictedCallingLetters.includes("A"), "Calling letters should include 'R' or 'A'");
 });
 
 
