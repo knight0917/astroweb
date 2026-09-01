@@ -342,11 +342,83 @@ STRICT CONSULTATION RULES (MANDATORY):
       .filter((msg: any) => msg.id !== "welcome" && msg.content && msg.content.trim())
       .slice(-8);
 
+    const isOpenRouter = apiKey.startsWith("sk-or-");
     const isSiliconFlow =
-      apiKey.startsWith("sk-") ||
-      Boolean(process.env.SILICONFLOW_API_KEY && (!userApiKey || userApiKey.startsWith("sk-")));
+      !isOpenRouter &&
+      (apiKey.startsWith("sk-") ||
+        Boolean(process.env.SILICONFLOW_API_KEY && (!userApiKey || userApiKey.startsWith("sk-"))));
 
-    // 1. SILICONFLOW DEEPSEEK ROUTE (OPENAI-COMPATIBLE)
+    // 1. OPENROUTER FREE / PRO ROUTE
+    if (isOpenRouter) {
+      const orMessages = [
+        { role: "system", content: systemInstruction },
+        ...filteredHistory.map((m: any) => ({
+          role:
+            m.sender === "bot" || m.role === "assistant" || m.role === "model"
+              ? "assistant"
+              : "user",
+          content: m.content || "",
+        })),
+      ];
+
+      if (orMessages.length === 1) {
+        orMessages.push({
+          role: "user",
+          content: "Pranam! Please provide my reading based on my birth chart.",
+        });
+      }
+
+      const openRouterModels = [
+        "deepseek/deepseek-r1:free",
+        "deepseek/deepseek-chat:free",
+        "qwen/qwen-2.5-72b-instruct:free",
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "google/gemini-2.0-flash-exp:free",
+      ];
+
+      let orLastError = "";
+
+      for (const modelName of openRouterModels) {
+        try {
+          const orRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "HTTP-Referer": "https://vedicsky.app",
+              "X-Title": "Vedic Sky AI",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: modelName,
+              messages: orMessages,
+              temperature: 0.3,
+              max_tokens: 4096,
+              stream: false,
+            }),
+          });
+
+          if (orRes.ok) {
+            const orData = await orRes.json();
+            const replyText =
+              orData.choices?.[0]?.message?.content ||
+              "I could not synthesize an astrological reading at this moment.";
+            return NextResponse.json({
+              reply: replyText,
+              model: modelName,
+              provider: "openrouter",
+            });
+          } else {
+            orLastError = await orRes.text();
+          }
+        } catch (err: any) {
+          orLastError = err?.message || "OpenRouter fetch failed";
+        }
+      }
+
+      console.warn("OpenRouter failed, falling back to Gemini:", orLastError);
+    }
+
+    // 2. SILICONFLOW DEEPSEEK ROUTE (OPENAI-COMPATIBLE)
     if (isSiliconFlow) {
       const sfApiKey = apiKey.startsWith("sk-")
         ? apiKey
@@ -420,7 +492,7 @@ STRICT CONSULTATION RULES (MANDATORY):
       console.warn("SiliconFlow failed, falling back to Gemini:", sfLastError);
     }
 
-    // 2. GOOGLE GEMINI ROUTE (DEFAULT / FALLBACK)
+    // 3. GOOGLE GEMINI ROUTE (DEFAULT / FALLBACK)
     const geminiApiKey = apiKey.startsWith("sk-")
       ? process.env.GEMINI_API_KEY ||
         process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
