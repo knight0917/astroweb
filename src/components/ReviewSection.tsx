@@ -141,7 +141,7 @@ export default function ReviewSection({ onClose }: { onClose?: () => void }) {
                 type="text"
                 required
                 maxLength={100}
-                placeholder="e.g. Ramesh Sharma"
+                placeholder="Enter your name..."
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-700/80 rounded-xl p-3 text-slate-100 font-medium focus:border-amber-500 focus:outline-none transition-colors"
@@ -157,7 +157,7 @@ export default function ReviewSection({ onClose }: { onClose?: () => void }) {
               <input
                 type="email"
                 required
-                placeholder="e.g. ramesh@example.com"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-700/80 rounded-xl p-3 text-slate-100 font-medium focus:border-amber-500 focus:outline-none transition-colors"
@@ -181,7 +181,7 @@ export default function ReviewSection({ onClose }: { onClose?: () => void }) {
               type="text"
               required
               maxLength={20}
-              placeholder="e.g. Accurate Dasha"
+              placeholder="Enter subject..."
               value={subject}
               onChange={(e) => setSubject(e.target.value.slice(0, 20))}
               className="w-full bg-slate-950 border border-slate-700/80 rounded-xl p-3 text-slate-100 font-medium focus:border-amber-500 focus:outline-none transition-colors"
