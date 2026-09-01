@@ -3452,6 +3452,36 @@ test("Client Reviews & Feedback Database Storage & 1-Day Rate Limit Verification
   assert.ok(found, "Saved review should be present in getReviews list");
 });
 
+test("Chatbot Intent-Based Context Slicing & High-Efficiency Dossier Verification", async () => {
+  const { detectConsultationIntent, buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 1. Verify intent detection
+  assert.strictEqual(detectConsultationIntent("When will I get a promotion in my job?"), "career");
+  assert.strictEqual(detectConsultationIntent("What is my spouse's direction and marriage timing?"), "marriage");
+  assert.strictEqual(detectConsultationIntent("What is the 1st letter of my name based on nakshatra?"), "name_phonetics");
+  assert.strictEqual(detectConsultationIntent("Can we do birth time verification?"), "btr_verification");
+  assert.strictEqual(detectConsultationIntent("What is today's panchang and rahu kalam?"), "panchang_muhurta");
+  assert.strictEqual(detectConsultationIntent("What mantra or gemstone remedy should I wear?"), "remedies_health");
+  assert.strictEqual(detectConsultationIntent("Tell me about my general life"), "all");
+
+  // 2. Verify dossier token / length efficiency
+  const loc = { cityName: "New Delhi", country: "India", latitude: 28.6139, longitude: 77.209, timezoneOffsetHours: 5.5 };
+  const dt = new Date("1995-10-15T06:30:00.000Z");
+  const natal = calculateVedicEphemeris(dt, loc, "Lahiri", "WholeSign", "Mean");
+  const transit = calculateVedicEphemeris(new Date(), loc, "Lahiri", "WholeSign", "Mean");
+
+  const fullDossier = buildAstroDossier(natal, transit, new Date(), "male", undefined, "all");
+  const careerDossier = buildAstroDossier(natal, transit, new Date(), "male", undefined, "career");
+  const nameDossier = buildAstroDossier(natal, transit, new Date(), "male", undefined, "name_phonetics");
+
+  // Verify that targeted dossiers are significantly more compact than the full 67-section payload
+  assert.ok(fullDossier.length > careerDossier.length, "Career dossier must be more compact than full dossier");
+  assert.ok(careerDossier.length > nameDossier.length, "Name phonetics dossier must be even more focused");
+  assert.ok(careerDossier.includes("JOB VS BUSINESS"), "Career dossier must contain Job vs Business section");
+  assert.ok(nameDossier.includes("VEDIC NAME DECODING"), "Name dossier must contain Svara Jyotish section");
+});
+
 
 
 

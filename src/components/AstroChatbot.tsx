@@ -2,8 +2,11 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
-import { buildAstroDossier } from "../engine/chatContext";
+import { buildAstroDossier, detectConsultationIntent, AstroConsultationIntent } from "../engine/chatContext";
 import { calculateVedicEphemeris } from "../engine/ephemeris";
+import { calculateVimshottariDasha } from "../engine/dasha";
+import { calculateJaiminiKarakas } from "../engine/jaimini";
+import { EphemerisResult } from "../engine/types";
 
 interface Message {
   id: string;
@@ -290,6 +293,120 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
     ],
   },
 ];
+
+/**
+ * 0ms Instant Client-Side Classical Calculation Interceptor
+ * Answers exact deterministic queries instantaneously without AI round-trip latency.
+ */
+function tryInstantEngineAnswer(
+  query: string,
+  natalEphem: EphemerisResult,
+  transitEphem: EphemerisResult,
+  evaluationDate: Date
+): string | null {
+  const q = query.toLowerCase().trim();
+
+  // 1. Lagna / Ascendant
+  if (
+    /^(what is my lagna|what is my ascendant|my lagna|my ascendant|lagna rashi|ascendant degree|what is my lagna sign|lagna)\??$/i.test(q) ||
+    (q.includes("lagna") && q.includes("what is") && !q.includes("lord in house") && !q.includes("remed"))
+  ) {
+    const asc = natalEphem.ascendant;
+    return `### 🌟 **Your Ascendant (Lagna / लग्न):**
+- **Sign (Rashi):** **${asc.rashi.englishName}** (*${asc.rashi.sanskritName}*) at **${(asc.siderealLongitude % 30).toFixed(2)}°**
+- **Ruling Lord:** **${asc.rashi.lord}**
+- **Nakshatra:** **${asc.nakshatra.sanskritName}** Pada **${asc.nakshatra.pada}** (Lord: ${asc.nakshatra.lord})
+- **Element:** ${asc.rashi.element}
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
+  // 2. Moon Sign / Janma Rashi / Nakshatra
+  if (
+    /^(what is my moon sign|what is my rashi|my moon sign|my rashi|janma rashi|moon nakshatra|what is my janma rashi|what is my nakshatra|my nakshatra)\??$/i.test(q) ||
+    (q.includes("moon sign") && q.includes("what is"))
+  ) {
+    const moon = natalEphem.planets.Moon;
+    if (!moon) return null;
+    return `### 🌙 **Your Moon Sign (Janma Rashi / जन्म राशि):**
+- **Rashi:** **${moon.rashi.englishName}** (*${moon.rashi.sanskritName}*) at **${(moon.siderealLongitude % 30).toFixed(2)}°**
+- **Ruling Lord:** **${moon.rashi.lord}**
+- **Janma Nakshatra:** **${moon.nakshatra.sanskritName}** Pada **${moon.nakshatra.pada}**
+- **Nakshatra Deity & Lord:** Deity: **${moon.nakshatra.deity || "Soma"}** • Lord: **${moon.nakshatra.lord}**
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
+  // 3. Sun Sign / Surya Rashi
+  if (/^(what is my sun sign|what is my surya rashi|my sun sign|surya rashi)\??$/i.test(q)) {
+    const sun = natalEphem.planets.Sun;
+    if (!sun) return null;
+    return `### ☀️ **Your Sun Sign (Surya Rashi / सूर्य राशि):**
+- **Rashi:** **${sun.rashi.englishName}** (*${sun.rashi.sanskritName}*) at **${(sun.siderealLongitude % 30).toFixed(2)}°**
+- **Natal House:** House **${sun.house}**
+- **Nakshatra:** **${sun.nakshatra.sanskritName}** Pada **${sun.nakshatra.pada}** (Lord: ${sun.nakshatra.lord})
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
+  // 4. Current Running Dasha
+  if (/^(what is my current dasha|what is my running dasha|current dasha|my dasha|running dasha|mahadasha)\??$/i.test(q)) {
+    const birthDate = new Date(natalEphem.utcDate);
+    const moonLon = natalEphem.planets.Moon?.siderealLongitude || 0;
+    const dasha = calculateVimshottariDasha(birthDate, moonLon, evaluationDate);
+    const active = dasha.activeDasha;
+    if (!active) return null;
+
+    const endStr = new Date(active.adEnd).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+    const mahaEndStr = new Date(active.mdEnd).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+
+    return `### 👑 **Your Current Running Vimshottari Dasha:**
+- **Mahadasha (MD):** **${active.mahadasha.name}** (Active until **${mahaEndStr}**)
+- **Antardasha (AD / Bhukti):** **${active.antardasha.name}** (Active until **${endStr}**)
+- **Pratyantardasha (PD):** **${active.pratyantardasha.name}**
+- **Lagna Functional Lord:** ${active.mahadasha.name} operating for your ${natalEphem.ascendant.rashi.englishName} Lagna.
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
+  // 5. Atmakaraka & Jaimini Karakas
+  if (/^(what is my atmakaraka|my atmakaraka|atmakaraka|what is my amk|jaimini karakas)\??$/i.test(q)) {
+    const jaimini = calculateJaiminiKarakas(natalEphem);
+    const ak = jaimini.atmakaraka;
+    const amk = jaimini.amatyakaraka;
+
+    return `### 👑 **Your Jaimini Soul Indicators:**
+- **Atmakaraka (AK - Soul Planet):** **${ak ? ak.planetName : "N/A"}** at **${ak ? ak.formattedDegrees : ""}** in ${ak?.rashi.englishName || ""} (Signifies your soul's core mission & highest lessons)
+- **Amatyakaraka (AmK - Career & Intellect):** **${amk ? amk.planetName : "N/A"}** at **${amk ? amk.formattedDegrees : ""}** in ${amk?.rashi.englishName || ""} (Signifies professional status & executive action)
+- **Bhratrikaraka (BK - Siblings/Guru):** ${jaimini.bhratrikaraka?.planetName || "N/A"}
+- **Darakaraka (DK - Spouse & Partnerships):** **${jaimini.darakaraka?.planetName || "N/A"}**
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
+  // 6. Real-time Live Panchang Today
+  if (/^(today panchang|aaj ka panchang|panchang today|rahu kalam today|what is today's tithi|panchang)\??$/i.test(q)) {
+    const p = transitEphem.panchanga;
+    const loc = transitEphem.location;
+    return `### 📅 **Real-Time Live Panchanga for ${loc.cityName || "Current Location"}, ${loc.country || ""}:**
+- 🌖 **Tithi:** **${p.tithi.name}** (${p.tithi.paksha} Paksha)${p.tithi.endTime ? ` • Ends at ${p.tithi.endTime}` : ""}
+- ⭐ **Nakshatra:** **${p.nakshatra.sanskritName}** Pada **${p.nakshatra.pada}** (Lord: ${p.nakshatra.lord})
+- 🌅 **Vara (Weekday):** **${p.vara.name}** (Ruler: ${p.vara.lord})
+- 🧘 **Yoga & Karana:** **${p.yoga.name}** • **${p.karana.name}**
+
+*⚡ Instant Real-Time Calculation (0ms)*`;
+  }
+
+  return null;
+}
 
 export default function AstroChatbot() {
   const {
@@ -788,6 +905,31 @@ STRICT CONSULTATION RULES (MANDATORY):
     const query = (textToSend || inputPrompt).trim();
     if (!query || isLoading) return;
 
+    // 1. Check 0ms Instant Client-Side Interceptor (0 tokens, 0ms latency)
+    const instantAnswer = tryInstantEngineAnswer(query, natalEphemeris, transitEphemeris, currentDate);
+    if (instantAnswer) {
+      const userMsg: Message = {
+        id: Date.now().toString(),
+        role: "user",
+        content: query,
+        timestamp: new Date(),
+        category: activeCategory,
+      };
+      const assistantMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: instantAnswer,
+        timestamp: new Date(),
+        category: activeCategory,
+      };
+      setMessages((prev) => [...prev, userMsg, assistantMsg]);
+      setInputPrompt("");
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
+      return;
+    }
+
     const userMsg: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -819,10 +961,21 @@ STRICT CONSULTATION RULES (MANDATORY):
 
     const activeKey = userApiKey.trim() || DEFAULT_GEMINI_KEY;
 
+    // 2. Intent Slicing (Reduces payload from 18,000 tokens to ~3,500 tokens for 4x speed)
+    const queryIntent = detectConsultationIntent(query, activeCategory);
+    const slicedDossier = buildAstroDossier(
+      natalEphemeris,
+      transitEphemeris,
+      new Date(),
+      gender,
+      matchmaking,
+      queryIntent
+    );
+
     try {
       const reply = await executeStreamingGeminiCall(
         updatedMessages,
-        astroDossier,
+        slicedDossier,
         activeKey,
         (streamText) => {
           setMessages((prev) =>
@@ -840,7 +993,7 @@ STRICT CONSULTATION RULES (MANDATORY):
               role: m.role,
               content: m.content,
             })),
-            astroDossier,
+            astroDossier: slicedDossier,
             userApiKey: activeKey,
           }),
         });
