@@ -73,6 +73,7 @@ import { calculateAdhanaKundali } from "./adhanaKundali";
 import { evaluateVedicNameMatrix } from "./nameAnalysis";
 import { calculateMatchmaking } from "./matchmaking";
 import { generateDrSamirTripathiSummary } from "./samirTripathiSuite";
+import { generateRashiTulyaNavamshaSummary } from "./rashiTulyaNavamsha";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
 import { calculateDayMuhurta } from "./muhurta";
@@ -1577,6 +1578,12 @@ export function buildAstroDossier(
     samirTripathiSummary = generateDrSamirTripathiSummary(natalEphemeris, transitEphemeris, evaluationDate);
   } catch (_) {}
 
+  // 69. Rashi Tulya Navamsha (RTN) Cross-Varga Projection Dossier (Deva Keralam & C.S. Patel)
+  let rtnSummary = "";
+  try {
+    rtnSummary = generateRashiTulyaNavamshaSummary(natalEphemeris, transitEphemeris);
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -1703,7 +1710,10 @@ export function buildAstroDossier(
       chintamaniSummary,
       "",
       "#### 🌟 68. DR. SAMIR TRIPATHI VEDIC MASTER SUITE (INDU LAGNA, AGE TRIGGERS & BAADHAK DYNAMICS):",
-      samirTripathiSummary
+      samirTripathiSummary,
+      "",
+      "#### 🌸 69. RASHI TULYA NAVAMSHA (RTN) & CROSS-VARGA PROJECTION DOSSIER:",
+      rtnSummary
     );
   } else if (intent === "marriage") {
     lines.push(
@@ -1719,6 +1729,9 @@ export function buildAstroDossier(
       "",
       "#### 🕊️ 65. BHRIGU NANDI NADI, VIVAH SAHAM & RASHI TULYA NAVAMSHA DOSSIER:",
       bhriguNadiSummary,
+      "",
+      "#### 🌸 69. RASHI TULYA NAVAMSHA (RTN) & CROSS-VARGA PROJECTION DOSSIER:",
+      rtnSummary,
       "",
       "#### 🌺 38. STRI JATAKA (FEMALE HOROSCOPY & TRIMSAMSHA) DOSSIER:",
       striJatakaSummary
@@ -1936,7 +1949,10 @@ export function buildAstroDossier(
       nameSummary,
       "",
       "#### 🌟 68. DR. SAMIR TRIPATHI VEDIC MASTER SUITE (INDU LAGNA, AGE TRIGGERS & BAADHAK DYNAMICS):",
-      samirTripathiSummary
+      samirTripathiSummary,
+      "",
+      "#### 🌸 69. RASHI TULYA NAVAMSHA (RTN) & CROSS-VARGA PROJECTION DOSSIER:",
+      rtnSummary
     );
   }
 

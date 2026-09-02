@@ -12,6 +12,7 @@ import {
   evaluateBaadhakDynamics,
   calculateBhagyaBindu,
 } from "../engine/samirTripathiSuite";
+import { evaluateRashiTulyaNavamsha } from "../engine/rashiTulyaNavamsha";
 import { EphemerisResult } from "../engine/types";
 
 interface Message {
@@ -503,6 +504,31 @@ ${ageRes.planetaryAwakenings.slice(0, 4).map((p) => `  - **${p.planet}:** ${p.st
 *⚡ Instant Classical Computation (0ms)*`;
   }
 
+  // 11. Rashi Tulya Navamsha (RTN) & 64th Navamsha
+  if (
+    /^(what is my rashi tulya navamsha|my rashi tulya navamsha|rashi tulya navamsha|rtn|64th navamsha|khara navamsha)\??$/i.test(q) ||
+    (q.includes("rashi tulya") && q.includes("navamsha"))
+  ) {
+    const rtn = evaluateRashiTulyaNavamsha(natalEphem, transitEphem);
+    const topPlanets = Object.values(rtn.planets).slice(0, 6).map(
+      (p) => `- **${p.planetName}:** D1 H${p.d1HouseFromLagna} (${p.d1Rashi.englishName}) ──► D9 in **${p.d9Rashi.englishName}** ──► **RTN House ${p.rtnHouseFromD1Lagna}**${p.isVargottama ? " (👑 Vargottama)" : ""}`
+    ).join("\n");
+
+    return `### 🌸 **Your Rashi Tulya Navamsha (RTN) Cross-Varga Blueprint:**
+- **D-1 Lagna (Physical Setup):** ${rtn.d1LagnaRashi.englishName}
+- **D-9 Navamsha Lagna (Inner Soul Core):** ${rtn.d9LagnaRashi.englishName}
+
+#### 🌟 **Planetary RTN Projections:**
+${topPlanets}
+
+#### ⚠️ **64th Navamsha (Khara Navamsha):**
+- **From Moon:** **${rtn.kharaNavamsha.moon64thNavamshaRashi.englishName}** (RTN House ${rtn.kharaNavamsha.moon64thRtnHouse})
+- **From Lagna:** **${rtn.kharaNavamsha.lagna64thNavamshaRashi.englishName}** (RTN House ${rtn.kharaNavamsha.lagna64thRtnHouse})
+- **Transit Safety:** ${rtn.kharaNavamsha.kharaWarningSummary}
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
   return null;
 }
 
@@ -647,6 +673,13 @@ STRICT CONSULTATION RULES (MANDATORY):
         - For Karmic Purpose: Integration with **D-60 Shashtiamsha** (the primordial cause/past-life seed).
      4. **The Unfolding Time Clock (Vimshottari Dasha & Transits)**: Explaining which chapter of this epic is actively playing right now, why certain challenges are occurring, and when the breakthrough window opens.
      5. **Empowered Resolution & Upaya**: Weaving the story together with actionable clarity, practical wisdom, and uplifting Vedic remedies so the client leaves feeling deeply understood, enlightened, and empowered.
+
+0C. **RASHI TULYA NAVAMSHA (RTN) CROSS-VARGA PROTOCOL (DEVA KERALAM & C.S. PATEL)**:
+   - Always synthesize Section 69 (Rashi Tulya Navamsha) during consultations:
+     1. **Soul-Level House Fruition:** Cross-examine where a planet's D-9 sign falls in D-1 houses (e.g. 7th lord in RTN 11th house brings massive gains through partnerships).
+     2. **RTN Conjunctions:** Note hidden past-life soul synergies between planets sharing the same RTN house.
+     3. **RTN Gochar Triggers:** When transit Jupiter or Saturn crosses the RTN sign of the 10th Lord / AmK (Career) or 7th Lord / Venus (Marriage), forecast the timing breakthrough.
+     4. **64th Navamsha:** Verify the Khara Navamsha safety factor to alert or reassure the native regarding major health or structural pivots.
 
 1. **ACCURATE TEMPORAL GROUNDING (REAL-TIME TIMELINE)**:
    - Today's date is strictly ${todayStr}.

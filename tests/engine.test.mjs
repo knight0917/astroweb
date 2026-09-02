@@ -3554,6 +3554,63 @@ test("Dr. Samir Tripathi Vedic Master Suite (Indu Lagna, Age Triggers & Baadhak 
   assert.ok(masterSummary.includes("BHAGYA BINDU"));
 });
 
+test("Classical Rashi Tulya Navamsha (RTN) & 64th Navamsha Cross-Varga Engine Verification", async () => {
+  const { evaluateRashiTulyaNavamsha, generateRashiTulyaNavamshaSummary, getD9RashiIndex } = await import("../src/engine/rashiTulyaNavamsha.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Allahabad", country: "India", latitude: 25.4358, longitude: 81.8463, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1999-09-17T13:02:00Z");
+  const natalEphem = calculateVedicEphemeris(birthDate, location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date(), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. D9 Index Math
+  assert.strictEqual(getD9RashiIndex(0), 0); // Aries 0 -> Aries
+  assert.strictEqual(getD9RashiIndex(30), 9); // Taurus 0 -> Capricorn
+  assert.strictEqual(getD9RashiIndex(60), 6); // Gemini 0 -> Libra
+  assert.strictEqual(getD9RashiIndex(90), 3); // Cancer 0 -> Cancer
+
+  // 2. RTN Evaluation
+  const rtn = evaluateRashiTulyaNavamsha(natalEphem, transitEphem);
+  assert.strictEqual(rtn.d1LagnaRashi.englishName, "Pisces");
+  assert.strictEqual(rtn.d9LagnaRashi.englishName, "Libra");
+
+  // 3. Planetary RTN House Assignments
+  const sun = rtn.planets.Sun;
+  assert.ok(sun);
+  assert.strictEqual(sun.d1HouseFromLagna, 7); // Sun in Virgo (7th)
+  assert.strictEqual(sun.d9Rashi.englishName, "Capricorn"); // 1st Navamsha of Virgo is Capricorn
+  assert.strictEqual(sun.rtnHouseFromD1Lagna, 11); // Capricorn is 11th from Pisces
+
+  const mercury = rtn.planets.Mercury;
+  assert.ok(mercury);
+  assert.strictEqual(mercury.d1HouseFromLagna, 7); // Mercury in Virgo (7th)
+  assert.strictEqual(mercury.d9Rashi.englishName, "Pisces");
+  assert.strictEqual(mercury.rtnHouseFromD1Lagna, 1); // Pisces is 1st from Pisces
+
+  const moon = rtn.planets.Moon;
+  assert.ok(moon);
+  assert.strictEqual(moon.d1HouseFromLagna, 9); // Moon in Scorpio (9th)
+  assert.ok(moon.d9Rashi.englishName);
+  assert.ok(moon.rtnHouseFromD1Lagna >= 1 && moon.rtnHouseFromD1Lagna <= 12);
+
+  const mars = rtn.planets.Mars;
+  assert.ok(mars);
+  assert.strictEqual(mars.d1HouseFromLagna, 9); // Mars in Scorpio (9th)
+  assert.ok(mars.d9Rashi.englishName);
+  assert.ok(mars.rtnHouseFromD1Lagna >= 1 && mars.rtnHouseFromD1Lagna <= 12);
+
+  // 4. 64th Navamsha
+  assert.ok(rtn.kharaNavamsha.moon64thNavamshaRashi);
+  assert.ok(rtn.kharaNavamsha.moon64thNavamshaRashi.englishName);
+  assert.ok(rtn.kharaNavamsha.kharaWarningSummary);
+
+  // 5. Dossier Synthesis
+  const summary = generateRashiTulyaNavamshaSummary(natalEphem, transitEphem);
+  assert.ok(summary.includes("RASHI TULYA NAVAMSHA (RTN)"));
+  assert.ok(summary.includes("64TH NAVAMSHA"));
+  assert.ok(summary.includes("RTN PREDICTIVE TRANSIT TRIGGERS"));
+});
+
 
 
 
