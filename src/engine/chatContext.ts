@@ -72,6 +72,7 @@ import { evaluateBhriguNadiMarriageTiming } from "./bhriguNadiMarriageTiming";
 import { calculateAdhanaKundali } from "./adhanaKundali";
 import { evaluateVedicNameMatrix } from "./nameAnalysis";
 import { calculateMatchmaking } from "./matchmaking";
+import { generateDrSamirTripathiSummary } from "./samirTripathiSuite";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
 import { calculateDayMuhurta } from "./muhurta";
@@ -1570,6 +1571,12 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 68. Dr. Samir Tripathi Vedic Master Suite (Indu Lagna, Age Triggers, Baadhak & Bhagya Bindu)
+  let samirTripathiSummary = "";
+  try {
+    samirTripathiSummary = generateDrSamirTripathiSummary(natalEphemeris, transitEphemeris, evaluationDate);
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -1693,7 +1700,10 @@ export function buildAstroDossier(
       dtpSummary,
       "",
       "#### 💎 37. ACHARYA VENKATESHA SHARMA SARVARTHA CHINTAMANI (13 ADHYAYAS) DOSSIER:",
-      chintamaniSummary
+      chintamaniSummary,
+      "",
+      "#### 🌟 68. DR. SAMIR TRIPATHI VEDIC MASTER SUITE (INDU LAGNA, AGE TRIGGERS & BAADHAK DYNAMICS):",
+      samirTripathiSummary
     );
   } else if (intent === "marriage") {
     lines.push(
@@ -1923,7 +1933,10 @@ export function buildAstroDossier(
       adhanaSummary,
       "",
       "#### 🔤 67. VEDIC NAME DECODING, SVARA JYOTISH & CALLING NAME PHONETICS DOSSIER:",
-      nameSummary
+      nameSummary,
+      "",
+      "#### 🌟 68. DR. SAMIR TRIPATHI VEDIC MASTER SUITE (INDU LAGNA, AGE TRIGGERS & BAADHAK DYNAMICS):",
+      samirTripathiSummary
     );
   }
 

@@ -3482,6 +3482,78 @@ test("Chatbot Intent-Based Context Slicing & High-Efficiency Dossier Verificatio
   assert.ok(nameDossier.includes("VEDIC NAME DECODING"), "Name dossier must contain Svara Jyotish section");
 });
 
+test("Dr. Samir Tripathi Vedic Master Suite (Indu Lagna, Age Triggers & Baadhak Dynamics) Verification", async () => {
+  const {
+    calculateInduLagna,
+    calculatePlanetaryAgeActivations,
+    evaluateBaadhakDynamics,
+    calculateBhagyaBindu,
+    generateDrSamirTripathiSummary,
+    INDU_KALA_VALUES,
+  } = await import("../src/engine/samirTripathiSuite.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1995-10-15T06:30:00Z");
+  const natalEphem = calculateVedicEphemeris(birthDate, location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date(), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Classical Ray (Kala) Values per Session 86
+  assert.strictEqual(INDU_KALA_VALUES.Sun, 30);
+  assert.strictEqual(INDU_KALA_VALUES.Moon, 16);
+  assert.strictEqual(INDU_KALA_VALUES.Mars, 6);
+  assert.strictEqual(INDU_KALA_VALUES.Mercury, 8);
+  assert.strictEqual(INDU_KALA_VALUES.Jupiter, 10);
+  assert.strictEqual(INDU_KALA_VALUES.Venus, 12);
+  assert.strictEqual(INDU_KALA_VALUES.Saturn, 1);
+
+  // 2. Indu Lagna Wealth Math
+  const induRes = calculateInduLagna(natalEphem);
+  assert.ok(induRes.induLagnaRashi);
+  assert.ok(induRes.induLagnaRashi.englishName);
+  assert.ok(induRes.totalKalas > 0);
+  assert.ok(induRes.remainderKala >= 1 && induRes.remainderKala <= 12);
+  assert.ok(induRes.induLagnaHouseFromD1 >= 1 && induRes.induLagnaHouseFromD1 <= 12);
+  assert.ok(induRes.wealthVerdict.length > 20);
+  assert.ok(induRes.wealthGrade.length > 5);
+
+  // 3. 12-House & Planetary Age Activations
+  const ageRes = calculatePlanetaryAgeActivations(natalEphem, new Date("2026-09-02T00:00:00Z"));
+  assert.strictEqual(ageRes.currentAge, 30); // 1995 to 2026 is 30
+  assert.ok(ageRes.activeHouse);
+  assert.strictEqual(ageRes.activeHouse.houseNumber, 6); // Age 30 activates 6th House (6 + 2*12 = 30)
+  assert.strictEqual(ageRes.allHouses.length, 12);
+  assert.strictEqual(ageRes.planetaryAwakenings.length, 9);
+  
+  // Jupiter (16 & 32), Saturn (36) checks
+  const jupAwakening = ageRes.planetaryAwakenings.find((p) => p.planet === "Jupiter");
+  assert.ok(jupAwakening.status.includes("Activation") || jupAwakening.status.includes("Awakened"));
+
+  // 4. Baadhak Dynamics & Transit Intersection
+  const baadhakRes = evaluateBaadhakDynamics(natalEphem, transitEphem);
+  assert.ok(baadhakRes.lagnaModality);
+  assert.ok([7, 9, 11].includes(baadhakRes.baadhakHouseNumber));
+  assert.ok(baadhakRes.baadhakRashi.englishName);
+  assert.ok(baadhakRes.baadhakeshPlanet);
+  assert.ok(baadhakRes.prescribedRemedy.length > 10);
+
+  // 5. Bhagya Bindu
+  const bhagyaRes = calculateBhagyaBindu(natalEphem);
+  assert.ok(bhagyaRes.longitude >= 0 && bhagyaRes.longitude < 360);
+  assert.ok(bhagyaRes.rashi.englishName);
+  assert.ok(bhagyaRes.house >= 1 && bhagyaRes.house <= 12);
+  assert.ok(bhagyaRes.nakshatra);
+  assert.ok(bhagyaRes.nakshatraLord);
+
+  // 6. Master Dossier Integration String
+  const masterSummary = generateDrSamirTripathiSummary(natalEphem, transitEphem, new Date());
+  assert.ok(masterSummary.includes("DR. SAMIR TRIPATHI VEDIC MASTER SUITE"));
+  assert.ok(masterSummary.includes("INDU LAGNA (इन्दु लग्न) WEALTH FORMULA"));
+  assert.ok(masterSummary.includes("BHRIGU HOUSE & PLANETARY AGE ACTIVATION MATRIX"));
+  assert.ok(masterSummary.includes("BAADHAK STHANA & TRANSIT IMPEDIMENT DYNAMICS"));
+  assert.ok(masterSummary.includes("BHAGYA BINDU"));
+});
+
 
 
 
