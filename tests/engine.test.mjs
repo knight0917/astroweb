@@ -3763,7 +3763,7 @@ test("End-to-End Chatbot Response Quality Gates & Shastric Evaluation Verificati
   assert.ok(marriageDossier.includes("BHRIGU NANDI NADI"));
 });
 
-test("Fast Yes/No Birth Time Rectification (BTR) & Milestone Alignment Verification", async () => {
+test("6-Point Multi-Divisional (D-1, D-3, D-4, D-9, D-10, D-24, D-60) BTR Verification", async () => {
   const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
   const { calculateShodashavargaChart } = await import("../src/engine/shodashavarga.ts");
 
@@ -3775,13 +3775,29 @@ test("Fast Yes/No Birth Time Rectification (BTR) & Milestone Alignment Verificat
   // D-1 Lagna check
   assert.strictEqual(natalEphem.ascendant.rashi.englishName, "Pisces");
 
-  // D-9 Navamsha Lagna check
+  // D-3 Drekkana (Sibling Order)
+  const d3Chart = calculateShodashavargaChart(natalEphem, "D3");
+  assert.ok(d3Chart.entities.length > 0);
+
+  // D-4 Chaturthamsha (Residence & Relocation)
+  const d4Chart = calculateShodashavargaChart(natalEphem, "D4");
+  assert.ok(d4Chart.entities.length > 0);
+
+  // D-9 Navamsha (Soul Blueprint & Marriage)
   const d9Chart = calculateShodashavargaChart(natalEphem, "D9");
   assert.ok(d9Chart.entities.length > 0);
 
-  // D-10 Dasamsa Career check
+  // D-10 Dasamsa (Career Karma)
   const d10Chart = calculateShodashavargaChart(natalEphem, "D10");
   assert.ok(d10Chart.entities.length > 0);
+
+  // D-24 Siddhamsa (Higher Learning & Skills)
+  const d24Chart = calculateShodashavargaChart(natalEphem, "D24");
+  assert.ok(d24Chart.entities.length > 0);
+
+  // D-60 Shashtiamsha (Past-Life Karmic Clock)
+  const d60Chart = calculateShodashavargaChart(natalEphem, "D60");
+  assert.ok(d60Chart.entities.length > 0);
 });
 
 test("Anti-Sycophancy & Chhala Prashna Shastric Boundary Verification", async () => {

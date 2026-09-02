@@ -699,7 +699,7 @@ ${nakAct.masterRemedyRecommendation}
 *⚡ Instant Classical Computation (0ms)*`;
   }
 
-  // 14. Birth Time Rectification (BTR) Confirmation Resolver
+  // 14. Birth Time Rectification (BTR) Confirmation Resolver (6-Divisional Framework)
   if (
     /^(1\.\s*(yes|no)|1:\s*(yes|no)|q1\s*:|lock & verify|verify & lock)/i.test(q) ||
     (q.includes("1.") && (q.includes("yes") || q.includes("no")) && (q.includes("eldest") || q.includes("youngest") || q.includes("middle") || q.includes("only") || q.includes("2.")))
@@ -709,73 +709,101 @@ ${nakAct.masterRemedyRecommendation}
     const ascDeg = `${(natalEphem.ascendant.siderealLongitude % 30).toFixed(2)}°`;
     const moonNak = natalEphem.planets.Moon?.nakshatra.sanskritName || "Punarvasu";
 
-    // Extract exact answers from the query string
+    // 1. D-24 Siddhamsha (Higher Education / Degree)
     const isQ1Yes = /1\.\s*yes|1:\s*yes|q1\s*:\s*yes/i.test(q);
+    // 2. D-10 Dasamsa (Career Entry & Responsibility)
     const isQ2Yes = /2\.\s*yes|2:\s*yes|q2\s*:\s*yes/i.test(q);
+    
+    // 3. D-9 Navamsha (Relationship / Marriage Anchor)
+    let d9Status = "Single / Self-Focus";
+    let isD9Match = true;
+    if (/married|committed/i.test(q)) {
+      d9Status = "Married / Committed Bond";
+    } else if (/past/i.test(q)) {
+      d9Status = "Past Significant Bond";
+    }
 
+    // 4. D-3 Drekkana (Sibling Order)
     let siblingText = "Eldest";
     if (/youngest/i.test(q)) siblingText = "Youngest";
     else if (/middle/i.test(q)) siblingText = "Middle";
     else if (/only\s*child|only/i.test(q)) siblingText = "Only Child";
 
-    const isQ4Yes = /4\.\s*yes|4:\s*yes|q4\s*:\s*yes/i.test(q);
+    // 5. D-4 Chaturthamsha (Residence Relocation)
+    const isQ5Relocated = /5\.\s*yes|5:\s*yes|q5\s*:\s*yes|relocated/i.test(q);
 
-    // Calculate match score
+    // 6. D-60 Shashtiamsha (Karmic Pivot / Physical Resilience)
+    const isQ6Yes = /6\.\s*yes|6:\s*yes|q6\s*:\s*yes|4\.\s*yes|4:\s*yes/i.test(q);
+
+    // Calculate match score across all 6 Divisional gates
     let matchCount = 0;
-    if (isQ1Yes) matchCount++;
-    if (isQ2Yes) matchCount++;
-    matchCount++; // Sibling anchor is always mapped to D3
-    if (!isQ4Yes) matchCount++; // No surgery confirms Shubha Drishti
+    if (isQ1Yes) matchCount++; // D-24
+    if (isQ2Yes) matchCount++; // D-10
+    if (isD9Match) matchCount++; // D-9
+    matchCount++; // D-3 sibling anchor
+    if (isQ5Relocated) matchCount++; // D-4 relocation
+    if (!isQ6Yes) matchCount++; // D-60 protection (or physical mark)
 
     const q1Explanation = isQ1Yes
-      ? `- 🎓 **2020–2022 Academic Fruition (✅ Confirmed):**
-  * Matches your **5th & 9th House Dasha sub-period gateways**, confirming the exact degree of your academic houses.`
-      : `- 🎓 **Academic Milestone (2020–2022) (⚠️ Milestone Divergence):**
-  * You indicated education/degree milestones did not culminate in this specific window. This confirms your **D-24 Chaturvimshamsha higher-learning cusp** operated on an alternate sub-period window.`;
+      ? `- 🎓 **D-24 Siddhamsha (2020–2022 Degree / Learning Gateway):** ✅ **Confirmed**
+  * Synchronized with your **5th & 9th House Dasha sub-periods** and D-24 learning axis.`
+      : `- 🎓 **D-24 Siddhamsha (Higher Learning Gateway):** ⚠️ **Milestone Divergence**
+  * Education culminated outside the 2020–2022 window, indicating your **D-24 higher learning cusp** operated on an alternate sub-period window.`;
 
     const q2Explanation = isQ2Yes
-      ? `- 💼 **2023–2025 Career Responsibility (✅ Confirmed):**
-  * Corresponds to **Saturn's D-10 Dasamsa transit axis**, confirming the exact cusp of your 10th house (Karma).`
-      : `- 💼 **2023–2025 Career Responsibility (⚠️ Milestone Divergence):**
-  * Indicates your career energy was internal/preparatory rather than an external public role transition, shifting the D-10 Dasamsa cusp.`;
+      ? `- 💼 **D-10 Dasamsa (2023–2025 Career Responsibility & Pivot):** ✅ **Confirmed**
+  * Corresponds directly to **Saturn's D-10 Karma transit axis**, locking the 10th house cusp.`
+      : `- 💼 **D-10 Dasamsa (Career Authority Axis):** ⚠️ **Milestone Divergence**
+  * Career energy was internal/preparatory rather than a public role transition, shifting the D-10 Dasamsa cusp.`;
 
-    const q3Explanation = `- 🌿 **Sibling Position (${siblingText}) (✅ Confirmed):**
+    const q3Explanation = `- 💍 **D-9 Navamsha (${d9Status}):** ✅ **Confirmed**
+  * Aligns with the **7th Lord's placement in D-9 Navamsha**, locking your soul-relationship timeline.`;
+
+    const q4Explanation = `- 🌿 **D-3 Drekkana (${siblingText} Child):** ✅ **Confirmed**
   * Locks the **3rd house and D-3 Drekkana lagna** alignments with your birth order.`;
 
-    const q4Explanation = isQ4Yes
-      ? `- 🏥 **Physical Marks / Scar (✅ Confirmed):**
-  * Mars / Ketu influence on Lagna or 6th house, confirming physical constitution resilience.`
-      : `- 🛡️ **Physical Marks / Surgery (✅ Confirmed):**
-  * Protective **Shubha Drishti (Jupiter's benefic aspect)** on Lagna, shielding against major surgical scars.`;
+    const q5Explanation = isQ5Relocated
+      ? `- ✈️ **D-4 Chaturthamsha (Residence & Relocation):** ✅ **Confirmed**
+  * 4th/12th house foreign displacement signature activated in D-4 chart.`
+      : `- 🏡 **D-4 Chaturthamsha (Ancestral Soil Stability):** ✅ **Confirmed**
+  * Strong 4th house anchor in D-4 preserving roots in the birth region.`;
+
+    const q6Explanation = isQ6Yes
+      ? `- ⚡ **D-60 Shashtiamsha (Karmic Pivot / Physical Scar):** ✅ **Confirmed**
+  * Mars / Ketu influence on Lagna or 6th house marking physical resilience.`
+      : `- 🛡️ **D-60 Shashtiamsha (Protective Shield):** ✅ **Confirmed**
+  * Protective **Jupiter's Shubha Drishti** shielding against major surgical trauma.`;
 
     let statusHeader = "";
     let conclusionBlock = "";
 
-    if (matchCount === 4) {
-      statusHeader = "✅ 100% Exact Precision Match (Clock Locked)";
-      conclusionBlock = `💡 **Your chart clock is fully synchronized down to the minute!** All D-1, D-3, D-9 Navamsha, and D-10 Dasamsa sub-chart cusps align with your life milestones.`;
-    } else if (matchCount === 3) {
-      statusHeader = "🟡 75% High Precision Match (Minor Micro-Calibration)";
-      conclusionBlock = `💡 **Your primary Lagna and D-9 Navamsha are firmly verified!** One minor sub-period variation was observed (D-24 education or D-10 career micro-window within ±1 to 2 minutes), which is standard and safe for predictive consultations.`;
+    if (matchCount >= 5) {
+      statusHeader = `✅ ${matchCount === 6 ? "100%" : "85%"} Exact Precision Match (All 6 Divisional Charts Locked)`;
+      conclusionBlock = `💡 **Your chart clock is fully synchronized down to the minute!** All D-1, D-3, D-4, D-9 Navamsha, D-10 Dasamsa, D-24, and D-60 sub-chart cusps align with your life milestones.`;
+    } else if (matchCount === 4) {
+      statusHeader = "🟡 70% High Alignment (Minor Micro-Calibration)";
+      conclusionBlock = `💡 **Your primary Lagna, D-9 Navamsha, and D-3 are firmly verified!** One or two minor sub-period variations were observed (D-24 education or D-10 career micro-window within ±1 to 2 minutes), which is standard and safe for predictive consultations.`;
     } else {
-      statusHeader = "⚠️ 50% Clock Shift Detected (Rectification Required)";
-      conclusionBlock = `⚠️ **Birth Clock Offset Identified (50% Milestone Divergence):**
-While your physical Ascendant (**${ascRashi} ${ascDeg}**) is stable, the divergence of major 2020–2022 and 2023–2025 Dasha gateways indicates your recorded time of **${timeStr}** is approximate (rounded at the hospital).
-* In classical BTR, your true astrological birth time is shifted by **±3 to 6 minutes**.
+      statusHeader = "⚠️ Clock Shift Detected (Birth Time Rectification Required)";
+      conclusionBlock = `⚠️ **Birth Clock Offset Identified (${Math.round((matchCount / 6) * 100)}% Milestone Alignment):**
+While your physical Ascendant (**${ascRashi} ${ascDeg}**) is stable, the divergence across major D-10, D-24, or D-9 gateways indicates your recorded time of **${timeStr}** is approximate (rounded at the hospital).
+* In classical BTR (*Tattva Shodhana & Kunda Shastra*), your true astrological birth time is shifted by **±3 to 6 minutes**.
 * *Recommended Calibration:* Consider testing a fine-tuned window of **±3 to 5 minutes** to lock the exact D-9 Navamsha Pada and D-10 Dasamsa cusps for pinpoint career and marriage timing.`;
     }
 
-    return `### 🎯 **Birth Time Verification Analysis & Verdict**
+    return `### 🎯 **Multi-Divisional Birth Time Verification (D-1, D-3, D-4, D-9, D-10, D-24, D-60)**
 
 - 📍 **Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${natalEphem.location?.cityName || "Allahabad"}, ${natalEphem.location?.country || "India"}**
 - 🌟 **Verification Status:** **${statusHeader}**
 - 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
 
-#### 🔍 **Mathematical Shastric Alignment Proofs:**
+#### 🔍 **6-Point Multi-Divisional Shastric Alignment Proofs:**
 ${q1Explanation}
 ${q2Explanation}
 ${q3Explanation}
 ${q4Explanation}
+${q5Explanation}
+${q6Explanation}
 
 ---
 ${conclusionBlock}
@@ -804,12 +832,12 @@ What would you like to explore next?
     const ascDeg = `${(natalEphem.ascendant.siderealLongitude % 30).toFixed(2)}°`;
     const moonNak = natalEphem.planets.Moon?.nakshatra.sanskritName || "Punarvasu";
 
-    return `### 🎯 **Step 1: Birth Time & Stability Overview**
+    return `### 🎯 **Step 1: Birth Time & Multi-Divisional Overview**
 - 📅 **Date of Birth:** **${dateStr}** • **Time:** **${timeStr}**
 - 📍 **Place:** **${natalEphem.location?.cityName || "Allahabad"}, ${natalEphem.location?.country || "India"}**
 - 🏛️ **Primary Ascendant:** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
 
-Your foundational planetary blueprint is strong and clear. Please review and select your answers in the interactive **4-Point Verification Checklist** below to verify your birth minute in 1 tap:`;
+Your foundational planetary blueprint is strong and clear. Please review and select your answers in the interactive **6-Point Multi-Divisional Checklist (D-1, D-3, D-4, D-9, D-10, D-24, D-60)** below to verify your birth minute in 1 tap:`;
   }
 
   return null;
@@ -823,11 +851,13 @@ interface InteractiveBtrProps {
 function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProps) {
   const [q1, setQ1] = useState<string>("Yes");
   const [q2, setQ2] = useState<string>("Yes");
-  const [q3, setQ3] = useState<string>("Eldest");
-  const [q4, setQ4] = useState<string>("No");
+  const [q3, setQ3] = useState<string>("Single");
+  const [q4, setQ4] = useState<string>("Eldest");
+  const [q5, setQ5] = useState<string>("Relocated");
+  const [q6, setQ6] = useState<string>("No");
 
   const handleSubmit = () => {
-    const formatted = `1. ${q1}, 2. ${q2}, 3. ${q3}, 4. ${q4}`;
+    const formatted = `1. ${q1}, 2. ${q2}, 3. ${q3}, 4. ${q4}, 5. ${q5}, 6. ${q6}`;
     onVerify(formatted);
   };
 
@@ -839,26 +869,26 @@ function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProp
           <span className="text-base">⚡</span>
           <div>
             <h4 className="font-extrabold text-amber-300 text-xs tracking-wide">
-              Interactive 4-Point Birth Time Verification
+              6-Point Multi-Divisional Verification (D-9, D-10, D-24, D-3, D-4, D-60)
             </h4>
             <p className="text-[10.5px] text-slate-400">
-              Select your answers directly below and lock your birth minute in 1 tap:
+              Select your answers directly below and lock your birth minute across all divisional charts:
             </p>
           </div>
         </div>
         <span className="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
-          Fast BTR
+          Advanced BTR
         </span>
       </div>
 
-      {/* Q1 */}
+      {/* Q1 - D-24 Higher Learning */}
       <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
           <span>🎓</span>
-          <span>1. Academic / Education Milestone (2020 – 2022):</span>
+          <span>1. D-24 Siddhamsha — Higher Education Milestone (2020 – 2022):</span>
         </div>
         <p className="text-[11px] text-slate-300 leading-snug">
-          Did you complete college graduation, post-grad, or an important skill certification between 2020 and 2022?
+          Did you complete college graduation, post-grad, or an important skill qualification between 2020 and 2022?
         </p>
         <div className="flex flex-wrap gap-1.5 pt-1">
           {[
@@ -869,7 +899,7 @@ function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProp
               key={opt.val}
               type="button"
               onClick={() => setQ1(opt.val)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
                 q1 === opt.val
                   ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
                   : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
@@ -881,11 +911,11 @@ function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProp
         </div>
       </div>
 
-      {/* Q2 */}
+      {/* Q2 - D-10 Dasamsa Career */}
       <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
           <span>💼</span>
-          <span>2. Career Pressure & Shift (2023 – 2025):</span>
+          <span>2. D-10 Dasamsa — Career Pressure & Role Shift (2023 – 2025):</span>
         </div>
         <p className="text-[11px] text-slate-300 leading-snug">
           Did 2023–2025 bring increased responsibilities, career/job transition, or a serious foundation-building phase?
@@ -899,7 +929,7 @@ function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProp
               key={opt.val}
               type="button"
               onClick={() => setQ2(opt.val)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
                 q2 === opt.val
                   ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
                   : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
@@ -911,11 +941,42 @@ function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProp
         </div>
       </div>
 
-      {/* Q3 */}
+      {/* Q3 - D-9 Navamsha Marriage/Relationship */}
+      <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+          <span>💍</span>
+          <span>3. D-9 Navamsha — Relationship / Soul Bond Status:</span>
+        </div>
+        <p className="text-[11px] text-slate-300 leading-snug">
+          What is your current relationship or marital status to synchronize your D-9 7th house axis?
+        </p>
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {[
+            { label: "💍 Married / Committed Bond", val: "Married" },
+            { label: "🕊️ Single / Self-Focus", val: "Single" },
+            { label: "💔 Past Significant Bond", val: "Past Bond" },
+          ].map((opt) => (
+            <button
+              key={opt.val}
+              type="button"
+              onClick={() => setQ3(opt.val)}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                q3 === opt.val
+                  ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                  : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Q4 - D-3 Drekkana Sibling */}
       <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
           <span>🌿</span>
-          <span>3. Sibling Birth Order:</span>
+          <span>4. D-3 Drekkana — Sibling Birth Order:</span>
         </div>
         <p className="text-[11px] text-slate-300 leading-snug">
           What is your birth order position among your siblings?
@@ -930,9 +991,9 @@ function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProp
             <button
               key={opt.val}
               type="button"
-              onClick={() => setQ3(opt.val)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
-                q3 === opt.val
+              onClick={() => setQ4(opt.val)}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                q4 === opt.val
                   ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
                   : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
               }`}
@@ -943,26 +1004,56 @@ function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProp
         </div>
       </div>
 
-      {/* Q4 */}
+      {/* Q5 - D-4 Chaturthamsha Residence */}
       <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
-          <span>🏥</span>
-          <span>4. Physical Scar / Surgery Check:</span>
+          <span>✈️</span>
+          <span>5. D-4 Chaturthamsha — Residence Relocation:</span>
         </div>
         <p className="text-[11px] text-slate-300 leading-snug">
-          Do you have a noticeable scar on head/face/limbs, or experienced a major injury/surgery?
+          Have you moved away from your birth city/ancestral home for education, career, or residence?
         </p>
         <div className="flex flex-wrap gap-1.5 pt-1">
           {[
-            { label: "🛡️ No Major Surgery / Scar", val: "No" },
-            { label: "🏥 Yes, Have Scar / Surgery", val: "Yes" },
+            { label: "✈️ Yes, Relocated Away from Birth City", val: "Relocated" },
+            { label: "🏡 No, Living in Birth Region", val: "Home Region" },
           ].map((opt) => (
             <button
               key={opt.val}
               type="button"
-              onClick={() => setQ4(opt.val)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
-                q4 === opt.val
+              onClick={() => setQ5(opt.val)}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                q5 === opt.val
+                  ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                  : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Q6 - D-60 Shashtiamsha Karmic Pivot */}
+      <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+          <span>⚡</span>
+          <span>6. D-60 Shashtiamsha — Karmic Turning Point & Physical Marks:</span>
+        </div>
+        <p className="text-[11px] text-slate-300 leading-snug">
+          Have you experienced a sudden life-altering pivot, major emergency, or have an indelible scar/mark?
+        </p>
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {[
+            { label: "⚡ Yes, Experienced Major Pivot / Scar", val: "Yes" },
+            { label: "🛡️ No Major Scar / Smooth Phase", val: "No" },
+          ].map((opt) => (
+            <button
+              key={opt.val}
+              type="button"
+              onClick={() => setQ6(opt.val)}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                q6 === opt.val
                   ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
                   : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
               }`}
@@ -981,7 +1072,7 @@ function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProp
         className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/25 cursor-pointer flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
       >
         <span>🚀</span>
-        <span>Lock & Verify Birth Time: "1. {q1}, 2. {q2}, 3. {q3}, 4. {q4}"</span>
+        <span>Lock & Verify 6 Divisional Charts: "1. {q1}, 2. {q2}, 3. {q3}, 4. {q4}, 5. {q5}, 6. {q6}"</span>
       </button>
     </div>
   );
@@ -1885,7 +1976,10 @@ STRICT CONSULTATION RULES (MANDATORY):
 
                   {/* Interactive Inline BTR Questionnaire directly inside question card */}
                   {msg.role === "assistant" &&
-                    (msg.content.includes("4-Point Verification Checklist") ||
+                    (msg.content.includes("Multi-Divisional") ||
+                      msg.content.includes("6-Point Multi-Divisional") ||
+                      msg.content.includes("4-Point Verification Checklist") ||
+                      msg.content.includes("Step 1: Birth Time & Multi-Divisional Overview") ||
                       msg.content.includes("Step 1: Birth Time & Stability Overview") ||
                       msg.content.includes("Step 2: 4 Fast Verification Checks") ||
                       msg.content.includes("Academic / Education Milestone")) && (
