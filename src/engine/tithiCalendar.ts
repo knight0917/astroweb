@@ -921,17 +921,90 @@ function detectFestivals(
     }
   }
 
-  // --- 7. LORD KRISHNA & GANESHA ---
-  if (masaIdx === 5 && paksha === "Krishna" && tithiNum === 8) {
+  // --- 7. LORD KRISHNA, RADHARANI & GANESHA ---
+  if ((masaIdx === 4 || masaIdx === 5) && paksha === "Krishna" && tithiNum === 8) {
     list.push({
       id: "krishna-janmashtami",
       name: "Krishna Janmashtami (Gokulashtami)",
       hindiName: "श्रीकृष्ण जन्माष्टमी (गोकुलाष्टमी)",
       category: "festival",
       deity: "Bhagavan Sri Krishna",
-      significance: "Midnight appearance of the Supreme Personality of Godhead Lord Krishna in Mathura.",
+      significance: "Midnight appearance of the Supreme Personality of Godhead Lord Krishna in Mathura (Rohini & Ashtami sanyoga).",
       ritual: "Midnight abhishek with milk/curd/honey, fasting until midnight, Dahi Handi, Bhagavad Gita reading.",
-      badgeColor: "bg-gradient-to-r from-blue-600/40 to-indigo-600/40 text-blue-100 border-blue-400 font-black shadow-lg",
+      badgeColor: "bg-gradient-to-r from-blue-600/40 via-indigo-600/40 to-amber-500/40 text-blue-100 border-blue-400 font-black shadow-lg",
+      muhurta: {
+        title: "Nishita Kaal Midnight Puja Muhurta",
+        hindiTitle: "निशीथ काल मध्यरात्रि जन्मोत्सव पूजा मुहूर्त",
+        timeRange: "11:55 PM to 12:45 AM (Midnight)",
+        duration: "50 Mins",
+        specialAuspiciousPeriod: "Rohini Nakshatra & Ashtami Tithi Sanyoga | Parana Time: Next Morning after Sunrise",
+        mantra: "ॐ नमो भगवते वासुदेवाय॥ हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे। हरे राम हरे राम राम राम हरे हरे॥",
+      },
+    });
+  }
+
+  if ((masaIdx === 4 || masaIdx === 5) && paksha === "Krishna" && tithiNum === 9) {
+    list.push({
+      id: "dahi-handi-nandotsav",
+      name: "Dahi Handi / Nandotsav",
+      hindiName: "दही हांडी / नंदोत्सव",
+      category: "festival",
+      deity: "Bal Krishna & Yashoda Mata",
+      significance: "Joyous celebration of Nandababa's feast and Bal Krishna's childhood butter-stealing Leelas in Gokul.",
+      ritual: "Dahi Handi human pyramids, distributing Makhan-Mishri prasadam, singing kirtans.",
+      badgeColor: "bg-yellow-500/25 text-amber-200 border-amber-400 font-bold",
+    });
+  }
+
+  if ((masaIdx === 4 || masaIdx === 5) && paksha === "Shukla" && tithiNum === 8) {
+    list.push({
+      id: "radhashtami",
+      name: "Radhashtami (Sri Radha Jayanti)",
+      hindiName: "राधाष्टमी (श्री राधा जन्मोत्सव)",
+      category: "festival",
+      deity: "Srimati Radharani",
+      significance: "Divine appearance day of Sri Radha Rani, the embodiment of unconditional divine love, in Barsana.",
+      ritual: "Midday Abhishek with Panchamrita, Chhappan Bhog offering, Radharani kirtans.",
+      badgeColor: "bg-gradient-to-r from-pink-500/30 to-purple-500/30 text-pink-100 border-pink-400 font-bold",
+    });
+  }
+
+  if (masaIdx === 4 && paksha === "Shukla" && tithiNum === 3) {
+    list.push({
+      id: "hariyali-teej",
+      name: "Hariyali Teej (Chhoti Teej)",
+      hindiName: "हरियाली तीज",
+      category: "vrat",
+      deity: "Goddess Parvati & Lord Shiva",
+      significance: "Monsoon festival celebrating the reunion of Lord Shiva and Goddess Parvati, nature's green glory and marital devotion.",
+      ritual: "Wearing green attire/bangles, singing traditional Teej songs, swinging on swings.",
+      badgeColor: "bg-emerald-500/30 text-emerald-100 border-emerald-400 font-bold",
+    });
+  }
+
+  if ((masaIdx === 4 || masaIdx === 5) && paksha === "Krishna" && tithiNum === 3) {
+    list.push({
+      id: "kajari-teej",
+      name: "Kajari Teej (Badi Teej)",
+      hindiName: "कजरी तीज (बड़ी तीज)",
+      category: "vrat",
+      deity: "Goddess Parvati & Lord Shiva",
+      significance: "Sacred fasting festival observed by married women for family prosperity and marital bliss.",
+      ritual: "Nirjala fast, Neem tree veneration, sattu preparation, evening moon sighting.",
+      badgeColor: "bg-teal-500/20 text-teal-200 border-teal-400 font-semibold",
+    });
+  }
+
+  if (masaIdx === 5 && paksha === "Shukla" && tithiNum === 3) {
+    list.push({
+      id: "hartalika-teej",
+      name: "Hartalika Teej Vrat",
+      hindiName: "हरतालिका तीज व्रत",
+      category: "vrat",
+      deity: "Lord Shiva & Goddess Parvati",
+      significance: "Nirjala fast observed by women for marital harmony and finding an ideal partner, commemorating Parvati's penance.",
+      ritual: "Clay idol worship of Shiva-Parvati, night jagaran, Hartalika Vrat Katha.",
+      badgeColor: "bg-emerald-500/25 text-emerald-200 border-emerald-400 font-bold",
     });
   }
 
@@ -945,6 +1018,19 @@ function detectFestivals(
       significance: "10-day Ganeshotsav festival celebrating the birth of Lord Ganesha.",
       ritual: "Ganesh Sthapana, 21 Modaka offering, Durva grass offering, chanting Atharvashirsha.",
       badgeColor: "bg-red-500/30 text-amber-100 border-red-400 font-black shadow-md",
+    });
+  }
+
+  if (masaIdx === 5 && paksha === "Shukla" && tithiNum === 14) {
+    list.push({
+      id: "anant-chaturdashi",
+      name: "Anant Chaturdashi (Ganesh Visarjan)",
+      hindiName: "अनंत चतुर्दशी (गणेश विसर्जन)",
+      category: "festival",
+      deity: "Lord Ananta Padmanabha (Vishnu) & Lord Ganesha",
+      significance: "14-knot sacred thread worship of Lord Vishnu and culmination of 10-day Ganeshotsav with grand immersion.",
+      ritual: "Tying 14-knot Ananta Sutra, reciting Ananta Vrat Katha, grand Ganesh Visarjan processions.",
+      badgeColor: "bg-gradient-to-r from-red-600/30 to-amber-600/30 text-yellow-100 border-amber-400 font-black",
     });
   }
 

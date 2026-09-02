@@ -358,6 +358,65 @@ function getLocalCivilDateTime(natalEphem: EphemerisResult) {
   };
 }
 
+function formatHumanReadableError(err: any): string {
+  const raw = err?.message || String(err || "");
+
+  // Check if error contains raw JSON
+  try {
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (parsed.error?.message) {
+        const msg = String(parsed.error.message);
+        if (
+          msg.toLowerCase().includes("api key not valid") ||
+          msg.toLowerCase().includes("api_key_invalid") ||
+          msg.toLowerCase().includes("invalid_argument")
+        ) {
+          return "Invalid or expired AI API key. Please check your API key in Settings.";
+        }
+        if (
+          msg.toLowerCase().includes("quota") ||
+          msg.toLowerCase().includes("rate limit") ||
+          parsed.error.code === 429
+        ) {
+          return "AI server rate limit reached. Please wait a moment or provide your own API key in Settings.";
+        }
+        return msg;
+      }
+    }
+  } catch (_) {}
+
+  if (
+    raw.toLowerCase().includes("api key not valid") ||
+    raw.toLowerCase().includes("api_key_invalid") ||
+    raw.includes("INVALID_ARGUMENT")
+  ) {
+    return "Invalid or missing AI API key. Please update your API key in Settings.";
+  }
+  if (
+    raw.toLowerCase().includes("failed to fetch") ||
+    raw.toLowerCase().includes("network") ||
+    raw.toLowerCase().includes("networkerror")
+  ) {
+    return "Network connection issue. Please check your internet connection.";
+  }
+  if (
+    raw.toLowerCase().includes("rate limit") ||
+    raw.toLowerCase().includes("quota") ||
+    raw.includes("429")
+  ) {
+    return "AI server is temporarily busy. Please try again shortly.";
+  }
+
+  // Strip curly braces and raw stack traces if present
+  if (raw.includes("{") && raw.includes("}")) {
+    return "Unable to connect to AI server. Please check your network or API key in Settings.";
+  }
+
+  return raw || "Unable to reach Astrological AI server.";
+}
+
 /**
  * 0ms Instant Client-Side Classical Calculation Interceptor
  * Answers exact deterministic queries instantaneously without AI round-trip latency.
@@ -1562,12 +1621,13 @@ STRICT CONSULTATION RULES (MANDATORY):
         }
       } catch (_) {}
 
+      const friendlyError = formatHumanReadableError(err);
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantMsgId
             ? {
                 ...m,
-                content: `⚠️ **Could not connect to Astrological AI:** ${err.message}\n\nPlease verify your internet connection or click **⚙️ Settings** to enter a custom Gemini API key.`,
+                content: `⚠️ **Connection Error:** ${friendlyError}\n\nPlease check your internet connection or click **⚙️ Settings** to enter a valid Gemini API key.`,
               }
             : m
         )
