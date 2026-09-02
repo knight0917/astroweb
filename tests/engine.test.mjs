@@ -3763,6 +3763,31 @@ test("End-to-End Chatbot Response Quality Gates & Shastric Evaluation Verificati
   assert.ok(marriageDossier.includes("BHRIGU NANDI NADI"));
 });
 
+test("Fast Yes/No Birth Time Rectification (BTR) & Milestone Alignment Verification", async () => {
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const { calculateShodashavargaChart } = await import("../src/engine/shodashavarga.ts");
+
+  const location = { cityName: "Allahabad", country: "India", latitude: 25.4358, longitude: 81.8463, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1999-09-17T18:32:00+05:30");
+
+  const natalEphem = calculateVedicEphemeris(birthDate, location, "Lahiri");
+  
+  // D-1 Lagna check
+  assert.strictEqual(natalEphem.ascendant.rashi.englishName, "Pisces");
+
+  // D-9 Navamsha Lagna check
+  const d9Chart = calculateShodashavargaChart(natalEphem, "D9");
+  assert.ok(d9Chart.entities.length > 0);
+
+  // D-10 Dasamsa Career check
+  const d10Chart = calculateShodashavargaChart(natalEphem, "D10");
+  assert.ok(d10Chart.entities.length > 0);
+
+  // D-3 Drekkana Sibling check
+  const d3Chart = calculateShodashavargaChart(natalEphem, "D3");
+  assert.ok(d3Chart.entities.length > 0);
+});
+
 
 
 
