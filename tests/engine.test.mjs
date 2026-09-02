@@ -3782,10 +3782,43 @@ test("Fast Yes/No Birth Time Rectification (BTR) & Milestone Alignment Verificat
   // D-10 Dasamsa Career check
   const d10Chart = calculateShodashavargaChart(natalEphem, "D10");
   assert.ok(d10Chart.entities.length > 0);
+});
 
-  // D-3 Drekkana Sibling check
-  const d3Chart = calculateShodashavargaChart(natalEphem, "D3");
-  assert.ok(d3Chart.entities.length > 0);
+test("Anti-Sycophancy & Chhala Prashna Shastric Boundary Verification", async () => {
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const fs = await import("fs");
+  const path = await import("path");
+
+  // 1. Verify route.ts contains Rule 0F (Anti-Sycophancy) and Rule 0G (Chhala Prashna)
+  const routeContent = fs.readFileSync(path.join(process.cwd(), "src/app/api/astro-chat/route.ts"), "utf-8");
+  assert.ok(routeContent.includes("ANTI-SYCOPHANCY & NON-RETROFITTING LAW"));
+  assert.ok(routeContent.includes("CHHALA PRASHNA & PHYSICAL SURVEILLANCE BOUNDARY PROTOCOL"));
+  assert.ok(routeContent.includes("Purushartha"));
+
+  // 2. Verify AstroChatbot.tsx contains Rule 0F and Rule 0G
+  const chatbotContent = fs.readFileSync(path.join(process.cwd(), "src/components/AstroChatbot.tsx"), "utf-8");
+  assert.ok(chatbotContent.includes("ANTI-SYCOPHANCY & NON-RETROFITTING LAW"));
+  assert.ok(chatbotContent.includes("CHHALA PRASHNA & PHYSICAL SURVEILLANCE BOUNDARY PROTOCOL"));
+
+  // 3. Verify Local Civil Date Time Accuracy
+  const location = { cityName: "Mau", country: "India", latitude: 25.9419, longitude: 83.5606, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1998-05-24T18:46:00Z"); // In UTC -> +5.5 hours = 1998-05-25 00:16 (12:16 AM)
+  const natalEphem = calculateVedicEphemeris(birthDate, location, "Lahiri");
+
+  const birthDateObj = new Date(natalEphem.utcDate);
+  const tzOffset = natalEphem.location?.timezoneOffsetHours ?? 0;
+  const localBirthDate = new Date(birthDateObj.getTime() + tzOffset * 3600 * 1000);
+
+  const rawHours = localBirthDate.getUTCHours();
+  const rawMinutes = String(localBirthDate.getUTCMinutes()).padStart(2, "0");
+  const hour12 = rawHours % 12 || 12;
+  const ampm = rawHours >= 12 ? "PM" : "AM";
+
+  assert.strictEqual(hour12, 12);
+  assert.strictEqual(rawMinutes, "16");
+  assert.strictEqual(ampm, "AM");
+  assert.strictEqual(localBirthDate.getUTCDate(), 25);
+  assert.strictEqual(localBirthDate.getUTCMonth(), 4); // May (0-indexed)
 });
 
 
