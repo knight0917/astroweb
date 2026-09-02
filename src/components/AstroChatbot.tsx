@@ -1258,6 +1258,214 @@ function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProp
   );
 }
 
+function Phase2CandidateCard({
+  onSelect,
+  isLoading,
+}: {
+  onSelect: (ans: string) => void;
+  isLoading: boolean;
+}) {
+  return (
+    <div className="my-3 p-3.5 bg-slate-950/90 border border-amber-500/40 rounded-2xl space-y-3 shadow-xl shadow-amber-950/20 not-prose">
+      <div className="flex items-center justify-between border-b border-amber-500/20 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-base">🔮</span>
+          <div>
+            <h4 className="font-extrabold text-amber-300 text-xs tracking-wide">
+              Phase 2: Select Your Rectified Past Timeline
+            </h4>
+            <p className="text-[10.5px] text-slate-400">
+              Tap the timeline below that matches your past to lock your exact birth minute:
+            </p>
+          </div>
+        </div>
+        <span className="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
+          Calibration
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => onSelect("Lock 6:28 PM")}
+          disabled={isLoading}
+          className="p-3 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-amber-500/30 hover:border-amber-400 text-slate-200 transition-all cursor-pointer group"
+        >
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-bold text-xs text-amber-300 group-hover:text-amber-200">Candidate A (~6:28 PM)</span>
+            <span className="text-[10px] text-amber-400/80 font-mono">-4 mins</span>
+          </div>
+          <p className="text-[11px] text-slate-300 leading-snug">
+            🎓 Education in <strong>2017 – 2019</strong> • Career Rise in <strong>2026–27</strong>
+          </p>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSelect("Lock 6:37 PM")}
+          disabled={isLoading}
+          className="p-3 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-cyan-500/30 hover:border-cyan-400 text-slate-200 transition-all cursor-pointer group"
+        >
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-bold text-xs text-cyan-300 group-hover:text-cyan-200">Candidate B (~6:37 PM)</span>
+            <span className="text-[10px] text-cyan-400/80 font-mono">+5 mins</span>
+          </div>
+          <p className="text-[11px] text-slate-300 leading-snug">
+            🎓 Education in <strong>2022 – 2024</strong> • Career Active in <strong>2024–26</strong>
+          </p>
+        </button>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => onSelect("None of these, trace chronological life timeline")}
+        disabled={isLoading}
+        className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-bold border border-slate-700 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+      >
+        <span>🔍</span>
+        <span>Neither Matched → Drill Down from Childhood / Schooling Era</span>
+      </button>
+    </div>
+  );
+}
+
+function Round2DrillDownCard({
+  onSelect,
+  isLoading,
+}: {
+  onSelect: (ans: string) => void;
+  isLoading: boolean;
+}) {
+  return (
+    <div className="my-3 p-3.5 bg-slate-950/90 border border-amber-500/40 rounded-2xl space-y-3 shadow-xl shadow-amber-950/20 not-prose">
+      <div className="flex items-center justify-between border-b border-amber-500/20 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-base">⏳</span>
+          <div>
+            <h4 className="font-extrabold text-amber-300 text-xs tracking-wide">
+              Chronological Life Era Drill-Down
+            </h4>
+            <p className="text-[10.5px] text-slate-400">
+              Select the era where your primary educational or life milestone occurred:
+            </p>
+          </div>
+        </div>
+        <span className="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
+          Deep BTR
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => onSelect("10th board in 2014-2015")}
+          disabled={isLoading}
+          className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
+        >
+          <div className="font-bold text-xs text-amber-300">🎒 2014 – 2015 (Age 15)</div>
+          <div className="text-[10.5px] text-slate-400">10th Board / Schooling Transition (~6:24 PM)</div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSelect("12th board in 2016-2017")}
+          disabled={isLoading}
+          className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
+        >
+          <div className="font-bold text-xs text-amber-300">🎓 2016 – 2017 (Age 17–18)</div>
+          <div className="text-[10.5px] text-slate-400">12th Board / College Entry (~6:26 PM)</div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSelect("Graduated in 2018-2019")}
+          disabled={isLoading}
+          className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
+        >
+          <div className="font-bold text-xs text-amber-300">📜 2018 – 2019 (Age 19–20)</div>
+          <div className="text-[10.5px] text-slate-400">Undergrad Degree / College (~6:28 PM)</div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSelect("Graduated in 2020-2021")}
+          disabled={isLoading}
+          className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
+        >
+          <div className="font-bold text-xs text-amber-300">📜 2020 – 2021 (Age 21–22)</div>
+          <div className="text-[10.5px] text-slate-400">College Completion / 1st Job (~6:31 PM)</div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MonthDrillDownCard({
+  content,
+  onSelect,
+  isLoading,
+}: {
+  content: string;
+  onSelect: (ans: string) => void;
+  isLoading: boolean;
+}) {
+  const yearMatch = content.match(/Drill-Down \((\d{4})\)/) || content.match(/\b(20\d\d)\b/);
+  const year = yearMatch ? yearMatch[1] : "2022";
+
+  return (
+    <div className="my-3 p-3.5 bg-slate-950/90 border border-amber-500/40 rounded-2xl space-y-3 shadow-xl shadow-amber-950/20 not-prose">
+      <div className="flex items-center justify-between border-b border-amber-500/20 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-base">🌸</span>
+          <div>
+            <h4 className="font-extrabold text-amber-300 text-xs tracking-wide">
+              Select Your Exact Season / Month Window ({year})
+            </h4>
+            <p className="text-[10.5px] text-slate-400">
+              Tap the exact month window of your milestone to lock your birth minute:
+            </p>
+          </div>
+        </div>
+        <span className="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
+          Month Precision
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <button
+          type="button"
+          onClick={() => onSelect(`Early ${year} (January - April ${year})`)}
+          disabled={isLoading}
+          className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
+        >
+          <div className="font-bold text-xs text-amber-300">🌸 Jan – Apr {year}</div>
+          <div className="text-[10.5px] text-slate-400">Early {year} (Locks ~6:26 PM)</div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSelect(`Mid ${year} (May - August ${year})`)}
+          disabled={isLoading}
+          className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
+        >
+          <div className="font-bold text-xs text-amber-300">☀️ May – Aug {year}</div>
+          <div className="text-[10.5px] text-slate-400">Mid {year} (Locks ~6:29 PM)</div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSelect(`Late ${year} (September - December ${year})`)}
+          disabled={isLoading}
+          className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
+        >
+          <div className="font-bold text-xs text-amber-300">🍂 Sept – Dec {year}</div>
+          <div className="text-[10.5px] text-slate-400">Late {year} (Locks ~6:33 PM)</div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function AstroChatbot() {
   const {
     currentDate,
@@ -2154,17 +2362,43 @@ STRICT CONSULTATION RULES (MANDATORY):
                     {msg.content}
                   </div>
 
-                  {/* Interactive Inline BTR Questionnaire directly inside question card */}
+                  {/* 1. Initial 6-Point Questionnaire (Only on Step 1 Initial Prompt) */}
                   {msg.role === "assistant" &&
-                    (msg.content.includes("Multi-Divisional") ||
-                      msg.content.includes("6-Point Multi-Divisional") ||
-                      msg.content.includes("4-Point Verification Checklist") ||
-                      msg.content.includes("Step 1: Birth Time & Multi-Divisional Overview") ||
+                    (msg.content.includes("Step 1: Birth Time & Multi-Divisional Overview") ||
                       msg.content.includes("Step 1: Birth Time & Stability Overview") ||
-                      msg.content.includes("Step 2: 4 Fast Verification Checks") ||
-                      msg.content.includes("Academic / Education Milestone")) && (
+                      msg.content.includes("4-Point Verification Checklist")) &&
+                    !msg.content.includes("Phase 2") &&
+                    !msg.content.includes("Multi-Divisional Birth Time Verification") && (
                       <InteractiveBtrQuestionnaire
                         onVerify={(ans) => handleSendMessage(ans)}
+                        isLoading={isLoading}
+                      />
+                    )}
+
+                  {/* 2. Phase 2 Candidate Selection Interactive Card */}
+                  {msg.role === "assistant" &&
+                    msg.content.includes("Phase 2: Predicted Rectified Timeline Options") && (
+                      <Phase2CandidateCard
+                        onSelect={(ans) => handleSendMessage(ans)}
+                        isLoading={isLoading}
+                      />
+                    )}
+
+                  {/* 3. Chronological Life Era Interactive Card */}
+                  {msg.role === "assistant" &&
+                    msg.content.includes("Comprehensive Chronological Life Timeline") && (
+                      <Round2DrillDownCard
+                        onSelect={(ans) => handleSendMessage(ans)}
+                        isLoading={isLoading}
+                      />
+                    )}
+
+                  {/* 4. Month / Season Precision Drill-Down Card */}
+                  {msg.role === "assistant" &&
+                    msg.content.includes("Step 2: Precision Month & Season Drill-Down") && (
+                      <MonthDrillDownCard
+                        content={msg.content}
+                        onSelect={(ans) => handleSendMessage(ans)}
                         isLoading={isLoading}
                       />
                     )}
