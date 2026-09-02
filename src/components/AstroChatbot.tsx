@@ -13,6 +13,7 @@ import {
   calculateBhagyaBindu,
 } from "../engine/samirTripathiSuite";
 import { evaluateRashiTulyaNavamsha } from "../engine/rashiTulyaNavamsha";
+import { calculateSamirTripathiPanchang } from "../engine/samirTripathiPanchang";
 import { EphemerisResult } from "../engine/types";
 
 interface Message {
@@ -525,6 +526,46 @@ ${topPlanets}
 - **From Moon:** **${rtn.kharaNavamsha.moon64thNavamshaRashi.englishName}** (RTN House ${rtn.kharaNavamsha.moon64thRtnHouse})
 - **From Lagna:** **${rtn.kharaNavamsha.lagna64thNavamshaRashi.englishName}** (RTN House ${rtn.kharaNavamsha.lagna64thRtnHouse})
 - **Transit Safety:** ${rtn.kharaNavamsha.kharaWarningSummary}
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
+  // 12. Dr. Samir Tripathi Daily Panchanga, Lucky Color & Disha Shool
+  if (
+    /^(today panchang|today's panchang|panchang|aaj ka panchang|daily panchang|what is today's panchang|what is panchang|lucky color|today's lucky color|shubh rang|aaj ka shubh rang|disha shool|aaj ka disha shool|chandra bala|aaj ka chandra bala|abhijit muhurta|rahu kaal)\??$/i.test(q) ||
+    (q.includes("panchang") && (q.includes("today") || q.includes("aaj") || q.includes("what"))) ||
+    (q.includes("lucky color") || q.includes("shubh rang") || q.includes("disha shool"))
+  ) {
+    const panchang = calculateSamirTripathiPanchang(evaluationDate, transitEphem.location || natalEphem.location, natalEphem.ayanamshaType);
+    return `### 🌸 **Today's Vedic Daily Panchanga & Astro Guidance (Dr. Samir Tripathi Shastra):**
+- 📍 **Location:** ${panchang.cityName} • 📅 **Date:** ${panchang.evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+- 🌅 **Sunrise:** ${panchang.sunriseFormatted} • 🌇 **Sunset:** ${panchang.sunsetFormatted}
+
+#### 🕉️ **The 5 Core Angas (पञ्चाङ्ग):**
+- **1. Tithi:** **${panchang.tithi.name} (${panchang.tithi.pakshaHindi}, ${panchang.tithi.categoryHindi})** • Ends: **${panchang.tithi.endTimeFormatted}** (${panchang.tithi.remainingHoursFormatted}) • Deity: ${panchang.tithi.deity} • Tatva: ${panchang.tithi.tatvaHindi}
+- **2. Vara:** **${panchang.vara.hindiName}** (${panchang.vara.dayName}) • Ruler: **${panchang.vara.rulingPlanet}** (${panchang.vara.planetHindi})
+- **3. Nakshatra:** **${panchang.nakshatra.name} (Pada ${panchang.nakshatra.pada}, ${panchang.nakshatra.sanskritName})** • Ends: **${panchang.nakshatra.endTimeFormatted}** • Lord: **${panchang.nakshatra.lord}** • Gana: ${panchang.nakshatra.gana}
+- **4. Yoga:** **${panchang.yoga.name}** (${panchang.yoga.nature}) • Ends: ${panchang.yoga.endTimeFormatted} • ${panchang.yoga.description}
+- **5. Karana:** **${panchang.karana.name}** (${panchang.karana.type}) • Ends: ${panchang.karana.endTimeFormatted}${panchang.karana.isBhadra ? ` • ⚠️ **${panchang.karana.bhadraVaasHindi}** (${panchang.karana.bhadraImpact})` : ""}
+
+#### 👕 **Auspicious Colors & Clothing (आज का शुभ रंग):**
+- **✓ Recommended Auspicious Colors:** **${panchang.auspiciousColors.join(", ")}**
+- **✕ Colors to Avoid Today:** ${panchang.inauspiciousColors.join(", ")}
+
+#### 🧭 **Disha Shool & Exit Remedy (दिशाशूल एवं घर से निकलने से पूर्व उपाय):**
+- **Prohibited Direction:** **${panchang.dishaShool.prohibitedDirection}**
+- **Chandra Vaas:** **${panchang.dishaShool.chandraVaas}** (${panchang.chandraRashi})
+- **🍯 Parihara / Exit Remedy:** **${panchang.exitRemedy}**
+
+#### ⏱️ **Key Auspicious & Inauspicious Muhurtas:**
+- **Abhijit Muhurta:** ${panchang.auspiciousMuhurtas.find((m) => m.name === "Abhijit Muhurta") ? `**${panchang.auspiciousMuhurtas.find((m) => m.name === "Abhijit Muhurta")?.startFormatted} – ${panchang.auspiciousMuhurtas.find((m) => m.name === "Abhijit Muhurta")?.endFormatted}** (Supreme Victory Window)` : "Prohibited Today (Wednesday)"}
+- **Rahu Kaalam:** **${panchang.inauspiciousMuhurtas.find((m) => m.name === "Rahu Kaalam")?.startFormatted} – ${panchang.inauspiciousMuhurtas.find((m) => m.name === "Rahu Kaalam")?.endFormatted}** (Avoid major agreements & starts)
+- **Brahma Muhurta:** ${panchang.auspiciousMuhurtas.find((m) => m.name === "Brahma Muhurta")?.startFormatted} – ${panchang.auspiciousMuhurtas.find((m) => m.name === "Brahma Muhurta")?.endFormatted}
+- **Amrit Kaal:** ${panchang.auspiciousMuhurtas.find((m) => m.name === "Amrit Kaal")?.startFormatted} – ${panchang.auspiciousMuhurtas.find((m) => m.name === "Amrit Kaal")?.endFormatted}
+
+#### 🕉️ **Mantra & Charity of the Day:**
+- **Prescribed Mantra:** **${panchang.dayMantra}**
+- **Recommended Charity (दान):** ${panchang.recommendedCharity}
 
 *⚡ Instant Classical Computation (0ms)*`;
   }

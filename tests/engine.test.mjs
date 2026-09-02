@@ -3611,6 +3611,68 @@ test("Classical Rashi Tulya Navamsha (RTN) & 64th Navamsha Cross-Varga Engine Ve
   assert.ok(summary.includes("RTN PREDICTIVE TRANSIT TRIGGERS"));
 });
 
+test("Dr. Samir Tripathi Daily Vedic Panchanga & Astro Guidance Engine Verification", async () => {
+  const { calculateSamirTripathiPanchang } = await import("../src/engine/samirTripathiPanchang.ts");
+
+  const location = { cityName: "Allahabad", country: "India", latitude: 25.4358, longitude: 81.8463, timezoneOffsetHours: 5.5 };
+  const date = new Date("2026-09-02T06:00:00Z");
+
+  const panchang = calculateSamirTripathiPanchang(date, location, "Lahiri");
+
+  // 1. Core 5 Angas
+  assert.ok(panchang.tithi);
+  assert.ok(panchang.tithi.name);
+  assert.ok(panchang.tithi.paksha);
+  assert.ok(panchang.tithi.category);
+  assert.ok(panchang.tithi.deity);
+  assert.ok(panchang.tithi.endTimeFormatted);
+
+  assert.ok(panchang.vara);
+  assert.ok(panchang.vara.hindiName);
+  assert.ok(panchang.vara.rulingPlanet);
+  assert.ok(panchang.vara.auspiciousColors.length > 0);
+
+  assert.ok(panchang.nakshatra);
+  assert.ok(panchang.nakshatra.name);
+  assert.ok(panchang.nakshatra.lord);
+  assert.ok(panchang.nakshatra.gana);
+  assert.ok(panchang.nakshatra.nature);
+
+  assert.ok(panchang.yoga);
+  assert.ok(panchang.yoga.name);
+  assert.ok(panchang.yoga.nature);
+
+  assert.ok(panchang.karana);
+  assert.ok(panchang.karana.name);
+  assert.ok(typeof panchang.karana.isBhadra === "boolean");
+
+  // 2. Astrological Guidance
+  assert.ok(panchang.dishaShool);
+  assert.ok(panchang.dishaShool.prohibitedDirection);
+  assert.ok(panchang.dishaShool.chandraVaas);
+  assert.ok(panchang.exitRemedy.length > 10);
+  assert.ok(panchang.dayMantra.length > 10);
+  assert.ok(panchang.recommendedCharity.length > 5);
+
+  // 3. Auspicious & Inauspicious Muhurtas
+  assert.ok(panchang.auspiciousMuhurtas.length >= 3);
+  assert.ok(panchang.inauspiciousMuhurtas.length >= 3);
+  const rahuKaal = panchang.inauspiciousMuhurtas.find((m) => m.name === "Rahu Kaalam");
+  assert.ok(rahuKaal);
+  assert.ok(rahuKaal.startFormatted);
+
+  // 4. Chandra Bala
+  assert.strictEqual(panchang.chandraBalaList.length, 12);
+  const ariesBala = panchang.chandraBalaList[0];
+  assert.ok(ariesBala.strength);
+  assert.ok(ariesBala.guidance);
+
+  // 5. Shuddhi Score
+  assert.ok(panchang.shuddhiScore >= 0 && panchang.shuddhiScore <= 100);
+  assert.ok(panchang.panchangaSummary.length > 30);
+});
+
+
 
 
 
