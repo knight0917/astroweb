@@ -358,6 +358,18 @@ function getLocalCivilDateTime(natalEphem: EphemerisResult) {
   };
 }
 
+function getShiftedLocalTime(natalEphem: EphemerisResult, minuteOffset: number): string {
+  const birthDateObj = new Date(natalEphem.utcDate);
+  const tzOffset = natalEphem.location?.timezoneOffsetHours ?? 0;
+  const localBirthDate = new Date(birthDateObj.getTime() + tzOffset * 3600 * 1000 + minuteOffset * 60 * 1000);
+  const rawHours = localBirthDate.getUTCHours();
+  const rawMinutes = String(localBirthDate.getUTCMinutes()).padStart(2, "0");
+  const hour12 = rawHours % 12 || 12;
+  const ampm = rawHours >= 12 ? "PM" : "AM";
+  const formattedHours = String(rawHours).padStart(2, "0");
+  return `${hour12}:${rawMinutes} ${ampm} (${formattedHours}:${rawMinutes})`;
+}
+
 function formatHumanReadableError(err: any): string {
   const raw = err?.message || String(err || "");
 
@@ -774,6 +786,11 @@ ${nakAct.masterRemedyRecommendation}
       : `- 🛡️ **D-60 Shashtiamsha (Protective Shield):** ✅ **Confirmed**
   * Protective **Jupiter's Shubha Drishti** shielding against major surgical trauma.`;
 
+    const candATime = getShiftedLocalTime(natalEphem, -4);
+    const candBTime = getShiftedLocalTime(natalEphem, 5);
+    const cityName = natalEphem.location?.cityName || "Mau";
+    const countryName = natalEphem.location?.country || "India";
+
     let statusHeader = "";
     let conclusionBlock = "";
 
@@ -795,23 +812,23 @@ Because your milestone(s) diverged from the unrectified **${timeStr}** clock, yo
 
 Based on mathematical reverse-Dasha calculation (*Tattva Shodhana & Kunda Cusp Shifting*), here are your two true birth minute candidates:
 
-#### ⏱️ **Candidate A: Shift Earlier by ~4 Minutes (~6:28 PM / 18:28)**
+#### ⏱️ **Candidate A: Shift Earlier by ~4 Minutes (~${candATime})**
 - 🎓 **Predicted Education Gateway:** Major degree or certification occurred earlier in **2017 – 2019** (Jupiter-Mercury D-24 cusp).
 - 💼 **Predicted Career Rise:** Major career expansion or independent venture activates strongly in **2026 – 2027**.
 
-#### ⏱️ **Candidate B: Shift Later by ~5 Minutes (~6:37 PM / 18:37)**
+#### ⏱️ **Candidate B: Shift Later by ~5 Minutes (~${candBTime})**
 - 🎓 **Predicted Education Gateway:** Higher education / post-grad completed in **2022 – 2024**.
 - 💼 **Predicted Career Rise:** Career consolidation phase currently active in **2024 – 2026**.
 
 ---
 👉 **Please lock your true timeline below to finalize chart calibration:**
-- 🔹 Type **"Lock 6:28 PM"** (or *"I graduated in 2018–2019"* for Candidate A)
-- 🔹 Type **"Lock 6:37 PM"** (or *"I graduated in 2022–2024"* for Candidate B)`;
+- 🔹 Type **"Lock ${candATime}"** (or *"I graduated in 2018–2019"* for Candidate A)
+- 🔹 Type **"Lock ${candBTime}"** (or *"I graduated in 2022–2024"* for Candidate B)`;
     }
 
     return `### 🎯 **Multi-Divisional Birth Time Verification (D-1, D-3, D-4, D-9, D-10, D-24, D-60)**
 
-- 📍 **Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${natalEphem.location?.cityName || "Allahabad"}, ${natalEphem.location?.country || "India"}**
+- 📍 **Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${cityName}, ${countryName}**
 - 🌟 **Verification Status:** **${statusHeader}**
 - 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
 
@@ -831,20 +848,22 @@ ${conclusionBlock}
 
   // 14B. Candidate Birth Time Lock Interceptor (Phase 2 BTR Resolution)
   if (
-    /lock\s*(6:28|6:27|6:29|18:28|18:27|earlier|candidate\s*a|option\s*a)|graduated?\s*(in\s*)?(2017|2018|2019)/i.test(q) ||
-    /lock\s*(6:37|6:36|6:38|18:37|18:36|later|candidate\s*b|option\s*b)|graduated?\s*(in\s*)?(2022|2023|2024)/i.test(q)
+    /lock\s*(\d{1,2}:\d{2}|earlier|candidate\s*a|option\s*a|later|candidate\s*b|option\s*b)/i.test(q)
   ) {
-    const { dateStr } = getLocalCivilDateTime(natalEphem);
-    const isEarlier = /6:28|6:27|6:29|18:28|18:27|earlier|candidate\s*a|option\s*a|2017|2018|2019/i.test(q);
-    const rectifiedTime = isEarlier ? "6:28 PM (18:28)" : "6:37 PM (18:37)";
+    const { timeStr, dateStr } = getLocalCivilDateTime(natalEphem);
+    const isEarlier = /earlier|candidate\s*a|option\s*a|-4/i.test(q) || q.includes(getShiftedLocalTime(natalEphem, -4));
+    const minuteOffset = isEarlier ? -4 : 5;
+    const rectifiedTime = getShiftedLocalTime(natalEphem, minuteOffset);
     const offsetStr = isEarlier ? "-4 Minutes" : "+5 Minutes";
+    const cityName = natalEphem.location?.cityName || "Mau";
+    const countryName = natalEphem.location?.country || "India";
     const ascRashi = natalEphem.ascendant.rashi.englishName;
     const moonNak = natalEphem.planets.Moon?.nakshatra.sanskritName || "Punarvasu";
 
     return `### 🎯 **Birth Time Successfully Rectified & Locked to ${rectifiedTime}**
 
-- 📍 **Original Time:** 6:32 PM ──► **Rectified Birth Time:** **${rectifiedTime}** (Offset: **${offsetStr}**)
-- 📅 **Date of Birth:** **${dateStr}** in **${natalEphem.location?.cityName || "Allahabad"}, ${natalEphem.location?.country || "India"}**
+- 📍 **Original Time:** ${timeStr} ──► **Rectified Birth Time:** **${rectifiedTime}** (Offset: **${offsetStr}**)
+- 📅 **Date of Birth:** **${dateStr}** in **${cityName}, ${countryName}**
 - 🌟 **Calibration Status:** **✅ 100% Exact Precision Match (Chart Clock Locked)**
 - 🏛️ **Ascendant (Lagna):** **${ascRashi}** • Moon Nakshatra: **${moonNak}**
 
@@ -868,10 +887,23 @@ What would you like to explore first?
   // 14C. Iterative Multi-Round BTR (Hierarchical Life Era & Month-Level Precision Drill-Down)
   if (
     /neither|none of|both wrong|different year|still not|not matching|wrong timeline|round 2|probe more|ask more|new question|childhood|teenage|school/i.test(q) ||
-    /(graduated?|college|degree|job|salary|income|married|marriage|relocated|relocation|bought|surgery|accident|fracture|board|school|10th|12th)\s*(in\s*)?(\d{4})/i.test(q) ||
-    /\b(19\d\d|20[0-2]\d)\b/.test(q)
+    /^(graduated?|college|degree|job|salary|income|married|marriage|relocated|relocation|bought|surgery|accident|fracture|board|school|10th|12th)\s*(in\s*)?(\d{4})$/i.test(q) ||
+    /^\b(19\d\d|20[0-2]\d)\b$/.test(q.trim()) ||
+    /^\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\s*(19\d\d|20[0-2]\d)\b$/i.test(q.trim())
   ) {
-    const { dateStr } = getLocalCivilDateTime(natalEphem);
+    // If the query is a rich narrative (user describing their life journey, multiple events, breaks, foreign travel, etc.)
+    // DO NOT intercept with a simplistic 3-line template! Pass to deep AI consultation.
+    const isRichNarrative =
+      q.length > 70 ||
+      /bachelor|masters|breaks?|passport|visa|italy|landed|course|match|trying|incomplete|bcom|bsc|btech|upsc|prep|management|field/i.test(q);
+
+    if (isRichNarrative) {
+      return null;
+    }
+
+    const { timeStr, dateStr } = getLocalCivilDateTime(natalEphem);
+    const cityName = natalEphem.location?.cityName || "Mau";
+    const countryName = natalEphem.location?.country || "India";
     const ascRashi = natalEphem.ascendant.rashi.englishName;
     const moonNak = natalEphem.planets.Moon?.nakshatra.sanskritName || "Punarvasu";
 
@@ -884,44 +916,39 @@ What would you like to explore first?
       const year = parseInt(yearMatch[1], 10);
       const isEarlyYear = /jan|feb|mar|apr|may|june?|spring|early/i.test(monthStr);
       
-      let rectifiedTime = "6:28 PM (18:28)";
-      let offsetStr = "-4 Minutes";
+      let minuteOffset = isEarlyYear ? -4 : 0;
       let dashaCusp = "Jupiter-Mercury Pratyantardasha";
 
       if (year <= 2014) {
-        rectifiedTime = isEarlyYear ? "6:22 PM (18:22)" : "6:24 PM (18:24)";
-        offsetStr = isEarlyYear ? "-10 Minutes" : "-8 Minutes";
+        minuteOffset = isEarlyYear ? -8 : -6;
         dashaCusp = "Moon Mahadasha to Mars/Rahu transition cusp";
       } else if (year <= 2016) {
-        rectifiedTime = isEarlyYear ? "6:24 PM (18:24)" : "6:25 PM (18:25)";
-        offsetStr = isEarlyYear ? "-8 Minutes" : "-7 Minutes";
+        minuteOffset = isEarlyYear ? -6 : -4;
         dashaCusp = "Jupiter-Jupiter Swabhukti 10th Board gateway";
       } else if (year <= 2018) {
-        rectifiedTime = isEarlyYear ? "6:26 PM (18:26)" : "6:27 PM (18:27)";
-        offsetStr = isEarlyYear ? "-6 Minutes" : "-5 Minutes";
+        minuteOffset = isEarlyYear ? -5 : -4;
         dashaCusp = "Jupiter-Saturn D-24 college entry axis";
       } else if (year <= 2020) {
-        rectifiedTime = isEarlyYear ? "6:28 PM (18:28)" : "6:29 PM (18:29)";
-        offsetStr = isEarlyYear ? "-4 Minutes" : "-3 Minutes";
+        minuteOffset = isEarlyYear ? -4 : -2;
         dashaCusp = "Jupiter-Mercury D-24 degree graduation axis";
       } else if (year <= 2022) {
-        rectifiedTime = isEarlyYear ? "6:30 PM (18:30)" : "6:32 PM (18:32)";
-        offsetStr = isEarlyYear ? "-2 Minutes" : "0 Minutes (Exact)";
+        minuteOffset = isEarlyYear ? -2 : 0;
         dashaCusp = "Jupiter-Ketu / Venus D-10 employment gateway";
       } else if (year <= 2024) {
-        rectifiedTime = isEarlyYear ? "6:34 PM (18:34)" : "6:36 PM (18:36)";
-        offsetStr = isEarlyYear ? "+2 Minutes" : "+4 Minutes";
+        minuteOffset = isEarlyYear ? 2 : 4;
         dashaCusp = "Saturn Sade Sati 1st phase & D-10 expansion cusp";
       } else {
-        rectifiedTime = isEarlyYear ? "6:37 PM (18:37)" : "6:39 PM (18:39)";
-        offsetStr = isEarlyYear ? "+5 Minutes" : "+7 Minutes";
+        minuteOffset = isEarlyYear ? 4 : 6;
         dashaCusp = "Saturn Mahadasha entry axis";
       }
 
+      const rectifiedTime = getShiftedLocalTime(natalEphem, minuteOffset);
+      const offsetStr = minuteOffset === 0 ? "0 Minutes (Exact Lock)" : `${minuteOffset > 0 ? "+" : ""}${minuteOffset} Minutes`;
+
       return `### 🎯 **Birth Time Verified & Locked to ${rectifiedTime}**
 
-- 📍 **Original Recorded Time:** 6:32 PM ──► **Rectified Birth Time:** **${rectifiedTime}** (Offset: **${offsetStr}**)
-- 📅 **Date of Birth:** **${dateStr}** in **${natalEphem.location?.cityName || "Allahabad"}, ${natalEphem.location?.country || "India"}**
+- 📍 **Original Recorded Time:** ${timeStr} ──► **Rectified Birth Time:** **${rectifiedTime}** (Offset: **${offsetStr}**)
+- 📅 **Date of Birth:** **${dateStr}** in **${cityName}, ${countryName}**
 - 🌟 **Verification Status:** **✅ 100% Micro-Calibrated via ${monthStr.toUpperCase()} ${year} Milestone Proof**
 - 🏛️ **Ascendant (Lagna):** **${ascRashi}** • Moon Nakshatra: **${moonNak}**
 
@@ -944,6 +971,10 @@ What would you like to explore first?
     // 2. If user specified a Year or Broad Window, Drill Down to Specific Months/Seasons!
     if (yearMatch) {
       const year = parseInt(yearMatch[1], 10);
+      const earlyLock = getShiftedLocalTime(natalEphem, -6);
+      const midLock = getShiftedLocalTime(natalEphem, -3);
+      const lateLock = getShiftedLocalTime(natalEphem, 1);
+
       return `### 🔍 **Step 2: Precision Month & Season Drill-Down (${year})**
 
 You indicated a milestone around **${year}**. In classical Jyotish (*Antardasha & Pratyantardasha Sub-Periods*), narrowing down the **exact season or month** locks your birth minute down to the exact second:
@@ -953,11 +984,11 @@ You indicated a milestone around **${year}**. In classical Jyotish (*Antardasha 
 #### ⏱️ **Which month window matches your ${year} event?**
 
 - 🌸 **Option A: Early ${year} (January – April ${year})**
-  * *Saturn-Jupiter Antardasha Entry* ──► **Locks Birth Time to ~6:26 PM (Offset: -6 mins)**
+  * *Saturn-Jupiter Antardasha Entry* ──► **Locks Birth Time to ~${earlyLock} (Offset: -6 mins)**
 - ☀️ **Option B: Mid ${year} (May – August ${year})**
-  * *Mercury-Ketu Sub-Period Cusp* ──► **Locks Birth Time to ~6:29 PM (Offset: -3 mins)**
+  * *Mercury-Ketu Sub-Period Cusp* ──► **Locks Birth Time to ~${midLock} (Offset: -3 mins)**
 - 🍂 **Option C: Late ${year} (September – December ${year})**
-  * *Venus-Sun Transit Convergence* ──► **Locks Birth Time to ~6:33 PM (Offset: +1 min)**
+  * *Venus-Sun Transit Convergence* ──► **Locks Birth Time to ~${lateLock} (Offset: +1 min)**
 
 ---
 👉 **How to reply:** Type your exact month (e.g. *"September ${year}"* or *"It was around May–June ${year}"*), and the engine will immediately lock your final birth minute!
@@ -974,21 +1005,21 @@ Let's trace your life milestones slowly and precisely, going all the way back to
 
 #### 1️⃣ 🎒 **Childhood / 10th Board Schooling Era (2012 – 2015 | Age 13–16):**
 *Did you complete 10th board exams, change schools, or experience a family home move around 2014–2015?*
-- 🅰️ **2014 – 2015** *(Locks Birth Time to ~6:24 PM)*
+- 🅰️ **2014 – 2015** *(Locks Birth Time to ~${getShiftedLocalTime(natalEphem, -8)})*
 
 #### 2️⃣ 🎓 **12th Board / College Entrance Era (2016 – 2017 | Age 17–18):**
 *Did you complete 12th board, enter college, or choose your major career stream around 2016–2017?*
-- 🅱️ **2016 – 2017** *(Locks Birth Time to ~6:26 PM)*
+- 🅱️ **2016 – 2017** *(Locks Birth Time to ~${getShiftedLocalTime(natalEphem, -6)})*
 
 #### 3️⃣ 📜 **College Graduation / Degree Era (2018 – 2021 | Age 19–22):**
 *In which period did you complete your primary college degree?*
-- 🅲 **2018 – 2019** *(Locks Birth Time to ~6:28 PM)*
-- 🅳 **2020 – 2021** *(Locks Birth Time to ~6:31 PM)*
+- 🅲 **2018 – 2019** *(Locks Birth Time to ~${getShiftedLocalTime(natalEphem, -4)})*
+- 🅳 **2020 – 2021** *(Locks Birth Time to ~${getShiftedLocalTime(natalEphem, -1)})*
 
 #### 4️⃣ 💼 **Post-Grad / First Job / Career Entry Era (2022 – 2025 | Age 23–26):**
 *When did you complete post-grad, take on your first major job, or experience significant professional responsibility?*
-- 🅴 **2022 – 2023** *(Locks Birth Time to ~6:34 PM)*
-- 🅵 **2024 – 2025** *(Locks Birth Time to ~6:37 PM)*
+- 🅴 **2022 – 2023** *(Locks Birth Time to ~${getShiftedLocalTime(natalEphem, 2)})*
+- 🅵 **2024 – 2025** *(Locks Birth Time to ~${getShiftedLocalTime(natalEphem, 5)})*
 
 ---
 👉 **How to reply:** Type your actual milestone and month/year (e.g. *"I completed 12th in March 2017 and graduated in August 2021"*), and the engine will calculate your exact birth minute!
