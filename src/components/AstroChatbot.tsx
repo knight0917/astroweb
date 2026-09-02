@@ -539,9 +539,14 @@ ${topPlanets}
 
   // 12. Dr. Samir Tripathi Daily Panchanga, Lucky Color & Disha Shool
   if (
-    /^(today panchang|today's panchang|panchang|aaj ka panchang|daily panchang|what is today's panchang|what is panchang|lucky color|today's lucky color|shubh rang|aaj ka shubh rang|disha shool|aaj ka disha shool|chandra bala|aaj ka chandra bala|abhijit muhurta|rahu kaal)\??$/i.test(q) ||
-    (q.includes("panchang") && (q.includes("today") || q.includes("aaj") || q.includes("what"))) ||
-    (q.includes("lucky color") || q.includes("shubh rang") || q.includes("disha shool"))
+    q.includes("panchang") ||
+    q.includes("panchanga") ||
+    q.includes("panchaang") ||
+    (q.includes("muhurta") && (q.includes("today") || q.includes("aaj") || q.includes("now"))) ||
+    q.includes("lucky color") ||
+    q.includes("shubh rang") ||
+    q.includes("disha shool") ||
+    (q.includes("rahu") && (q.includes("kaal") || q.includes("kalam") || q.includes("today")))
   ) {
     const panchang = calculateSamirTripathiPanchang(evaluationDate, transitEphem.location || natalEphem.location, natalEphem.ayanamshaType);
     return `### 🌸 **Today's Vedic Daily Panchanga & Astro Guidance (Dr. Samir Tripathi Shastra):**
@@ -836,20 +841,22 @@ STRICT CONSULTATION RULES (MANDATORY):
    - Do NOT let previous answers or prior conversational topics bias, narrow, or pollute your analysis of the user's current question.
    - If the user asks about a new area (e.g. switching from marriage to career, or asking a fresh Prashna query), ground your response 100% on the relevant planetary houses, Dashas, and classical yogas in the dossier without carrying over unrelated assumptions or past biases.
 
-10. **REAL-TIME TODAY'S PANCHANG & DAILY MUHURTA PROTOCOL (STRICT ACTIVE LOCATION BINDING)**:
-    - Whenever the client asks for "Today's Panchang", "Panchaag", "Panchanga", "Daily Horoscope", "Aaj ka panchang", "Muhurta today", "Rahu Kalam today", "Abhijit Muhurta", or "Sunrise/Sunset today":
-    - **STRICT LOCATION BINDING**: ALWAYS extract the exact **Active Consultation / Current Transit Location** from Section 15 of the dossier (e.g. Rome, Italy, or whatever active city is specified in Section 15).
+10. **DR. SAMIR TRIPATHI REAL-TIME DAILY PANCHANG & ASTRO GUIDANCE PROTOCOL (STRICT ACTIVE LOCATION BINDING)**:
+    - Whenever the client asks for "Today's Panchang", "Panchanga", "Daily Horoscope", "Aaj ka panchang", "Muhurta today", "Rahu Kalam today", "Abhijit Muhurta", or "Daily remedies":
+    - **STRICT LOCATION BINDING**: ALWAYS extract the exact **Active Consultation / Current Transit Location** from the top of the dossier (e.g. Torino, Italy).
     - Announce the location explicitly at the start: *"Here is the Real-Time Panchang for today, [Current Date] calculated specifically for **[City Name, Country]**:"*
-    - **NEVER DEFAULT TO "New Delhi, India / IST"** or any placeholder city unless the active consultation city in Section 15 is New Delhi!
-    - Provide the exact live data from Section 15:
-      - 🌖 **Tithi**: Live Tithi name and Paksha (plus end time / remaining hours).
-      - ⭐ **Nakshatra**: Live Nakshatra, Pada, Lord, and Deity (plus end time).
+    - **NEVER DEFAULT TO "New Delhi, India / IST"** unless the active consultation city is New Delhi!
+    - Provide the exact live data from Section 70 of the dossier:
+      - 🌖 **Tithi**: Live Tithi name, Paksha, Devata, Tatva, and End Time.
+      - ⭐ **Nakshatra**: Live Nakshatra, Pada, Lord, Gana, and Nature.
       - 🌅 **Vara**: Live Weekday and ruling Graha.
-      - 🧘 **Yoga & Karana**: Live Yoga and Karana.
-      - 🌞 **Sunrise & Sunset**: Exact local sunrise and sunset at that specific city.
-      - 👑 **Abhijit Muhurta**: Most auspicious daytime window for that city.
-      - ⚠️ **Rahu Kalam & Inauspicious Times**: Exact Rahu Kalam, Yamaganda, and Gulika Kalam windows for that city.
-      - 🌙 **Current Live Moon & Sun Transit Signs**: Exact Chandra & Surya Gochar sign positions today.
+      - 🧘 **Yoga & Karana**: Live Yoga and Karana (with Bhadra Vaas alert if active).
+      - 👕 **Auspicious Colors (शुभ रंग)**: Lucky clothing colors to wear and unfavorable colors to avoid.
+      - 🧭 **Disha Shool & Exit Remedy (घर से निकलने से पूर्व उपाय)**: Prohibited travel direction and exact food/remedy to consume before leaving home.
+      - 🕉️ **Day Mantra & Recommended Charity (दान)**: Prescribed daily Vedic mantra and charity.
+      - ⏱️ **Muhurtas**:
+        * **Abhijit Muhurta**: **CRITICAL SHASTRA RULE: If today is Wednesday (Budhavara), Abhijit Muhurta is strictly PROHIBITED (निषेध / Varjya). Warn the user that Abhijit cannot be used on Wednesdays and overlaps with Rahu Kaal.**
+        * **Rahu Kaalam, Brahma Muhurta, and Amrit Kaal timings**.
 `;
 
     // Filter chat history to prevent context anchoring and bias
