@@ -222,6 +222,7 @@ export default function PlanetIndexDeck() {
                     <div
                       key={p.id}
                       onClick={() => setSelectedEntityId(p.id)}
+                      onMouseEnter={() => setSelectedEntityId(p.id)}
                       style={{
                         borderColor: isSelected ? p.color : "transparent",
                         backgroundColor: isSelected ? `${p.color}20` : undefined,

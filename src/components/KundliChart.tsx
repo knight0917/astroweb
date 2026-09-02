@@ -864,7 +864,7 @@ function KundliChart() {
           <div className="flex items-center gap-2 text-slate-400 text-[11px]">
             <span className="text-amber-400">💡</span>
             <span>
-              <strong>Hover or tap</strong> on any planet (or Indu Lagna / Bhagya Bindu) to project live{" "}
+              <strong>Hover or tap</strong> on any of the <strong>9 Grahas</strong> (or Indu Lagna / Bhagya Bindu) to see live{" "}
               <strong className="text-amber-300">Graha</strong> &{" "}
               <strong className="text-cyan-300">Rashi</strong> aspect rays!
             </span>

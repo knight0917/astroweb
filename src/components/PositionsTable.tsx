@@ -134,6 +134,7 @@ export default function PositionsTable() {
                   <tr
                     key={p.id}
                     onClick={() => setSelectedEntityId(p.id)}
+                    onMouseEnter={() => setSelectedEntityId(p.id)}
                     className={`cursor-pointer transition-colors ${
                       isSelected ? "bg-amber-950/30" : "hover:bg-slate-900/40"
                     }`}
