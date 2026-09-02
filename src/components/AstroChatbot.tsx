@@ -654,7 +654,204 @@ ${nakAct.masterRemedyRecommendation}
 *⚡ Instant Classical Computation (0ms)*`;
   }
 
+  // 15. Birth Time Rectification (BTR) Initial Request Interceptor
+  if (
+    q.includes("verify my birth time") ||
+    q.includes("first time") ||
+    q === "yes" ||
+    q.includes("check my birth time") ||
+    q.includes("is my chart accurate") ||
+    q.includes("doubtful about my birth time") ||
+    q.includes("birth time rectification") ||
+    q.includes("btr")
+  ) {
+    const ascRashi = natalEphem.ascendant.rashi.englishName;
+    const ascDeg = `${(natalEphem.ascendant.siderealLongitude % 30).toFixed(2)}°`;
+    const moonNak = natalEphem.planets.Moon?.nakshatra.sanskritName || "Punarvasu";
+    const localTimeStr = birthDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+    const localDateStr = birthDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+    return `### 🎯 **Step 1: Birth Time & Stability Overview**
+- 📅 **Date of Birth:** **${localDateStr}** • **Time:** **${localTimeStr}**
+- 📍 **Place:** **${natalEphem.location?.cityName || "Allahabad"}, ${natalEphem.location?.country || "India"}**
+- 🏛️ **Primary Ascendant:** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
+
+Your foundational planetary blueprint is strong and clear. Please review and select your answers in the interactive **4-Point Verification Checklist** below to verify your birth minute in 1 tap:`;
+  }
+
   return null;
+}
+
+interface InteractiveBtrProps {
+  onVerify: (answer: string) => void;
+  isLoading: boolean;
+}
+
+function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProps) {
+  const [q1, setQ1] = useState<string>("Yes");
+  const [q2, setQ2] = useState<string>("Yes");
+  const [q3, setQ3] = useState<string>("Eldest");
+  const [q4, setQ4] = useState<string>("No");
+
+  const handleSubmit = () => {
+    const formatted = `1. ${q1}, 2. ${q2}, 3. ${q3}, 4. ${q4}`;
+    onVerify(formatted);
+  };
+
+  return (
+    <div className="my-3 p-3.5 bg-slate-950/90 border border-amber-500/40 rounded-2xl space-y-3 shadow-xl shadow-amber-950/20 not-prose">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-amber-500/20 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-base">⚡</span>
+          <div>
+            <h4 className="font-extrabold text-amber-300 text-xs tracking-wide">
+              Interactive 4-Point Birth Time Verification
+            </h4>
+            <p className="text-[10.5px] text-slate-400">
+              Select your answers directly below and lock your birth minute in 1 tap:
+            </p>
+          </div>
+        </div>
+        <span className="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
+          Fast BTR
+        </span>
+      </div>
+
+      {/* Q1 */}
+      <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+          <span>🎓</span>
+          <span>1. Academic / Education Milestone (2020 – 2022):</span>
+        </div>
+        <p className="text-[11px] text-slate-300 leading-snug">
+          Did you complete college graduation, post-grad, or an important skill certification between 2020 and 2022?
+        </p>
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {[
+            { label: "✅ Yes (Graduated / Skill in 2020–2022)", val: "Yes" },
+            { label: "❌ No / Different Year", val: "No" },
+          ].map((opt) => (
+            <button
+              key={opt.val}
+              type="button"
+              onClick={() => setQ1(opt.val)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                q1 === opt.val
+                  ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                  : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Q2 */}
+      <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+          <span>💼</span>
+          <span>2. Career Pressure & Shift (2023 – 2025):</span>
+        </div>
+        <p className="text-[11px] text-slate-300 leading-snug">
+          Did 2023–2025 bring increased responsibilities, career/job transition, or a serious foundation-building phase?
+        </p>
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {[
+            { label: "✅ Yes (Heavy Responsibility / Shift)", val: "Yes" },
+            { label: "❌ No", val: "No" },
+          ].map((opt) => (
+            <button
+              key={opt.val}
+              type="button"
+              onClick={() => setQ2(opt.val)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                q2 === opt.val
+                  ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                  : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Q3 */}
+      <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+          <span>🌿</span>
+          <span>3. Sibling Birth Order:</span>
+        </div>
+        <p className="text-[11px] text-slate-300 leading-snug">
+          What is your birth order position among your siblings?
+        </p>
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {[
+            { label: "👑 Eldest Child", val: "Eldest" },
+            { label: "🌿 Youngest Child", val: "Youngest" },
+            { label: "⚖️ Middle Child", val: "Middle" },
+            { label: "🌟 Only Child", val: "Only Child" },
+          ].map((opt) => (
+            <button
+              key={opt.val}
+              type="button"
+              onClick={() => setQ3(opt.val)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                q3 === opt.val
+                  ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                  : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Q4 */}
+      <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+          <span>🏥</span>
+          <span>4. Physical Scar / Surgery Check:</span>
+        </div>
+        <p className="text-[11px] text-slate-300 leading-snug">
+          Do you have a noticeable scar on head/face/limbs, or experienced a major injury/surgery?
+        </p>
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {[
+            { label: "🛡️ No Major Surgery / Scar", val: "No" },
+            { label: "🏥 Yes, Have Scar / Surgery", val: "Yes" },
+          ].map((opt) => (
+            <button
+              key={opt.val}
+              type="button"
+              onClick={() => setQ4(opt.val)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                q4 === opt.val
+                  ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                  : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Submit Action */}
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={isLoading}
+        className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/25 cursor-pointer flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+      >
+        <span>🚀</span>
+        <span>Lock & Verify Birth Time: "1. {q1}, 2. {q2}, 3. {q3}, 4. {q4}"</span>
+      </button>
+    </div>
+  );
 }
 
 export default function AstroChatbot() {
@@ -1525,6 +1722,18 @@ STRICT CONSULTATION RULES (MANDATORY):
                     {msg.content}
                   </div>
 
+                  {/* Interactive Inline BTR Questionnaire directly inside question card */}
+                  {msg.role === "assistant" &&
+                    (msg.content.includes("4-Point Verification Checklist") ||
+                      msg.content.includes("Step 1: Birth Time & Stability Overview") ||
+                      msg.content.includes("Step 2: 4 Fast Verification Checks") ||
+                      msg.content.includes("Academic / Education Milestone")) && (
+                      <InteractiveBtrQuestionnaire
+                        onVerify={(ans) => handleSendMessage(ans)}
+                        isLoading={isLoading}
+                      />
+                    )}
+
                   {/* Onboarding Options for First-Time Welcome Message */}
                   {msg.id === "welcome" && messages.length === 1 && (
                     <div className="flex flex-col sm:flex-row gap-2 mt-3 pt-2.5 border-t border-slate-800/80">
@@ -1554,52 +1763,6 @@ STRICT CONSULTATION RULES (MANDATORY):
                   {/* Message Action Bar (Copy & Quick Follow-ups) */}
                   {msg.role === "assistant" && msg.id !== "welcome" && msg.content && (
                     <div className="pt-2 mt-2 border-t border-slate-800/80 space-y-2">
-                      {/* Specialized 1-Tap BTR Quick-Reply Action Bar */}
-                      {(msg.content.includes("Sibling Birth Order") ||
-                        msg.content.includes("Fast Yes/No") ||
-                        msg.content.includes("Verification Check") ||
-                        msg.content.includes("Academic / Education Milestone")) && (
-                        <div className="p-2 mb-2 bg-amber-950/30 rounded-xl border border-amber-500/30 space-y-2">
-                          <div className="flex items-center justify-between text-[10px]">
-                            <span className="text-[10px] font-extrabold text-amber-300 flex items-center gap-1 uppercase tracking-wider">
-                              <span>⚡</span>
-                              <span>1-Tap Fast BTR Confirmation:</span>
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                            {[
-                              { icon: "✅", label: "1. Yes (Degree 2020–2022)", text: "1. Yes" },
-                              { icon: "💼", label: "2. Yes (Career Shift 2023–2025)", text: "2. Yes" },
-                              { icon: "👑", label: "3. Eldest Child", text: "3. Eldest" },
-                              { icon: "🌿", label: "3. Youngest Child", text: "3. Youngest" },
-                              { icon: "⚖️", label: "3. Middle Child", text: "3. Middle" },
-                              { icon: "🌟", label: "3. Only Child", text: "3. Only Child" },
-                              { icon: "🛡️", label: "4. No Major Surgery", text: "4. No" },
-                              { icon: "🏥", label: "4. Yes (Had Scar)", text: "4. Yes" },
-                            ].map((btn) => (
-                              <button
-                                key={btn.label}
-                                onClick={() => {
-                                  setInputPrompt((prev) => (prev ? `${prev}, ${btn.text}` : btn.text));
-                                }}
-                                className="px-2 py-1 rounded-lg bg-slate-900 hover:bg-amber-950/60 border border-amber-500/40 hover:border-amber-400 text-[10px] text-amber-200 font-medium transition-all cursor-pointer flex items-center gap-1"
-                              >
-                                <span>{btn.icon}</span>
-                                <span>{btn.label}</span>
-                              </button>
-                            ))}
-                            <button
-                              onClick={() => handleSendMessage("1. Yes, 2. Yes, 3. Eldest, 4. No")}
-                              disabled={isLoading}
-                              className="w-full mt-1 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs shadow-md cursor-pointer flex items-center justify-center gap-1.5"
-                            >
-                              <span>🚀</span>
-                              <span>Submit Fast Answer: "1. Yes, 2. Yes, 3. Eldest, 4. No"</span>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
                       <div className="flex items-center justify-between text-[10px]">
                         <span className="text-[9.5px] font-bold text-amber-400/80 uppercase tracking-wider">
                           Quick Follow-Up:
