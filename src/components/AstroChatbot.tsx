@@ -6,6 +6,12 @@ import { buildAstroDossier, detectConsultationIntent, AstroConsultationIntent } 
 import { calculateVedicEphemeris } from "../engine/ephemeris";
 import { calculateVimshottariDasha } from "../engine/dasha";
 import { calculateJaiminiKarakas } from "../engine/jaimini";
+import {
+  calculateInduLagna,
+  calculatePlanetaryAgeActivations,
+  evaluateBaadhakDynamics,
+  calculateBhagyaBindu,
+} from "../engine/samirTripathiSuite";
 import { EphemerisResult } from "../engine/types";
 
 interface Message {
@@ -55,6 +61,21 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
         title: "Major Rajayogas & Strengths",
         prompt: "Which major Rajayogas, Dhana Yogas, or planetary dignities exist in my birth chart and how can I activate them?",
       },
+      {
+        icon: "💰",
+        title: "My Indu Lagna (IL)",
+        prompt: "What is my Indu Lagna (IL), its exact ray Kalas, house position, and wealth potential according to Dr. Samir Tripathi's classical formula?",
+      },
+      {
+        icon: "🎯",
+        title: "My Bhagya Bindu (BB)",
+        prompt: "What is my Bhagya Bindu (BB / Fortune Point), which house does it anchor, and how does it trigger prosperity?",
+      },
+      {
+        icon: "⏳",
+        title: "Active Age House",
+        prompt: "Which house and planetary energies are activated for my current age according to Bhrigu house age activations?",
+      },
     ],
   },
   {
@@ -70,14 +91,24 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
         prompt: "Based on my 10th house, 6th house, 7th house, and D10 Dashamsha, is employment (job) or independent business/freelancing more fruitful for me?",
       },
       {
+        icon: "💰",
+        title: "Indu Lagna Wealth Math",
+        prompt: "What is my Indu Lagna (IL), its exact Kalas, and wealth grade according to Dr. Samir Tripathi's formula?",
+      },
+      {
         icon: "📈",
         title: "Promotion & Job Change Timing",
         prompt: "When is the most favorable time window for a job change, salary hike, or promotion based on my current Dasha and transit Gochar?",
       },
       {
-        icon: "💰",
-        title: "Wealth & Dhana Yogas",
-        prompt: "Examining my 2nd (wealth), 11th (gains), and 9th (luck) houses along with Amatyakaraka (AmK), what are my best avenues for financial abundance?",
+        icon: "🎯",
+        title: "Bhagya Bindu Fortune Axis",
+        prompt: "Examining my 2nd, 11th, 9th houses and Bhagya Bindu (BB), what are my best avenues for financial abundance?",
+      },
+      {
+        icon: "🛡️",
+        title: "Baadhak Obstacles & Upayas",
+        prompt: "What is my Baadhak house and Baadhakesh planet? How can I dissolve its subtle friction through simple daily pariharas?",
       },
       {
         icon: "✈️",
@@ -403,6 +434,73 @@ function tryInstantEngineAnswer(
 - 🧘 **Yoga & Karana:** **${p.yoga.name}** • **${p.karana.name}**
 
 *⚡ Instant Real-Time Calculation (0ms)*`;
+  }
+
+  // 7. Indu Lagna (इन्दु लग्न - Moon-Ray Wealth Ascendant)
+  if (
+    /^(what is my indu lagna|my indu lagna|indu lagna|indu lagna wealth|indu lagna calculation)\??$/i.test(q) ||
+    (q.includes("indu lagna") && q.includes("what is"))
+  ) {
+    const indu = calculateInduLagna(natalEphem);
+    return `### 💰 **Your Classical Indu Lagna (इन्दु लग्न) Wealth Computation:**
+- **Indu Lagna Sign:** **${indu.induLagnaRashi.englishName}** (*${indu.induLagnaRashi.sanskritName}*) at **${(indu.induLagnaLongitude % 30).toFixed(2)}°**
+- **House in Natal Chart:** House **${indu.induLagnaHouseFromD1}** from Lagna
+- **Classical Ray Math:** 9th Lord from Lagna (${indu.lagnaNinthLord}: ${indu.lagnaNinthKala} Kalas) + 9th Lord from Moon (${indu.moonNinthLord}: ${indu.moonNinthKala} Kalas) = **${indu.totalKalas} Kalas** (Remainder: ${indu.remainderKala})
+- **Occupants in Indu Lagna:** ${indu.planetsInInduLagna.length > 0 ? indu.planetsInInduLagna.join(", ") : "None (Aspects apply)"}
+- **Wealth Grade:** **${indu.wealthGrade}**
+- **Predictive Rule:** ${indu.wealthVerdict}
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
+  // 8. Bhagya Bindu (भाग्य बिन्दु / Point of Prosperity)
+  if (
+    /^(what is my bhagya bindu|my bhagya bindu|bhagya bindu|what is bb|fortune point|point of fortune|bb)\??$/i.test(q) ||
+    (q.includes("bhagya bindu") && q.includes("what is"))
+  ) {
+    const bb = calculateBhagyaBindu(natalEphem);
+    return `### 🎯 **Your Bhagya Bindu (भाग्य बिन्दु / Point of Prosperity):**
+- **Bhagya Bindu Sign:** **${bb.rashi.englishName}** (*${bb.rashi.sanskritName}*) at **${(bb.longitude % 30).toFixed(2)}°**
+- **House in Natal Chart:** House **${bb.house}** (${bb.isDayBirth ? "Day Birth Formula" : "Night Birth Formula"})
+- **Nakshatra:** **${bb.nakshatra}** (Lord: ${bb.nakshatraLord})
+- **Predictive Significance:** ${bb.significance}
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
+  // 9. Bhrigu House Age Activation
+  if (
+    /^(what house is active for my age|age activation|active house this year|what is my active house|bhrigu age activation|house age activation)\??$/i.test(q) ||
+    (q.includes("age") && q.includes("active house"))
+  ) {
+    const ageRes = calculatePlanetaryAgeActivations(natalEphem, evaluationDate);
+    const h = ageRes.activeHouse;
+    return `### ⏳ **Your Current Bhrigu House Age Activation (Sessions 50–60):**
+- **Current Native Age:** **${ageRes.currentAge} Years Old**
+- **Active House This Year:** **${h.houseName} (${h.sanskritName})** — Ruled by **${h.houseLord}**
+- **Occupants in Active House:** ${h.occupantPlanets.length > 0 ? h.occupantPlanets.join(", ") : "Vacant (Governed by " + h.houseLord + ")"}
+- **Active Year Theme:** ${h.theme}
+- **Planetary Maturation Highlight:**
+${ageRes.planetaryAwakenings.slice(0, 4).map((p) => `  - **${p.planet}:** ${p.status} (Dawn: Age ${p.dawnAge}, Peak: Age ${p.peakAge})`).join("\n")}
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
+  // 10. Baadhak Sthana & Baadhakesh
+  if (
+    /^(what is my baadhak house|what is my baadhak|my baadhak|baadhak house|baadhakesh|baadhak sthana)\??$/i.test(q) ||
+    (q.includes("baadhak") && q.includes("what is"))
+  ) {
+    const b = evaluateBaadhakDynamics(natalEphem, transitEphem);
+    return `### 🛡️ **Your Baadhak Sthana & Obstacle Dynamics (Sessions 82, 84, 85):**
+- **Lagna Modality:** ${b.lagnaModality}
+- **Baadhak Sthana (Obstacle House):** House **${b.baadhakHouseNumber}** in **${b.baadhakRashi.englishName}**
+- **Baadhakesh Planet:** **${b.baadhakeshPlanet}** (Placed in House ${b.baadhakeshD1Placement.house} in ${b.baadhakeshD1Placement.rashi})
+- **Nodal Transit Impact:** ${b.isTransitRahuKetuAfflicting ? "⚠️ Active Rahu/Ketu triggering temporary karmic resistance" : "✅ Clear — no active nodal obstruction"}
+- **Resolution Domain:** ${b.activeObstacleDomain}
+- **Prescribed Parihara (Remedy):** ${b.prescribedRemedy}
+
+*⚡ Instant Classical Computation (0ms)*`;
   }
 
   return null;

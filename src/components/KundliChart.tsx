@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { RASHIS } from "../engine/constants";
 import { calculateJaiminiKarakas, KarakaCode } from "../engine/jaimini";
+import { calculateInduLagna, calculateBhagyaBindu } from "../engine/samirTripathiSuite";
 
 function KundliChart() {
   const [chartType, setChartType] = useState<"north" | "south">("north");
@@ -18,6 +19,8 @@ function KundliChart() {
   } = useAstroStore();
 
   const jaimini = useMemo(() => calculateJaiminiKarakas(ephemeris), [ephemeris]);
+  const induLagna = useMemo(() => calculateInduLagna(ephemeris), [ephemeris]);
+  const bhagyaBindu = useMemo(() => calculateBhagyaBindu(ephemeris), [ephemeris]);
 
   const ascLon = ephemeris.ascendant.siderealLongitude;
   const ascRashiIndex = Math.floor(ascLon / 30); // 0 = Mesha, ..., 11 = Meena
@@ -26,7 +29,18 @@ function KundliChart() {
   const houseOccupants = useMemo(() => {
     const map: Record<
       number,
-      { id: string; symbol: string; name: string; isRetro?: boolean; isUpagraha?: boolean; deg: number; karakaCode?: KarakaCode }[]
+      {
+        id: string;
+        symbol: string;
+        name: string;
+        isRetro?: boolean;
+        isUpagraha?: boolean;
+        isSpecialPoint?: boolean;
+        pointType?: "IL" | "BB";
+        tooltip?: string;
+        deg: number;
+        karakaCode?: KarakaCode;
+      }[]
     > = {};
     for (let i = 1; i <= 12; i++) map[i] = [];
 
@@ -44,6 +58,32 @@ function KundliChart() {
       });
     });
 
+    // Add Indu Lagna (IL)
+    if (induLagna && induLagna.induLagnaHouseFromD1) {
+      map[induLagna.induLagnaHouseFromD1].push({
+        id: "indu_lagna",
+        symbol: "💰",
+        name: "IL",
+        isSpecialPoint: true,
+        pointType: "IL",
+        deg: induLagna.induLagnaLongitude % 30,
+        tooltip: `Indu Lagna (IL - Moon-Ray Wealth): ${induLagna.induLagnaRashi.englishName} ${(induLagna.induLagnaLongitude % 30).toFixed(1)}° (${induLagna.wealthGrade})`,
+      });
+    }
+
+    // Add Bhagya Bindu (BB)
+    if (bhagyaBindu && bhagyaBindu.house) {
+      map[bhagyaBindu.house].push({
+        id: "bhagya_bindu",
+        symbol: "🎯",
+        name: "BB",
+        isSpecialPoint: true,
+        pointType: "BB",
+        deg: bhagyaBindu.longitude % 30,
+        tooltip: `Bhagya Bindu (BB - Fortune Point): ${bhagyaBindu.rashi.englishName} ${(bhagyaBindu.longitude % 30).toFixed(1)}° in House ${bhagyaBindu.house} (${bhagyaBindu.nakshatra})`,
+      });
+    }
+
     // Add Upagrahas if enabled
     if (showUpagrahas) {
       Object.values(ephemeris.upagrahas).forEach((u) => {
@@ -58,7 +98,7 @@ function KundliChart() {
     }
 
     return map;
-  }, [ephemeris, showModernPlanets, showUpagrahas, jaimini]);
+  }, [ephemeris, showModernPlanets, showUpagrahas, jaimini, induLagna, bhagyaBindu]);
 
   // Helper to get Rashi number (1 to 12) for a given House in North Indian chart
   const getNorthRashiNum = (houseNum: number) => {
@@ -85,6 +125,8 @@ function KundliChart() {
           const isSelected = selectedEntityId === p.id;
           const isAK = p.karakaCode === "AK";
           const isDK = p.karakaCode === "DK";
+          const isIL = p.pointType === "IL";
+          const isBB = p.pointType === "BB";
 
           return (
             <button
@@ -93,6 +135,10 @@ function KundliChart() {
               className={`${badgeStyle} rounded-md font-extrabold flex items-center gap-1 transition-all hover:scale-110 shadow-sm cursor-pointer ${
                 isSelected
                   ? "bg-amber-400 text-slate-950 ring-2 ring-white scale-105"
+                  : isIL
+                  ? "bg-gradient-to-r from-amber-600/50 to-yellow-500/50 text-amber-200 border border-amber-400 shadow-amber-500/20 font-black"
+                  : isBB
+                  ? "bg-gradient-to-r from-emerald-600/50 to-teal-500/50 text-emerald-200 border border-emerald-400 shadow-emerald-500/20 font-black"
                   : isAK
                   ? "bg-gradient-to-r from-amber-500/30 to-yellow-500/30 text-amber-200 border border-amber-400/80 shadow-amber-500/20"
                   : isDK
@@ -101,7 +147,7 @@ function KundliChart() {
                   ? "bg-purple-950/90 text-purple-200 border border-purple-600/60 hover:border-purple-400"
                   : "bg-slate-800/95 text-amber-200 border border-slate-700 hover:border-amber-400/60"
               }`}
-              title={p.karakaCode ? `${p.name}: ${jaimini.planetToKaraka[p.id]?.name} (${p.karakaCode})` : p.name}
+              title={p.tooltip || (p.karakaCode ? `${p.name}: ${jaimini.planetToKaraka[p.id]?.name} (${p.karakaCode})` : p.name)}
             >
               <span>{p.name}</span>
               {p.isRetro && <span className="text-[7.5px] text-red-400 font-extrabold">R</span>}
@@ -160,15 +206,31 @@ function KundliChart() {
         </div>
       </div>
 
-      {/* Lagna Banner */}
-      <div className="w-full max-w-[460px] mb-3 flex items-center justify-between px-3 py-1.5 bg-slate-900/60 rounded-xl border border-slate-800 text-xs">
-        <div className="flex items-center gap-1.5">
-          <span className="text-amber-400 font-bold">Lagna:</span>
-          <span className="font-extrabold text-slate-100">{ephemeris.ascendant.rashi.englishName} ({ephemeris.ascendant.rashi.sanskritName})</span>
-          <span className="font-mono text-amber-300 text-[11px]">{(ephemeris.ascendant.siderealLongitude % 30).toFixed(2)}°</span>
+      {/* Lagna & Dr. Samir Tripathi Special Points Banner */}
+      <div className="w-full max-w-[460px] mb-3 flex flex-col gap-1.5 px-3 py-2 bg-slate-900/80 rounded-xl border border-slate-800 text-xs shadow-inner">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="text-amber-400 font-bold">Lagna:</span>
+            <span className="font-extrabold text-slate-100">{ephemeris.ascendant.rashi.englishName} ({ephemeris.ascendant.rashi.sanskritName})</span>
+            <span className="font-mono text-amber-300 text-[11px]">{(ephemeris.ascendant.siderealLongitude % 30).toFixed(2)}°</span>
+          </div>
+          <div className="text-[11px] text-slate-400 font-mono">
+            Nakshatra: <span className="text-slate-200 font-semibold">{ephemeris.ascendant.nakshatra.sanskritName}</span>
+          </div>
         </div>
-        <div className="text-[11px] text-slate-400 font-mono">
-          Nakshatra: <span className="text-slate-200 font-semibold">{ephemeris.ascendant.nakshatra.sanskritName}</span>
+
+        {/* Indu Lagna (IL) & Bhagya Bindu (BB) Quick Indicators */}
+        <div className="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[11px] flex-wrap gap-1">
+          <div className="flex items-center gap-1.5" title={induLagna?.wealthVerdict}>
+            <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/50 font-black text-[9.5px]">IL</span>
+            <span className="text-slate-300 font-semibold">Indu Lagna:</span>
+            <span className="text-amber-200 font-bold font-mono">{induLagna?.induLagnaRashi.englishName} (H{induLagna?.induLagnaHouseFromD1})</span>
+          </div>
+          <div className="flex items-center gap-1.5" title={bhagyaBindu?.significance}>
+            <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 font-black text-[9.5px]">BB</span>
+            <span className="text-slate-300 font-semibold">Bhagya Bindu:</span>
+            <span className="text-emerald-200 font-bold font-mono">{bhagyaBindu?.rashi.englishName} (H{bhagyaBindu?.house})</span>
+          </div>
         </div>
       </div>
 
