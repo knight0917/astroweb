@@ -7,24 +7,48 @@ import {
   VARGA_DEFINITIONS,
   VargaId,
 } from "../engine/shodashavarga";
+import { evaluateRashiTulyaNavamsha } from "../engine/rashiTulyaNavamsha";
+import { calculateVedicEphemeris } from "../engine/ephemeris";
 import { RASHIS } from "../engine/constants";
 
-export default function ShodashavargaView() {
-  const [selectedVarga, setSelectedVarga] = useState<VargaId>("D9");
-  const [chartType, setChartType] = useState<"north" | "south">("north");
-  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "Shadvarga" | "Saptavarga" | "Dashavarga">("ALL");
+export type VargaViewId = VargaId | "RTN";
 
-  const { ephemeris, showModernPlanets, showUpagrahas, selectedEntityId, setSelectedEntityId } =
-    useAstroStore();
+export default function ShodashavargaView() {
+  const [selectedVarga, setSelectedVarga] = useState<VargaViewId>("D9");
+  const [chartType, setChartType] = useState<"north" | "south">("north");
+  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "Shadvarga" | "Saptavarga" | "Dashavarga" | "RTN">("ALL");
+
+  const {
+    ephemeris,
+    location,
+    ayanamsha,
+    houseSystem,
+    nodeType,
+    showModernPlanets,
+    showUpagrahas,
+    selectedEntityId,
+    setSelectedEntityId,
+  } = useAstroStore();
+
+  const isRtnMode = selectedVarga === "RTN";
+
+  const transitEphemeris = useMemo(() => {
+    return calculateVedicEphemeris(new Date(), location, ayanamsha, houseSystem, nodeType);
+  }, [location, ayanamsha, houseSystem, nodeType]);
+
+  const rtnResult = useMemo(() => {
+    return evaluateRashiTulyaNavamsha(ephemeris, transitEphemeris);
+  }, [ephemeris, transitEphemeris]);
 
   const vargaChart = useMemo(() => {
-    return calculateShodashavargaChart(ephemeris, selectedVarga, showUpagrahas, showModernPlanets);
-  }, [ephemeris, selectedVarga, showUpagrahas, showModernPlanets]);
+    const vId: VargaId = isRtnMode ? "D9" : (selectedVarga as VargaId);
+    return calculateShodashavargaChart(ephemeris, vId, showUpagrahas, showModernPlanets);
+  }, [ephemeris, selectedVarga, isRtnMode, showUpagrahas, showModernPlanets]);
 
   const allVargas = Object.values(VARGA_DEFINITIONS);
 
   const filteredVargas = useMemo(() => {
-    if (categoryFilter === "ALL") return allVargas;
+    if (categoryFilter === "ALL" || categoryFilter === "RTN") return allVargas;
     return allVargas.filter((v) => {
       if (categoryFilter === "Shadvarga") return v.category === "Shadvarga";
       if (categoryFilter === "Saptavarga") return v.category === "Shadvarga" || v.category === "Saptavarga";
@@ -34,13 +58,74 @@ export default function ShodashavargaView() {
     });
   }, [categoryFilter, allVargas]);
 
-  const ascRashiIndex = vargaChart.ascendant.vargaSignIndex;
+  const ascRashiIndex = isRtnMode
+    ? Math.floor(ephemeris.ascendant.siderealLongitude / 30)
+    : vargaChart.ascendant.vargaSignIndex;
 
   const getNorthRashiNum = (houseNum: number) => {
     return ((ascRashiIndex + (houseNum - 1)) % 12) + 1;
   };
 
+  // Map RTN occupants
+  const rtnHouseOccupants = useMemo(() => {
+    if (!isRtnMode) return {};
+    const map: Record<number, typeof rtnResult.planets[string][]> = {};
+    for (let i = 1; i <= 12; i++) map[i] = [];
+    Object.values(rtnResult.planets).forEach((p) => {
+      map[p.rtnHouseFromD1Lagna].push(p);
+    });
+    return map;
+  }, [isRtnMode, rtnResult]);
+
   const renderPlanetList = (houseNum: number) => {
+    if (isRtnMode) {
+      const list = rtnHouseOccupants[houseNum] || [];
+      if (list.length === 0) return null;
+
+      const count = list.length;
+      const badgeStyle =
+        count >= 5
+          ? "text-[8.5px] px-1 py-0.5"
+          : count >= 3
+          ? "text-[9.5px] px-1.5 py-0.5"
+          : "text-[11px] px-2 py-0.5";
+
+      return (
+        <div className="flex flex-wrap gap-1 justify-center items-center w-full max-w-full p-1 overflow-visible">
+          {list.map((p) => {
+            const isSelected = selectedEntityId === p.planetId;
+            return (
+              <button
+                key={p.planetId}
+                onClick={() => setSelectedEntityId(p.planetId)}
+                className={`${badgeStyle} rounded-md font-extrabold flex items-center gap-1 transition-all hover:scale-110 shadow-sm cursor-pointer ${
+                  isSelected
+                    ? "bg-amber-400 text-slate-950 ring-2 ring-white scale-105"
+                    : p.isVargottama
+                    ? "bg-gradient-to-r from-cyan-900/90 to-teal-900/90 text-cyan-200 border border-cyan-400 shadow-cyan-500/20 font-black"
+                    : "bg-slate-900/90 text-amber-300 border border-amber-500/60 hover:border-amber-400"
+                }`}
+                title={p.rtnHouseSignificance}
+              >
+                <span>{p.planetName.substring(0, 2)}</span>
+                <span className="text-[7.5px] px-1 py-0.2 rounded bg-slate-950/80 text-slate-300 font-mono">
+                  {p.d9Rashi.englishName.substring(0, 2)}
+                </span>
+                {p.isVargottama && (
+                  <span className="text-[8px] text-cyan-300 font-black" title="Vargottama (वर्गोत्तम)">
+                    ★
+                  </span>
+                )}
+                <span className="text-[8px] opacity-75 font-mono">
+                  {Math.floor(p.d1Longitude % 30)}°
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
     const list = vargaChart.houseOccupants[houseNum] || [];
     if (list.length === 0) return null;
 
@@ -106,27 +191,69 @@ export default function ShodashavargaView() {
           </p>
         </div>
 
-        {/* Category Filter Pills */}
-        <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs">
-          {(["ALL", "Shadvarga", "Saptavarga", "Dashavarga"] as const).map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setCategoryFilter(cat)}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                categoryFilter === cat
-                  ? "bg-amber-500 text-slate-950 shadow"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              {cat === "ALL" ? "All 16 Vargas" : `${cat}`}
-            </button>
-          ))}
+        {/* Category Filter Pills including Rashi Tulya Navamsha */}
+        <div className="flex flex-wrap items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs">
+          {(["ALL", "Shadvarga", "Saptavarga", "Dashavarga", "RTN"] as const).map((cat) => {
+            const isActive = categoryFilter === cat || (cat === "RTN" && isRtnMode);
+            return (
+              <button
+                key={cat}
+                onClick={() => {
+                  setCategoryFilter(cat);
+                  if (cat === "RTN") setSelectedVarga("RTN");
+                  else if (isRtnMode) setSelectedVarga("D9");
+                }}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  isActive
+                    ? "bg-amber-500 text-slate-950 shadow"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                {cat === "RTN" && <span>🌸</span>}
+                <span>
+                  {cat === "ALL"
+                    ? "All 16 Vargas"
+                    : cat === "RTN"
+                    ? "Rashi Tulya Navamsha (RTN)"
+                    : `${cat}`}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* 16-Varga Quick Selector Horizontal Carousel with Snap Scrolling */}
       <div className="glass-panel p-2.5 sm:p-3 rounded-2xl border border-slate-800 shadow-xl bg-slate-950/90 overflow-x-auto snap-scroll-x no-scrollbar">
         <div className="flex items-center gap-2 min-w-max">
+          {/* Dedicated RTN Button in Carousel */}
+          <button
+            onClick={() => {
+              setSelectedVarga("RTN");
+              setCategoryFilter("RTN");
+            }}
+            className={`snap-item px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-start gap-0.5 border cursor-pointer ${
+              isRtnMode
+                ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 border-amber-300 shadow-lg shadow-amber-500/25 scale-105"
+                : "bg-amber-950/40 hover:bg-amber-900/60 text-amber-200 border-amber-600/40"
+            }`}
+          >
+            <div className="flex items-center gap-1.5 w-full justify-between">
+              <span className="font-extrabold text-sm flex items-center gap-1">
+                <span>🌸</span>
+                <span>RTN</span>
+              </span>
+              <span
+                className={`text-[9px] px-1.5 py-0.2 rounded font-mono ${
+                  isRtnMode ? "bg-slate-950 text-amber-300" : "bg-amber-900/80 text-amber-200"
+                }`}
+              >
+                D1 ⮂ D9
+              </span>
+            </div>
+            <span className="text-[10px] opacity-90 truncate max-w-[120px]">Rashi Tulya Nav.</span>
+          </button>
+
           {filteredVargas.map((v) => {
             const isSelected = selectedVarga === v.id;
             return (
@@ -166,15 +293,32 @@ export default function ShodashavargaView() {
               <div className="flex items-center gap-2">
                 <span className="text-lg text-amber-400">☸</span>
                 <h3 className="font-extrabold text-slate-100 text-sm sm:text-base">
-                  {vargaChart.varga.id} — {vargaChart.varga.name} ({vargaChart.varga.sanskritName})
+                  {isRtnMode
+                    ? "🌸 Rashi Tulya Navamsha (RTN) — Cross-Varga Projection"
+                    : `${vargaChart.varga.id} — ${vargaChart.varga.name} (${vargaChart.varga.sanskritName})`}
                 </h3>
               </div>
               <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
-                Varga Lagna:{" "}
-                <span className="text-emerald-400 font-bold font-mono">
-                  {vargaChart.ascendant.vargaRashi.englishName} ({vargaChart.ascendant.vargaRashi.sanskritName})
-                </span>{" "}
-                • Division: {vargaChart.varga.spanDegrees.toFixed(2)}°
+                {isRtnMode ? (
+                  <span>
+                    D-1 Earthly Lagna:{" "}
+                    <span className="text-emerald-400 font-bold font-mono">
+                      {rtnResult.d1LagnaRashi.englishName} ({rtnResult.d1LagnaRashi.sanskritName})
+                    </span>{" "}
+                    • D-9 Soul Core:{" "}
+                    <span className="text-amber-300 font-bold font-mono">
+                      {rtnResult.d9LagnaRashi.englishName}
+                    </span>
+                  </span>
+                ) : (
+                  <span>
+                    Varga Lagna:{" "}
+                    <span className="text-emerald-400 font-bold font-mono">
+                      {vargaChart.ascendant.vargaRashi.englishName} ({vargaChart.ascendant.vargaRashi.sanskritName})
+                    </span>{" "}
+                    • Division: {vargaChart.varga.spanDegrees.toFixed(2)}°
+                  </span>
+                )}
               </p>
             </div>
 
@@ -182,7 +326,7 @@ export default function ShodashavargaView() {
             <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
               <button
                 onClick={() => setChartType("north")}
-                className={`px-3 py-1 rounded-md font-semibold transition-all ${
+                className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
                   chartType === "north" ? "bg-amber-500 text-slate-950 shadow" : "text-slate-400 hover:text-slate-200"
                 }`}
               >
@@ -190,7 +334,7 @@ export default function ShodashavargaView() {
               </button>
               <button
                 onClick={() => setChartType("south")}
-                className={`px-3 py-1 rounded-md font-semibold transition-all ${
+                className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
                   chartType === "south" ? "bg-amber-500 text-slate-950 shadow" : "text-slate-400 hover:text-slate-200"
                 }`}
               >
@@ -199,8 +343,24 @@ export default function ShodashavargaView() {
             </div>
           </div>
 
+          {/* RTN Special Banner */}
+          {isRtnMode && (
+            <div className="w-full mb-3 p-2.5 rounded-xl bg-gradient-to-r from-amber-950/50 via-slate-900/80 to-purple-950/50 border border-amber-500/40 flex flex-wrap items-center justify-between gap-2 text-xs shadow-inner">
+              <div className="flex items-center gap-2 text-amber-200">
+                <span className="text-base">🌸</span>
+                <span className="font-bold">Deva Keralam & C.S. Patel Cross-Varga Overlay:</span>
+                <span className="text-slate-300">
+                  D-9 Navamsha signs mapped directly onto D-1 Lagna houses.
+                </span>
+              </div>
+              <span className="text-[10px] text-amber-300 font-bold bg-amber-900/60 px-2 py-0.5 rounded-md border border-amber-500/40">
+                Soul Fruit in Manifest Life
+              </span>
+            </div>
+          )}
+
           {/* Vargottama Banner for D2..D60 */}
-          {vargaChart.varga.id !== "D1" && vargaChart.vargottamaPlanets.length > 0 && (
+          {!isRtnMode && vargaChart.varga.id !== "D1" && vargaChart.vargottamaPlanets.length > 0 && (
             <div className="w-full mb-3 p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/50 flex flex-wrap items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-2 text-emerald-300">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
@@ -216,7 +376,7 @@ export default function ShodashavargaView() {
           )}
 
           {/* D1 Key Planetary Dignities Banner */}
-          {vargaChart.varga.id === "D1" && (
+          {!isRtnMode && vargaChart.varga.id === "D1" && (
             <div className="w-full mb-3 p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/40 flex flex-wrap items-center justify-between gap-2 text-xs shadow-inner">
               <div className="flex flex-wrap items-center gap-2 text-slate-200">
                 <span className="text-amber-400 font-extrabold flex items-center gap-1.5">
@@ -404,8 +564,12 @@ export default function ShodashavargaView() {
 
                 <div className="col-start-2 col-span-2 row-start-2 row-span-2 border border-slate-800 bg-slate-950/80 flex flex-col items-center justify-center text-center p-2">
                   <span className="text-xl text-amber-400">☸</span>
-                  <span className="text-xs font-bold text-slate-200 mt-1">{vargaChart.varga.id} Chart</span>
-                  <span className="text-[10px] text-slate-400">{vargaChart.varga.name}</span>
+                  <span className="text-xs font-bold text-slate-200 mt-1">
+                    {isRtnMode ? "RTN Chart" : `${vargaChart.varga.id} Chart`}
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    {isRtnMode ? "Rashi Tulya Navamsha" : vargaChart.varga.name}
+                  </span>
                 </div>
               </div>
             )}
@@ -414,120 +578,264 @@ export default function ShodashavargaView() {
 
         {/* Right Column: Varga Planetary Details Table & Commentary (5 cols) */}
         <div className="lg:col-span-5 flex flex-col gap-6">
-          {/* Varga Significance Card */}
-          <div className="glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider">
-                📜 Classical Significance
-              </span>
-              <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-300">
-                {vargaChart.varga.category}
-              </span>
-            </div>
+          {/* RTN Mode Right Dashboard */}
+          {isRtnMode ? (
+            <>
+              {/* RTN Classical Framework Card */}
+              <div className="glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                  <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>🌸</span>
+                    <span>Rashi Tulya Navamsha Classical Law</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-amber-950/60 border border-amber-500/40 text-[10px] font-mono text-amber-300">
+                    Deva Keralam & C.S. Patel
+                  </span>
+                </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed font-medium">
-              {vargaChart.varga.significance}
-            </p>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                  <strong>Rashi Tulya Navamsha (RTN)</strong> projects each planet's inner soul reality (D-9 Navamsha sign) directly onto your earthly D-1 houses. While D-1 represents your physical setup, RTN reveals where the true karma matures and produces real-world fruition.
+                </p>
 
-            <div className="pt-2 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
-                <span className="text-[9px] text-slate-500 block uppercase font-bold">Division Arc</span>
-                <span className="font-mono font-bold text-amber-300">
-                  {vargaChart.varga.spanDegrees.toFixed(3)}° (1/{vargaChart.varga.divisionNumber})
-                </span>
+                <div className="pt-2 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                    <span className="text-[9px] text-slate-500 block uppercase font-bold">Earthly Anchor</span>
+                    <span className="font-mono font-bold text-emerald-300">
+                      D1 Lagna: {rtnResult.d1LagnaRashi.englishName}
+                    </span>
+                  </div>
+                  <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                    <span className="text-[9px] text-slate-500 block uppercase font-bold">Soul Anchor</span>
+                    <span className="font-mono font-bold text-amber-300">
+                      D9 Lagna: {rtnResult.d9LagnaRashi.englishName}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
-                <span className="text-[9px] text-slate-500 block uppercase font-bold">Ruling Deities</span>
-                <span className="font-medium text-slate-200 truncate block" title={vargaChart.varga.deityGroup}>
-                  {vargaChart.varga.deityGroup}
-                </span>
-              </div>
-            </div>
-          </div>
 
-          {/* Planetary Varga Positions Table */}
-          <div className="glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 space-y-3">
-            <h4 className="font-extrabold text-xs text-slate-200 uppercase tracking-wider flex items-center gap-2">
-              <span>🪐</span>
-              <span>{vargaChart.varga.id} Planetary Placements</span>
-            </h4>
+              {/* RTN Planetary Positions Table */}
+              <div className="glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 space-y-3">
+                <h4 className="font-extrabold text-xs text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                  <span>🪐</span>
+                  <span>RTN Manifestation Placements</span>
+                </h4>
 
-            <div className="overflow-x-auto custom-scrollbar max-h-[380px]">
-              <table className="w-full text-left text-xs border-collapse font-mono">
-                <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/80 sticky top-0">
-                    <th className="p-2 font-bold">Graha</th>
-                    <th className="p-2">D1 Rashi</th>
-                    <th className="p-2">{vargaChart.varga.id} Sign</th>
-                    <th className="p-2 text-center">House</th>
-                    <th className="p-2 text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60">
-                  {vargaChart.entities.map((e) => {
-                    const isSelected = selectedEntityId === e.id;
-                    return (
-                      <tr
-                        key={e.id}
-                        onClick={() => setSelectedEntityId(e.id)}
-                        className={`hover:bg-slate-900/60 cursor-pointer transition-colors ${
-                          isSelected ? "bg-amber-500/15 font-bold" : ""
-                        }`}
-                      >
-                        <td className="p-2 font-bold text-slate-200 flex items-center gap-1">
-                          <span className="text-amber-400">{e.symbol}</span>
-                          <span>{e.name}</span>
-                        </td>
-                        <td className="p-2 text-slate-400">
-                          {RASHIS[e.natalSignIndex].symbol} {RASHIS[e.natalSignIndex].englishName}
-                        </td>
-                        <td className="p-2 font-bold text-amber-300">
-                          {e.vargaRashi.symbol} {e.vargaRashi.englishName}
-                        </td>
-                        <td className="p-2 text-center text-slate-300 font-bold">H{e.house}</td>
-                        <td className="p-2 text-right">
-                          <div className="flex flex-wrap items-center justify-end gap-1">
-                            {e.statusBadges.map((badge, bIdx) => {
-                              let badgeColor = "bg-slate-800 text-slate-400 border-slate-700";
-                              if (badge.type === "exalted") {
-                                badgeColor = "bg-emerald-950/90 text-emerald-300 border-emerald-500 shadow-sm";
-                              } else if (badge.type === "debilitated") {
-                                badgeColor = "bg-rose-950/90 text-rose-300 border-rose-500 shadow-sm";
-                              } else if (badge.type === "own" || badge.type === "moolatrikona") {
-                                badgeColor = "bg-amber-950/90 text-amber-300 border-amber-500/80 shadow-sm";
-                              } else if (badge.type === "vargottama") {
-                                badgeColor = "bg-cyan-950/90 text-cyan-300 border-cyan-400 shadow-sm font-black";
-                              } else if (badge.type === "combust") {
-                                badgeColor = "bg-orange-950/90 text-orange-300 border-orange-500/80";
-                              } else if (badge.type === "retro") {
-                                badgeColor = "bg-purple-950/90 text-purple-300 border-purple-500/80 font-black";
-                              } else if (badge.type === "friend") {
-                                badgeColor = "bg-teal-950/60 text-teal-300 border-teal-600/40";
-                              } else if (badge.type === "enemy") {
-                                badgeColor = "bg-red-950/50 text-red-300 border-red-700/40";
-                              } else if (badge.type === "neutral") {
-                                badgeColor = "bg-slate-900/60 text-slate-400 border-slate-800";
-                              }
-
-                              return (
-                                <span
-                                  key={bIdx}
-                                  className={`px-1.5 py-0.5 rounded border text-[9px] font-bold tracking-tight ${badgeColor}`}
-                                  title={badge.hindiLabel}
-                                >
-                                  {badge.label}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        </td>
+                <div className="overflow-x-auto custom-scrollbar max-h-[340px]">
+                  <table className="w-full text-left text-xs border-collapse font-mono">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/80 sticky top-0">
+                        <th className="p-2 font-bold">Graha</th>
+                        <th className="p-2">D1 Sign</th>
+                        <th className="p-2">D9 Nav.</th>
+                        <th className="p-2 text-center">RTN House</th>
+                        <th className="p-2 text-right">Status</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {Object.values(rtnResult.planets).map((p) => {
+                        const isSelected = selectedEntityId === p.planetId;
+                        return (
+                          <tr
+                            key={p.planetId}
+                            onClick={() => setSelectedEntityId(p.planetId)}
+                            className={`hover:bg-slate-900/60 cursor-pointer transition-colors ${
+                              isSelected ? "bg-amber-500/15 font-bold" : ""
+                            }`}
+                          >
+                            <td className="p-2 font-bold text-slate-200">
+                              {p.planetName}
+                            </td>
+                            <td className="p-2 text-slate-400">
+                              {p.d1Rashi.englishName} (H{p.d1HouseFromLagna})
+                            </td>
+                            <td className="p-2 font-bold text-amber-300">
+                              {p.d9Rashi.englishName}
+                            </td>
+                            <td className="p-2 text-center text-emerald-300 font-extrabold">
+                              House {p.rtnHouseFromD1Lagna}
+                            </td>
+                            <td className="p-2 text-right">
+                              {p.isVargottama ? (
+                                <span className="px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500 text-[9px] font-bold">
+                                  ★ Vargottama
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-slate-500">
+                                  H{p.d9HouseFromD9Lagna} in D9
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* RTN Conjunctions & Hidden Soul Bonds Card */}
+              {rtnResult.rtnConjunctions.length > 0 && (
+                <div className="glass-panel p-4 rounded-2xl border border-amber-500/30 bg-slate-950/90 space-y-2">
+                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>🪢</span>
+                    <span>RTN Conjunctions & Soul Synergy</span>
+                  </span>
+                  <div className="space-y-1.5 text-xs text-slate-300">
+                    {rtnResult.rtnConjunctions.map((c) => (
+                      <div key={c.houseNumber} className="p-2 rounded-xl bg-slate-900/80 border border-slate-800">
+                        <div className="font-bold text-amber-300">
+                          House {c.houseNumber} ({c.rashi.englishName}): {c.planets.join(" + ")}
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-0.5">{c.interpretation}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 64th Navamsha (Khara) Alert Card */}
+              <div className="glass-panel p-4 rounded-2xl border border-slate-800 bg-slate-950/90 space-y-2">
+                <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <span>⚠️</span>
+                  <span>64th Navamsha (Khara Navamsha) Integrity</span>
+                </span>
+                <div className="text-xs space-y-1 text-slate-300">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">From Moon (Khara Moon):</span>
+                    <span className="font-mono font-bold text-amber-300">
+                      {rtnResult.kharaNavamsha.moon64thNavamshaRashi.englishName} (RTN H{rtnResult.kharaNavamsha.moon64thRtnHouse})
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">From Lagna (Khara Lagna):</span>
+                    <span className="font-mono font-bold text-amber-300">
+                      {rtnResult.kharaNavamsha.lagna64thNavamshaRashi.englishName} (RTN H{rtnResult.kharaNavamsha.lagna64thRtnHouse})
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-emerald-400 mt-1 font-medium bg-slate-900/80 p-1.5 rounded-lg border border-slate-800">
+                    {rtnResult.kharaNavamsha.kharaWarningSummary}
+                  </p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Standard Varga Significance Card */}
+              <div className="glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                  <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider">
+                    📜 Classical Significance
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-300">
+                    {vargaChart.varga.category}
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                  {vargaChart.varga.significance}
+                </p>
+
+                <div className="pt-2 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                    <span className="text-[9px] text-slate-500 block uppercase font-bold">Division Arc</span>
+                    <span className="font-mono font-bold text-amber-300">
+                      {vargaChart.varga.spanDegrees.toFixed(3)}° (1/{vargaChart.varga.divisionNumber})
+                    </span>
+                  </div>
+                  <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                    <span className="text-[9px] text-slate-500 block uppercase font-bold">Ruling Deities</span>
+                    <span className="font-medium text-slate-200 truncate block" title={vargaChart.varga.deityGroup}>
+                      {vargaChart.varga.deityGroup}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Standard Planetary Varga Positions Table */}
+              <div className="glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 space-y-3">
+                <h4 className="font-extrabold text-xs text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                  <span>🪐</span>
+                  <span>{vargaChart.varga.id} Planetary Placements</span>
+                </h4>
+
+                <div className="overflow-x-auto custom-scrollbar max-h-[380px]">
+                  <table className="w-full text-left text-xs border-collapse font-mono">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/80 sticky top-0">
+                        <th className="p-2 font-bold">Graha</th>
+                        <th className="p-2">D1 Rashi</th>
+                        <th className="p-2">{vargaChart.varga.id} Sign</th>
+                        <th className="p-2 text-center">House</th>
+                        <th className="p-2 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {vargaChart.entities.map((e) => {
+                        const isSelected = selectedEntityId === e.id;
+                        return (
+                          <tr
+                            key={e.id}
+                            onClick={() => setSelectedEntityId(e.id)}
+                            className={`hover:bg-slate-900/60 cursor-pointer transition-colors ${
+                              isSelected ? "bg-amber-500/15 font-bold" : ""
+                            }`}
+                          >
+                            <td className="p-2 font-bold text-slate-200 flex items-center gap-1">
+                              <span className="text-amber-400">{e.symbol}</span>
+                              <span>{e.name}</span>
+                            </td>
+                            <td className="p-2 text-slate-400">
+                              {RASHIS[e.natalSignIndex].symbol} {RASHIS[e.natalSignIndex].englishName}
+                            </td>
+                            <td className="p-2 font-bold text-amber-300">
+                              {e.vargaRashi.symbol} {e.vargaRashi.englishName}
+                            </td>
+                            <td className="p-2 text-center text-slate-300 font-bold">H{e.house}</td>
+                            <td className="p-2 text-right">
+                              <div className="flex flex-wrap items-center justify-end gap-1">
+                                {e.statusBadges.map((badge, bIdx) => {
+                                  let badgeColor = "bg-slate-800 text-slate-400 border-slate-700";
+                                  if (badge.type === "exalted") {
+                                    badgeColor = "bg-emerald-950/90 text-emerald-300 border-emerald-500 shadow-sm";
+                                  } else if (badge.type === "debilitated") {
+                                    badgeColor = "bg-rose-950/90 text-rose-300 border-rose-500 shadow-sm";
+                                  } else if (badge.type === "own" || badge.type === "moolatrikona") {
+                                    badgeColor = "bg-amber-950/90 text-amber-300 border-amber-500/80 shadow-sm";
+                                  } else if (badge.type === "vargottama") {
+                                    badgeColor = "bg-cyan-950/90 text-cyan-300 border-cyan-400 shadow-sm font-black";
+                                  } else if (badge.type === "combust") {
+                                    badgeColor = "bg-orange-950/90 text-orange-300 border-orange-500/80";
+                                  } else if (badge.type === "retro") {
+                                    badgeColor = "bg-purple-950/90 text-purple-300 border-purple-500/80 font-black";
+                                  } else if (badge.type === "friend") {
+                                    badgeColor = "bg-teal-950/60 text-teal-300 border-teal-600/40";
+                                  } else if (badge.type === "enemy") {
+                                    badgeColor = "bg-red-950/50 text-red-300 border-red-700/40";
+                                  } else if (badge.type === "neutral") {
+                                    badgeColor = "bg-slate-900/60 text-slate-400 border-slate-800";
+                                  }
+
+                                  return (
+                                    <span
+                                      key={bIdx}
+                                      className={`px-1.5 py-0.5 rounded border text-[9px] font-bold tracking-tight ${badgeColor}`}
+                                      title={badge.hindiLabel}
+                                    >
+                                      {badge.label}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
