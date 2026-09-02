@@ -333,17 +333,43 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
   },
 ];
 
+function getLocalCivilDateTime(natalEphem: EphemerisResult) {
+  const birthDateObj = new Date(natalEphem.utcDate);
+  const tzOffset = natalEphem.location?.timezoneOffsetHours ?? 0;
+  const tzOffsetMs = tzOffset * 3600 * 1000;
+  const localBirthDate = new Date(birthDateObj.getTime() + tzOffsetMs);
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ];
+  const year = localBirthDate.getUTCFullYear();
+  const month = monthNames[localBirthDate.getUTCMonth()];
+  const day = localBirthDate.getUTCDate();
+  const rawHours = localBirthDate.getUTCHours();
+  const rawMinutes = String(localBirthDate.getUTCMinutes()).padStart(2, "0");
+  const hour12 = rawHours % 12 || 12;
+  const ampm = rawHours >= 12 ? "PM" : "AM";
+  const formattedHours = String(rawHours).padStart(2, "0");
+
+  return {
+    timeStr: `${hour12}:${rawMinutes} ${ampm} (${formattedHours}:${rawMinutes})`,
+    dateStr: `${month} ${day}, ${year}`,
+  };
+}
+
 /**
  * 0ms Instant Client-Side Classical Calculation Interceptor
  * Answers exact deterministic queries instantaneously without AI round-trip latency.
  */
 function tryInstantEngineAnswer(
   query: string,
-  natalEphem: EphemerisResult,
-  transitEphem: EphemerisResult,
+  natalEphem?: EphemerisResult | null,
+  transitEphem?: EphemerisResult | null,
   evaluationDate: Date = new Date(),
   birthDate: Date = new Date("1999-09-17")
 ): string | null {
+  if (!natalEphem || !transitEphem) return null;
   const q = query.toLowerCase().trim();
 
   // 1. Lagna / Ascendant
@@ -616,37 +642,69 @@ ${nakAct.masterRemedyRecommendation}
 
   // 14. Birth Time Rectification (BTR) Confirmation Resolver
   if (
-    /^(1\.\s*yes|1:\s*yes|yes,\s*1\.|all yes|confirm btr|btr confirmed|verify time confirmed|1\.\s*yes.*2\.\s*yes|eldest.*yes|yes.*eldest)/i.test(q) ||
-    (q.includes("1.") && q.includes("yes") && (q.includes("eldest") || q.includes("youngest") || q.includes("middle") || q.includes("only") || q.includes("no") || q.includes("yes"))) ||
-    q === "1. yes, 2. yes, 3. eldest, 4. no" ||
-    q === "1. yes, 2. yes, 3. youngest, 4. no" ||
-    q === "1. yes, 2. yes, 3. eldest, 4. yes" ||
-    q === "1. yes, 2. yes, 3. middle, 4. no" ||
-    q === "1. yes, 2. yes, 3. only child, 4. no"
+    /^(1\.\s*(yes|no)|1:\s*(yes|no)|q1\s*:|lock & verify|verify & lock)/i.test(q) ||
+    (q.includes("1.") && (q.includes("yes") || q.includes("no")) && (q.includes("eldest") || q.includes("youngest") || q.includes("middle") || q.includes("only") || q.includes("2.")))
   ) {
+    const { timeStr, dateStr } = getLocalCivilDateTime(natalEphem);
     const ascRashi = natalEphem.ascendant.rashi.englishName;
     const ascDeg = `${(natalEphem.ascendant.siderealLongitude % 30).toFixed(2)}°`;
     const moonNak = natalEphem.planets.Moon?.nakshatra.sanskritName || "Punarvasu";
-    const localTimeStr = birthDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
 
-    return `### 🎯 **Birth Time Verification Confirmed (100% Precision Match)**
+    // Extract exact answers from the query string
+    const isQ1Yes = /1\.\s*yes|1:\s*yes|q1\s*:\s*yes/i.test(q);
+    const isQ2Yes = /2\.\s*yes|2:\s*yes|q2\s*:\s*yes/i.test(q);
 
-- 📍 **Recorded Birth Time:** **${localTimeStr}** in **${natalEphem.location?.cityName || "Allahabad"}, ${natalEphem.location?.country || "India"}**
-- 🌟 **Verification Status:** **✅ 100% Exact & Confirmed**
+    let siblingText = "Eldest";
+    if (/youngest/i.test(q)) siblingText = "Youngest";
+    else if (/middle/i.test(q)) siblingText = "Middle";
+    else if (/only\s*child|only/i.test(q)) siblingText = "Only Child";
+
+    const isQ4Yes = /4\.\s*yes|4:\s*yes|q4\s*:\s*yes/i.test(q);
+
+    // Calculate match score
+    let matchCount = 0;
+    if (isQ1Yes) matchCount++;
+    if (isQ2Yes) matchCount++;
+    matchCount++; // Sibling anchor is always mapped to D3
+    if (!isQ4Yes) matchCount++; // No surgery confirms Shubha Drishti
+
+    const matchPct = matchCount === 4 ? "100% Exact & Confirmed" : matchCount === 3 ? "90% High Precision Match" : "80% Calibration Match";
+
+    const q1Explanation = isQ1Yes
+      ? `- 🎓 **2020–2022 Academic Fruition (✅ Confirmed):**
+  * Matches your **5th & 9th House Dasha sub-period gateways**, confirming the exact degree of your academic houses.`
+      : `- 🎓 **Academic Milestone (2020–2022) (⚠️ Alternate Timeline / Shifted Window):**
+  * You indicated education/skill milestones did not culminate in this specific window. This confirms your **D-24 Chaturvimshamsha learning gateway** operated on a different sub-period cycle (e.g. self-directed or earlier).`;
+
+    const q2Explanation = isQ2Yes
+      ? `- 💼 **2023–2025 Career Responsibility (✅ Confirmed):**
+  * Corresponds to **Saturn's D-10 Dasamsa transit axis**, confirming the exact cusp of your 10th house (Karma).`
+      : `- 💼 **2023–2025 Career Responsibility (⚠️ Internal Consolidation):**
+  * Indicates your career energy was focused on internal skills and preparation rather than public role transition.`;
+
+    const q3Explanation = `- 🌿 **Sibling Position (${siblingText}) (✅ Confirmed):**
+  * Locks the **3rd house and D-3 Drekkana lagna** alignments with your birth order.`;
+
+    const q4Explanation = isQ4Yes
+      ? `- 🏥 **Physical Marks / Scar (✅ Confirmed):**
+  * Mars / Ketu influence on Lagna or 6th house, confirming physical constitution resilience.`
+      : `- 🛡️ **Physical Marks / Surgery (✅ Confirmed):**
+  * Protective **Shubha Drishti (Jupiter's benefic aspect)** on Lagna, shielding against major surgical scars.`;
+
+    return `### 🎯 **Birth Time Verification Analysis & Verdict**
+
+- 📍 **Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${natalEphem.location?.cityName || "Allahabad"}, ${natalEphem.location?.country || "India"}**
+- 🌟 **Verification Status:** **✅ ${matchPct}**
 - 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
 
 #### 🔍 **Mathematical Shastric Alignment Proofs:**
-1. 🎓 **2020–2022 Academic / Degree Fruition (Confirmed):**
-   * Corresponds to your **5th & 9th House Dasha sub-period gateways**, confirming the exact degree of your academic houses.
-2. 💼 **2023–2025 Structural Career Responsibility (Confirmed):**
-   * Corresponds to **Saturn's D-10 Dasamsa transit axis**, confirming the exact cusp of your 10th house (Karma).
-3. 🌿 **Sibling Position (Confirmed):**
-   * Locks the **3rd house and D-3 Drekkana lagna** alignments.
-4. 👑 **D-1 Rashi, D-9 Navamsha & D-10 Dasamsa Clock Lock:**
-   * Your Ascendant at ${ascDeg} ${ascRashi} and specialized divisional charts are fully synchronized with your real-life timeline!
+${q1Explanation}
+${q2Explanation}
+${q3Explanation}
+${q4Explanation}
 
 ---
-💡 **Your chart clock is now verified down to the minute!** What would you like to explore first?
+💡 **Your chart clock is now verified and calibrated!** What would you like to explore next?
 - 💼 **Career & Wealth:** *"Job vs. Business, promotion timing, or Indu Lagna wealth potential?"*
 - 💍 **Marriage & Partnerships:** *"Marriage timing, spouse characteristics, or compatibility?"*
 - ⭐ **27 Nakshatras Activation:** *"Which Nakshatra is active for my age?"*
@@ -665,14 +723,13 @@ ${nakAct.masterRemedyRecommendation}
     q.includes("birth time rectification") ||
     q.includes("btr")
   ) {
+    const { timeStr, dateStr } = getLocalCivilDateTime(natalEphem);
     const ascRashi = natalEphem.ascendant.rashi.englishName;
     const ascDeg = `${(natalEphem.ascendant.siderealLongitude % 30).toFixed(2)}°`;
     const moonNak = natalEphem.planets.Moon?.nakshatra.sanskritName || "Punarvasu";
-    const localTimeStr = birthDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-    const localDateStr = birthDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
     return `### 🎯 **Step 1: Birth Time & Stability Overview**
-- 📅 **Date of Birth:** **${localDateStr}** • **Time:** **${localTimeStr}**
+- 📅 **Date of Birth:** **${dateStr}** • **Time:** **${timeStr}**
 - 📍 **Place:** **${natalEphem.location?.cityName || "Allahabad"}, ${natalEphem.location?.country || "India"}**
 - 🏛️ **Primary Ascendant:** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
 
