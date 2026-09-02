@@ -727,19 +727,17 @@ ${nakAct.masterRemedyRecommendation}
     matchCount++; // Sibling anchor is always mapped to D3
     if (!isQ4Yes) matchCount++; // No surgery confirms Shubha Drishti
 
-    const matchPct = matchCount === 4 ? "100% Exact & Confirmed" : matchCount === 3 ? "90% High Precision Match" : "80% Calibration Match";
-
     const q1Explanation = isQ1Yes
       ? `- 🎓 **2020–2022 Academic Fruition (✅ Confirmed):**
   * Matches your **5th & 9th House Dasha sub-period gateways**, confirming the exact degree of your academic houses.`
-      : `- 🎓 **Academic Milestone (2020–2022) (⚠️ Alternate Timeline / Shifted Window):**
-  * You indicated education/skill milestones did not culminate in this specific window. This confirms your **D-24 Chaturvimshamsha learning gateway** operated on a different sub-period cycle (e.g. self-directed or earlier).`;
+      : `- 🎓 **Academic Milestone (2020–2022) (⚠️ Milestone Divergence):**
+  * You indicated education/degree milestones did not culminate in this specific window. This confirms your **D-24 Chaturvimshamsha higher-learning cusp** operated on an alternate sub-period window.`;
 
     const q2Explanation = isQ2Yes
       ? `- 💼 **2023–2025 Career Responsibility (✅ Confirmed):**
   * Corresponds to **Saturn's D-10 Dasamsa transit axis**, confirming the exact cusp of your 10th house (Karma).`
-      : `- 💼 **2023–2025 Career Responsibility (⚠️ Internal Consolidation):**
-  * Indicates your career energy was focused on internal skills and preparation rather than public role transition.`;
+      : `- 💼 **2023–2025 Career Responsibility (⚠️ Milestone Divergence):**
+  * Indicates your career energy was internal/preparatory rather than an external public role transition, shifting the D-10 Dasamsa cusp.`;
 
     const q3Explanation = `- 🌿 **Sibling Position (${siblingText}) (✅ Confirmed):**
   * Locks the **3rd house and D-3 Drekkana lagna** alignments with your birth order.`;
@@ -750,10 +748,27 @@ ${nakAct.masterRemedyRecommendation}
       : `- 🛡️ **Physical Marks / Surgery (✅ Confirmed):**
   * Protective **Shubha Drishti (Jupiter's benefic aspect)** on Lagna, shielding against major surgical scars.`;
 
+    let statusHeader = "";
+    let conclusionBlock = "";
+
+    if (matchCount === 4) {
+      statusHeader = "✅ 100% Exact Precision Match (Clock Locked)";
+      conclusionBlock = `💡 **Your chart clock is fully synchronized down to the minute!** All D-1, D-3, D-9 Navamsha, and D-10 Dasamsa sub-chart cusps align with your life milestones.`;
+    } else if (matchCount === 3) {
+      statusHeader = "🟡 75% High Precision Match (Minor Micro-Calibration)";
+      conclusionBlock = `💡 **Your primary Lagna and D-9 Navamsha are firmly verified!** One minor sub-period variation was observed (D-24 education or D-10 career micro-window within ±1 to 2 minutes), which is standard and safe for predictive consultations.`;
+    } else {
+      statusHeader = "⚠️ 50% Clock Shift Detected (Rectification Required)";
+      conclusionBlock = `⚠️ **Birth Clock Offset Identified (50% Milestone Divergence):**
+While your physical Ascendant (**${ascRashi} ${ascDeg}**) is stable, the divergence of major 2020–2022 and 2023–2025 Dasha gateways indicates your recorded time of **${timeStr}** is approximate (rounded at the hospital).
+* In classical BTR, your true astrological birth time is shifted by **±3 to 6 minutes**.
+* *Recommended Calibration:* Consider testing a fine-tuned window of **±3 to 5 minutes** to lock the exact D-9 Navamsha Pada and D-10 Dasamsa cusps for pinpoint career and marriage timing.`;
+    }
+
     return `### 🎯 **Birth Time Verification Analysis & Verdict**
 
 - 📍 **Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${natalEphem.location?.cityName || "Allahabad"}, ${natalEphem.location?.country || "India"}**
-- 🌟 **Verification Status:** **✅ ${matchPct}**
+- 🌟 **Verification Status:** **${statusHeader}**
 - 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
 
 #### 🔍 **Mathematical Shastric Alignment Proofs:**
@@ -763,7 +778,9 @@ ${q3Explanation}
 ${q4Explanation}
 
 ---
-💡 **Your chart clock is now verified and calibrated!** What would you like to explore next?
+${conclusionBlock}
+
+What would you like to explore next?
 - 💼 **Career & Wealth:** *"Job vs. Business, promotion timing, or Indu Lagna wealth potential?"*
 - 💍 **Marriage & Partnerships:** *"Marriage timing, spouse characteristics, or compatibility?"*
 - ⭐ **27 Nakshatras Activation:** *"Which Nakshatra is active for my age?"*
