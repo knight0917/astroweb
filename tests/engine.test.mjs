@@ -3715,6 +3715,54 @@ test("27 Nakshatras Activation Years & Cosmic Awakening Engine Verification", as
   assert.ok(summary.includes("Executive Nakshatra Synthesis"));
 });
 
+test("End-to-End Chatbot Response Quality Gates & Shastric Evaluation Verification", async () => {
+  const { buildAstroDossier, detectConsultationIntent } = await import("../src/engine/chatContext.ts");
+  const { calculateInduLagna, calculateBhagyaBindu } = await import("../src/engine/samirTripathiSuite.ts");
+  const { calculateSamirTripathiPanchang } = await import("../src/engine/samirTripathiPanchang.ts");
+  const { evaluateNakshatraActivation } = await import("../src/engine/nakshatraActivation.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Allahabad", country: "India", latitude: 25.4358, longitude: 81.8463, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1999-09-17T18:32:00+05:30");
+  const evalDate = new Date("2026-09-02T12:00:00Z");
+
+  const natalEphem = calculateVedicEphemeris(birthDate, location, "Lahiri");
+  const transitEphem = calculateVedicEphemeris(evalDate, location, "Lahiri");
+
+  // 1. Indu Lagna Gate
+  const indu = calculateInduLagna(natalEphem);
+  assert.strictEqual(indu.induLagnaRashi.englishName, "Leo");
+  assert.strictEqual(indu.induLagnaHouseFromD1, 6);
+
+  // 2. Bhagya Bindu Gate
+  const bb = calculateBhagyaBindu(natalEphem);
+  assert.ok(bb.rashi.englishName);
+  assert.ok(bb.house > 0);
+
+  // 3. Nakshatra Activation Gate
+  const nakAct = evaluateNakshatraActivation(natalEphem, birthDate, evalDate);
+  assert.strictEqual(nakAct.completedAge, 26);
+  assert.strictEqual(nakAct.runningYear, 27);
+  assert.ok(nakAct.masterRemedyRecommendation.length > 20);
+
+  // 4. Daily Panchang Gate
+  const panchang = calculateSamirTripathiPanchang(evalDate, location, "Lahiri");
+  assert.ok(panchang.tithi.name);
+  assert.ok(panchang.vara.hindiName);
+  assert.ok(panchang.dishaShool.prohibitedDirection);
+  assert.ok(panchang.exitRemedy);
+
+  // 5. Intent Slicing & Quality Dossier Gate
+  const careerDossier = buildAstroDossier(natalEphem, transitEphem, evalDate, "male", undefined, "career");
+  assert.ok(careerDossier.includes("JOB VS BUSINESS"));
+  assert.ok(careerDossier.includes("27 NAKSHATRA ACTIVATION YEARS"));
+  assert.ok(careerDossier.includes("RASHI TULYA NAVAMSHA"));
+
+  const marriageDossier = buildAstroDossier(natalEphem, transitEphem, evalDate, "male", undefined, "marriage");
+  assert.ok(marriageDossier.includes("MASTER MULTI-VARGA MARRIAGE"));
+  assert.ok(marriageDossier.includes("BHRIGU NANDI NADI"));
+});
+
 
 
 
