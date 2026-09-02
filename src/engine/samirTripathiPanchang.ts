@@ -13,6 +13,24 @@ import { calculateVedicEphemeris } from "./ephemeris";
 import { getRashi } from "./rashiNakshatra";
 import { TITHI_NAMES, YOGA_NAMES, RASHIS } from "./constants";
 
+export interface TithiSpanStatus {
+  isKshaya: boolean;
+  isVriddhi: boolean;
+  statusText: string;
+  shastricGuidance: string;
+}
+
+export interface LunarMonthDetail {
+  amantaMonth: string; // e.g. "Bhadrapada (भाद्रपद)"
+  purnimantaMonth: string; // e.g. "Ashwina (आश्विन)"
+  vikramSamvat: number; // e.g. 2083
+  shakaSamvat: number; // e.g. 1948
+  ayanam: "Uttarayana (उत्तरायण)" | "Dakshinayana (दक्षिणायन)";
+  ritu: "Vasanta (वसन्त)" | "Grishma (ग्रीष्म)" | "Varsha (वर्षा)" | "Sharad (शरद्)" | "Hemanta (हेमन्त)" | "Shishira (शिशिर)";
+  rituHindi: string;
+  isAdhikaMasa: boolean;
+}
+
 export interface TithiDetail {
   index: number; // 0 to 29
   tithiNumber: number; // 1 to 15
@@ -27,6 +45,7 @@ export interface TithiDetail {
   tatva: "Agni" | "Prithvi" | "Vayu" | "Jala" | "Akasha";
   tatvaHindi: string;
   significance: string;
+  spanStatus: TithiSpanStatus;
   endTime: Date;
   endTimeFormatted: string;
   remainingHoursFormatted: string;
@@ -78,6 +97,8 @@ export interface YogaDetail {
   nature: "Shubha (Auspicious)" | "Ashubha (Inauspicious)" | "Ati-Shubha (Highly Auspicious)";
   deity: string;
   description: string;
+  favorableActs: string;
+  prohibitedActs: string;
   endTime: Date;
   endTimeFormatted: string;
 }
@@ -142,6 +163,9 @@ export interface DailySamirTripathiPanchang {
   sunsetFormatted: string;
   dayDurationFormatted: string;
   nightDurationFormatted: string;
+
+  // Vedic Calendar Context
+  lunarMonth: LunarMonthDetail;
 
   // 5 Core Limbs
   tithi: TithiDetail;
@@ -356,36 +380,67 @@ const NAKSHATRA_NATURES: Record<number, { nature: NakshatraDetail["nature"]; nat
   26: { nature: "Mridu (Maitra)", natureHindi: "मृदु (मैत्र)", favorable: "Travel, trade, marriage, clothing, jewellery, fine arts." }, // Revati
 };
 
-// Yoga Auspiciousness Map
-const YOGA_NATURE_MAP: Record<number, { nature: YogaDetail["nature"]; deity: string; desc: string }> = {
-  0: { nature: "Ashubha (Inauspicious)", deity: "Yama", desc: "Vishkambha — obstacles and friction in early hours." },
-  1: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Surya", desc: "Priti — mutual love, harmony and friendly alliances." },
-  2: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Vishnu", desc: "Ayushman — longevity, health and vital energy." },
-  3: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Savitri", desc: "Saubhagya — good fortune, marital bliss and prosperity." },
-  4: { nature: "Shubha (Auspicious)", deity: "Chandra", desc: "Shobhana — elegance, radiance and artistic success." },
-  5: { nature: "Ashubha (Inauspicious)", deity: "Rahu", desc: "Atiganda — severe obstacles, avoid journey and new ventures." },
-  6: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Indra", desc: "Sukarma — auspicious actions, charity and virtue." },
-  7: { nature: "Ashubha (Inauspicious)", deity: "Varuna", desc: "Dhriti — patience, steadiness and fortitude." },
-  8: { nature: "Ashubha (Inauspicious)", deity: "Yama", desc: "Shula — pain and discord, sharp instruments and litigation." },
-  9: { nature: "Ashubha (Inauspicious)", deity: "Prajapati", desc: "Ganda — distress and impediments; needs caution." },
-  10: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Mitra", desc: "Vriddhi — growth, expansion, financial gains and glory." },
-  11: { nature: "Shubha (Auspicious)", deity: "Varuna", desc: "Dhruva — constancy, fixed assets and permanence." },
-  12: { nature: "Ashubha (Inauspicious)", deity: "Yama", desc: "Vyaghata — fierce, sudden blows; avoid major contracts." },
-  13: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Bhaga", desc: "Harshana — immense joy, celebrations and triumph." },
-  14: { nature: "Ashubha (Inauspicious)", deity: "Rudra", desc: "Vajra — weapon-like hard impact; avoid gentle deeds." },
-  15: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Vishnu", desc: "Siddhi — accomplishment, mastery and wish fulfillment." },
-  16: { nature: "Ashubha (Inauspicious)", deity: "Yama", desc: "Vyatipata — calamitous celestial turbulence; avoid major events." },
-  17: { nature: "Shubha (Auspicious)", deity: "Shiva", desc: "Variyana — comfort, luxury, respect and high position." },
-  18: { nature: "Ashubha (Inauspicious)", deity: "Agni", desc: "Parigha — blockade and obstructions; travel prohibited." },
-  19: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Ganesha", desc: "Shiva — auspiciousness, purity and spiritual grace." },
-  20: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Brahma", desc: "Siddha — complete perfection, spiritual powers and victory." },
-  21: { nature: "Shubha (Auspicious)", deity: "Sadhya", desc: "Sadhya — achievable goals, discipline and learning." },
-  22: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Shubha", desc: "Shubha — pure fortune, beauty and sacred rituals." },
-  23: { nature: "Shubha (Auspicious)", deity: "Lakshmi", desc: "Shukla — bright, pure, virtuous deeds and ceremonies." },
-  24: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Brahma", desc: "Brahma — supreme wisdom, Vedic knowledge and peace." },
-  25: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Indra", desc: "Indra — leadership, administrative authority and power." },
-  26: { nature: "Ashubha (Inauspicious)", deity: "Diti", desc: "Vaidhriti — malefic cosmic vortex; strictly avoid auspicious starts." },
+// Yoga Actionable Matrix
+const YOGA_META_MAP: Record<number, { nature: YogaDetail["nature"]; deity: string; desc: string; favorable: string; prohibited: string }> = {
+  0: { nature: "Ashubha (Inauspicious)", deity: "Yama", desc: "Vishkambha — obstacles and friction in early hours.", favorable: "Overcoming enemies, destruction of bad habits.", prohibited: "New auspicious beginnings, travels, marriage ceremonies." },
+  1: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Surya", desc: "Priti — mutual love, harmony and friendly alliances.", favorable: "Friendships, reconciliations, artistic creations, romantic partnerships.", prohibited: "Harsh legal disputes, surgical confrontations." },
+  2: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Vishnu", desc: "Ayushman — longevity, health and vital energy.", favorable: "Medical treatments, health regimens, starting educational degrees, buying clothes.", prohibited: "Destructive acts, litigation." },
+  3: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Savitri", desc: "Saubhagya — good fortune, marital bliss and prosperity.", favorable: "Marriage, business partnerships, investment in jewellery/property.", prohibited: "Gambling, aggressive confrontation." },
+  4: { nature: "Shubha (Auspicious)", deity: "Chandra", desc: "Shobhana — elegance, radiance and artistic success.", favorable: "Decoration, purchasing cars, beauty treatments, festivals.", prohibited: "Entering conflict, hazardous travel." },
+  5: { nature: "Ashubha (Inauspicious)", deity: "Rahu", desc: "Atiganda — severe obstacles, avoid journey and new ventures.", favorable: "Tantric Sadhana, research into hidden secrets.", prohibited: "All major auspicious works, starting construction, buying assets." },
+  6: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Indra", desc: "Sukarma — auspicious actions, charity and virtue.", favorable: "Religious rituals, charity, joining new employment, trade contracts.", prohibited: "Deceitful or unethical practices." },
+  7: { nature: "Ashubha (Inauspicious)", deity: "Varuna", desc: "Dhriti — patience, steadiness and fortitude.", favorable: "Laying foundation stones, patience-heavy technical work.", prohibited: "Impatient speculative trading." },
+  8: { nature: "Ashubha (Inauspicious)", deity: "Yama", desc: "Shula — pain and discord, sharp instruments and litigation.", favorable: "Surgical operations, iron work, weapon storage.", prohibited: "Marriage, long travels, signing agreements." },
+  9: { nature: "Ashubha (Inauspicious)", deity: "Prajapati", desc: "Ganda — distress and impediments; needs caution.", favorable: "Penance, spiritual fasting, consulting mystics.", prohibited: "Financial loans, auspicious beginnings." },
+  10: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Mitra", desc: "Vriddhi — growth, expansion, financial gains and glory.", favorable: "Investments, inaugurations, signing commercial leases, agricultural sowing.", prohibited: "Borrowing debts (debts will expand)." },
+  11: { nature: "Shubha (Auspicious)", deity: "Varuna", desc: "Dhruva — constancy, fixed assets and permanence.", favorable: "Griha Pravesh, swearing-in ceremonies, long-term fixed deposits.", prohibited: "Temporary or fast-moving speculative trading." },
+  12: { nature: "Ashubha (Inauspicious)", deity: "Yama", desc: "Vyaghata — fierce, sudden blows; avoid major contracts.", favorable: "Martial arts, hunting, defensive strategy.", prohibited: "Gentle partnerships, travelling at night, buying vehicles." },
+  13: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Bhaga", desc: "Harshana — immense joy, celebrations and triumph.", favorable: "Celebrating achievements, music concerts, festivals, parties.", prohibited: "Mourning, solitary pessimistic thoughts." },
+  14: { nature: "Ashubha (Inauspicious)", deity: "Rudra", desc: "Vajra — weapon-like hard impact; avoid gentle deeds.", favorable: "Metal forging, surgical operations, breaking stones.", prohibited: "Delicate artistic works, lending money." },
+  15: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Vishnu", desc: "Siddhi — accomplishment, mastery and wish fulfillment.", favorable: "All sacred beginnings, signing contracts, spiritual mantras, buying property.", prohibited: "None (supreme blessing day)." },
+  16: { nature: "Ashubha (Inauspicious)", deity: "Yama", desc: "Vyatipata — calamitous celestial turbulence; avoid major events.", favorable: "Pitri Tarpan, chanting Gayatri, quiet introspection.", prohibited: "All 16 Samskaras, starting businesses, inaugurations." },
+  17: { nature: "Shubha (Auspicious)", deity: "Shiva", desc: "Variyana — comfort, luxury, respect and high position.", favorable: "Meeting royalty/superiors, luxury purchases, music, fine dining.", prohibited: "Hard physical labor, harsh words." },
+  18: { nature: "Ashubha (Inauspicious)", deity: "Agni", desc: "Parigha — blockade and obstructions; travel prohibited.", favorable: "Enclosing boundaries, building fences, defensive fortification.", prohibited: "Traveling abroad, initiating diplomacy." },
+  19: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Ganesha", desc: "Shiva — auspiciousness, purity and spiritual grace.", favorable: "Shiva Puja, buying land, learning sciences, marriage.", prohibited: "Impure acts, greed." },
+  20: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Brahma", desc: "Siddha — complete perfection, spiritual powers and victory.", favorable: "Spiritual mastery, passing exams, winning arguments, healing.", prohibited: "Unethical actions." },
+  21: { nature: "Shubha (Auspicious)", deity: "Sadhya", desc: "Sadhya — achievable goals, discipline and learning.", favorable: "Setting goals, athletic training, academic study, legal mediation.", prohibited: "Procrastination." },
+  22: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Shubha", desc: "Shubha — pure fortune, beauty and sacred rituals.", favorable: "Yajnas, pilgrimages, investing in gold, buying elegant clothes.", prohibited: "Harsh or deceptive deeds." },
+  23: { nature: "Shubha (Auspicious)", deity: "Lakshmi", desc: "Shukla — bright, pure, virtuous deeds and ceremonies.", favorable: "Charity, temple worship, artistic performances, banking.", prohibited: "Dark/covert dealings." },
+  24: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Brahma", desc: "Brahma — supreme wisdom, Vedic knowledge and peace.", favorable: "Vedic recitation, guru blessings, philosophical study, peace treaties.", prohibited: "Sensory over-indulgence, discord." },
+  25: { nature: "Ati-Shubha (Highly Auspicious)", deity: "Indra", desc: "Indra — leadership, administrative authority and power.", favorable: "Assuming high office, signing global pacts, governance.", prohibited: "Submissive weakness, betrayal of trust." },
+  26: { nature: "Ashubha (Inauspicious)", deity: "Diti", desc: "Vaidhriti — malefic cosmic vortex; strictly avoid auspicious starts.", favorable: "Maha Mrityunjaya Japa, charity to leprosy/blind homes.", prohibited: "All worldly auspicious beginnings and journey." },
 };
+
+// Vedic Month Names corresponding to Sun's Sidereal Transit
+const VEDIC_MONTH_NAMES = [
+  "Mesha (वैशाख / Vaishakha)",
+  "Vrishabha (ज्येष्ठ / Jyeshtha)",
+  "Mithuna (आषाढ़ / Ashadha)",
+  "Karka (श्रावण / Shravana)",
+  "Simha (भाद्रपद / Bhadrapada)",
+  "Kanya (आश्विन / Ashwina)",
+  "Tula (कार्तिक / Kartika)",
+  "Vrishchika (मार्गशीर्ष / Margashirsha)",
+  "Dhanu (पौष / Pausha)",
+  "Makara (माघ / Magha)",
+  "Kumbha (फाल्गुन / Phalguna)",
+  "Meena (चैत्र / Chaitra)",
+];
+
+const AMANTA_MONTH_LIST = [
+  "Vaishakha (वैशाख)",
+  "Jyeshtha (ज्येष्ठ)",
+  "Ashadha (आषाढ़)",
+  "Shravana (श्रावण)",
+  "Bhadrapada (भाद्रपद)",
+  "Ashwina (आश्विन)",
+  "Kartika (कार्तिक)",
+  "Margashirsha (मार्गशीर्ष)",
+  "Pausha (पौष)",
+  "Magha (माघ)",
+  "Phalguna (फाल्गुन)",
+  "Chaitra (चैत्र)",
+];
 
 /**
  * Main Function: Calculate Complete Dr. Samir Tripathi Daily Panchanga
@@ -428,6 +483,7 @@ export function calculateSamirTripathiPanchang(
   const moonTropLon = ephem.planets.Moon?.tropicalLongitude || 0;
   const sunSidLon = ephem.planets.Sun?.siderealLongitude || 0;
   const moonSidLon = ephem.planets.Moon?.siderealLongitude || 0;
+  const sunRashi = ephem.planets.Sun?.rashi || getRashi(sunSidLon);
   const moonRashi = ephem.planets.Moon?.rashi || getRashi(moonSidLon);
 
   // 3. Tithi Calculation
@@ -445,6 +501,27 @@ export function calculateSamirTripathiPanchang(
   const degRemainingInTithi = 12 - degIntoTithi;
   const hoursToTithiEnd = (degRemainingInTithi / 12.19) * 24;
   const tithiEndTime = new Date(date.getTime() + hoursToTithiEnd * 3600 * 1000);
+
+  // Tithi Vriddhi / Kshaya Determination (Dr. Samir Tripathi Shastra)
+  // Tithi Kshaya: Tithi ends before next sunrise without touching the next sunrise.
+  // Tithi Vriddhi: Tithi spans across two sunrises (duration > 24 hours).
+  const isKshaya = hoursToTithiEnd < 20 && (tithiEndTime.getTime() < nextSunrise.getTime()) && (degIntoTithi > 6);
+  const isVriddhi = hoursToTithiEnd > 24.5;
+
+  const spanStatus: TithiSpanStatus = {
+    isKshaya,
+    isVriddhi,
+    statusText: isKshaya
+      ? "⚠️ क्षय तिथि (Tithi Kshaya — Fast-moving lunar phase)"
+      : isVriddhi
+      ? "✨ वृद्धि तिथि (Tithi Vriddhi — Extended auspicious phase)"
+      : "✅ सामान्य तिथि (Normal Standard Tithi)",
+    shastricGuidance: isKshaya
+      ? "आज तिथि का क्षय है। अत्यधिक संवेदनशील व बड़े वित्तीय अनुबंधों में सावधानी बरतें।"
+      : isVriddhi
+      ? "आज तिथि की वृद्धि है। यह आध्यात्मिक साधना, दान व दीर्घकालीन कार्यों के लिए अत्यंत शुभ है।"
+      : "तिथि सामान्य रूप से गतिमान है।",
+  };
 
   const illum = Astronomy.Illumination(Astronomy.Body.Moon, astroTime);
   const moonEmoji = tithiIdx === 14 ? "🌕" : tithiIdx === 29 ? "🌑" : tithiIdx < 14 ? "🌓" : "🌘";
@@ -464,6 +541,7 @@ export function calculateSamirTripathiPanchang(
     tatva: tithiCat.tatva,
     tatvaHindi: tithiCat.tatvaHindi,
     significance: tithiCat.significance,
+    spanStatus,
     endTime: tithiEndTime,
     endTimeFormatted: formatTime12h(tithiEndTime),
     remainingHoursFormatted: `${Math.floor(hoursToTithiEnd)}h ${Math.floor((hoursToTithiEnd % 1) * 60)}m remaining`,
@@ -471,7 +549,52 @@ export function calculateSamirTripathiPanchang(
     illuminationPercent: Math.round(illum.phase_fraction * 100),
   };
 
-  // 4. Vara (Weekday) Detail
+  // 4. Vedic Lunar Month, Samvat, Ayanam & Ritu
+  const sunRashiIdx = sunRashi.index;
+  const amantaMonthName = AMANTA_MONTH_LIST[sunRashiIdx] || "Chaitra (चैत्र)";
+  // In Krishna Paksha, Purnimanta month is 1 month ahead of Amanta
+  const purnimantaMonthIdx = paksha === "Krishna" ? (sunRashiIdx + 1) % 12 : sunRashiIdx;
+  const purnimantaMonthName = AMANTA_MONTH_LIST[purnimantaMonthIdx] || "Chaitra (चैत्र)";
+
+  // Vikram Samvat & Shaka Samvat
+  const civilYear = date.getFullYear();
+  const isAfterChaitra = date.getMonth() >= 3;
+  const vikramSamvat = isAfterChaitra ? civilYear + 57 : civilYear + 56;
+  const shakaSamvat = isAfterChaitra ? civilYear - 78 : civilYear - 79;
+
+  // Ayanam: Uttarayana when Sun in Makara to Mithuna (9 to 2)
+  const isUttarayana = [9, 10, 11, 0, 1, 2].includes(sunRashiIdx);
+  const ayanam = isUttarayana ? "Uttarayana (उत्तरायण)" : "Dakshinayana (दक्षिणायन)";
+
+  // 6 Ritus
+  const RITU_LIST: Array<{ ritu: LunarMonthDetail["ritu"]; hindi: string }> = [
+    { ritu: "Vasanta (वसन्त)", hindi: "वसन्त ऋतु (Spring — नवीनीकरण एवं उल्लास)" }, // Chaitra / Vaishakha (Pisces/Aries)
+    { ritu: "Vasanta (वसन्त)", hindi: "वसन्त ऋतु (Spring)" },
+    { ritu: "Grishma (ग्रीष्म)", hindi: "ग्रीष्म ऋतु (Summer — तेज एवं ऊर्जा)" }, // Taurus/Gemini
+    { ritu: "Grishma (ग्रीष्म)", hindi: "ग्रीष्म ऋतु (Summer)" },
+    { ritu: "Varsha (वर्षा)", hindi: "वर्षा ऋतु (Monsoon — नवजीवन व समृद्धि)" }, // Cancer/Leo
+    { ritu: "Varsha (वर्षा)", hindi: "वर्षा ऋतु (Monsoon)" },
+    { ritu: "Sharad (शरद्)", hindi: "शरद् ऋतु (Autumn — निर्मलता व स्वास्थ्य)" }, // Virgo/Libra
+    { ritu: "Sharad (शरद्)", hindi: "शरद् ऋतु (Autumn)" },
+    { ritu: "Hemanta (हेमन्त)", hindi: "हेमन्त ऋतु (Pre-Winter — पुष्टि व शक्ति)" }, // Scorpio/Sagittarius
+    { ritu: "Hemanta (हेमन्त)", hindi: "हेमन्त ऋतु (Pre-Winter)" },
+    { ritu: "Shishira (शिशिर)", hindi: "शिशिर ऋतु (Winter — साधना व तपस्या)" }, // Capricorn/Aquarius
+    { ritu: "Shishira (शिशिर)", hindi: "शिशिर ऋतु (Winter)" },
+  ];
+  const rituInfo = RITU_LIST[sunRashiIdx] || RITU_LIST[0];
+
+  const lunarMonth: LunarMonthDetail = {
+    amantaMonth: amantaMonthName,
+    purnimantaMonth: purnimantaMonthName,
+    vikramSamvat,
+    shakaSamvat,
+    ayanam,
+    ritu: rituInfo.ritu,
+    rituHindi: rituInfo.hindi,
+    isAdhikaMasa: false,
+  };
+
+  // 5. Vara (Weekday) Detail
   const dayOfWeek = date.getDay();
   const varaInfo = VARA_DATA[dayOfWeek];
 
@@ -492,7 +615,7 @@ export function calculateSamirTripathiPanchang(
     activitiesFavorable: varaInfo.activitiesFavorable,
   };
 
-  // 5. Nakshatra Detail
+  // 6. Nakshatra Detail
   const nak = ephem.planets.Moon?.nakshatra || { index: 0, name: "Ashwini", sanskritName: "Ashwini", lord: "Ketu", deity: "Ashwini Kumaras" };
   const nakNature = NAKSHATRA_NATURES[nak.index] || {
     nature: "Kshipra (Laghu)",
@@ -548,10 +671,16 @@ export function calculateSamirTripathiPanchang(
     remainingHoursFormatted: `${Math.floor(hoursToNakEnd)}h ${Math.floor((hoursToNakEnd % 1) * 60)}m remaining`,
   };
 
-  // 6. Yoga Detail
+  // 7. Yoga Detail with Actionable Guide
   let yogaSum = (sunSidLon + moonSidLon) % 360;
   const yogaIdx = Math.floor(yogaSum / (360 / 27)) % 27;
-  const yogaMeta = YOGA_NATURE_MAP[yogaIdx] || { nature: "Shubha (Auspicious)", deity: "Vishnu", desc: "Auspicious flow." };
+  const yogaMeta = YOGA_META_MAP[yogaIdx] || {
+    nature: "Shubha (Auspicious)",
+    deity: "Vishnu",
+    desc: "Auspicious flow.",
+    favorable: "General auspicious deeds.",
+    prohibited: "Adverse actions.",
+  };
 
   const degIntoYoga = yogaSum % (360 / 27);
   const degRemInYoga = 360 / 27 - degIntoYoga;
@@ -566,11 +695,13 @@ export function calculateSamirTripathiPanchang(
     nature: yogaMeta.nature,
     deity: yogaMeta.deity,
     description: yogaMeta.desc,
+    favorableActs: yogaMeta.favorable,
+    prohibitedActs: yogaMeta.prohibited,
     endTime: yogaEndTime,
     endTimeFormatted: formatTime12h(yogaEndTime),
   };
 
-  // 7. Karana Detail
+  // 8. Karana Detail
   const karanaIdx = Math.floor(tithiDiff / 6) % 60;
   let karanaName = "";
   let isBhadra = false;
@@ -631,7 +762,7 @@ export function calculateSamirTripathiPanchang(
     endTimeFormatted: formatTime12h(karanaEndTime),
   };
 
-  // 8. Disha Shool & Chandra Vaas
+  // 9. Disha Shool & Chandra Vaas
   const chandraVaasDirections: Record<number, string> = {
     0: "East (पूर्व)", // Aries
     4: "East (पूर्व)", // Leo
@@ -655,7 +786,7 @@ export function calculateSamirTripathiPanchang(
     chandraRashi: `${moonRashi.englishName} (${moonRashi.sanskritName})`,
   };
 
-  // 9. Auspicious & Inauspicious Muhurtas Timeline
+  // 10. Auspicious & Inauspicious Muhurtas Timeline
   const now = date;
   const auspiciousMuhurtas: MuhurtaSlot[] = [];
   const inauspiciousMuhurtas: MuhurtaSlot[] = [];
@@ -792,13 +923,13 @@ export function calculateSamirTripathiPanchang(
   // --- Inauspicious Kaalas ---
   // A. Rahu Kaalam (1/8th day segment per weekday)
   const rahuKaalOffsets: Record<number, number> = {
-    0: 7, // Sun: 8th segment (4:30 - 6:00 PM approx)
-    1: 1, // Mon: 2nd segment (7:30 - 9:00 AM approx)
-    2: 6, // Tue: 7th segment (3:00 - 4:30 PM approx)
-    3: 4, // Wed: 5th segment (12:00 - 1:30 PM approx)
-    4: 5, // Thu: 6th segment (1:30 - 3:00 PM approx)
-    5: 3, // Fri: 4th segment (10:30 - 12:00 PM approx)
-    6: 2, // Sat: 3rd segment (9:00 - 10:30 AM approx)
+    0: 7, // Sun: 8th segment
+    1: 1, // Mon: 2nd segment
+    2: 6, // Tue: 7th segment
+    3: 4, // Wed: 5th segment
+    4: 5, // Thu: 6th segment
+    5: 3, // Fri: 4th segment
+    6: 2, // Sat: 3rd segment
   };
   const dayOctantMs = dayDurationMs / 8;
   const rahuOffset = rahuKaalOffsets[dayOfWeek];
@@ -901,28 +1032,22 @@ export function calculateSamirTripathiPanchang(
   const allMuhurtas = [...auspiciousMuhurtas, ...inauspiciousMuhurtas];
   const activeMuhurtaNow = allMuhurtas.find((m) => m.isActiveNow) || null;
 
-  // 10. Chandra Bala for all 12 Rashis (Moon Transit Strength)
+  // 11. Chandra Bala for all 12 Rashis (Moon Transit Strength)
   const chandraBalaList: ChandraBalaRashi[] = RASHIS.map((r, rIdx) => {
-    // House of transit Moon from natal Rashi
     const houseFromRashi = ((moonRashi.index - rIdx + 12) % 12) + 1;
     let strength: ChandraBalaRashi["strength"];
     let badgeColor: string;
     let guidance: string;
 
-    // Classical Chandra Bala Rule: 1, 3, 6, 7, 10, 11 are Shubha
     if ([1, 3, 6, 7, 10, 11].includes(houseFromRashi)) {
       strength = "Shubha (Auspicious)";
       badgeColor = "bg-emerald-950 text-emerald-300 border-emerald-500 font-bold";
       guidance = "Excellent Chandra Bala. High mental clarity, enthusiasm, and support for major initiatives.";
-    }
-    // 2, 5, 9 are Moderate (Madhyama)
-    else if ([2, 5, 9].includes(houseFromRashi)) {
+    } else if ([2, 5, 9].includes(houseFromRashi)) {
       strength = "Madhyama (Moderate)";
       badgeColor = "bg-amber-950 text-amber-300 border-amber-500 font-semibold";
       guidance = "Moderate Chandra Bala. Routine affairs succeed; exercise ordinary discretion in new steps.";
-    }
-    // 4, 8, 12 are Inauspicious (Chandrashtama / 4th Kantaka / 12th Vyaya)
-    else {
+    } else {
       strength = "Ashubha (Chandrashtama / Caution)";
       badgeColor = "bg-rose-950 text-rose-300 border-rose-500 font-bold";
       guidance =
@@ -945,16 +1070,17 @@ export function calculateSamirTripathiPanchang(
     };
   });
 
-  // 11. Panchanga Shuddhi Score (0 to 100)
+  // 12. Panchanga Shuddhi Score (0 to 100)
   let shuddhi = 100;
   if (tithiDetail.category === "Rikta") shuddhi -= 20;
   if (tithiDetail.index === 29) shuddhi -= 25; // Amavasya
   if (yogaDetail.nature.includes("Ashubha")) shuddhi -= 20;
   if (isBhadra && bhadraVaas === "Bhu Loka (Mrityu Loka)") shuddhi -= 25;
   if (nakshatraDetail.nature.includes("Tikshna") || nakshatraDetail.nature.includes("Ugra")) shuddhi -= 15;
+  if (isKshaya) shuddhi -= 10;
   shuddhi = Math.max(20, Math.min(100, shuddhi));
 
-  const summary = `आज ${varaDetail.hindiName} है। तिथि: ${tithiDetail.hindiName} (${tithiDetail.pakshaHindi}, ${tithiDetail.categoryHindi}), नक्षत्र: ${nakshatraDetail.hindiName}, योग: ${yogaDetail.hindiName}, करण: ${karanaDetail.hindiName}। चन्द्रमा ${moonRashi.englishName} (${moonRashi.sanskritName}) राशि में स्थित हैं। आज का दिशाशूल: ${dishaShool.prohibitedDirection}। शुभ रंग: ${varaDetail.auspiciousColors.join(", ")}।`;
+  const summary = `आज ${varaDetail.hindiName} है। मास: ${lunarMonth.purnimantaMonth} (पूर्णिमांत) / ${lunarMonth.amantaMonth} (अमांत), ${lunarMonth.ayanam}, ${lunarMonth.ritu}। संवत्: विक्रम ${lunarMonth.vikramSamvat}। तिथि: ${tithiDetail.hindiName} (${tithiDetail.pakshaHindi}, ${tithiDetail.categoryHindi}), नक्षत्र: ${nakshatraDetail.hindiName} (पद ${nakshatraDetail.pada}), योग: ${yogaDetail.hindiName}, करण: ${karanaDetail.hindiName}। चन्द्रमा ${moonRashi.englishName} (${moonRashi.sanskritName}) राशि में स्थित हैं। आज का दिशाशूल: ${dishaShool.prohibitedDirection}। शुभ रंग: ${varaDetail.auspiciousColors.join(", ")}।`;
 
   return {
     evaluationDate: date,
@@ -967,6 +1093,7 @@ export function calculateSamirTripathiPanchang(
     sunsetFormatted: formatTime12h(sunset),
     dayDurationFormatted: `${dayHours}h ${dayMins}m`,
     nightDurationFormatted: `${nightHours}h ${nightMins}m`,
+    lunarMonth,
     tithi: tithiDetail,
     vara: varaDetail,
     nakshatra: nakshatraDetail,

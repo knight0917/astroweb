@@ -13,14 +13,19 @@ import {
   calculateSamirTripathiPanchang,
   DailySamirTripathiPanchang,
 } from "../engine/samirTripathiPanchang";
+import {
+  evaluateNakshatraActivation,
+  NAKSHATRA_ACTIVATION_TABLE,
+} from "../engine/nakshatraActivation";
 
 export default function MuhurtaView() {
-  const { currentDate, location, ayanamsha } = useAstroStore();
+  const { currentDate, ephemeris: natalEphemeris, location, ayanamsha } = useAstroStore();
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date(currentDate).toISOString().slice(0, 10)
+    new Date().toISOString().slice(0, 10)
   );
-  const [activeTab, setActiveTab] = useState<"panchang" | "muhurta" | "events" | "chandrabala">("panchang");
+  const [activeTab, setActiveTab] = useState<"panchang" | "muhurta" | "events" | "chandrabala" | "nakshatra_activation">("panchang");
   const [selectedCategory, setSelectedCategory] = useState<EventCategory | "all">("all");
+  const [nakshatraSearch, setNakshatraSearch] = useState("");
 
   const targetDate = useMemo(() => new Date(selectedDate), [selectedDate]);
 
@@ -34,6 +39,11 @@ export default function MuhurtaView() {
     return calculateSamirTripathiPanchang(targetDate, location, ayanamsha);
   }, [targetDate, location, ayanamsha]);
 
+  // 27 Nakshatras Activation Milestones for Native
+  const nakshatraActivationData = useMemo(() => {
+    return evaluateNakshatraActivation(natalEphemeris, new Date(currentDate), targetDate);
+  }, [natalEphemeris, currentDate, targetDate]);
+
   const eventCategories: { id: EventCategory; label: string; hindiLabel: string }[] = [
     { id: "grihaPravesh", label: "Griha Pravesh", hindiLabel: "गृह प्रवेश" },
     { id: "vivaha", label: "Vivaha (Marriage)", hindiLabel: "विवाह मुहूर्त" },
@@ -46,6 +56,18 @@ export default function MuhurtaView() {
   const recommendations: EventMuhurtaRecommendation[] = useMemo(() => {
     return eventCategories.map((c) => evaluateEventMuhurta(c.id, dayData));
   }, [dayData]);
+
+  const filteredNakshatras = useMemo(() => {
+    if (!nakshatraSearch.trim()) return NAKSHATRA_ACTIVATION_TABLE;
+    const q = nakshatraSearch.toLowerCase();
+    return NAKSHATRA_ACTIVATION_TABLE.filter(
+      (n) =>
+        n.name.toLowerCase().includes(q) ||
+        n.hindiName.includes(q) ||
+        n.rulingPlanet.toLowerCase().includes(q) ||
+        n.primaryThemes.toLowerCase().includes(q)
+    );
+  }, [nakshatraSearch]);
 
   const formatTime = (d: Date) => {
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -64,11 +86,11 @@ export default function MuhurtaView() {
               Vedic Daily Panchanga & Shastric Guidance
             </h2>
             <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
-              Dr. Samir Tripathi Shastra
+              Dr. Samir Tripathi Suite
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            5 Core Angas, Disha Shool & Exit Remedies, Lucky Colors, Day Mantra, Rahu Kaal, Abhijit & 12-Rashi Chandra Bala
+            5 Angas, Disha Shool & Exit Remedies, Lucky Colors, 27 Nakshatra Activation Years, Rahu Kaal & 12-Rashi Chandra Bala
           </p>
         </div>
 
@@ -113,6 +135,18 @@ export default function MuhurtaView() {
         </button>
 
         <button
+          onClick={() => setActiveTab("nakshatra_activation")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            activeTab === "nakshatra_activation"
+              ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 font-black"
+              : "bg-slate-900/70 text-slate-400 hover:text-slate-200 border border-slate-800"
+          }`}
+        >
+          <span>⭐</span>
+          <span>Nakshatra Activation Timeline (नक्षत्र जागरण वर्ष)</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab("muhurta")}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
             activeTab === "muhurta"
@@ -152,6 +186,49 @@ export default function MuhurtaView() {
       {/* TAB 1: DAILY VEDIC PANCHANGA & ASTRO GUIDANCE */}
       {activeTab === "panchang" && (
         <div className="space-y-6">
+          {/* Vedic Calendar Context Bar (Amanta/Purnimanta, Samvat, Ayanam, Ritu) */}
+          <div className="glass-panel p-4 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-950/40 via-slate-950 to-slate-950 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-base">📅</span>
+              <div>
+                <span className="text-slate-400 font-bold block">Vedic Lunar Month (मास):</span>
+                <span className="font-extrabold text-amber-300">
+                  {panchangData.lunarMonth.purnimantaMonth} (पूर्णिमांत) / {panchangData.lunarMonth.amantaMonth} (अमांत)
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-base">☸️</span>
+              <div>
+                <span className="text-slate-400 font-bold block">Samvat (संवत्):</span>
+                <span className="font-extrabold text-slate-200">
+                  विक्रम {panchangData.lunarMonth.vikramSamvat} | शक {panchangData.lunarMonth.shakaSamvat}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-base">☀️</span>
+              <div>
+                <span className="text-slate-400 font-bold block">Ayanam & Ritu (अयन एवं ऋतु):</span>
+                <span className="font-extrabold text-orange-300">
+                  {panchangData.lunarMonth.ayanam} • {panchangData.lunarMonth.ritu}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-base">🌘</span>
+              <div>
+                <span className="text-slate-400 font-bold block">Tithi Span Status:</span>
+                <span className="font-bold text-slate-300">
+                  {panchangData.tithi.spanStatus.statusText}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Solar & Lunar Ephemeris Summary Banner */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="glass-panel p-3 rounded-2xl border border-slate-800 bg-slate-950/70 flex items-center justify-between">
@@ -180,543 +257,652 @@ export default function MuhurtaView() {
 
             <div className="glass-panel p-3 rounded-2xl border border-slate-800 bg-slate-950/70 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold block">Moon Rashi (चन्द्र राशि)</span>
-                <span className="text-sm font-bold font-mono text-emerald-300">
-                  {panchangData.chandraRashi} ({panchangData.chandraRashiHindi})
+                <span className="text-[10px] text-slate-400 uppercase font-bold block">Moon Phase</span>
+                <span className="text-sm font-bold font-mono text-slate-200">
+                  {panchangData.tithi.moonPhaseEmoji} {panchangData.tithi.illuminationPercent}%
                 </span>
               </div>
-              <span className="text-xl">☽</span>
+              <span className="text-xl">🌙</span>
             </div>
           </div>
 
-          {/* 5 Core Limbs Cards Grid (पञ्चाङ्ग) */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {/* 1. Tithi Card */}
-            <div className="glass-panel p-4 rounded-2xl border border-amber-500/30 bg-slate-950/80 shadow-xl space-y-2 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-xs border-b border-slate-800 pb-1.5">
-                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider">1. Tithi (तिथि)</span>
-                  <span className="text-base">{panchangData.tithi.moonPhaseEmoji}</span>
-                </div>
-                <div className="mt-2">
-                  <h4 className="text-base font-black text-slate-100">{panchangData.tithi.name}</h4>
-                  <p className="text-[11px] text-amber-300 font-semibold">{panchangData.tithi.pakshaHindi}</p>
-                </div>
-                <div className="mt-2 space-y-1 text-xs text-slate-400">
-                  <div className="flex justify-between">
-                    <span>Category:</span>
-                    <span className="font-bold text-slate-200">{panchangData.tithi.categoryHindi}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Deity:</span>
-                    <span className="text-slate-300">{panchangData.tithi.deity}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Element:</span>
-                    <span className="text-slate-300">{panchangData.tithi.tatvaHindi}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="pt-2 border-t border-slate-800 text-[11px] font-mono">
-                <span className="text-slate-400 block">Ends at:</span>
-                <span className="font-bold text-emerald-400">{panchangData.tithi.endTimeFormatted}</span>
-                <span className="text-[10px] text-slate-500 block">{panchangData.tithi.remainingHoursFormatted}</span>
-              </div>
-            </div>
-
-            {/* 2. Vara Card */}
-            <div className="glass-panel p-4 rounded-2xl border border-slate-800 bg-slate-950/80 shadow-xl space-y-2 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-xs border-b border-slate-800 pb-1.5">
-                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider">2. Vara (वार)</span>
-                  <span className="text-base">📅</span>
-                </div>
-                <div className="mt-2">
-                  <h4 className="text-base font-black text-slate-100">{panchangData.vara.hindiName}</h4>
-                  <p className="text-[11px] text-slate-400">{panchangData.vara.dayName}</p>
-                </div>
-                <div className="mt-2 space-y-1 text-xs text-slate-400">
-                  <div className="flex justify-between">
-                    <span>Lord:</span>
-                    <span className="font-bold text-amber-300">{panchangData.vara.rulingPlanet}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Deity:</span>
-                    <span className="text-slate-300 truncate max-w-[120px]" title={panchangData.vara.deity}>
-                      {panchangData.vara.deity}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Tatva:</span>
-                    <span className="text-slate-300">{panchangData.vara.tatva}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="pt-2 border-t border-slate-800 text-[11px]">
-                <span className="text-slate-400 block font-semibold">Auspicious Activities:</span>
-                <span className="text-slate-300 text-[10px] line-clamp-2">
-                  {panchangData.vara.activitiesFavorable.slice(0, 2).join(", ")}
+          {/* 5 Core Limbs Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* 1. TITHI */}
+            <div className="glass-panel p-4 rounded-3xl border border-slate-800 bg-slate-950/80 space-y-3 relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                  <span>🌘</span> 1. TITHI (तिथि)
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                  {panchangData.tithi.categoryHindi}
                 </span>
               </div>
-            </div>
 
-            {/* 3. Nakshatra Card */}
-            <div className="glass-panel p-4 rounded-2xl border border-slate-800 bg-slate-950/80 shadow-xl space-y-2 flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between text-xs border-b border-slate-800 pb-1.5">
-                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider">3. Nakshatra (नक्षत्र)</span>
-                  <span className="text-base">⭐</span>
+                <h3 className="text-lg font-black text-slate-100">{panchangData.tithi.hindiName}</h3>
+                <p className="text-xs text-slate-400">
+                  {panchangData.tithi.pakshaHindi} (Paksha) • {panchangData.tithi.tatvaHindi}
+                </p>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs space-y-1">
+                <div className="flex justify-between text-slate-300">
+                  <span>Ends At:</span>
+                  <span className="font-mono font-bold text-amber-300">{panchangData.tithi.endTimeFormatted}</span>
                 </div>
-                <div className="mt-2">
-                  <h4 className="text-base font-black text-slate-100">{panchangData.nakshatra.name}</h4>
-                  <p className="text-[11px] text-slate-400">Pada {panchangData.nakshatra.pada} • {panchangData.nakshatra.sanskritName}</p>
+                <div className="flex justify-between text-slate-400 text-[11px]">
+                  <span>Countdown:</span>
+                  <span className="font-mono">{panchangData.tithi.remainingHoursFormatted}</span>
                 </div>
-                <div className="mt-2 space-y-1 text-xs text-slate-400">
-                  <div className="flex justify-between">
-                    <span>Lord / Devata:</span>
-                    <span className="font-bold text-slate-200">{panchangData.nakshatra.lord}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Gana / Yoni:</span>
-                    <span className="text-slate-300">{panchangData.nakshatra.gana} • {panchangData.nakshatra.yoni.split(" ")[0]}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Nature:</span>
-                    <span className="text-amber-300 font-semibold">{panchangData.nakshatra.natureHindi}</span>
-                  </div>
+                <div className="flex justify-between text-slate-400 text-[11px]">
+                  <span>Deity (देवता):</span>
+                  <span className="font-bold text-slate-300">{panchangData.tithi.deity}</span>
                 </div>
               </div>
-              <div className="pt-2 border-t border-slate-800 text-[11px] font-mono">
-                <span className="text-slate-400 block">Ends at:</span>
-                <span className="font-bold text-emerald-400">{panchangData.nakshatra.endTimeFormatted}</span>
-                <span className="text-[10px] text-slate-500 block">{panchangData.nakshatra.remainingHoursFormatted}</span>
+
+              <p className="text-[11px] text-slate-400 italic">
+                {panchangData.tithi.significance}
+              </p>
+            </div>
+
+            {/* 2. VARA (WEEKDAY) */}
+            <div className="glass-panel p-4 rounded-3xl border border-slate-800 bg-slate-950/80 space-y-3 relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-orange-400 flex items-center gap-1.5">
+                  <span>🌅</span> 2. VARA (वार)
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 font-bold border border-orange-500/30">
+                  {panchangData.vara.rulingPlanet}
+                </span>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-black text-slate-100">{panchangData.vara.hindiName}</h3>
+                <p className="text-xs text-slate-400">{panchangData.vara.planetHindi}</p>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs space-y-1">
+                <div className="flex justify-between text-slate-300">
+                  <span>Presiding Deity:</span>
+                  <span className="font-bold text-amber-300">{panchangData.vara.deity}</span>
+                </div>
+                <div className="flex justify-between text-slate-400 text-[11px]">
+                  <span>Element (तत्व):</span>
+                  <span>{panchangData.vara.tatva}</span>
+                </div>
+              </div>
+
+              <div className="text-[11px] text-slate-300">
+                <span className="font-bold text-amber-300 block">Favorable Deeds:</span>
+                {panchangData.vara.activitiesFavorable.slice(0, 2).join(", ")}
               </div>
             </div>
 
-            {/* 4. Yoga Card */}
-            <div className="glass-panel p-4 rounded-2xl border border-slate-800 bg-slate-950/80 shadow-xl space-y-2 flex flex-col justify-between">
+            {/* 3. NAKSHATRA */}
+            <div className="glass-panel p-4 rounded-3xl border border-slate-800 bg-slate-950/80 space-y-3 relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-yellow-400 flex items-center gap-1.5">
+                  <span>⭐</span> 3. NAKSHATRA (नक्षत्र)
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 font-bold border border-yellow-500/30">
+                  {panchangData.nakshatra.natureHindi}
+                </span>
+              </div>
+
               <div>
-                <div className="flex items-center justify-between text-xs border-b border-slate-800 pb-1.5">
-                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider">4. Yoga (योग)</span>
-                  <span className="text-base">✨</span>
+                <h3 className="text-lg font-black text-slate-100">
+                  {panchangData.nakshatra.hindiName} (पद {panchangData.nakshatra.pada})
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Lord: <span className="font-bold text-amber-300">{panchangData.nakshatra.lord}</span> • Deity: {panchangData.nakshatra.deity}
+                </p>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs space-y-1">
+                <div className="flex justify-between text-slate-300">
+                  <span>Ends At:</span>
+                  <span className="font-mono font-bold text-yellow-300">{panchangData.nakshatra.endTimeFormatted}</span>
                 </div>
-                <div className="mt-2">
-                  <h4 className="text-base font-black text-slate-100">{panchangData.yoga.name}</h4>
-                  <span
-                    className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full inline-block mt-1 ${
-                      panchangData.yoga.nature.includes("Ashubha")
-                        ? "bg-rose-950 text-rose-300 border border-rose-500"
-                        : "bg-emerald-950 text-emerald-300 border border-emerald-500"
-                    }`}
-                  >
-                    {panchangData.yoga.nature.split(" ")[0]}
-                  </span>
+                <div className="flex justify-between text-slate-400 text-[11px]">
+                  <span>Gana / Yoni:</span>
+                  <span>{panchangData.nakshatra.gana} • {panchangData.nakshatra.yoni}</span>
                 </div>
-                <div className="mt-2 text-[11px] text-slate-400 line-clamp-3">
+                <div className="flex justify-between text-slate-400 text-[11px]">
+                  <span>Nature (प्रकृति):</span>
+                  <span>{panchangData.nakshatra.nature}</span>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-400 italic">
+                {panchangData.nakshatra.favorableActivities}
+              </p>
+            </div>
+
+            {/* 4. YOGA */}
+            <div className="glass-panel p-4 rounded-3xl border border-slate-800 bg-slate-950/80 space-y-3 relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                  <span>🧘</span> 4. YOGA (योग)
+                </span>
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                    panchangData.yoga.nature.includes("Ashubha")
+                      ? "bg-rose-950 text-rose-300 border-rose-500"
+                      : "bg-emerald-950 text-emerald-300 border-emerald-500"
+                  }`}
+                >
+                  {panchangData.yoga.nature.split(" ")[0]}
+                </span>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-black text-slate-100">{panchangData.yoga.hindiName}</h3>
+                <p className="text-xs text-slate-400">Deity: {panchangData.yoga.deity}</p>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs space-y-1">
+                <div className="flex justify-between text-slate-300">
+                  <span>Ends At:</span>
+                  <span className="font-mono font-bold text-emerald-300">{panchangData.yoga.endTimeFormatted}</span>
+                </div>
+                <div className="text-[11px] text-slate-400">
                   {panchangData.yoga.description}
                 </div>
               </div>
-              <div className="pt-2 border-t border-slate-800 text-[11px] font-mono">
-                <span className="text-slate-400 block">Ends at:</span>
-                <span className="font-bold text-emerald-400">{panchangData.yoga.endTimeFormatted}</span>
+
+              <div className="text-[11px] space-y-1">
+                <div className="text-emerald-300 font-semibold">
+                  <span>✓ Favorable: </span>
+                  <span className="text-slate-300 font-normal">{panchangData.yoga.favorableActs}</span>
+                </div>
+                <div className="text-rose-300 font-semibold">
+                  <span>✕ Avoid: </span>
+                  <span className="text-slate-400 font-normal">{panchangData.yoga.prohibitedActs}</span>
+                </div>
               </div>
             </div>
 
-            {/* 5. Karana Card */}
-            <div className="glass-panel p-4 rounded-2xl border border-slate-800 bg-slate-950/80 shadow-xl space-y-2 flex flex-col justify-between">
+            {/* 5. KARANA */}
+            <div className="glass-panel p-4 rounded-3xl border border-slate-800 bg-slate-950/80 space-y-3 relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
+                  <span>⚖️</span> 5. KARANA (करण)
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30">
+                  {panchangData.karana.type}
+                </span>
+              </div>
+
               <div>
-                <div className="flex items-center justify-between text-xs border-b border-slate-800 pb-1.5">
-                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider">5. Karana (करण)</span>
-                  <span className="text-base">🛡️</span>
+                <h3 className="text-lg font-black text-slate-100">{panchangData.karana.hindiName}</h3>
+                <p className="text-xs text-slate-400">Deity: {panchangData.karana.rulingDeity}</p>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs space-y-1">
+                <div className="flex justify-between text-slate-300">
+                  <span>Ends At:</span>
+                  <span className="font-mono font-bold text-purple-300">{panchangData.karana.endTimeFormatted}</span>
                 </div>
-                <div className="mt-2">
-                  <h4 className="text-base font-black text-slate-100">{panchangData.karana.name}</h4>
-                  <p className="text-[11px] text-slate-400">{panchangData.karana.type}</p>
-                </div>
-                <div className="mt-2 space-y-1 text-xs text-slate-400">
-                  <div className="flex justify-between">
-                    <span>Bhadra Status:</span>
-                    <span className={`font-bold ${panchangData.karana.isBhadra ? "text-rose-400" : "text-emerald-400"}`}>
-                      {panchangData.karana.isBhadra ? "⚠️ Bhadra Active" : "No Bhadra"}
+                {panchangData.karana.isBhadra && (
+                  <div className="mt-1 pt-1 border-t border-slate-800">
+                    <span className="text-rose-400 font-bold block">
+                      ⚠️ Bhadra Vaas: {panchangData.karana.bhadraVaasHindi}
                     </span>
+                    <p className="text-[11px] text-slate-300 mt-0.5">{panchangData.karana.bhadraImpact}</p>
                   </div>
-                  {panchangData.karana.isBhadra && panchangData.karana.bhadraVaasHindi && (
-                    <div className="text-[10px] text-amber-300 font-bold bg-slate-900 p-1 rounded">
-                      {panchangData.karana.bhadraVaasHindi}
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
-              <div className="pt-2 border-t border-slate-800 text-[11px] font-mono">
-                <span className="text-slate-400 block">Ends at:</span>
-                <span className="font-bold text-emerald-400">{panchangData.karana.endTimeFormatted}</span>
-              </div>
+
+              {!panchangData.karana.isBhadra && (
+                <p className="text-[11px] text-emerald-400 font-semibold">
+                  ✅ Non-Bhadra Karana: Smooth flow for routine and auspicious activities.
+                </p>
+              )}
             </div>
-          </div>
 
-          {/* Dr. Samir Tripathi Astrological Advice Grid (दैनिक परामर्श एवं उपाय) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* A. Lucky Color of the Day & Clothing Advice */}
-            <div className="glass-panel p-5 rounded-3xl border border-amber-500/40 bg-slate-950/90 shadow-2xl space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">👕</span>
-                  <h3 className="font-black text-xs uppercase tracking-wider text-amber-300">
-                    Auspicious Colors & Clothing (आज का शुभ रंग)
-                  </h3>
-                </div>
-                <span className="text-[10px] font-mono text-slate-400">Dr. Samir Tripathi Tip</span>
+            {/* 6. DISHA SHOOL & TRAVEL REMEDY */}
+            <div className="glass-panel p-4 rounded-3xl border border-rose-900/40 bg-slate-950/90 space-y-3 relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-rose-400 flex items-center gap-1.5">
+                  <span>🧭</span> DISHA SHOOL (दिशाशूल)
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 font-bold border border-rose-500">
+                  PROHIBITED: {panchangData.dishaShool.prohibitedDirection.split(" ")[0]}
+                </span>
               </div>
 
-              <div className="space-y-3">
-                <div>
-                  <span className="text-[10px] text-emerald-400 uppercase font-black block mb-1">
-                    ✓ Recommended Auspicious Colors (धारण करने योग्य शुभ रंग):
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {panchangData.auspiciousColors.map((color, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2.5 py-1 rounded-xl bg-emerald-950/80 border border-emerald-500 text-emerald-200 text-xs font-bold"
-                      >
-                        {color}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+              <div>
+                <h3 className="text-base font-black text-rose-200">
+                  {panchangData.dishaShool.prohibitedDirection}
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Chandra Vaas (यात्रा में चन्द्र): <span className="text-amber-300 font-bold">{panchangData.dishaShool.chandraVaas}</span>
+                </p>
+              </div>
 
-                <div>
-                  <span className="text-[10px] text-rose-400 uppercase font-black block mb-1">
-                    ✕ Inauspicious Colors to Avoid Today (वर्जित रंग):
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {panchangData.inauspiciousColors.map((color, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2.5 py-1 rounded-xl bg-rose-950/80 border border-rose-500 text-rose-200 text-xs font-bold"
-                      >
-                        {color}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <p className="text-[11px] text-slate-400 leading-relaxed pt-1">
-                  Wearing the ruling planet's harmonious color attunes your personal aura with today's planetary vibrations, enhancing confidence and goodwill in negotiations.
+              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs space-y-1">
+                <span className="text-amber-300 font-bold block">🍯 Exit Remedy (घर से निकलने से पूर्व उपाय):</span>
+                <p className="text-slate-300 text-[11px] leading-relaxed font-serif">
+                  {panchangData.exitRemedy}
                 </p>
               </div>
             </div>
-
-            {/* B. Disha Shool & Exit Remedy (घर से निकलने से पूर्व उपाय) */}
-            <div className="glass-panel p-5 rounded-3xl border border-amber-500/40 bg-slate-950/90 shadow-2xl space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">🧭</span>
-                  <h3 className="font-black text-xs uppercase tracking-wider text-amber-300">
-                    Disha Shool & Exit Remedy (दिशाशूल एवं उपाय)
-                  </h3>
-                </div>
-                <span className="text-[10px] font-mono text-rose-400 font-black">
-                  Prohibited: {panchangData.dishaShool.prohibitedDirection.split(" ")[0]}
-                </span>
-              </div>
-
-              <div className="space-y-2.5 text-xs">
-                <div className="p-2.5 rounded-xl bg-rose-950/40 border border-rose-800/60 flex items-start gap-2">
-                  <span className="text-rose-400 font-bold text-sm">⚠️</span>
-                  <div>
-                    <span className="font-bold text-rose-200 block">
-                      दिशाशूल: {panchangData.dishaShool.prohibitedDirection}
-                    </span>
-                    <span className="text-[11px] text-slate-300">
-                      {panchangData.dishaShool.reason}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-500/50 space-y-1">
-                  <span className="text-[10px] text-amber-400 uppercase font-black block">
-                    🍯 Parihara / Exit Remedy (घर से निकलने से पूर्व अवश्य करें):
-                  </span>
-                  <p className="text-xs text-amber-200 font-semibold leading-relaxed">
-                    {panchangData.exitRemedy}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-1">
-                  <span>Chandra Vaas (यात्रा में चन्द्र मुख):</span>
-                  <span className="text-emerald-400 font-bold">{panchangData.dishaShool.chandraVaas}</span>
-                </div>
-              </div>
-            </div>
           </div>
 
-          {/* Mantra of the Day & Charity Card */}
-          <div className="glass-panel p-5 rounded-3xl border border-slate-800 bg-slate-950/90 shadow-2xl space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🕉️</span>
-                <h3 className="font-black text-xs uppercase tracking-wider text-slate-200">
-                  Daily Mantra Sadhana & Recommended Charity (दैनिक मंत्र व दान)
-                </h3>
-              </div>
-              <span className="text-[10px] font-mono text-amber-400">Presiding Lord: {panchangData.vara.planetHindi}</span>
+          {/* ASTRO GUIDANCE BANNER: LUCKY CLOTHING COLORS, MANTRA & CHARITY */}
+          <div className="glass-panel p-5 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-950/30 via-slate-950 to-slate-950 space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🌟</span>
+              <h3 className="text-base font-black text-amber-300">
+                Dr. Samir Tripathi Daily Shastric Astro Guidance (दैनिक ज्योतिषीय परामर्श)
+              </h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 space-y-1.5">
-                <span className="text-[10px] text-amber-400 uppercase font-black block">
-                  📿 Prescribed Beej Mantra of the Day (आज का विशेष मंत्र):
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Lucky Colors */}
+              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+                <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                  <span>👕</span> Lucky Clothing Colors (आज का शुभ रंग)
                 </span>
-                <p className="text-sm font-bold text-slate-100 font-mono leading-relaxed bg-slate-950 p-2.5 rounded-xl border border-amber-500/30">
+                <div className="space-y-1">
+                  <div className="text-xs text-slate-200 font-semibold">
+                    <span className="text-emerald-400">✓ Wear: </span>
+                    {panchangData.auspiciousColors.join(", ")}
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    <span className="text-rose-400">✕ Avoid: </span>
+                    {panchangData.inauspiciousColors.join(", ")}
+                  </div>
+                </div>
+              </div>
+
+              {/* Prescribed Day Mantra */}
+              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+                <span className="text-xs font-bold text-yellow-400 flex items-center gap-1.5">
+                  <span>🕉️</span> Prescribed Day Mantra (दैनिक मंत्र)
+                </span>
+                <p className="text-xs font-mono text-yellow-200 bg-slate-950 p-2 rounded-xl border border-yellow-500/20 leading-relaxed font-bold">
                   {panchangData.dayMantra}
                 </p>
-                <span className="text-[10px] text-slate-400 block">
-                  Chant at least 11, 21, or 108 times before starting your work to remove malefic influences.
-                </span>
               </div>
 
-              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 space-y-1.5">
-                <span className="text-[10px] text-emerald-400 uppercase font-black block">
-                  🎁 Recommended Charity (आज का शुभ दान):
+              {/* Recommended Charity */}
+              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+                <span className="text-xs font-bold text-orange-400 flex items-center gap-1.5">
+                  <span>🎁</span> Recommended Charity (आज का दान)
                 </span>
-                <p className="text-xs font-semibold text-slate-200 leading-relaxed bg-slate-950 p-2.5 rounded-xl border border-emerald-500/30">
+                <p className="text-xs text-slate-300 leading-relaxed">
                   {panchangData.recommendedCharity}
                 </p>
-                <span className="text-[10px] text-slate-400 block">
-                  Donating these items on this weekday pacifies planetary debilities and invokes divine grace.
-                </span>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* TAB 2: AUSPICIOUS & INAUSPICIOUS MUHURTAS */}
-      {activeTab === "muhurta" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Auspicious Muhurtas (शुभ काल) */}
-          <div className="glass-panel p-5 rounded-3xl border border-emerald-500/30 bg-slate-950/85 shadow-2xl space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h3 className="font-black text-xs text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span>✨</span>
-                <span>Auspicious Windows (शुभ मुहूर्त काल)</span>
-              </h3>
-              <span className="text-[10px] text-slate-400 font-mono">Sunrise: {formatTime(dayData.sunrise)}</span>
+      {/* TAB 2: NAKSHATRA ACTIVATION TIMELINE */}
+      {activeTab === "nakshatra_activation" && (
+        <div className="space-y-6">
+          {/* Hero Awakening Summary */}
+          <div className="glass-panel p-5 rounded-3xl border border-amber-500/40 bg-gradient-to-r from-amber-950/40 via-slate-950 to-slate-950 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">⭐</span>
+                <div>
+                  <h3 className="text-base md:text-lg font-black text-amber-300">
+                    27 Nakshatras Cosmic Activation Timeline (नक्षत्र जागरण वर्ष)
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Dr. Samir Tripathi & Nadi Shastra Matrix: When your natal Nakshatras awaken to trigger career, fortune, and spiritual turning points
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-4 py-2 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono font-black text-sm">
+                Current Age: {nakshatraActivationData.completedAge} Yrs (Running {nakshatraActivationData.runningYear}th Yr)
+              </div>
             </div>
 
-            <div className="space-y-2.5">
-              {panchangData.auspiciousMuhurtas.map((m, i) => (
+            <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs text-slate-200 leading-relaxed">
+              {nakshatraActivationData.executiveSynthesis}
+            </div>
+          </div>
+
+          {/* 5 Vital Points Awakening Grid */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-black text-slate-200 flex items-center gap-2">
+              <span>🪐</span> Your 5 Vital Natal Nakshatras & Activation Milestones
+            </h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {nakshatraActivationData.vitalPoints.map((vp, idx) => (
                 <div
-                  key={i}
-                  className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 transition-colors ${
-                    m.isActiveNow
-                      ? "bg-emerald-950/50 border-emerald-400 shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-400"
-                      : "bg-slate-900/90 border-emerald-900/40 hover:border-emerald-500/50"
+                  key={idx}
+                  className={`glass-panel p-4 rounded-3xl border transition-all space-y-3 ${
+                    vp.isActiveNow
+                      ? "border-amber-500 bg-amber-950/20 shadow-lg shadow-amber-500/10"
+                      : vp.activationStatus.includes("Upcoming")
+                      ? "border-slate-700 bg-slate-950/80"
+                      : "border-slate-800 bg-slate-950/60"
                   }`}
                 >
-                  <div className="space-y-1">
-                    <div className="font-bold text-xs text-slate-100 flex items-center gap-2">
-                      <span>{m.name}</span>
-                      <span className="text-[10px] text-amber-400 font-mono">({m.sanskritName})</span>
-                      {m.isActiveNow && (
-                        <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-emerald-500 text-slate-950 animate-pulse">
-                          ACTIVE NOW
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-slate-400 leading-tight">{m.description}</p>
-                  </div>
-                  <div className="text-right flex-shrink-0 font-mono">
-                    <span className="text-xs font-bold text-emerald-400 block">
-                      {m.startFormatted} – {m.endFormatted}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-400">{vp.pointType}</span>
+                    <span
+                      className={`text-[10px] px-2.5 py-0.5 rounded-full font-black border ${
+                        vp.isActiveNow
+                          ? "bg-amber-500 text-slate-950 border-amber-400 animate-pulse"
+                          : vp.activationStatus.includes("Upcoming")
+                          ? "bg-blue-950 text-blue-300 border-blue-500"
+                          : "bg-slate-900 text-slate-400 border-slate-700"
+                      }`}
+                    >
+                      {vp.isActiveNow
+                        ? "🌟 ACTIVE NOW"
+                        : vp.activationStatus.includes("Upcoming")
+                        ? `⏳ AT AGE ${vp.closestActivationAge}`
+                        : "✓ ACTIVATED"}
                     </span>
-                    <span className="text-[9px] text-slate-400">{m.quality}</span>
+                  </div>
+
+                  <div>
+                    <h5 className="text-lg font-black text-slate-100">
+                      {vp.nakshatraName} ({vp.hindiName}) <span className="text-xs text-slate-400 font-normal">Pada {vp.pada}</span>
+                    </h5>
+                    <p className="text-xs text-amber-300 font-semibold">
+                      Seated: {vp.planetOccupant}
+                    </p>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs space-y-1">
+                    <div className="flex justify-between text-slate-300">
+                      <span>Activation Ages:</span>
+                      <span className="font-mono font-bold text-amber-300">{vp.activationAges.join(", ")} Years</span>
+                    </div>
+                    {vp.activationStatus.includes("Upcoming") && (
+                      <div className="flex justify-between text-blue-300 text-[11px]">
+                        <span>Time Remaining:</span>
+                        <span className="font-bold font-mono">~{vp.yearsUntilActivation} years away</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    {vp.phalaDescription}
+                  </p>
+
+                  <div className="pt-2 border-t border-slate-800 text-[11px] text-amber-300/90">
+                    <span className="font-bold block">🕉️ Parihara / Remedy:</span>
+                    <span className="text-slate-300">{vp.remedy}</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Inauspicious Periods (वर्ज्य काल / त्याज्य) */}
-          <div className="glass-panel p-5 rounded-3xl border border-rose-500/30 bg-slate-950/85 shadow-2xl space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h3 className="font-black text-xs text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span>⚠️</span>
-                <span>Inauspicious Windows (राहु काल व त्याज्य समय)</span>
-              </h3>
-              <span className="text-[10px] text-slate-400 font-mono">Sunset: {formatTime(dayData.sunset)}</span>
+          {/* Complete 27 Nakshatras Reference Table */}
+          <div className="glass-panel p-5 rounded-3xl border border-slate-800 bg-slate-950/80 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h4 className="text-sm font-black text-slate-200">
+                  📜 Complete 27 Nakshatras Activation Master Directory
+                </h4>
+                <p className="text-xs text-slate-400">
+                  Search by Nakshatra name, deity, or themes
+                </p>
+              </div>
+
+              <input
+                type="text"
+                placeholder="Search Nakshatra (e.g. Rohini, Ashwini)..."
+                value={nakshatraSearch}
+                onChange={(e) => setNakshatraSearch(e.target.value)}
+                className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-1.5 w-64"
+              />
             </div>
 
-            <div className="space-y-2.5">
-              {panchangData.inauspiciousMuhurtas.map((m, i) => (
-                <div
-                  key={i}
-                  className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 transition-colors ${
-                    m.isActiveNow
-                      ? "bg-rose-950/50 border-rose-400 shadow-lg shadow-rose-500/20 ring-1 ring-rose-400"
-                      : "bg-slate-900/90 border-rose-900/40 hover:border-rose-500/50"
-                  }`}
-                >
-                  <div className="space-y-1">
-                    <div className="font-bold text-xs text-slate-100 flex items-center gap-2">
-                      <span>{m.name}</span>
-                      <span className="text-[10px] text-rose-400 font-mono">({m.sanskritName})</span>
-                      {m.isActiveNow && (
-                        <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-rose-500 text-slate-950 animate-pulse">
-                          ACTIVE NOW
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-slate-400 leading-tight">{m.description}</p>
-                  </div>
-                  <div className="text-right flex-shrink-0 font-mono">
-                    <span className="text-xs font-bold text-rose-400 block">
-                      {m.startFormatted} – {m.endFormatted}
-                    </span>
-                    <span className="text-[9px] text-slate-400">{m.quality}</span>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="text-[11px] uppercase bg-slate-900/90 text-slate-400 border-b border-slate-800">
+                  <tr>
+                    <th className="py-2.5 px-3">#</th>
+                    <th className="py-2.5 px-3">Nakshatra</th>
+                    <th className="py-2.5 px-3">Lord & Deity</th>
+                    <th className="py-2.5 px-3">Activation Ages</th>
+                    <th className="py-2.5 px-3">Primary Manifestation</th>
+                    <th className="py-2.5 px-3">Prescribed Remedy</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {filteredNakshatras.map((n) => (
+                    <tr key={n.index} className="hover:bg-slate-900/40">
+                      <td className="py-2 px-3 font-mono text-slate-400">{n.index + 1}</td>
+                      <td className="py-2 px-3 font-bold text-slate-200">
+                        {n.name} ({n.hindiName})
+                        <span className="block text-[10px] text-slate-400 font-normal">{n.symbol}</span>
+                      </td>
+                      <td className="py-2 px-3 text-slate-300">
+                        <span className="font-bold text-amber-300">{n.rulingPlanet}</span>
+                        <span className="block text-[10px] text-slate-400">{n.rulingDeity}</span>
+                      </td>
+                      <td className="py-2 px-3 font-mono font-bold text-amber-400">
+                        {n.activationAges.join(", ")} Yrs
+                      </td>
+                      <td className="py-2 px-3 text-slate-300 max-w-xs">{n.materialManifestation}</td>
+                      <td className="py-2 px-3 text-slate-400 text-[11px] max-w-xs">{n.remedyUpaya}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       )}
 
-      {/* TAB 3: EVENT SUITABILITY */}
-      {activeTab === "events" && (
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800 bg-slate-950/85 shadow-2xl space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
-              Event Suitability & Muhurta Verdict (कार्य सिद्धि मुहूर्त)
+      {/* TAB 3: AUSPICIOUS & INAUSPICIOUS MUHURTAS */}
+      {activeTab === "muhurta" && (
+        <div className="space-y-6">
+          {/* Auspicious Muhurtas */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-black text-emerald-400 flex items-center gap-2">
+              <span>✨</span> Auspicious Muhurtas (शुभ मुहूर्त काल)
             </h3>
 
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                onClick={() => setSelectedCategory("all")}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  selectedCategory === "all"
-                    ? "bg-amber-500 text-slate-950"
-                    : "bg-slate-900 text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                All Events
-              </button>
-              {eventCategories.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setSelectedCategory(c.id)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    selectedCategory === c.id
-                      ? "bg-amber-500 text-slate-950"
-                      : "bg-slate-900 text-slate-400 hover:text-slate-200"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {panchangData.auspiciousMuhurtas.map((m, idx) => (
+                <div
+                  key={idx}
+                  className={`glass-panel p-4 rounded-2xl border transition-all space-y-2 ${
+                    m.isActiveNow
+                      ? "border-emerald-500 bg-emerald-950/30 shadow-lg shadow-emerald-500/20"
+                      : "border-slate-800 bg-slate-950/70"
                   }`}
                 >
-                  {c.label}
-                </button>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-100 text-sm">{m.hindiName}</span>
+                    {m.isActiveNow && (
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 animate-pulse">
+                        ACTIVE NOW
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs font-mono text-emerald-300 font-bold bg-slate-900/80 p-2 rounded-xl border border-slate-800">
+                    <span>{m.startFormatted} – {m.endFormatted}</span>
+                    <span className="text-slate-400 text-[10px]">{m.durationFormatted}</span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-300 leading-relaxed">{m.description}</p>
+                </div>
               ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recommendations
-              .filter((r) => selectedCategory === "all" || r.category === selectedCategory)
-              .map((rec) => {
-                const catMeta = eventCategories.find((c) => c.id === rec.category);
-                return (
-                  <div
-                    key={rec.category}
-                    className={`p-4 rounded-2xl border flex flex-col justify-between space-y-3 transition-all ${
-                      rec.isRecommended
-                        ? "bg-slate-900/90 border-emerald-800/60 hover:border-emerald-500"
-                        : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <div className="font-bold text-sm text-slate-100">
-                          {catMeta?.label}
-                        </div>
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-black border ${
-                            rec.isRecommended
-                              ? "bg-emerald-950 text-emerald-300 border-emerald-500"
-                              : "bg-rose-950 text-rose-300 border-rose-500"
-                          }`}
-                        >
-                          {rec.isRecommended ? "RECOMMENDED" : "AVOID TODAY"}
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-amber-400 font-mono mt-0.5">{catMeta?.hindiLabel}</div>
+          {/* Inauspicious Muhurtas */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-black text-rose-400 flex items-center gap-2">
+              <span>⚠️</span> Inauspicious Kaalas (अशुभ एवं त्याज्य काल)
+            </h3>
 
-                      <div className="space-y-1 mt-2 text-xs text-slate-300">
-                        {rec.favorableFactors.slice(0, 2).map((f, idx) => (
-                          <div key={idx} className="leading-relaxed text-[11px] text-slate-300">
-                            • {f}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-800 space-y-1 text-xs font-mono">
-                      <div className="flex justify-between text-slate-400">
-                        <span>Suitability Score:</span>
-                        <span className="font-bold text-amber-300">{rec.suitabilityScore}%</span>
-                      </div>
-                      {rec.bestTimeSlots.length > 0 && (
-                        <div className="text-[11px] text-emerald-400 font-semibold truncate">
-                          Best: {rec.bestTimeSlots.map((s) => s.name).join(", ")}
-                        </div>
-                      )}
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              {panchangData.inauspiciousMuhurtas.map((m, idx) => (
+                <div
+                  key={idx}
+                  className={`glass-panel p-4 rounded-2xl border transition-all space-y-2 ${
+                    m.isActiveNow
+                      ? "border-rose-500 bg-rose-950/40 shadow-lg shadow-rose-500/20"
+                      : "border-slate-800 bg-slate-950/70"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-rose-300 text-sm">{m.hindiName}</span>
+                    {m.isActiveNow && (
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-500 text-slate-950 animate-pulse">
+                        AVOID NOW
+                      </span>
+                    )}
                   </div>
-                );
-              })}
+
+                  <div className="flex items-center justify-between text-xs font-mono text-rose-300 font-bold bg-slate-900/80 p-2 rounded-xl border border-slate-800">
+                    <span>{m.startFormatted} – {m.endFormatted}</span>
+                    <span className="text-slate-400 text-[10px]">{m.durationFormatted}</span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-300 leading-relaxed">{m.description}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      {/* TAB 4: CHANDRA BALA MATRIX FOR ALL 12 RASHIS */}
+      {/* TAB 4: EVENT SUITABILITY */}
+      {activeTab === "events" && (
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedCategory("all")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                selectedCategory === "all"
+                  ? "bg-amber-500 text-slate-950 font-black"
+                  : "bg-slate-900 text-slate-400 border border-slate-800"
+              }`}
+            >
+              All Events (समस्त कार्य)
+            </button>
+            {eventCategories.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => setSelectedCategory(c.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  selectedCategory === c.id
+                    ? "bg-amber-500 text-slate-950 font-black"
+                    : "bg-slate-900 text-slate-400 border border-slate-800"
+                }`}
+              >
+                {c.hindiLabel}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {recommendations
+              .filter((r) => selectedCategory === "all" || r.category === selectedCategory)
+              .map((rec, idx) => (
+                <div
+                  key={idx}
+                  className={`glass-panel p-5 rounded-3xl border transition-all space-y-3 ${
+                    rec.isRecommended
+                      ? "border-emerald-500/40 bg-emerald-950/10"
+                      : "border-slate-800 bg-slate-950/70"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-base font-black text-slate-100">
+                        {eventCategories.find((c) => c.id === rec.category)?.hindiLabel}
+                      </h4>
+                      <span className="text-xs text-slate-400">
+                        {eventCategories.find((c) => c.id === rec.category)?.label}
+                      </span>
+                    </div>
+
+                    <span
+                      className={`text-xs px-3 py-1 rounded-xl font-bold border ${
+                        rec.isRecommended
+                          ? "bg-emerald-950 text-emerald-300 border-emerald-500"
+                          : "bg-slate-900 text-slate-400 border-slate-700"
+                      }`}
+                    >
+                      {rec.suitabilityScore}% ({rec.isRecommended ? "RECOMMENDED" : "CAUTION"})
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-300 leading-relaxed font-serif">
+                    {rec.isRecommended
+                      ? "This date aligns with favorable Tithi, Vara, and Nakshatra configurations for this event."
+                      : "Certain planetary limbs or doshas are present; exercise caution or select an auspicious slot."}
+                  </p>
+
+                  <div className="space-y-1.5 pt-2 border-t border-slate-800 text-[11px]">
+                    {rec.favorableFactors.length > 0 && (
+                      <div className="text-emerald-300">
+                        <span className="font-bold">✓ Favorable: </span>
+                        <span className="text-slate-300">{rec.favorableFactors.join(", ")}</span>
+                      </div>
+                    )}
+                    {rec.unfavorableFactors.length > 0 && (
+                      <div className="text-rose-300">
+                        <span className="font-bold">✕ Unfavorable: </span>
+                        <span className="text-slate-400">{rec.unfavorableFactors.join(", ")}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: 12-RASHI CHANDRA BALA */}
       {activeTab === "chandrabala" && (
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800 bg-slate-950/85 shadow-2xl space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+        <div className="space-y-4">
+          <div className="glass-panel p-4 rounded-2xl border border-slate-800 bg-slate-950/80 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-black text-slate-100 uppercase tracking-wider flex items-center gap-2">
-                <span>🌙</span>
-                <span>Chandra Bala for all 12 Rashis (द्वादश राशि चन्द्र बल)</span>
+              <h3 className="text-sm font-black text-amber-300">
+                12-Rashi Chandra Bala Matrix (चन्द्र बल निर्णय)
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Transit Moon is currently placed in{" "}
-                <span className="text-emerald-400 font-bold font-mono">
-                  {panchangData.chandraRashi} ({panchangData.chandraRashiHindi})
-                </span>
-                . Auspicious houses from Moon: 1st, 3rd, 6th, 7th, 10th, 11th.
+              <p className="text-xs text-slate-400">
+                Current Moon Transit: <span className="text-amber-300 font-bold">{panchangData.chandraRashi} ({panchangData.chandraRashiHindi})</span>
               </p>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-amber-300">
-              Classical Muhurta Shastra
+            <span className="text-xs text-slate-400">
+              Classical Law: 1, 3, 6, 7, 10, 11 from Moon are Shubha; 4, 8, 12 require Caution
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {panchangData.chandraBalaList.map((cb) => (
               <div
                 key={cb.rashiIndex}
-                className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2"
+                className="glass-panel p-4 rounded-2xl border border-slate-800 bg-slate-950/70 space-y-2.5"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-base text-amber-400">{cb.symbol}</span>
-                    <span className="font-bold text-sm text-slate-100">{cb.rashiName}</span>
-                    <span className="text-[11px] text-slate-400 font-mono">({cb.hindiName})</span>
+                    <span className="text-lg">{cb.symbol}</span>
+                    <h4 className="font-black text-slate-100 text-sm">
+                      {cb.rashiName} ({cb.hindiName})
+                    </h4>
                   </div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full border ${cb.badgeColor}`}>
-                    H{cb.houseFromMoon} • {cb.strength.split(" ")[0]}
-                  </span>
+                  <span className="text-xs font-mono font-bold text-slate-400">H{cb.houseFromMoon}</span>
                 </div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  {cb.guidance}
-                </p>
+
+                <div className={`text-[10px] px-2 py-0.5 rounded-full border text-center ${cb.badgeColor}`}>
+                  {cb.strength}
+                </div>
+
+                <p className="text-[11px] text-slate-300 leading-relaxed font-sans">{cb.guidance}</p>
               </div>
             ))}
           </div>

@@ -75,6 +75,7 @@ import { calculateMatchmaking } from "./matchmaking";
 import { generateDrSamirTripathiSummary } from "./samirTripathiSuite";
 import { generateRashiTulyaNavamshaSummary } from "./rashiTulyaNavamsha";
 import { calculateSamirTripathiPanchang } from "./samirTripathiPanchang";
+import { generateNakshatraActivationSummary } from "./nakshatraActivation";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
 import { calculateDayMuhurta } from "./muhurta";
@@ -1617,6 +1618,12 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 71. 27 Nakshatras Activation Years & Cosmic Awakening Dossier (Dr. Samir Tripathi & Nadi Shastra)
+  let nakshatraActivationSummary = "";
+  try {
+    nakshatraActivationSummary = generateNakshatraActivationSummary(natalEphemeris, birthDate, evaluationDate);
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -1746,7 +1753,10 @@ export function buildAstroDossier(
       samirTripathiSummary,
       "",
       "#### 🌸 69. RASHI TULYA NAVAMSHA (RTN) & CROSS-VARGA PROJECTION DOSSIER:",
-      rtnSummary
+      rtnSummary,
+      "",
+      "#### 🌟 71. 27 NAKSHATRA ACTIVATION YEARS & COSMIC AWAKENING DOSSIER:",
+      nakshatraActivationSummary
     );
   } else if (intent === "marriage") {
     lines.push(
@@ -1788,7 +1798,10 @@ export function buildAstroDossier(
       dtpSummary,
       "",
       "#### 🌟 19. K.N. RAO ADVANCED PREDICTIVE TECHNIQUES (SATURN-VENUS & SPHUTAS):",
-      techniquesSummary
+      techniquesSummary,
+      "",
+      "#### 🌟 71. 27 NAKSHATRA ACTIVATION YEARS & COSMIC AWAKENING DOSSIER:",
+      nakshatraActivationSummary
     );
   } else if (intent === "panchang_muhurta") {
     lines.push(
@@ -1991,7 +2004,10 @@ export function buildAstroDossier(
       rtnSummary,
       "",
       "#### 🌸 70. DR. SAMIR TRIPATHI CLASSICAL DAILY VEDIC PANCHANGA & ASTRO GUIDANCE DOSSIER:",
-      samirPanchangSummary
+      samirPanchangSummary,
+      "",
+      "#### 🌟 71. 27 NAKSHATRA ACTIVATION YEARS & COSMIC AWAKENING DOSSIER:",
+      nakshatraActivationSummary
     );
   }
 

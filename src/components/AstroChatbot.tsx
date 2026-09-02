@@ -14,6 +14,7 @@ import {
 } from "../engine/samirTripathiSuite";
 import { evaluateRashiTulyaNavamsha } from "../engine/rashiTulyaNavamsha";
 import { calculateSamirTripathiPanchang } from "../engine/samirTripathiPanchang";
+import { evaluateNakshatraActivation } from "../engine/nakshatraActivation";
 import { EphemerisResult } from "../engine/types";
 
 interface Message {
@@ -77,6 +78,11 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
         icon: "⏳",
         title: "Active Age House",
         prompt: "Which house and planetary energies are activated for my current age according to Bhrigu house age activations?",
+      },
+      {
+        icon: "⭐",
+        title: "Nakshatra Activation Year",
+        prompt: "Which of my natal Nakshatras (Moon, Lagna, 10th Lord, AK) is actively awakened for my current age and what turning points will it trigger according to Dr. Samir Tripathi's Shastra?",
       },
     ],
   },
@@ -335,7 +341,8 @@ function tryInstantEngineAnswer(
   query: string,
   natalEphem: EphemerisResult,
   transitEphem: EphemerisResult,
-  evaluationDate: Date
+  evaluationDate: Date = new Date(),
+  birthDate: Date = new Date("1999-09-17")
 ): string | null {
   const q = query.toLowerCase().trim();
 
@@ -566,6 +573,38 @@ ${topPlanets}
 #### 🕉️ **Mantra & Charity of the Day:**
 - **Prescribed Mantra:** **${panchang.dayMantra}**
 - **Recommended Charity (दान):** ${panchang.recommendedCharity}
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
+  // 13. 27 Nakshatras Activation Years & Cosmic Awakening (Dr. Samir Tripathi)
+  if (
+    /^(which nakshatra is active|my nakshatra activation|nakshatra activation|nakshatra activation year|nakshatra activation years|nakshatra awakening|active nakshatra for my age)\??$/i.test(q) ||
+    (q.includes("nakshatra") && (q.includes("activation") || q.includes("active for my age") || q.includes("awakening") || q.includes("jaagrit")))
+  ) {
+    const nakAct = evaluateNakshatraActivation(natalEphem, birthDate, evaluationDate);
+    const activePointsStr = nakAct.currentlyActivePoints.length > 0
+      ? nakAct.currentlyActivePoints.map((p) => `- 🌟 **${p.nakshatraName} (${p.hindiName})** (Pada ${p.pada} - ${p.pointType}): Seated ${p.planetOccupant} ──► **${p.phalaDescription}**`).join("\n")
+      : "- No singular vital Nakshatra is in primary awakening this exact month; native is integrating prior activations.";
+
+    const upcomingStr = nakAct.upcomingActivations.slice(0, 3).map(
+      (p) => `- ⏳ **Age ${p.closestActivationAge} (~${p.yearsUntilActivation} yrs):** **${p.nakshatraName} (${p.pointType})** ──► ${p.phalaDescription}`
+    ).join("\n");
+
+    return `### ⭐ **Your 27 Nakshatras Cosmic Activation Timeline (Dr. Samir Tripathi Shastra):**
+- **Current Age:** **${nakAct.completedAge} Completed Years (Running ${nakAct.runningYear}th Year)**
+
+#### 🌟 **Currently Awakened Nakshatras:**
+${activePointsStr}
+
+#### ⏳ **Upcoming Nakshatra Milestones:**
+${upcomingStr}
+
+#### 📜 **Executive Synthesis:**
+${nakAct.executiveSynthesis}
+
+#### 🕉️ **Prescribed Upaya (Remedy):**
+${nakAct.masterRemedyRecommendation}
 
 *⚡ Instant Classical Computation (0ms)*`;
   }
@@ -1092,7 +1131,7 @@ STRICT CONSULTATION RULES (MANDATORY):
     if (!query || isLoading) return;
 
     // 1. Check 0ms Instant Client-Side Interceptor (0 tokens, 0ms latency)
-    const instantAnswer = tryInstantEngineAnswer(query, natalEphemeris, transitEphemeris, currentDate);
+    const instantAnswer = tryInstantEngineAnswer(query, natalEphemeris, transitEphemeris, new Date(), currentDate);
     if (instantAnswer) {
       const userMsg: Message = {
         id: Date.now().toString(),

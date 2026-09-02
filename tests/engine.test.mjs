@@ -3672,6 +3672,50 @@ test("Dr. Samir Tripathi Daily Vedic Panchanga & Astro Guidance Engine Verificat
   assert.ok(panchang.panchangaSummary.length > 30);
 });
 
+test("27 Nakshatras Activation Years & Cosmic Awakening Engine Verification", async () => {
+  const { evaluateNakshatraActivation, generateNakshatraActivationSummary, NAKSHATRA_ACTIVATION_TABLE } = await import("../src/engine/nakshatraActivation.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 1. Master Table Integrity
+  assert.strictEqual(NAKSHATRA_ACTIVATION_TABLE.length, 27);
+  const ashwini = NAKSHATRA_ACTIVATION_TABLE[0];
+  assert.deepStrictEqual(ashwini.activationAges, [16, 24, 28]);
+  assert.ok(ashwini.primaryThemes.length > 10);
+  assert.ok(ashwini.materialManifestation.length > 10);
+
+  // 2. Sample Chart: 17-09-1999 Allahabad (Native Age ~26-27)
+  const location = { cityName: "Allahabad", country: "India", latitude: 25.4358, longitude: 81.8463, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1999-09-17T18:32:00+05:30");
+  const evalDate = new Date("2026-09-02T12:00:00Z");
+  const natalEphem = calculateVedicEphemeris(birthDate, location, "Lahiri");
+
+  const res = evaluateNakshatraActivation(natalEphem, birthDate, evalDate);
+
+  assert.strictEqual(res.completedAge, 26);
+  assert.strictEqual(res.runningYear, 27);
+  assert.ok(res.vitalPoints.length >= 4);
+
+  // Check Janma Nakshatra
+  const janmaPoint = res.vitalPoints.find((p) => p.pointType.includes("Janma"));
+  assert.ok(janmaPoint);
+  assert.ok(janmaPoint.nakshatraName);
+  assert.ok(janmaPoint.activationAges.length > 0);
+  assert.ok(janmaPoint.remedy.length > 10);
+
+  // Check Lifetime Milestones
+  assert.ok(res.lifetimeMilestones.length > 0);
+  const m1 = res.lifetimeMilestones[0];
+  assert.ok(m1.age > 0);
+  assert.ok(m1.activeNakshatras.length > 0);
+
+  // Check Dossier Summary
+  const summary = generateNakshatraActivationSummary(natalEphem, birthDate, evalDate);
+  assert.ok(summary.includes("NAKSHATRA ACTIVATION YEARS"));
+  assert.ok(summary.includes("Native's Current Age"));
+  assert.ok(summary.includes("Executive Nakshatra Synthesis"));
+});
+
+
 
 
 
