@@ -84,9 +84,12 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Listen for message to skip waiting when user accepts update
+// Listen for messages (Skip waiting & 24-Hour cache clearing)
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+  if (event.data && event.data.type === 'CLEAR_CACHE_24H') {
+    caches.keys().then((names) => Promise.all(names.map((n) => caches.delete(n))));
   }
 });

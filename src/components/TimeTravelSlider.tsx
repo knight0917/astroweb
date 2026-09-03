@@ -30,6 +30,7 @@ export default function TimeTravelSlider() {
     setUserEmail,
     syncChartsWithDb,
     isSyncingDb,
+    run24HourCacheCleanup,
   } = useAstroStore();
 
   const [mounted, setMounted] = useState(false);
@@ -46,6 +47,7 @@ export default function TimeTravelSlider() {
   const [saveGender, setSaveGender] = useState<"male" | "female">("male");
   const [syncEmailInput, setSyncEmailInput] = useState("");
   const [isSavingChart, setIsSavingChart] = useState(false);
+  const [syncConflictMsg, setSyncConflictMsg] = useState<string | null>(null);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
   const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
   const [saveToast, setSaveToast] = useState("");
@@ -1086,6 +1088,7 @@ export default function TimeTravelSlider() {
                 e.preventDefault();
                 setIsSavingChart(true);
                 setSaveSuccessMsg(null);
+                setSyncConflictMsg(null);
                 try {
                   const saved = await saveProfile(
                     newProfileName || "My Birth Chart",
@@ -1101,7 +1104,13 @@ export default function TimeTravelSlider() {
                   setShowSaveModal(false);
                   setNewProfileName("");
                 } catch (err: any) {
-                  console.error("Save error:", err);
+                  console.warn("Save error:", err);
+                  if (err.alreadyExists) {
+                    setSyncConflictMsg(err.message || "This chart data is already available under this email. Please sync to restore it.");
+                  } else {
+                    setSaveToast(err.message || "Could not save chart.");
+                    setTimeout(() => setSaveToast(""), 4000);
+                  }
                 } finally {
                   setIsSavingChart(false);
                 }
@@ -1197,6 +1206,40 @@ export default function TimeTravelSlider() {
                 </div>
               </div>
 
+              {/* Duplicate Detection Sync Banner */}
+              {syncConflictMsg && (
+                <div className="p-3.5 rounded-2xl bg-amber-950/80 border border-amber-500/70 text-xs text-amber-200 space-y-2 shadow-lg animate-in fade-in">
+                  <div className="flex items-start gap-2">
+                    <span className="text-base">⚠️</span>
+                    <div className="flex-1">
+                      <strong className="text-amber-300 block font-bold">Chart Already Available:</strong>
+                      <p className="text-[11.5px] leading-relaxed text-amber-100">{syncConflictMsg}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end gap-2 pt-1 border-t border-amber-800/60">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setIsSavingChart(true);
+                        try {
+                          await syncChartsWithDb(saveEmail.trim() || userEmail || undefined);
+                          setSaveToast("✓ Charts successfully synchronized from cloud vault!");
+                          setTimeout(() => setSaveToast(""), 4000);
+                          setShowSaveModal(false);
+                          setSyncConflictMsg(null);
+                          setShowProfilesDropdown(true);
+                        } catch (_) {}
+                        setIsSavingChart(false);
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs shadow cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span>🔄</span>
+                      <span>Sync & Restore Now</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
                 <button
@@ -1256,6 +1299,25 @@ export default function TimeTravelSlider() {
                 className="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs cursor-pointer"
               >
                 ✕
+              </button>
+            </div>
+
+            {/* 24-Hour Cache Lifecycle & Cloud Status */}
+            <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between text-[10.5px]">
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <span className="text-emerald-400">🛡️</span>
+                <span>Auto-clears & syncs cache every 24 hrs</span>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  const res = await run24HourCacheCleanup(true);
+                  setSyncStatusMsg(res.message);
+                  setTimeout(() => setSyncStatusMsg(null), 3500);
+                }}
+                className="text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer"
+              >
+                Flush Cache & Sync
               </button>
             </div>
 

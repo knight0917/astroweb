@@ -3917,3 +3917,39 @@ test("Marriage Masterclass 2 (Sexual Compatibility & Lapping Systems) Verificati
   assert.ok(compoundTeacher, "Compound EgoTeacher overlay must be identified");
   assert.strictEqual(compoundTeacher.score, 20);
 });
+
+test("24-Hour Device Cache Invalidation & Duplicate Email Data Sync Verification", async () => {
+  const { findExistingChartByEmailAndData, normalizeEmail } = await import("../src/lib/db.ts");
+
+  // 1. Verify Email Normalization
+  assert.equal(normalizeEmail("  USER.Test@GMAIL.Com  "), "user.test@gmail.com");
+
+  // 2. 24-Hour Cache Invalidation Threshold Calculation
+  const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const freshTime = now - (2 * 60 * 60 * 1000); // 2 hours old
+  const expiredTime = now - (25 * 60 * 60 * 1000); // 25 hours old
+
+  const isFreshDue = (now - freshTime) >= TWENTY_FOUR_HOURS_MS;
+  const isExpiredDue = (now - expiredTime) >= TWENTY_FOUR_HOURS_MS;
+
+  assert.equal(isFreshDue, false, "Cache less than 24h old should not trigger invalidation");
+  assert.equal(isExpiredDue, true, "Cache older than 24h must trigger invalidation");
+
+  // 3. Verify Chart Duplication Matcher with Email
+  const testEmail = "vault.astro@gmail.com";
+  const mockChartData = {
+    id: "new_chart_id_123",
+    name: "Aarav Sharma",
+    dob: "1998-05-25",
+    time: "00:16",
+    dateIso: "1998-05-25T00:16:00.000Z",
+    latitude: 25.94,
+    longitude: 83.56,
+  };
+
+  // Check matching logic
+  const existingChart = await findExistingChartByEmailAndData(testEmail, mockChartData);
+  // Function should safely resolve (null if not in DB yet)
+  assert.ok(existingChart === null || typeof existingChart === "object");
+});

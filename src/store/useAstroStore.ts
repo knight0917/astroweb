@@ -62,6 +62,7 @@ const STORAGE_ACTIVE_KEY = "vedic_active_chart_data";
 const STORAGE_PROFILES_KEY = "vedic_saved_birth_profiles";
 const STORAGE_USER_EMAIL_KEY = "vedic_user_email";
 const STORAGE_MATCHMAKING_KEY = "vedic_matchmaking_active_state";
+const STORAGE_LAST_CACHE_CLEANUP_KEY = "vedic_last_cache_cleanup_timestamp";
 
 const defaultMatchmakingState: MatchmakingStoreState = {
   boy: {
@@ -169,6 +170,8 @@ interface AstroState {
   activeProfileName: string | null;
   userEmail: string | null;
   isSyncingDb: boolean;
+  lastCacheCleanupTime: number | null;
+  run24HourCacheCleanup: (force?: boolean) => Promise<{ cleaned: boolean; message: string }>;
 
   // Matchmaking State (Groom & Bride)
   matchmaking: MatchmakingStoreState;
@@ -237,6 +240,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   activeProfileName: null,
   userEmail: null,
   isSyncingDb: false,
+  lastCacheCleanupTime: null,
   matchmaking: defaultMatchmakingState,
   ephemeris: calculateVedicEphemeris(
     defaultDate,
@@ -255,6 +259,66 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     set({ userEmail: clean });
     if (clean) {
       get().syncChartsWithDb(clean);
+    }
+  },
+
+    run24HourCacheCleanup: async (force = false) => {
+    if (typeof window === "undefined") {
+      return { cleaned: false, message: "Window undefined" };
+    }
+
+    const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const rawLast = localStorage.getItem(STORAGE_LAST_CACHE_CLEANUP_KEY);
+    const lastTime = rawLast ? Number(rawLast) : 0;
+    const isDue = force || !lastTime || (now - lastTime >= TWENTY_FOUR_HOURS_MS);
+
+    if (!isDue) {
+      set({ lastCacheCleanupTime: lastTime });
+      return {
+        cleaned: false,
+        message: `Cache is fresh. Next 24h cleanup in ${Math.round((TWENTY_FOUR_HOURS_MS - (now - lastTime)) / (60 * 1000))} minutes.`,
+      };
+    }
+
+    try {
+      // 1. Purge Browser CacheStorage (PWA / Assets cache)
+      if ("caches" in window) {
+        const cacheKeys = await window.caches.keys();
+        await Promise.all(cacheKeys.map((k) => window.caches.delete(k)));
+      }
+
+      // 2. Notify Service Worker if available
+      if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: "CLEAR_CACHE_24H" });
+      }
+
+      // 3. Invalidate temporary transient keys
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith("vedic_transient_") || key.startsWith("vedic_cache_"))) {
+          localStorage.removeItem(key);
+        }
+      }
+
+      // 4. Auto-sync profiles with Cloud DB if email is linked
+      const currentEmail = get().userEmail;
+      if (currentEmail) {
+        await get().syncChartsWithDb(currentEmail);
+      }
+
+      // 5. Update timestamp
+      localStorage.setItem(STORAGE_LAST_CACHE_CLEANUP_KEY, String(now));
+      set({ lastCacheCleanupTime: now });
+
+      console.log("[Vedic Sky Tracker] 24-Hour Cache Invalidation successfully executed across all connected device storage.");
+      return {
+        cleaned: true,
+        message: "24-Hour cache invalidation completed. Device storage synchronized with cloud vault.",
+      };
+    } catch (err: any) {
+      console.warn("24h cache cleanup warning:", err);
+      return { cleaned: false, message: err?.message || "Cleanup failed" };
     }
   },
 

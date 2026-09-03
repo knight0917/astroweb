@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getChartsByEmail, saveChart, deleteChart, normalizeEmail } from "@/lib/db";
+import { getChartsByEmail, saveChart, deleteChart, normalizeEmail, findExistingChartByEmailAndData } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   try {
@@ -70,6 +70,32 @@ export async function POST(req: NextRequest) {
 
     const dob = `${year}-${month}-${day}`;
     const time = `${hours}:${minutes}`;
+
+    // 1. Check if identical chart already exists on this email (Prevent duplicate data, instruct to sync)
+    if (!body.forceOverwrite) {
+      const existing = await findExistingChartByEmailAndData(userEmail, {
+        id,
+        name: name.trim(),
+        dob,
+        time,
+        dateIso,
+        latitude: location.latitude,
+        longitude: location.longitude,
+      });
+
+      if (existing) {
+        return NextResponse.json(
+          {
+            success: false,
+            alreadyExists: true,
+            existingChart: existing,
+            error: "This chart data is already available on this email. Please sync to restore it.",
+            message: `Birth chart for '${existing.name}' is already available on ${normalizeEmail(userEmail)}. Please sync to restore it on this device.`,
+          },
+          { status: 409 }
+        );
+      }
+    }
 
     const savedRecord = await saveChart({
       id,

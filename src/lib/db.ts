@@ -135,6 +135,59 @@ export async function getChartsByEmail(email: string): Promise<StoredBirthChart[
 /**
  * Save or update a birth chart in Supabase and local cache
  */
+
+/**
+ * Check if a chart with the same birth data already exists under the specified email.
+ * Matches by (Name + DOB) or (DOB + Time + Coordinates).
+ */
+export async function findExistingChartByEmailAndData(
+  email: string,
+  data: {
+    id?: string;
+    name?: string;
+    dob?: string;
+    time?: string;
+    dateIso?: string;
+    latitude?: number;
+    longitude?: number;
+  }
+): Promise<StoredBirthChart | null> {
+  const normEmail = normalizeEmail(email);
+  if (!normEmail) return null;
+
+  const existingCharts = await getChartsByEmail(normEmail);
+  const targetName = (data.name || "").trim().toLowerCase();
+  const targetDob = data.dob || (data.dateIso ? data.dateIso.split("T")[0] : "");
+  const targetTime = data.time || (data.dateIso && data.dateIso.includes("T") ? data.dateIso.split("T")[1].substring(0, 5) : "");
+
+  for (const c of existingCharts) {
+    if (data.id && c.id === data.id) {
+      continue;
+    }
+
+    const cName = (c.name || "").trim().toLowerCase();
+    const cDob = c.dob || (c.dateIso ? c.dateIso.split("T")[0] : "");
+    const cTime = c.time || (c.dateIso && c.dateIso.includes("T") ? c.dateIso.split("T")[1].substring(0, 5) : "");
+
+    const isSameNameAndDob = targetName && cName && targetName === cName && targetDob && cDob && targetDob === cDob;
+
+    const isSameTime = (!targetTime || !cTime) || targetTime === cTime;
+    const isSameCoords =
+      data.latitude !== undefined &&
+      data.longitude !== undefined &&
+      Math.abs(c.location.latitude - data.latitude) < 0.05 &&
+      Math.abs(c.location.longitude - data.longitude) < 0.05;
+
+    const isSameBirthMoment = targetDob && cDob && targetDob === cDob && isSameTime && isSameCoords;
+
+    if (isSameNameAndDob || isSameBirthMoment) {
+      return c;
+    }
+  }
+
+  return null;
+}
+
 export async function saveChart(
   chart: Omit<StoredBirthChart, "createdAt" | "updatedAt"> & { id?: string }
 ): Promise<StoredBirthChart> {
