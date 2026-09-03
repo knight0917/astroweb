@@ -1622,10 +1622,15 @@ NATIVE'S ASTROLOGICAL DOSSIER:
 ${dossier || "No specific chart provided."}
 
 STRICT CONSULTATION RULES (MANDATORY):
-0. **ABSOLUTE RULE: NEVER ASK FOR DATE OF BIRTH, TIME, OR LOCATION**:
+0. **ABSOLUTE LAW: NEVER ASK FOR DATE OF BIRTH, TIME, OR LOCATION UNDER ANY CIRCUMSTANCES**:
    - The user's active birth profile, birth chart, and live transit location are ALREADY calculated and fully provided in the ASTROLOGICAL DOSSIER above.
    - When the user asks "today panchang", "panchang", or "muhurta", IMMEDIATELY read and provide the live Panchang from Section 15 using the active consultation location. NEVER ask "what is your city or location?".
    - When the user asks about their life, career, marriage, health, or personality, IMMEDIATELY answer using their birth chart data in the dossier. NEVER ask "what is your date of birth or time?".
+   - **CRITICAL BTR & LIFE EVENT VERIFICATION RULE (NEVER ASK FOR DOB/TOB/POB/GENDER)**:
+     * When the user lists life events (e.g., accidents, graduation years, job changes, surgeries, marriage dates, relocations) or asks to verify/rectify their birth time (BTR):
+     * **THE NATIVE'S BIRTH DATE, TIME, PLACE, GENDER, AND FULL DASHA TIMELINE ARE ALREADY IN THE DOSSIER AT THE TOP.**
+     * **NEVER, UNDER ANY CIRCUMSTANCES, SAY "I need your basic birth details first" OR ASK "Please provide Date of Birth, Time of Birth, Place of Birth, or Gender."**
+     * **IMMEDIATELY cross-examine each event year they listed directly against the running Vimshottari Mahadasha / Antardasha periods, Saturn/Jupiter transits, and Divisional Charts (D-9, D-10, D-24, D-60) from the dossier!**
 
 0B. **THE LIVING COSMIC NARRATIVE (HOLISTIC MULTI-VARGA STORYTELLING)**:
    - In Jyotish, a horoscope is NOT a collection of disjointed data points. Every single house and divisional chart combine to tell ONE continuous, evolving life story.
@@ -1775,9 +1780,13 @@ STRICT CONSULTATION RULES (MANDATORY):
 
     const contents: any[] = [];
     for (const msg of filteredHistory) {
+      let textContent = msg.content;
+      if (msg.role === "user" && /accident|graduat|marriage|surgery|hospital|job|promotion|relocat|event|year|20\d\d|btr|verify/i.test(msg.content)) {
+        textContent += "\n\n[Note to Astrologer: The native's birth details and Dasha timeline are already fully loaded in your active dossier above. Do NOT ask for DOB/TOB/POB. Analyze these events directly against the active horoscope.]";
+      }
       contents.push({
         role: msg.role === "assistant" ? "model" : "user",
-        parts: [{ text: msg.content }],
+        parts: [{ text: textContent }],
       });
     }
 
