@@ -6,30 +6,30 @@ import { useAstroStore } from "../store/useAstroStore";
 import { formatDMS } from "../engine/rashiNakshatra";
 
 export default function EntityDetailModal() {
-  const { selectedEntityId, setSelectedEntityId, ephemeris } = useAstroStore();
+  const { inspectorEntityId, setInspectorEntityId, ephemeris } = useAstroStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!selectedEntityId || !mounted) return null;
+  if (!inspectorEntityId || !mounted) return null;
 
   // Check if it's Ascendant, Midheaven, a Planet, or an Upagraha
   let data: any = null;
   let isLagna = false;
   let isUpagraha = false;
 
-  if (selectedEntityId === "Ascendant") {
+  if (inspectorEntityId === "Ascendant") {
     data = ephemeris.ascendant;
     isLagna = true;
-  } else if (selectedEntityId === "Midheaven") {
+  } else if (inspectorEntityId === "Midheaven") {
     data = ephemeris.midheaven;
     isLagna = true;
-  } else if (ephemeris.planets[selectedEntityId]) {
-    data = ephemeris.planets[selectedEntityId];
-  } else if (ephemeris.upagrahas[selectedEntityId]) {
-    data = ephemeris.upagrahas[selectedEntityId];
+  } else if (ephemeris.planets[inspectorEntityId]) {
+    data = ephemeris.planets[inspectorEntityId];
+  } else if (ephemeris.upagrahas[inspectorEntityId]) {
+    data = ephemeris.upagrahas[inspectorEntityId];
     isUpagraha = true;
   }
 
@@ -61,7 +61,7 @@ export default function EntityDetailModal() {
           </div>
 
           <button
-            onClick={() => setSelectedEntityId(null)}
+            onClick={() => setInspectorEntityId(null)}
             className="w-8 h-8 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer"
           >
             ✕
@@ -201,7 +201,7 @@ export default function EntityDetailModal() {
         {/* Footer */}
         <div className="flex justify-end">
           <button
-            onClick={() => setSelectedEntityId(null)}
+            onClick={() => setInspectorEntityId(null)}
             className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg cursor-pointer"
           >
             Close Inspector

@@ -14,6 +14,7 @@ export default function PositionsTable() {
     showModernPlanets,
     selectedEntityId,
     setSelectedEntityId,
+    setInspectorEntityId,
   } = useAstroStore();
 
   const planetList = Object.values(ephemeris.planets).filter((p) => {
@@ -87,6 +88,7 @@ export default function PositionsTable() {
                 <th className="py-2.5 px-3">Ishta / Kashta (Res %)</th>
                 <th className="py-2.5 px-3">Avastha & Badhaka</th>
                 <th className="py-2.5 px-3">Motion</th>
+                <th className="py-2.5 px-3 text-right">Inspect</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -121,6 +123,18 @@ export default function PositionsTable() {
                 <td className="py-2 px-3 text-slate-500">—</td>
                 <td className="py-2 px-3 text-slate-500">—</td>
                 <td className="py-2 px-3 text-slate-400">—</td>
+                <td className="py-2 px-3 text-right">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setInspectorEntityId("Ascendant");
+                    }}
+                    title="Open Ascendant Dossier"
+                    className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-slate-300 font-bold text-[10px] transition-all border border-slate-700 hover:border-emerald-400 cursor-pointer"
+                  >
+                    🔍 Info
+                  </button>
+                </td>
               </tr>
 
               {/* Planets */}
@@ -229,6 +243,19 @@ export default function PositionsTable() {
                         </span>
                       )}
                     </td>
+
+                    <td className="py-2 px-3 text-right">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInspectorEntityId(p.id);
+                        }}
+                        title={`Open ${p.name} Dossier`}
+                        className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-300 font-bold text-[10px] transition-all border border-slate-700 hover:border-amber-400 cursor-pointer"
+                      >
+                        🔍 Info
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -250,6 +277,7 @@ export default function PositionsTable() {
                 <th className="py-2.5 px-3">Nakshatra</th>
                 <th className="py-2.5 px-3">House</th>
                 <th className="py-2.5 px-3">Classical Significance</th>
+                <th className="py-2.5 px-3 text-right">Inspect</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -283,6 +311,18 @@ export default function PositionsTable() {
                     <td className="py-2 px-3 font-bold text-slate-300">H{u.house}</td>
                     <td className="py-2 px-3 text-slate-400 text-[11px] max-w-xs truncate">
                       {u.description}
+                    </td>
+                    <td className="py-2 px-3 text-right">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInspectorEntityId(u.id);
+                        }}
+                        title={`Open ${u.name} Dossier`}
+                        className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-purple-600 hover:text-white text-slate-300 font-bold text-[10px] transition-all border border-slate-700 hover:border-purple-400 cursor-pointer"
+                      >
+                        🔍 Info
+                      </button>
                     </td>
                   </tr>
                 );

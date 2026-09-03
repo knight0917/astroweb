@@ -161,6 +161,7 @@ interface AstroState {
   viewMode: ViewMode;
   skyViewType: SkyViewType;
   selectedEntityId: string | null;
+  inspectorEntityId: string | null;
   ephemeris: EphemerisResult;
 
   // Profile Management & Persistence
@@ -193,6 +194,7 @@ interface AstroState {
   setViewMode: (mode: ViewMode) => void;
   setSkyViewType: (type: SkyViewType) => void;
   setSelectedEntityId: (id: string | null) => void;
+  setInspectorEntityId: (id: string | null) => void;
   recompute: () => void;
 
   // Saved Profile Methods
@@ -230,6 +232,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   viewMode: "kundli-north",
   skyViewType: "ecliptic",
   selectedEntityId: null,
+  inspectorEntityId: null,
   savedProfiles: [],
   activeProfileName: null,
   userEmail: null,
@@ -414,6 +417,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   setViewMode: (viewMode) => set({ viewMode }),
   setSkyViewType: (skyViewType) => set({ skyViewType }),
   setSelectedEntityId: (selectedEntityId) => set({ selectedEntityId }),
+  setInspectorEntityId: (inspectorEntityId) => set({ inspectorEntityId }),
 
   recompute: () => {
     const { currentDate, location, ayanamsha, houseSystem, nodeType } = get();
