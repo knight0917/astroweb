@@ -10,7 +10,6 @@ import {
   calculateGrahaDrishtis,
   calculateRashiDrishtis,
   NORTH_HOUSE_CENTERS,
-  NORTH_HOUSE_POLYGONS,
   SOUTH_RASHI_CENTERS,
 } from "../engine/aspectRays";
 
@@ -30,7 +29,6 @@ function KundliChart() {
   const [chartType, setChartType] = useState<"north" | "south">("north");
   const [aspectMode, setAspectMode] = useState<"all" | "graha" | "rashi" | "off">("all");
   const [hoveredEntity, setHoveredEntity] = useState<ActiveHoverEntity | null>(null);
-  const [lockedEntityId, setLockedEntityId] = useState<string | null>(null);
   const [showKarakaTable, setShowKarakaTable] = useState(true);
 
   const {
@@ -49,94 +47,19 @@ function KundliChart() {
   const ascLon = ephemeris.ascendant.siderealLongitude;
   const ascRashiIndex = Math.floor(ascLon / 30); // 0 = Mesha, ..., 11 = Meena
 
-  // Map of all entities for quick ID lookup
-  const allEntitiesMap = useMemo(() => {
-    const map: Record<string, ActiveHoverEntity> = {};
-
-    Object.values(ephemeris.planets).forEach((p) => {
-      if (!showModernPlanets && p.isModernPlanet) return;
-      const rIdx = Math.floor(p.siderealLongitude / 30);
-      map[p.id] = {
-        id: p.id,
-        name: p.name.substring(0, 2),
-        fullName: p.name,
-        house: p.house,
-        rashiIndex: rIdx,
-        deg: p.siderealLongitude % 30,
-        isPlanet: true,
-      };
-    });
-
-    if (induLagna?.induLagnaHouseFromD1) {
-      const rIdx = Math.floor(induLagna.induLagnaLongitude / 30);
-      map["indu_lagna"] = {
-        id: "indu_lagna",
-        name: "IL",
-        fullName: `Indu Lagna (${induLagna.induLagnaRashi.englishName})`,
-        house: induLagna.induLagnaHouseFromD1,
-        rashiIndex: rIdx,
-        deg: induLagna.induLagnaLongitude % 30,
-        isPlanet: false,
-        pointType: "IL",
-        color: "#f59e0b",
-      };
-    }
-
-    if (bhagyaBindu?.house) {
-      const rIdx = Math.floor(bhagyaBindu.longitude / 30);
-      map["bhagya_bindu"] = {
-        id: "bhagya_bindu",
-        name: "BB",
-        fullName: `Bhagya Bindu (${bhagyaBindu.rashi.englishName})`,
-        house: bhagyaBindu.house,
-        rashiIndex: rIdx,
-        deg: bhagyaBindu.longitude % 30,
-        isPlanet: false,
-        pointType: "BB",
-        color: "#10b981",
-      };
-    }
-
-    if (showUpagrahas) {
-      Object.values(ephemeris.upagrahas).forEach((u) => {
-        const rIdx = Math.floor(u.siderealLongitude / 30);
-        map[u.id] = {
-          id: u.id,
-          name: u.name.substring(0, 2),
-          fullName: u.name,
-          house: u.house,
-          rashiIndex: rIdx,
-          deg: u.siderealLongitude % 30,
-          isPlanet: false,
-          color: "#c084fc",
-        };
-      });
-    }
-
-    return map;
-  }, [ephemeris, showModernPlanets, showUpagrahas, induLagna, bhagyaBindu]);
-
-  // Determine the active entity for aspect projection
-  const activeEntity: ActiveHoverEntity | null = useMemo(() => {
-    if (hoveredEntity) return hoveredEntity;
-    if (lockedEntityId && allEntitiesMap[lockedEntityId]) return allEntitiesMap[lockedEntityId];
-    if (selectedEntityId && allEntitiesMap[selectedEntityId]) return allEntitiesMap[selectedEntityId];
-    return null;
-  }, [hoveredEntity, lockedEntityId, selectedEntityId, allEntitiesMap]);
-
-  // Compute active aspect rays from active entity
+  // Compute active aspect rays strictly when actively hovered
   const activeAspectRays: AspectRay[] = useMemo(() => {
-    if (!activeEntity || aspectMode === "off") return [];
+    if (!hoveredEntity || aspectMode === "off") return [];
 
     let rays: AspectRay[] = [];
 
     // 1. Graha Drishti (Planetary Aspects)
-    if ((aspectMode === "all" || aspectMode === "graha") && activeEntity.isPlanet) {
+    if ((aspectMode === "all" || aspectMode === "graha") && hoveredEntity.isPlanet) {
       const grahaRays = calculateGrahaDrishtis(
-        activeEntity.id,
-        activeEntity.fullName,
-        activeEntity.house,
-        activeEntity.rashiIndex,
+        hoveredEntity.id,
+        hoveredEntity.fullName,
+        hoveredEntity.house,
+        hoveredEntity.rashiIndex,
         ascRashiIndex
       );
       rays = rays.concat(grahaRays);
@@ -145,25 +68,15 @@ function KundliChart() {
     // 2. Rashi Drishti (Jaimini Sign Aspects)
     if (aspectMode === "all" || aspectMode === "rashi") {
       const rashiRays = calculateRashiDrishtis(
-        activeEntity.fullName,
-        activeEntity.rashiIndex,
+        hoveredEntity.fullName,
+        hoveredEntity.rashiIndex,
         ascRashiIndex
       );
       rays = rays.concat(rashiRays);
     }
 
     return rays;
-  }, [activeEntity, aspectMode, ascRashiIndex]);
-
-  // Map of targeted houses to rays hitting them
-  const aspectedHousesMap = useMemo(() => {
-    const map: Record<number, AspectRay[]> = {};
-    activeAspectRays.forEach((r) => {
-      if (!map[r.toHouse]) map[r.toHouse] = [];
-      map[r.toHouse].push(r);
-    });
-    return map;
-  }, [activeAspectRays]);
+  }, [hoveredEntity, aspectMode, ascRashiIndex]);
 
   // Map each house (1..12) to the list of planets in it (memoized)
   const houseOccupants = useMemo(() => {
@@ -259,7 +172,7 @@ function KundliChart() {
     return ((ascRashiIndex + (houseNum - 1)) % 12) + 1;
   };
 
-  // Helper to render planet badges inside house with adaptive layout and hover beam triggers
+  // Helper to render planet badges inside house with hover beam triggers
   const renderPlanetList = (houseNum: number) => {
     const list = houseOccupants[houseNum] || [];
     if (list.length === 0) return null;
@@ -276,9 +189,7 @@ function KundliChart() {
       <div className="flex flex-wrap gap-1 justify-center items-center w-full max-w-full p-0.5 overflow-visible">
         {list.map((p) => {
           const isSelected = selectedEntityId === p.id;
-          const isLocked = lockedEntityId === p.id;
           const isHovered = hoveredEntity?.id === p.id;
-          const isSourceActive = isSelected || isLocked || isHovered;
           const isAK = p.karakaCode === "AK";
           const isDK = p.karakaCode === "DK";
           const isIL = p.pointType === "IL";
@@ -300,13 +211,12 @@ function KundliChart() {
                 })
               }
               onMouseLeave={() => setHoveredEntity(null)}
-              onClick={() => {
-                setSelectedEntityId(p.id);
-                setLockedEntityId((prev) => (prev === p.id ? null : p.id));
-              }}
+              onClick={() => setSelectedEntityId(p.id)}
               className={`${badgeStyle} rounded-md font-extrabold flex items-center gap-1 transition-all hover:scale-110 shadow-sm cursor-pointer ${
-                isSourceActive
+                isHovered
                   ? "bg-amber-400 text-slate-950 ring-2 ring-white scale-105 shadow-lg shadow-amber-500/50"
+                  : isSelected
+                  ? "bg-amber-500/40 text-amber-200 ring-1 ring-amber-400"
                   : isIL
                   ? "bg-gradient-to-r from-amber-600/50 to-yellow-500/50 text-amber-200 border border-amber-400 shadow-amber-500/20 font-black"
                   : isBB
@@ -355,7 +265,7 @@ function KundliChart() {
               Interactive Kundli Chart
             </span>
             <span className="text-[10px] text-slate-400 font-semibold">
-              Live Graha & Rashi Aspect Beam Projection
+              Hover over any Planet to see Aspect Rays (Drishti Beams)
             </span>
           </div>
         </div>
@@ -497,28 +407,6 @@ function KundliChart() {
               </filter>
             </defs>
 
-            {/* Aspected House Highlight Background Auras */}
-            {Object.keys(aspectedHousesMap).map((hStr) => {
-              const hNum = parseInt(hStr, 10);
-              const raysOnHouse = aspectedHousesMap[hNum];
-              const primaryColor = raysOnHouse[0]?.color || "#f59e0b";
-              const polyPoints = NORTH_HOUSE_POLYGONS[hNum];
-              if (!polyPoints) return null;
-
-              return (
-                <polygon
-                  key={`highlight-${hNum}`}
-                  points={polyPoints}
-                  fill={primaryColor}
-                  fillOpacity="0.16"
-                  stroke={primaryColor}
-                  strokeWidth="2"
-                  strokeDasharray="4 3"
-                  className="transition-all duration-300 animate-pulse"
-                />
-              );
-            })}
-
             {/* Outer Box */}
             <rect x="5" y="5" width="390" height="390" fill="none" stroke="#b45309" strokeWidth="2.5" />
 
@@ -632,7 +520,7 @@ function KundliChart() {
               <div className="h-full flex items-center justify-center">{renderPlanetList(12)}</div>
             </foreignObject>
 
-            {/* --- ACTIVE DRISHTI LASER RAYS (North Indian SVG Overlay) --- */}
+            {/* --- ACTIVE DRISHTI LASER RAYS ONLY (No Bubbles, No Pill Badges, No Bulky Circles) --- */}
             {activeAspectRays.map((ray, idx) => {
               const pFrom = NORTH_HOUSE_CENTERS[ray.fromHouse];
               const pTo = NORTH_HOUSE_CENTERS[ray.toHouse];
@@ -642,63 +530,19 @@ function KundliChart() {
 
               return (
                 <g key={`ray-${ray.fromHouse}-${ray.toHouse}-${idx}`} className="pointer-events-none">
-                  {/* Glowing Laser Beam */}
+                  {/* Glowing Clean Laser Beam */}
                   <line
                     x1={pFrom.x}
                     y1={pFrom.y}
                     x2={pTo.x}
                     y2={pTo.y}
                     stroke={ray.color}
-                    strokeWidth={isGraha ? "2.8" : "2"}
-                    strokeDasharray={isGraha ? "6 3" : "3 3"}
+                    strokeWidth={isGraha ? "3" : "2.2"}
+                    strokeDasharray={isGraha ? "7 3" : "4 3"}
                     strokeLinecap="round"
                     filter="url(#laserGlow)"
                     className="animate-pulse"
                   />
-
-                  {/* Impact Pulse Ring at Target Center */}
-                  <circle
-                    cx={pTo.x}
-                    cy={pTo.y}
-                    r="14"
-                    fill={ray.color}
-                    fillOpacity="0.25"
-                    stroke={ray.color}
-                    strokeWidth="1.5"
-                    className="animate-ping"
-                  />
-                  <circle cx={pTo.x} cy={pTo.y} r="4.5" fill={ray.color} />
-
-                  {/* Floating Aspect Badge on Target House */}
-                  <g
-                    transform={`translate(${pTo.x}, ${
-                      pTo.y + (ray.toHouse === 1 || ray.toHouse === 2 || ray.toHouse === 12 ? 26 : -26)
-                    })`}
-                  >
-                    <rect
-                      x="-34"
-                      y="-9"
-                      width="68"
-                      height="18"
-                      rx="6"
-                      fill="#020617"
-                      fillOpacity="0.95"
-                      stroke={ray.color}
-                      strokeWidth="1.2"
-                      className="shadow-lg"
-                    />
-                    <text
-                      x="0"
-                      y="3.5"
-                      textAnchor="middle"
-                      fill={ray.color}
-                      fontSize="8"
-                      fontWeight="900"
-                      className="font-mono font-bold tracking-tight select-none"
-                    >
-                      {ray.aspectLabel.split(" ")[0]}
-                    </text>
-                  </g>
                 </g>
               );
             })}
@@ -724,16 +568,13 @@ function KundliChart() {
                 const rashi = RASHIS[rashiIdx];
                 const houseNum = ((rashiIdx - ascRashiIndex + 12) % 12) + 1;
                 const isLagna = rashiIdx === ascRashiIndex;
-                const isTargeted = !!aspectedHousesMap[houseNum];
 
                 return (
                   <div
                     key={rashiIdx}
                     style={{ gridColumn: col, gridRow: row }}
                     className={`border border-slate-700/80 p-1 flex flex-col justify-between overflow-hidden transition-colors ${
-                      isTargeted
-                        ? "bg-amber-500/20 ring-2 ring-inset ring-amber-400"
-                        : isLagna
+                      isLagna
                         ? "bg-emerald-950/30 ring-1 ring-inset ring-emerald-500/50"
                         : "bg-slate-900/40"
                     }`}
@@ -763,7 +604,7 @@ function KundliChart() {
               </div>
             </div>
 
-            {/* South Indian SVG Laser Beams Overlay */}
+            {/* South Indian SVG Laser Beams Overlay - Clean Rays Only */}
             {activeAspectRays.length > 0 && (
               <svg
                 viewBox="0 0 400 400"
@@ -794,23 +635,12 @@ function KundliChart() {
                         x2={pTo.x}
                         y2={pTo.y}
                         stroke={ray.color}
-                        strokeWidth={isGraha ? "2.8" : "2"}
-                        strokeDasharray={isGraha ? "6 3" : "3 3"}
+                        strokeWidth={isGraha ? "3" : "2.2"}
+                        strokeDasharray={isGraha ? "7 3" : "4 3"}
                         strokeLinecap="round"
                         filter="url(#southLaserGlow)"
                         className="animate-pulse"
                       />
-                      <circle
-                        cx={pTo.x}
-                        cy={pTo.y}
-                        r="14"
-                        fill={ray.color}
-                        fillOpacity="0.25"
-                        stroke={ray.color}
-                        strokeWidth="1.5"
-                        className="animate-ping"
-                      />
-                      <circle cx={pTo.x} cy={pTo.y} r="4.5" fill={ray.color} />
                     </g>
                   );
                 })}
@@ -822,24 +652,16 @@ function KundliChart() {
 
       {/* --- REAL-TIME ASPECT RAY HUD BANNER --- */}
       <div className="w-full max-w-[460px] mt-2.5 p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 text-xs shadow-md">
-        {activeEntity && activeAspectRays.length > 0 ? (
+        {hoveredEntity && activeAspectRays.length > 0 ? (
           <div className="space-y-1.5">
             <div className="flex items-center justify-between flex-wrap gap-1">
               <div className="flex items-center gap-1.5 font-bold">
-                <span className="text-amber-400">⚡ Aspect Source:</span>
-                <span className="text-slate-100 font-extrabold">{activeEntity.fullName}</span>
+                <span className="text-amber-400">⚡ Aspect Beams:</span>
+                <span className="text-slate-100 font-extrabold">{hoveredEntity.fullName}</span>
                 <span className="text-[10px] text-slate-400">
-                  in House {activeEntity.house} ({RASHIS[activeEntity.rashiIndex].englishName}) • {activeEntity.deg.toFixed(1)}°
+                  in House {hoveredEntity.house} ({RASHIS[hoveredEntity.rashiIndex].englishName}) • {hoveredEntity.deg.toFixed(1)}°
                 </span>
               </div>
-              {lockedEntityId && (
-                <button
-                  onClick={() => setLockedEntityId(null)}
-                  className="text-[9.5px] px-1.5 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-700/60 hover:bg-rose-900 cursor-pointer"
-                >
-                  Unlock Ray
-                </button>
-              )}
             </div>
 
             <div className="flex flex-wrap gap-1.5 pt-0.5">
@@ -864,7 +686,7 @@ function KundliChart() {
           <div className="flex items-center gap-2 text-slate-400 text-[11px]">
             <span className="text-amber-400">💡</span>
             <span>
-              <strong>Hover or tap</strong> on any of the <strong>9 Grahas</strong> (or Indu Lagna / Bhagya Bindu) to see live{" "}
+              <strong>Hover</strong> on any of the <strong>9 Grahas</strong> (or Indu Lagna / Bhagya Bindu) to project live{" "}
               <strong className="text-amber-300">Graha</strong> &{" "}
               <strong className="text-cyan-300">Rashi</strong> aspect rays!
             </span>
@@ -911,10 +733,7 @@ function KundliChart() {
                     });
                   }}
                   onMouseLeave={() => setHoveredEntity(null)}
-                  onClick={() => {
-                    setSelectedEntityId(k.planetId);
-                    setLockedEntityId((prev) => (prev === k.planetId ? null : k.planetId));
-                  }}
+                  onClick={() => setSelectedEntityId(k.planetId)}
                   className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                     isSelected
                       ? "bg-amber-500/20 border-amber-400 ring-2 ring-amber-400/50 shadow-lg scale-105"
