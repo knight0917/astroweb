@@ -679,25 +679,25 @@ function KundliChart() {
         )}
       </div>
 
-      {/* --- REAL-TIME ASPECT RAY HUD BANNER --- */}
-      <div className="w-full max-w-[460px] mt-2.5 p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 text-xs shadow-md">
+      {/* --- REAL-TIME ASPECT RAY HUD BANNER (Zero-Shift Fixed Height to Prevent Hover Oscillations) --- */}
+      <div className="w-full max-w-[460px] mt-2.5 h-[84px] p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 text-xs shadow-md flex flex-col justify-center overflow-hidden">
         {hoveredEntity && activeAspectRays.length > 0 ? (
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between flex-wrap gap-1">
-              <div className="flex items-center gap-1.5 font-bold">
-                <span className="text-amber-400">⚡ Aspect Beams ({activeAspectRays.length} Lines):</span>
-                <span className="text-slate-100 font-extrabold">{hoveredEntity.fullName}</span>
-                <span className="text-[10px] text-slate-400">
-                  in House {hoveredEntity.house} ({RASHIS[hoveredEntity.rashiIndex].englishName}) • {hoveredEntity.deg.toFixed(1)}°
+          <div className="h-full flex flex-col justify-between space-y-1 overflow-hidden">
+            <div className="flex items-center justify-between gap-1 shrink-0">
+              <div className="flex items-center gap-1.5 font-bold truncate">
+                <span className="text-amber-400 text-[11px] shrink-0">⚡ Beams ({activeAspectRays.length}):</span>
+                <span className="text-slate-100 font-extrabold text-[11px] truncate">{hoveredEntity.fullName}</span>
+                <span className="text-[10px] text-slate-400 font-mono shrink-0">
+                  H{hoveredEntity.house} ({RASHIS[hoveredEntity.rashiIndex].englishName}) • {hoveredEntity.deg.toFixed(1)}°
                 </span>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-1.5 pt-0.5">
+            <div className="flex flex-wrap gap-1 overflow-y-auto custom-scrollbar max-h-[50px] pr-0.5">
               {activeAspectRays.map((ray, i) => (
                 <span
                   key={i}
-                  className="text-[10px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-1"
+                  className="text-[9.5px] font-bold px-1.5 py-0.5 rounded border flex items-center gap-1 shrink-0"
                   style={{
                     backgroundColor: `${ray.color}18`,
                     borderColor: `${ray.color}60`,
@@ -705,17 +705,17 @@ function KundliChart() {
                   }}
                 >
                   <span>{ray.type === "graha" ? "⚡" : "🌀"}</span>
-                  <span>{ray.aspectLabel}</span>
-                  <span className="opacity-75">→ {ray.targetHouseName}</span>
+                  <span className="truncate max-w-[140px]">{ray.aspectLabel}</span>
+                  <span className="opacity-75 font-mono">→ {ray.targetHouseName}</span>
                 </span>
               ))}
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-slate-400 text-[11px]">
-            <span className="text-amber-400">💡</span>
+          <div className="flex items-center gap-2 text-slate-400 text-[11px] leading-relaxed">
+            <span className="text-amber-400 text-sm shrink-0">💡</span>
             <span>
-              <strong>Hover</strong> on any of the <strong>9 Grahas</strong> (or Indu Lagna / Bhagya Bindu) to project live{" "}
+              <strong>Hover</strong> on any of the <strong>9 Grahas</strong> or <strong>Chara Karakas</strong> below to project live{" "}
               <strong className="text-amber-300">Graha</strong> &{" "}
               <strong className="text-cyan-300">Rashi</strong> aspect rays!
             </span>
@@ -763,7 +763,7 @@ function KundliChart() {
                   }}
                   onMouseLeave={() => setHoveredEntity(null)}
                   onClick={() => setSelectedEntityId(k.planetId)}
-                  className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                  className={`p-2 rounded-xl border text-left transition-colors cursor-pointer flex flex-col justify-between ${
                     isSelected
                       ? "bg-amber-500/20 border-amber-400 ring-2 ring-amber-400/50 shadow-lg scale-105"
                       : isAK
