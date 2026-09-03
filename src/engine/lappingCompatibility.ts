@@ -469,22 +469,16 @@ export function calculateLappingCompatibility(
   const pB_L7_pos = chartB.planets[pB_L7]?.house || 0;
   const pB_H8_hasRahu = chartB.planets["Rahu"]?.house === 8;
 
-  const hasAffliction =
-    pA_L7_pos === 8 ||
-    pA_L7_pos === 6 ||
-    pA_L7_pos === 12 ||
-    pA_H8_hasRahu ||
-    pB_L7_pos === 8 ||
-    pB_L7_pos === 6 ||
-    pB_L7_pos === 12 ||
-    pB_H8_hasRahu;
+  const pA_hasAffliction = pA_L7_pos === 8 || pA_L7_pos === 6 || pA_L7_pos === 12 || pA_H8_hasRahu;
+  const pB_hasAffliction = pB_L7_pos === 8 || pB_L7_pos === 6 || pB_L7_pos === 12 || pB_H8_hasRahu;
+  const hasAffliction = pA_hasAffliction || pB_hasAffliction;
 
-  let partnerWithAffliction = "None";
-  if ((pA_L7_pos === 8 || pA_H8_hasRahu) && (pB_L7_pos === 8 || pB_H8_hasRahu)) {
+  let partnerWithAffliction = "Neither Partner";
+  if (pA_hasAffliction && pB_hasAffliction) {
     partnerWithAffliction = "Both Partners";
-  } else if (pA_L7_pos === 8 || pA_H8_hasRahu) {
+  } else if (pA_hasAffliction) {
     partnerWithAffliction = "Partner A";
-  } else if (pB_L7_pos === 8 || pB_H8_hasRahu) {
+  } else if (pB_hasAffliction) {
     partnerWithAffliction = "Partner B";
   }
 
@@ -493,9 +487,9 @@ export function calculateLappingCompatibility(
     partnerWithAffliction,
     details: hasAffliction
       ? `8th/6th/12th house karmic tension detected in ${partnerWithAffliction}'s horoscope. When 8th house heaviness peaks, domestic disagreements turn into stubborn emotional stalemates.`
-      : "8th house energy is clear of heavy malefic nodal locks.",
+      : "8th house energy is clear of heavy malefic nodal locks in both charts.",
     solitudeRemedy:
-      "Dr. Samir Tripathi 8th-House Prescription: Take a 15-day solo mountain retreat / quiet solitary travel and observe periodic Ekadashi Upavasa (fasting). This detaches the 2nd-house possessive grip and completely resets the 8th-house karmic weight.",
+      "Take a 15-day solo mountain retreat / quiet solitary travel and observe periodic Ekadashi Upavasa (fasting). This detaches the 2nd-house possessive grip and completely resets the 8th-house karmic weight.",
   };
 
   karmicRemedies.push(eighthHouseAnalysis.solitudeRemedy);
@@ -504,7 +498,7 @@ export function calculateLappingCompatibility(
   );
 
   // 8. Samir Tripathi Final Masterclass Verdict Summary
-  const samirTripathiVerdict = `Dr. Samir Tripathi's Masterclass Verdict: ${overallVerdict} (Overall Score: ${overallLappingScore}/100, Sexual Attraction: ${sexualScore}/100, Longevity Devotion: ${longevityScore}/100, Material Joy: ${materialJoyScore}/100). ${
+  const samirTripathiVerdict = `Masterclass Synthesis Verdict: ${overallVerdict} (Overall Score: ${overallLappingScore}/100, Sexual Attraction: ${sexualScore}/100, Longevity Devotion: ${longevityScore}/100, Material Joy: ${materialJoyScore}/100). ${
     overallLappingScore >= 75
       ? "Strong planetary superimposition supports deep attraction and enduring commitment."
       : overallLappingScore >= 50

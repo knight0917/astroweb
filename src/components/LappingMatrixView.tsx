@@ -113,7 +113,7 @@ export default function LappingMatrixView({
           <div className="flex items-center gap-2">
             <span className="text-xl text-pink-400 animate-pulse">🔥</span>
             <h3 className="text-base font-extrabold text-pink-300 uppercase tracking-wider">
-              Dr. Samir Tripathi Marriage Masterclass 2: Sexual Compatibility & Lapping Systems
+              Marriage Masterclass: Sexual Compatibility & Lapping Systems
             </h3>
           </div>
           <p className="text-xs text-slate-400 font-sans">
@@ -248,7 +248,7 @@ export default function LappingMatrixView({
       <div className="p-4 rounded-xl bg-gradient-to-r from-purple-950/40 to-slate-900 border border-purple-800/50 space-y-2 text-xs font-sans">
         <div className="flex items-center gap-2 font-bold text-purple-300">
           <span className="text-base">🏔️</span>
-          <span>Dr. Samir Tripathi 8th-House Solitary Reset & Karmic Remedy:</span>
+          <span>8th-House Solitary Reset & Karmic Remedy:</span>
         </div>
         <p className="text-slate-300 leading-relaxed">
           {result.eighthHouseAnalysis.details}

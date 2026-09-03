@@ -708,7 +708,7 @@ export default function MatchmakingView() {
         </div>
       </div>
 
-            {/* Dr. Samir Tripathi Marriage Masterclass 2 (Sexual Compatibility & Lapping Systems) */}
+            {/* Marriage Masterclass (Sexual Compatibility & Lapping Systems) */}
       <LappingMatrixView
         boyEphem={boyEphem}
         girlEphem={girlEphem}

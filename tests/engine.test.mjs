@@ -3836,7 +3836,7 @@ test("Anti-Sycophancy & Chhala Prashna Shastric Boundary Verification", async ()
   assert.strictEqual(localBirthDate.getUTCDate(), 25);
   assert.strictEqual(localBirthDate.getUTCMonth(), 4); // May (0-indexed)
 });
-test("Dr. Samir Tripathi Marriage Masterclass 2 (Sexual Compatibility & Lapping Systems) Verification", async () => {
+test("Marriage Masterclass 2 (Sexual Compatibility & Lapping Systems) Verification", async () => {
   const { calculateLappingCompatibility } = await import("../src/engine/lappingCompatibility.ts");
   const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
 
@@ -3862,7 +3862,7 @@ test("Dr. Samir Tripathi Marriage Masterclass 2 (Sexual Compatibility & Lapping 
   assert.ok(result.primaryGifts.length > 0);
   assert.ok(result.criticalRisks.length > 0);
   assert.ok(result.karmicRemedies.length > 0);
-  assert.ok(result.samirTripathiVerdict.includes("Dr. Samir Tripathi's Masterclass Verdict"));
+  assert.ok(result.samirTripathiVerdict.includes("Masterclass Synthesis Verdict"));
   assert.ok(typeof result.eighthHouseAnalysis.hasAffliction === "boolean");
   assert.ok(result.eighthHouseAnalysis.solitudeRemedy.includes("15-day solo mountain retreat"));
 

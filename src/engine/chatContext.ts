@@ -1372,7 +1372,7 @@ export function buildAstroDossier(
         "  - D-1 to D-9 Moon Resonance: " + matchRes.d1d9Synastry.moonResonanceDescription,
         "  - D-9 4th House Domestic Joy: " + matchRes.d1d9Synastry.d9FourthHouseHarmony,
         "  - Birth Dasha Lord Linkage: " + matchRes.d1d9Synastry.birthDashaLinkDescription,
-        "- **Dr. Samir Tripathi Marriage Masterclass 2 (Sexual Compatibility & Lapping Systems / रोपण पद्धति):**",
+        "- **Marriage Masterclass (Sexual Compatibility & Lapping Systems / रोपण पद्धति):**",
         "  - Overall Lapping Verdict: **" + lappingRes.overallVerdict + " (" + lappingRes.overallLappingScore + "/100)**",
         "  - Physical & Sexual Drive Index: **" + lappingRes.sexualAttractionScore + "/100** • Longevity & Devotion: **" + lappingRes.longevityDevotionScore + "/100** • Material Joy: **" + lappingRes.materialJoyScore + "/100**",
         "  - Primary Karmic Gifts: " + (lappingRes.primaryGifts.join(" • ") || "Neutral baseline"),
