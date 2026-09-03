@@ -3836,44 +3836,84 @@ test("Anti-Sycophancy & Chhala Prashna Shastric Boundary Verification", async ()
   assert.strictEqual(localBirthDate.getUTCDate(), 25);
   assert.strictEqual(localBirthDate.getUTCMonth(), 4); // May (0-indexed)
 });
+test("Dr. Samir Tripathi Marriage Masterclass 2 (Sexual Compatibility & Lapping Systems) Verification", async () => {
+  const { calculateLappingCompatibility } = await import("../src/engine/lappingCompatibility.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
 
+  const loc = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
 
+  // Chart A: Birth 1998-05-25 00:16 Mau (Pisces Lagna, Venus in Aries/Taurus)
+  const chartA = calculateVedicEphemeris(new Date("1998-05-24T18:46:00Z"), loc, "Lahiri");
 
+  // Chart B: Birth 1999-10-15 14:30 Varanasi (Libra Lagna)
+  const chartB = calculateVedicEphemeris(new Date("1999-10-15T09:00:00Z"), loc, "Lahiri");
 
+  const result = calculateLappingCompatibility(chartA, chartB);
 
+  // 1. Structure Verification
+  assert.ok(Array.isArray(result.partnerA_on_B_Venus));
+  assert.ok(Array.isArray(result.partnerB_on_A_Venus));
+  assert.ok(Array.isArray(result.compoundOverlaps));
+  assert.ok(typeof result.sexualAttractionScore === "number");
+  assert.ok(typeof result.longevityDevotionScore === "number");
+  assert.ok(typeof result.materialJoyScore === "number");
+  assert.ok(typeof result.overallLappingScore === "number");
+  assert.ok(result.overallVerdict);
+  assert.ok(result.primaryGifts.length > 0);
+  assert.ok(result.criticalRisks.length > 0);
+  assert.ok(result.karmicRemedies.length > 0);
+  assert.ok(result.samirTripathiVerdict.includes("Dr. Samir Tripathi's Masterclass Verdict"));
+  assert.ok(typeof result.eighthHouseAnalysis.hasAffliction === "boolean");
+  assert.ok(result.eighthHouseAnalysis.solitudeRemedy.includes("15-day solo mountain retreat"));
 
+  // 2. Synthetic Chart Tests for Exact Rule Verification
+  // Test A: Direct Mars on Venus (100% Same Rashi)
+  const mockChartA = JSON.parse(JSON.stringify(chartA));
+  const mockChartB = JSON.parse(JSON.stringify(chartB));
 
+  // Put Partner A's Venus at Taurus (35 deg -> Rashi 1)
+  mockChartA.planets["Venus"].siderealLongitude = 35.0;
 
+  // Put Partner B's Mars at Taurus (40 deg -> Rashi 1)
+  mockChartB.planets["Mars"].siderealLongitude = 40.0;
 
+  const resultDirectMars = calculateLappingCompatibility(mockChartA, mockChartB);
+  const marsOverlay = resultDirectMars.partnerB_on_A_Venus.find(o => o.superimposedPlanet === "Mars");
+  assert.ok(marsOverlay, "Mars overlay on Venus should be found");
+  assert.strictEqual(marsOverlay.relationship, "Same Rashi (100%)");
+  assert.strictEqual(marsOverlay.weight, 1.0);
+  assert.strictEqual(marsOverlay.baseScore, 95);
+  assert.strictEqual(marsOverlay.weightedScore, 95);
+  assert.strictEqual(marsOverlay.grade, "Exceptional (Top-Tier)");
+  assert.ok(resultDirectMars.sexualAttractionScore >= 95);
 
+  // Test B: Mars in 5th Trine (Virgo: Rashi 5 -> 155 deg)
+  mockChartB.planets["Mars"].siderealLongitude = 155.0; // Virgo (5th from Taurus)
+  const resultTrineMars = calculateLappingCompatibility(mockChartA, mockChartB);
+  const trineOverlay = resultTrineMars.partnerB_on_A_Venus.find(o => o.superimposedPlanet === "Mars");
+  assert.ok(trineOverlay, "5th Trine Mars overlay on Venus should be found");
+  assert.strictEqual(trineOverlay.relationship, "5th Trine (50%)");
+  assert.strictEqual(trineOverlay.weight, 0.5);
+  assert.strictEqual(trineOverlay.weightedScore, 48); // Math.round(95 * 0.5)
 
+  // Test C: Compound Angarak (Mars + Ketu) on Partner A's Venus
+  mockChartB.planets["Mars"].siderealLongitude = 35.0; // Taurus
+  mockChartB.planets["Ketu"].siderealLongitude = 38.0; // Taurus
+  const resultAngarak = calculateLappingCompatibility(mockChartA, mockChartB);
+  const compoundAngarak = resultAngarak.compoundOverlaps.find(c => c.compoundType === "Angarak");
+  assert.ok(compoundAngarak, "Compound Angarak overlay must be identified");
+  assert.strictEqual(compoundAngarak.score, 10);
+  assert.strictEqual(compoundAngarak.verdict, "Angarak Fiery Rupture (High Trauma)");
 
+  // Test D: Compound Sun + Jupiter on Venus (Preacher Conflict)
+  mockChartB.planets["Sun"].siderealLongitude = 32.0; // Taurus
+  mockChartB.planets["Jupiter"].siderealLongitude = 36.0; // Taurus
+  // move Mars and Ketu away
+  mockChartB.planets["Mars"].siderealLongitude = 210.0;
+  mockChartB.planets["Ketu"].siderealLongitude = 270.0;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  const resultEgoTeacher = calculateLappingCompatibility(mockChartA, mockChartB);
+  const compoundTeacher = resultEgoTeacher.compoundOverlaps.find(c => c.compoundType === "EgoTeacher");
+  assert.ok(compoundTeacher, "Compound EgoTeacher overlay must be identified");
+  assert.strictEqual(compoundTeacher.score, 20);
+});

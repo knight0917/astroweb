@@ -72,6 +72,7 @@ import { evaluateBhriguNadiMarriageTiming } from "./bhriguNadiMarriageTiming";
 import { calculateAdhanaKundali } from "./adhanaKundali";
 import { evaluateVedicNameMatrix } from "./nameAnalysis";
 import { calculateMatchmaking } from "./matchmaking";
+import { calculateLappingCompatibility } from "./lappingCompatibility";
 import { generateDrSamirTripathiSummary } from "./samirTripathiSuite";
 import { generateRashiTulyaNavamshaSummary } from "./rashiTulyaNavamsha";
 import { calculateSamirTripathiPanchang } from "./samirTripathiPanchang";
@@ -1301,6 +1302,7 @@ export function buildAstroDossier(
       const girlEphem = calculateVedicEphemeris(girlUtc, matchmaking.girl.location, natalEphemeris.ayanamshaType);
 
       const matchRes = calculateMatchmaking(boyEphem, girlEphem);
+      const lappingRes = calculateLappingCompatibility(boyEphem, girlEphem);
 
       const boyD1 = calculateShodashavargaChart(boyEphem, "D1");
       const boyD9 = calculateShodashavargaChart(boyEphem, "D9");
@@ -1370,6 +1372,13 @@ export function buildAstroDossier(
         "  - D-1 to D-9 Moon Resonance: " + matchRes.d1d9Synastry.moonResonanceDescription,
         "  - D-9 4th House Domestic Joy: " + matchRes.d1d9Synastry.d9FourthHouseHarmony,
         "  - Birth Dasha Lord Linkage: " + matchRes.d1d9Synastry.birthDashaLinkDescription,
+        "- **Dr. Samir Tripathi Marriage Masterclass 2 (Sexual Compatibility & Lapping Systems / रोपण पद्धति):**",
+        "  - Overall Lapping Verdict: **" + lappingRes.overallVerdict + " (" + lappingRes.overallLappingScore + "/100)**",
+        "  - Physical & Sexual Drive Index: **" + lappingRes.sexualAttractionScore + "/100** • Longevity & Devotion: **" + lappingRes.longevityDevotionScore + "/100** • Material Joy: **" + lappingRes.materialJoyScore + "/100**",
+        "  - Primary Karmic Gifts: " + (lappingRes.primaryGifts.join(" • ") || "Neutral baseline"),
+        "  - Critical Risks & Preacher Warning: " + (lappingRes.criticalRisks.join(" • ") || "No severe Venus lapping afflictions"),
+        "  - 8th-House Solitude & Fasting Remedy: " + lappingRes.eighthHouseAnalysis.solitudeRemedy,
+        "  - Masterclass Synthesis: " + lappingRes.samirTripathiVerdict,
         "- **Classical Shastric Verdict:** " + matchRes.verdictDescription,
       ].join("\n");
     } catch (_) {}

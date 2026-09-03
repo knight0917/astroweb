@@ -8,6 +8,7 @@ import { POPULAR_CITIES } from "../engine/constants";
 import { EXTENDED_LOCAL_PLACES } from "../engine/geocoding";
 import { GeoLocation } from "../engine/types";
 import MatchmakingChartsDeck from "./MatchmakingChartsDeck";
+import LappingMatrixView from "./LappingMatrixView";
 
 function formatUtcToLocalIso(utcDate: Date, tzOffsetHours: number = 5.5): string {
   const localMs = utcDate.getTime() + tzOffsetHours * 3600 * 1000;
@@ -706,6 +707,14 @@ export default function MatchmakingView() {
           </div>
         </div>
       </div>
+
+            {/* Dr. Samir Tripathi Marriage Masterclass 2 (Sexual Compatibility & Lapping Systems) */}
+      <LappingMatrixView
+        boyEphem={boyEphem}
+        girlEphem={girlEphem}
+        boyName={boyName}
+        girlName={girlName}
+      />
 
       {/* Classical Ashtakavarga Synastry (C.S. Patel & Parashara) */}
       <div className="glass-panel p-6 rounded-2xl border border-teal-500/30 bg-slate-950/80 shadow-2xl space-y-4">
