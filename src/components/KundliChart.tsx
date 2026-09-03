@@ -730,39 +730,16 @@ function KundliChart() {
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col justify-between space-y-3 text-xs">
-              <div className="space-y-1.5 border-b border-slate-800 pb-2.5">
-                <span className="text-xs font-black uppercase tracking-wide text-amber-400 flex items-center gap-1.5">
-                  <span>💡</span> Live Aspect Rays Guide
-                </span>
-                <p className="text-[11.5px] text-slate-300 font-sans leading-relaxed">
-                  <strong>Hover over any of the 9 Grahas</strong> (or Chara Karakas below) to project interactive laser aspect rays across the chart.
-                </p>
+            <div className="flex-1 flex flex-col justify-center items-center text-center p-4 space-y-2.5 text-xs">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-xl text-amber-400 animate-pulse">
+                ⚡
               </div>
-
-              <div className="space-y-2 text-[11px] font-sans">
-                <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                  <span className="font-bold text-amber-300 flex items-center gap-1">
-                    <span>⚡</span> Graha Drishti (Planetary Eyesight)
-                  </span>
-                  <p className="text-slate-400 text-[10.5px] leading-relaxed">
-                    7th direct for all planets; Mars 4th/8th; Jupiter, Rahu, Ketu 5th/9th; Saturn 3rd/10th special aspects.
-                  </p>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                  <span className="font-bold text-cyan-300 flex items-center gap-1">
-                    <span>🌀</span> Rashi Drishti (Jaimini Sign Aspects)
-                  </span>
-                  <p className="text-slate-400 text-[10.5px] leading-relaxed">
-                    Moveable signs aspect Fixed signs (except adjacent); Fixed aspect Moveable; Dual signs aspect all other Dual signs.
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800/80 text-[10px] text-slate-400 text-center font-mono">
-                Click on any planet to open deep astrological analysis.
-              </div>
+              <span className="text-xs font-black uppercase tracking-wider text-amber-400">
+                Aspect Rays Cockpit
+              </span>
+              <p className="text-[11px] text-slate-400 font-sans max-w-[200px] leading-relaxed">
+                Hover any planet in the chart or Karakas below to inspect aspect beams.
+              </p>
             </div>
           )}
         </div>
