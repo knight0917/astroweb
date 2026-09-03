@@ -346,7 +346,7 @@ function KundliChart() {
       </div>
 
       {/* Lagna & Special Points Banner */}
-      <div className="w-full max-w-[460px] mb-3 flex flex-col gap-1.5 px-3 py-2 bg-slate-900/80 rounded-xl border border-slate-800 text-xs shadow-inner">
+      <div className="w-full max-w-[840px] mb-3 flex flex-col gap-1.5 px-3 py-2 bg-slate-900/80 rounded-xl border border-slate-800 text-xs shadow-inner">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <span className="text-amber-400 font-bold">Lagna:</span>
@@ -388,343 +388,388 @@ function KundliChart() {
         </div>
       </div>
 
-      {/* SVG Canvas Container */}
-      <div className="relative w-full max-w-[460px] aspect-square bg-slate-950 rounded-2xl border-2 border-slate-800/80 shadow-2xl p-2 flex items-center justify-center overflow-visible transform-gpu will-change-transform">
-        {chartType === "north" ? (
-          // North Indian Diamond Kundli (SVG)
-          <div className="relative w-full h-full">
-            <svg
-              viewBox="0 0 400 400"
-              className="w-full h-full text-slate-200 select-none overflow-visible transform-gpu"
-            >
-              {/* Outer Box */}
-              <rect x="5" y="5" width="390" height="390" fill="none" stroke="#b45309" strokeWidth="2.5" />
-
-              {/* Diagonal Cross (X) */}
-              <line x1="5" y1="5" x2="395" y2="395" stroke="#78350f" strokeWidth="1.5" />
-              <line x1="395" y1="5" x2="5" y2="395" stroke="#78350f" strokeWidth="1.5" />
-
-              {/* Inner Diamond (Rhombus) */}
-              <polygon points="200,5 395,200 200,395 5,200" fill="none" stroke="#d97706" strokeWidth="2" />
-
-              {/* Central Diamond Inner Accent (Lagna / 1st House & 7th House) */}
-              <polygon points="200,5 297.5,102.5 200,200 102.5,102.5" fill="#022c22" fillOpacity="0.3" />
-              <polygon points="200,395 297.5,297.5 200,200 102.5,297.5" fill="#1e1b4b" fillOpacity="0.2" />
-
-              {/* --- House 1 (Top Center Diamond - TANU / LAGNA) --- */}
-              <text x="200" y="24" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="bold" className="font-mono">
-                {getNorthRashiNum(1)}
-              </text>
-              <text x="200" y="38" textAnchor="middle" fill="#10b981" fontSize="9" fontWeight="900" letterSpacing="1">
-                LAGNA
-              </text>
-              <foreignObject x="110" y="42" width="180" height="120" className="overflow-visible pointer-events-none">
-                <div className="h-full flex items-center justify-center">{renderPlanetList(1)}</div>
-              </foreignObject>
-
-              {/* House 2 (Top Left Upper Triangle) */}
-              <text x="120" y="24" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
-                {getNorthRashiNum(2)}
-              </text>
-              <foreignObject x="15" y="25" width="170" height="85" className="overflow-visible pointer-events-none">
-                <div className="h-full flex items-center justify-center">{renderPlanetList(2)}</div>
-              </foreignObject>
-
-              {/* House 3 (Left Top Outer Triangle) */}
-              <text x="28" y="110" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
-                {getNorthRashiNum(3)}
-              </text>
-              <foreignObject x="10" y="45" width="105" height="140" className="overflow-visible pointer-events-none">
-                <div className="h-full flex items-center justify-center">{renderPlanetList(3)}</div>
-              </foreignObject>
-
-              {/* House 4 (Left Center Diamond - Sukha Bhava) */}
-              <text x="75" y="165" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
-                {getNorthRashiNum(4)}
-              </text>
-              <foreignObject x="25" y="130" width="150" height="140" className="overflow-visible pointer-events-none">
-                <div className="h-full flex items-center justify-center">{renderPlanetList(4)}</div>
-              </foreignObject>
-
-              {/* House 5 (Left Bottom Outer Triangle) */}
-              <text x="28" y="300" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
-                {getNorthRashiNum(5)}
-              </text>
-              <foreignObject x="10" y="215" width="105" height="140" className="overflow-visible pointer-events-none">
-                <div className="h-full flex items-center justify-center">{renderPlanetList(5)}</div>
-              </foreignObject>
-
-              {/* House 6 (Bottom Left Lower Triangle) */}
-              <text x="120" y="386" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
-                {getNorthRashiNum(6)}
-              </text>
-              <foreignObject x="15" y="290" width="170" height="85" className="overflow-visible pointer-events-none">
-                <div className="h-full flex items-center justify-center">{renderPlanetList(6)}</div>
-              </foreignObject>
-
-              {/* House 7 (Bottom Center Diamond - Jaya / Kalatra Bhava) */}
-              <text x="200" y="386" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
-                {getNorthRashiNum(7)}
-              </text>
-              <foreignObject x="110" y="242" width="180" height="120" className="overflow-visible pointer-events-none">
-                <div className="h-full flex items-center justify-center">{renderPlanetList(7)}</div>
-              </foreignObject>
-
-              {/* House 8 (Bottom Right Lower Triangle) */}
-              <text x="280" y="386" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
-                {getNorthRashiNum(8)}
-              </text>
-              <foreignObject x="215" y="290" width="170" height="85" className="overflow-visible pointer-events-none">
-                <div className="h-full flex items-center justify-center">{renderPlanetList(8)}</div>
-              </foreignObject>
-
-              {/* House 9 (Right Bottom Outer Triangle) */}
-              <text x="372" y="300" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
-                {getNorthRashiNum(9)}
-              </text>
-              <foreignObject x="285" y="215" width="105" height="140" className="overflow-visible pointer-events-none">
-                <div className="h-full flex items-center justify-center">{renderPlanetList(9)}</div>
-              </foreignObject>
-
-              {/* House 10 (Right Center Diamond - Karma Bhava) */}
-              <text x="325" y="165" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
-                {getNorthRashiNum(10)}
-              </text>
-              <foreignObject x="225" y="130" width="150" height="140" className="overflow-visible pointer-events-none">
-                <div className="h-full flex items-center justify-center">{renderPlanetList(10)}</div>
-              </foreignObject>
-
-              {/* House 11 (Right Top Outer Triangle) */}
-              <text x="372" y="110" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
-                {getNorthRashiNum(11)}
-              </text>
-              <foreignObject x="285" y="45" width="105" height="140" className="overflow-visible pointer-events-none">
-                <div className="h-full flex items-center justify-center">{renderPlanetList(11)}</div>
-              </foreignObject>
-
-              {/* House 12 (Top Right Upper Triangle) */}
-              <text x="280" y="24" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
-                {getNorthRashiNum(12)}
-              </text>
-              <foreignObject x="215" y="25" width="170" height="85" className="overflow-visible pointer-events-none">
-                <div className="h-full flex items-center justify-center">{renderPlanetList(12)}</div>
-              </foreignObject>
-            </svg>
-
-            {/* --- TOP-LEVEL LASER OVERLAY (Always Renders ON TOP of all DOM elements) --- */}
-            {activeAspectRays.length > 0 && (
+      {/* Chart & Side Aspect Inspector Layout */}
+      <div className="w-full max-w-[840px] flex flex-col lg:flex-row items-center lg:items-stretch justify-center gap-3.5">
+        {/* Left Side: SVG Canvas Container */}
+        <div className="relative w-full max-w-[460px] aspect-square bg-slate-950 rounded-2xl border-2 border-slate-800/80 shadow-2xl p-2 flex items-center justify-center overflow-visible transform-gpu will-change-transform shrink-0">
+          {chartType === "north" ? (
+            // North Indian Diamond Kundli (SVG)
+            <div className="relative w-full h-full">
               <svg
                 viewBox="0 0 400 400"
-                className="absolute inset-0 w-full h-full pointer-events-none z-30 overflow-visible select-none"
+                className="w-full h-full text-slate-200 select-none overflow-visible transform-gpu"
               >
-                <defs>
-                  <filter id="northTopLaserGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
+                {/* Outer Box */}
+                <rect x="5" y="5" width="390" height="390" fill="none" stroke="#b45309" strokeWidth="2.5" />
 
-                {activeAspectRays.map((ray, idx) => {
-                  const pFrom = NORTH_HOUSE_CENTERS[ray.fromHouse];
-                  const pTo = NORTH_HOUSE_CENTERS[ray.toHouse];
-                  if (!pFrom || !pTo) return null;
+                {/* Diagonal Cross (X) */}
+                <line x1="5" y1="5" x2="395" y2="395" stroke="#78350f" strokeWidth="1.5" />
+                <line x1="395" y1="5" x2="5" y2="395" stroke="#78350f" strokeWidth="1.5" />
 
-                  const isGraha = ray.type === "graha";
+                {/* Inner Diamond (Rhombus) */}
+                <polygon points="200,5 395,200 200,395 5,200" fill="none" stroke="#d97706" strokeWidth="2" />
 
-                  return (
-                    <g key={`top-ray-${ray.fromHouse}-${ray.toHouse}-${idx}`}>
-                      {/* Underglow Beam */}
-                      <line
-                        x1={pFrom.x}
-                        y1={pFrom.y}
-                        x2={pTo.x}
-                        y2={pTo.y}
-                        stroke={ray.color}
-                        strokeWidth={isGraha ? "4" : "3"}
-                        strokeOpacity="0.5"
-                        strokeLinecap="round"
-                        filter="url(#northTopLaserGlow)"
-                      />
-                      {/* Crisp Core Laser Beam */}
-                      <line
-                        x1={pFrom.x}
-                        y1={pFrom.y}
-                        x2={pTo.x}
-                        y2={pTo.y}
-                        stroke="#ffffff"
-                        strokeWidth={isGraha ? "2" : "1.5"}
-                        strokeDasharray={isGraha ? "8 4" : "4 4"}
-                        strokeLinecap="round"
-                        className="animate-pulse"
-                      />
-                    </g>
-                  );
-                })}
+                {/* Central Diamond Inner Accent (Lagna / 1st House & 7th House) */}
+                <polygon points="200,5 297.5,102.5 200,200 102.5,102.5" fill="#022c22" fillOpacity="0.3" />
+                <polygon points="200,395 297.5,297.5 200,200 102.5,297.5" fill="#1e1b4b" fillOpacity="0.2" />
+
+                {/* --- House 1 (Top Center Diamond - TANU / LAGNA) --- */}
+                <text x="200" y="24" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="bold" className="font-mono">
+                  {getNorthRashiNum(1)}
+                </text>
+                <text x="200" y="38" textAnchor="middle" fill="#10b981" fontSize="9" fontWeight="900" letterSpacing="1">
+                  LAGNA
+                </text>
+                <foreignObject x="110" y="42" width="180" height="120" className="overflow-visible pointer-events-none">
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(1)}</div>
+                </foreignObject>
+
+                {/* House 2 (Top Left Upper Triangle) */}
+                <text x="120" y="24" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
+                  {getNorthRashiNum(2)}
+                </text>
+                <foreignObject x="15" y="25" width="170" height="85" className="overflow-visible pointer-events-none">
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(2)}</div>
+                </foreignObject>
+
+                {/* House 3 (Left Top Outer Triangle) */}
+                <text x="28" y="110" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
+                  {getNorthRashiNum(3)}
+                </text>
+                <foreignObject x="10" y="45" width="105" height="140" className="overflow-visible pointer-events-none">
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(3)}</div>
+                </foreignObject>
+
+                {/* House 4 (Left Center Diamond - Sukha Bhava) */}
+                <text x="75" y="165" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
+                  {getNorthRashiNum(4)}
+                </text>
+                <foreignObject x="25" y="130" width="150" height="140" className="overflow-visible pointer-events-none">
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(4)}</div>
+                </foreignObject>
+
+                {/* House 5 (Left Bottom Outer Triangle) */}
+                <text x="28" y="300" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
+                  {getNorthRashiNum(5)}
+                </text>
+                <foreignObject x="10" y="215" width="105" height="140" className="overflow-visible pointer-events-none">
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(5)}</div>
+                </foreignObject>
+
+                {/* House 6 (Bottom Left Lower Triangle) */}
+                <text x="120" y="386" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
+                  {getNorthRashiNum(6)}
+                </text>
+                <foreignObject x="15" y="290" width="170" height="85" className="overflow-visible pointer-events-none">
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(6)}</div>
+                </foreignObject>
+
+                {/* House 7 (Bottom Center Diamond - Jaya / Kalatra Bhava) */}
+                <text x="200" y="386" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
+                  {getNorthRashiNum(7)}
+                </text>
+                <foreignObject x="110" y="242" width="180" height="120" className="overflow-visible pointer-events-none">
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(7)}</div>
+                </foreignObject>
+
+                {/* House 8 (Bottom Right Lower Triangle) */}
+                <text x="280" y="386" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
+                  {getNorthRashiNum(8)}
+                </text>
+                <foreignObject x="215" y="290" width="170" height="85" className="overflow-visible pointer-events-none">
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(8)}</div>
+                </foreignObject>
+
+                {/* House 9 (Right Bottom Outer Triangle) */}
+                <text x="372" y="300" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
+                  {getNorthRashiNum(9)}
+                </text>
+                <foreignObject x="285" y="215" width="105" height="140" className="overflow-visible pointer-events-none">
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(9)}</div>
+                </foreignObject>
+
+                {/* House 10 (Right Center Diamond - Karma Bhava) */}
+                <text x="325" y="165" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
+                  {getNorthRashiNum(10)}
+                </text>
+                <foreignObject x="225" y="130" width="150" height="140" className="overflow-visible pointer-events-none">
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(10)}</div>
+                </foreignObject>
+
+                {/* House 11 (Right Top Outer Triangle) */}
+                <text x="372" y="110" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
+                  {getNorthRashiNum(11)}
+                </text>
+                <foreignObject x="285" y="45" width="105" height="140" className="overflow-visible pointer-events-none">
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(11)}</div>
+                </foreignObject>
+
+                {/* House 12 (Top Right Upper Triangle) */}
+                <text x="280" y="24" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold" className="font-mono">
+                  {getNorthRashiNum(12)}
+                </text>
+                <foreignObject x="215" y="25" width="170" height="85" className="overflow-visible pointer-events-none">
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(12)}</div>
+                </foreignObject>
               </svg>
-            )}
-          </div>
-        ) : (
-          // South Indian Box Chart (4x4 Grid with SVG Aspect Ray Overlay)
-          <div className="relative w-full h-full border-2 border-amber-500/80 text-xs">
-            <div className="grid grid-cols-4 grid-rows-4 w-full h-full">
-              {[
-                { rashiIdx: 11, col: "1", row: "1" },
-                { rashiIdx: 0, col: "2", row: "1" },
-                { rashiIdx: 1, col: "3", row: "1" },
-                { rashiIdx: 2, col: "4", row: "1" },
-                { rashiIdx: 10, col: "1", row: "2" },
-                { rashiIdx: 3, col: "4", row: "2" },
-                { rashiIdx: 9, col: "1", row: "3" },
-                { rashiIdx: 4, col: "4", row: "3" },
-                { rashiIdx: 8, col: "1", row: "4" },
-                { rashiIdx: 7, col: "2", row: "4" },
-                { rashiIdx: 6, col: "3", row: "4" },
-                { rashiIdx: 5, col: "4", row: "4" },
-              ].map(({ rashiIdx, col, row }) => {
-                const rashi = RASHIS[rashiIdx];
-                const houseNum = ((rashiIdx - ascRashiIndex + 12) % 12) + 1;
-                const isLagna = rashiIdx === ascRashiIndex;
 
-                return (
-                  <div
-                    key={rashiIdx}
-                    style={{ gridColumn: col, gridRow: row }}
-                    className={`border border-slate-700/80 p-1 flex flex-col justify-between overflow-hidden transition-colors ${
-                      isLagna
-                        ? "bg-emerald-950/30 ring-1 ring-inset ring-emerald-500/50"
-                        : "bg-slate-900/40"
-                    }`}
-                  >
-                    <div className="flex justify-between items-center text-[10px]">
-                      <span className="text-slate-400 font-semibold">{rashi.sanskritName}</span>
-                      {isLagna && (
-                        <span className="text-[9px] font-extrabold px-1 bg-emerald-500 text-slate-950 rounded">
-                          LAGNA
-                        </span>
-                      )}
-                      <span className="text-slate-500">H{houseNum}</span>
-                    </div>
-                    <div className="flex-1 flex items-center justify-center my-0.5 overflow-visible">
-                      {renderPlanetList(houseNum)}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Hollow Center */}
-              <div className="col-start-2 col-span-2 row-start-2 row-span-2 border border-slate-800 bg-slate-950/80 flex flex-col items-center justify-center text-center p-2">
-                <span className="text-xs font-bold text-slate-200">Rashi Kundli</span>
-                <span className="text-[10px] text-slate-400 font-mono mt-0.5">
-                  {ephemeris.ayanamshaType} Ayanamsha
-                </span>
-              </div>
-            </div>
-
-            {/* South Indian SVG Laser Beams Overlay - Clean Rays Only */}
-            {activeAspectRays.length > 0 && (
-              <svg
-                viewBox="0 0 400 400"
-                className="absolute inset-0 w-full h-full pointer-events-none z-30 overflow-visible select-none"
-              >
-                <defs>
-                  <filter id="southLaserGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-
-                {activeAspectRays.map((ray, idx) => {
-                  const pFrom = SOUTH_RASHI_CENTERS[ray.fromRashiIndex];
-                  const pTo = SOUTH_RASHI_CENTERS[ray.toRashiIndex];
-                  if (!pFrom || !pTo) return null;
-
-                  const isGraha = ray.type === "graha";
-
-                  return (
-                    <g key={`south-ray-${idx}`}>
-                      <line
-                        x1={pFrom.x}
-                        y1={pFrom.y}
-                        x2={pTo.x}
-                        y2={pTo.y}
-                        stroke={ray.color}
-                        strokeWidth={isGraha ? "4" : "3"}
-                        strokeOpacity="0.5"
-                        strokeLinecap="round"
-                        filter="url(#southLaserGlow)"
-                      />
-                      <line
-                        x1={pFrom.x}
-                        y1={pFrom.y}
-                        x2={pTo.x}
-                        y2={pTo.y}
-                        stroke="#ffffff"
-                        strokeWidth={isGraha ? "2" : "1.5"}
-                        strokeDasharray={isGraha ? "8 4" : "4 4"}
-                        strokeLinecap="round"
-                        className="animate-pulse"
-                      />
-                    </g>
-                  );
-                })}
-              </svg>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* --- REAL-TIME ASPECT RAY HUD BANNER (Zero-Shift Fixed Height to Prevent Hover Oscillations) --- */}
-      <div className="w-full max-w-[460px] mt-2.5 h-[84px] p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 text-xs shadow-md flex flex-col justify-center overflow-hidden">
-        {hoveredEntity && activeAspectRays.length > 0 ? (
-          <div className="h-full flex flex-col justify-between space-y-1 overflow-hidden">
-            <div className="flex items-center justify-between gap-1 shrink-0">
-              <div className="flex items-center gap-1.5 font-bold truncate">
-                <span className="text-amber-400 text-[11px] shrink-0">⚡ Beams ({activeAspectRays.length}):</span>
-                <span className="text-slate-100 font-extrabold text-[11px] truncate">{hoveredEntity.fullName}</span>
-                <span className="text-[10px] text-slate-400 font-mono shrink-0">
-                  H{hoveredEntity.house} ({RASHIS[hoveredEntity.rashiIndex].englishName}) • {hoveredEntity.deg.toFixed(1)}°
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-1 overflow-y-auto custom-scrollbar max-h-[50px] pr-0.5">
-              {activeAspectRays.map((ray, i) => (
-                <span
-                  key={i}
-                  className="text-[9.5px] font-bold px-1.5 py-0.5 rounded border flex items-center gap-1 shrink-0"
-                  style={{
-                    backgroundColor: `${ray.color}18`,
-                    borderColor: `${ray.color}60`,
-                    color: ray.color,
-                  }}
+              {/* --- TOP-LEVEL LASER OVERLAY (Always Renders ON TOP of all DOM elements) --- */}
+              {activeAspectRays.length > 0 && (
+                <svg
+                  viewBox="0 0 400 400"
+                  className="absolute inset-0 w-full h-full pointer-events-none z-30 overflow-visible select-none"
                 >
-                  <span>{ray.type === "graha" ? "⚡" : "🌀"}</span>
-                  <span className="truncate max-w-[140px]">{ray.aspectLabel}</span>
-                  <span className="opacity-75 font-mono">→ {ray.targetHouseName}</span>
-                </span>
-              ))}
+                  <defs>
+                    <filter id="northTopLaserGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  {activeAspectRays.map((ray, idx) => {
+                    const pFrom = NORTH_HOUSE_CENTERS[ray.fromHouse];
+                    const pTo = NORTH_HOUSE_CENTERS[ray.toHouse];
+                    if (!pFrom || !pTo) return null;
+
+                    const isGraha = ray.type === "graha";
+
+                    return (
+                      <g key={`top-ray-${ray.fromHouse}-${ray.toHouse}-${idx}`}>
+                        {/* Underglow Beam */}
+                        <line
+                          x1={pFrom.x}
+                          y1={pFrom.y}
+                          x2={pTo.x}
+                          y2={pTo.y}
+                          stroke={ray.color}
+                          strokeWidth={isGraha ? "4" : "3"}
+                          strokeOpacity="0.5"
+                          strokeLinecap="round"
+                          filter="url(#northTopLaserGlow)"
+                        />
+                        {/* Crisp Core Laser Beam */}
+                        <line
+                          x1={pFrom.x}
+                          y1={pFrom.y}
+                          x2={pTo.x}
+                          y2={pTo.y}
+                          stroke="#ffffff"
+                          strokeWidth={isGraha ? "2" : "1.5"}
+                          strokeDasharray={isGraha ? "8 4" : "4 4"}
+                          strokeLinecap="round"
+                          className="animate-pulse"
+                        />
+                      </g>
+                    );
+                  })}
+                </svg>
+              )}
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 text-slate-400 text-[11px] leading-relaxed">
-            <span className="text-amber-400 text-sm shrink-0">💡</span>
-            <span>
-              <strong>Hover</strong> on any of the <strong>9 Grahas</strong> or <strong>Chara Karakas</strong> below to project live{" "}
-              <strong className="text-amber-300">Graha</strong> &{" "}
-              <strong className="text-cyan-300">Rashi</strong> aspect rays!
-            </span>
-          </div>
-        )}
+          ) : (
+            // South Indian Box Chart (4x4 Grid with SVG Aspect Ray Overlay)
+            <div className="relative w-full h-full border-2 border-amber-500/80 text-xs">
+              <div className="grid grid-cols-4 grid-rows-4 w-full h-full">
+                {[
+                  { rashiIdx: 11, col: "1", row: "1" },
+                  { rashiIdx: 0, col: "2", row: "1" },
+                  { rashiIdx: 1, col: "3", row: "1" },
+                  { rashiIdx: 2, col: "4", row: "1" },
+                  { rashiIdx: 10, col: "1", row: "2" },
+                  { rashiIdx: 3, col: "4", row: "2" },
+                  { rashiIdx: 9, col: "1", row: "3" },
+                  { rashiIdx: 4, col: "4", row: "3" },
+                  { rashiIdx: 8, col: "1", row: "4" },
+                  { rashiIdx: 7, col: "2", row: "4" },
+                  { rashiIdx: 6, col: "3", row: "4" },
+                  { rashiIdx: 5, col: "4", row: "4" },
+                ].map(({ rashiIdx, col, row }) => {
+                  const rashi = RASHIS[rashiIdx];
+                  const houseNum = ((rashiIdx - ascRashiIndex + 12) % 12) + 1;
+                  const isLagna = rashiIdx === ascRashiIndex;
+
+                  return (
+                    <div
+                      key={rashiIdx}
+                      style={{ gridColumn: col, gridRow: row }}
+                      className={`border border-slate-700/80 p-1 flex flex-col justify-between overflow-hidden transition-colors ${
+                        isLagna
+                          ? "bg-emerald-950/30 ring-1 ring-inset ring-emerald-500/50"
+                          : "bg-slate-900/40"
+                      }`}
+                    >
+                      <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-slate-400 font-semibold">{rashi.sanskritName}</span>
+                        {isLagna && (
+                          <span className="text-[9px] font-extrabold px-1 bg-emerald-500 text-slate-950 rounded">
+                            LAGNA
+                          </span>
+                        )}
+                        <span className="text-slate-500">H{houseNum}</span>
+                      </div>
+                      <div className="flex-1 flex items-center justify-center my-0.5 overflow-visible">
+                        {renderPlanetList(houseNum)}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Hollow Center */}
+                <div className="col-start-2 col-span-2 row-start-2 row-span-2 border border-slate-800 bg-slate-950/80 flex flex-col items-center justify-center text-center p-2">
+                  <span className="text-xs font-bold text-slate-200">Rashi Kundli</span>
+                  <span className="text-[10px] text-slate-400 font-mono mt-0.5">
+                    {ephemeris.ayanamshaType} Ayanamsha
+                  </span>
+                </div>
+              </div>
+
+              {/* South Indian SVG Laser Beams Overlay - Clean Rays Only */}
+              {activeAspectRays.length > 0 && (
+                <svg
+                  viewBox="0 0 400 400"
+                  className="absolute inset-0 w-full h-full pointer-events-none z-30 overflow-visible select-none"
+                >
+                  <defs>
+                    <filter id="southLaserGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  {activeAspectRays.map((ray, idx) => {
+                    const pFrom = SOUTH_RASHI_CENTERS[ray.fromRashiIndex];
+                    const pTo = SOUTH_RASHI_CENTERS[ray.toRashiIndex];
+                    if (!pFrom || !pTo) return null;
+
+                    const isGraha = ray.type === "graha";
+
+                    return (
+                      <g key={`south-ray-${idx}`}>
+                        <line
+                          x1={pFrom.x}
+                          y1={pFrom.y}
+                          x2={pTo.x}
+                          y2={pTo.y}
+                          stroke={ray.color}
+                          strokeWidth={isGraha ? "4" : "3"}
+                          strokeOpacity="0.5"
+                          strokeLinecap="round"
+                          filter="url(#southLaserGlow)"
+                        />
+                        <line
+                          x1={pFrom.x}
+                          y1={pFrom.y}
+                          x2={pTo.x}
+                          y2={pTo.y}
+                          stroke="#ffffff"
+                          strokeWidth={isGraha ? "2" : "1.5"}
+                          strokeDasharray={isGraha ? "8 4" : "4 4"}
+                          strokeLinecap="round"
+                          className="animate-pulse"
+                        />
+                      </g>
+                    );
+                  })}
+                </svg>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Right Side: Aspect Rays Inspector & Drishti Cockpit Panel */}
+        <div className="w-full lg:w-[320px] max-w-[460px] lg:max-w-none flex flex-col justify-between bg-slate-900/90 rounded-2xl border border-slate-800 p-3.5 shadow-2xl space-y-3">
+          {hoveredEntity && activeAspectRays.length > 0 ? (
+            <div className="flex-1 flex flex-col justify-between space-y-2.5 overflow-hidden">
+              <div className="border-b border-slate-800 pb-2 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wide text-amber-400 flex items-center gap-1.5">
+                    <span>⚡</span> Aspect Rays Cockpit
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                    {activeAspectRays.length} Active Beams
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-between pt-0.5">
+                  <span className="font-extrabold text-sm text-slate-100">{hoveredEntity.fullName}</span>
+                  <span className="font-mono text-xs text-amber-300">
+                    House {hoveredEntity.house} ({RASHIS[hoveredEntity.rashiIndex].englishName}) • {hoveredEntity.deg.toFixed(1)}°
+                  </span>
+                </div>
+              </div>
+
+              {/* Scrollable Aspect Beams Cards */}
+              <div className="flex-1 space-y-1.5 overflow-y-auto custom-scrollbar max-h-[310px] pr-1">
+                {activeAspectRays.map((ray, i) => (
+                  <div
+                    key={i}
+                    className="p-2 rounded-xl border flex flex-col gap-1 transition-all"
+                    style={{
+                      backgroundColor: `${ray.color}12`,
+                      borderColor: `${ray.color}50`,
+                    }}
+                  >
+                    <div className="flex items-center justify-between text-[11px] font-bold">
+                      <span className="flex items-center gap-1" style={{ color: ray.color }}>
+                        <span>{ray.type === "graha" ? "⚡" : "🌀"}</span>
+                        <span>{ray.type === "graha" ? "Graha Drishti" : "Rashi Drishti"}</span>
+                      </span>
+                      <span className="font-mono text-[10.5px] px-1.5 py-0.2 rounded bg-slate-950/80 text-slate-200 border border-slate-800">
+                        {ray.targetHouseName}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-300 font-sans leading-tight">
+                      {ray.aspectLabel}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col justify-between space-y-3 text-xs">
+              <div className="space-y-1.5 border-b border-slate-800 pb-2.5">
+                <span className="text-xs font-black uppercase tracking-wide text-amber-400 flex items-center gap-1.5">
+                  <span>💡</span> Live Aspect Rays Guide
+                </span>
+                <p className="text-[11.5px] text-slate-300 font-sans leading-relaxed">
+                  <strong>Hover over any of the 9 Grahas</strong> (or Chara Karakas below) to project interactive laser aspect rays across the chart.
+                </p>
+              </div>
+
+              <div className="space-y-2 text-[11px] font-sans">
+                <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+                  <span className="font-bold text-amber-300 flex items-center gap-1">
+                    <span>⚡</span> Graha Drishti (Planetary Eyesight)
+                  </span>
+                  <p className="text-slate-400 text-[10.5px] leading-relaxed">
+                    7th direct for all planets; Mars 4th/8th; Jupiter, Rahu, Ketu 5th/9th; Saturn 3rd/10th special aspects.
+                  </p>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+                  <span className="font-bold text-cyan-300 flex items-center gap-1">
+                    <span>🌀</span> Rashi Drishti (Jaimini Sign Aspects)
+                  </span>
+                  <p className="text-slate-400 text-[10.5px] leading-relaxed">
+                    Moveable signs aspect Fixed signs (except adjacent); Fixed aspect Moveable; Dual signs aspect all other Dual signs.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800/80 text-[10px] text-slate-400 text-center font-mono">
+                Click on any planet to open deep astrological analysis.
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* JAIMINI CHARA KARAKAS (AK to DK) SECTION */}
-      <div className="w-full max-w-[640px] mt-4 pt-3 border-t border-slate-800 space-y-2">
+      <div className="w-full max-w-[840px] mt-4 pt-3 border-t border-slate-800 space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
@@ -813,7 +858,7 @@ function KundliChart() {
       </div>
 
       {/* Classical Strength & Divisional Launchers */}
-      <div className="mt-3 w-full max-w-[460px] grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="mt-3 w-full max-w-[840px] grid grid-cols-1 sm:grid-cols-3 gap-2">
         <button
           onClick={() => setViewMode("shodashavarga")}
           className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-700 hover:border-amber-400 text-slate-100 font-bold text-[11px] transition-all shadow-sm cursor-pointer text-center"
