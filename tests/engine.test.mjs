@@ -3805,16 +3805,17 @@ test("Anti-Sycophancy & Chhala Prashna Shastric Boundary Verification", async ()
   const fs = await import("fs");
   const path = await import("path");
 
-  // 1. Verify route.ts contains Rule 0F (Anti-Sycophancy) and Rule 0G (Chhala Prashna)
-  const routeContent = fs.readFileSync(path.join(process.cwd(), "src/app/api/astro-chat/route.ts"), "utf-8");
-  assert.ok(routeContent.includes("ANTI-SYCOPHANCY & NON-RETROFITTING LAW"));
-  assert.ok(routeContent.includes("CHHALA PRASHNA & PHYSICAL SURVEILLANCE BOUNDARY PROTOCOL"));
-  assert.ok(routeContent.includes("Purushartha"));
+  // 1. Verify chatPrompt.ts contains Rule 0F (Anti-Sycophancy) and Rule 0G (Chhala Prashna)
+  const promptContent = fs.readFileSync(path.join(process.cwd(), "src/engine/chatPrompt.ts"), "utf-8");
+  assert.ok(promptContent.includes("ANTI-SYCOPHANCY & NON-RETROFITTING LAW"));
+  assert.ok(promptContent.includes("CHHALA PRASHNA & PHYSICAL SURVEILLANCE BOUNDARY PROTOCOL"));
+  assert.ok(promptContent.includes("Purushartha"));
 
-  // 2. Verify AstroChatbot.tsx contains Rule 0F and Rule 0G
+  // 2. Verify route.ts and AstroChatbot.tsx consume the centralized chat prompt engine
+  const routeContent = fs.readFileSync(path.join(process.cwd(), "src/app/api/astro-chat/route.ts"), "utf-8");
+  assert.ok(routeContent.includes("buildChatSystemInstruction"));
   const chatbotContent = fs.readFileSync(path.join(process.cwd(), "src/components/AstroChatbot.tsx"), "utf-8");
-  assert.ok(chatbotContent.includes("ANTI-SYCOPHANCY & NON-RETROFITTING LAW"));
-  assert.ok(chatbotContent.includes("CHHALA PRASHNA & PHYSICAL SURVEILLANCE BOUNDARY PROTOCOL"));
+  assert.ok(chatbotContent.includes("buildChatSystemInstruction"));
 
   // 3. Verify Local Civil Date Time Accuracy
   const location = { cityName: "Mau", country: "India", latitude: 25.9419, longitude: 83.5606, timezoneOffsetHours: 5.5 };
@@ -4317,8 +4318,34 @@ test("Vāstu Studio All 15 Rooms Best Direction & Shastric Matrix Verification",
   assert.ok(toiletInNE.pariharaRemedy, "Defective toilet must have a parihara remedy");
 });
 
+test("Chatbot Persistent Ground-Truth Memory & Anti-Hallucination Protocol (Rules 0K–0N) Verification", async () => {
+  const { extractUserConfirmedFacts, buildChatSystemInstruction } = await import("../src/engine/chatPrompt.ts");
 
+  // 1. Fact Extraction Test
+  const mockHistory = [
+    { role: "user", content: "Yes, I am here for the first time. Please verify my birth time first." },
+    { role: "assistant", content: "Let us verify your birth time with 4 questions..." },
+    { role: "user", content: "1. Yes, graduated in 2021. 2. Yes. 3. Married and have a kid. 4. Eldest child." },
+  ];
 
+  const facts = extractUserConfirmedFacts(mockHistory);
+  assert.ok(facts.some((f) => f.includes("Married")), "Should extract Married fact");
+  assert.ok(facts.some((f) => f.includes("Has a Child")), "Should extract Child fact");
+  assert.ok(facts.some((f) => f.includes("Eldest Child")), "Should extract Sibling fact");
+  assert.ok(facts.some((f) => f.includes("2021")), "Should extract Education milestone fact");
 
+  // 2. System Instruction Verification
+  const dossierMock = "Mock Astrological Dossier with Ascendant in Virgo";
+  const systemInstruction = buildChatSystemInstruction(dossierMock, facts);
 
+  // Assert Ground-Truth Memory Block
+  assert.ok(systemInstruction.includes("USER-CONFIRMED LIFE REALITIES & GROUND TRUTH MEMORY"), "Memory block must be present");
+  assert.ok(systemInstruction.includes("Married"), "Memory block must contain Married fact");
 
+  // Assert Anti-Hallucination & Dignity Rules
+  assert.ok(systemInstruction.includes("0K. **USER-CONFIRMED FACTS & PERSISTENT MEMORY PROTOCOL"), "Rule 0K must exist");
+  assert.ok(systemInstruction.includes("0L. **ABSOLUTE PROHIBITION ON INVENTING PLANETARY POSITIONS OR YOGAS"), "Rule 0L must exist");
+  assert.ok(systemInstruction.includes("0M. **DIGNIFIED POST-CORRECTION PROTOCOL"), "Rule 0M must exist");
+  assert.ok(systemInstruction.includes("0N. **BINARY MARITAL & STATUS QUERY PROTOCOL"), "Rule 0N must exist");
+  assert.ok(systemInstruction.includes("NEVER ASK FOR DATE OF BIRTH, TIME, OR LOCATION"), "Rule 0 must exist");
+});
