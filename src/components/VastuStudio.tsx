@@ -149,72 +149,125 @@ export default function VastuStudio() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: 81-Grid Canvas */}
           <div className="lg:col-span-8 glass-panel p-5 rounded-3xl border border-slate-800 bg-slate-950/90 space-y-4 shadow-xl">
-            {/* Compass / Directional Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            {/* Canvas Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs font-bold text-slate-200">Interactive 81-Grid Canvas</span>
+                <span className="text-xs font-black text-slate-200 tracking-wide uppercase">
+                  81-Pada Purusha Mandala (45 Deities)
+                </span>
               </div>
-              <div className="flex items-center gap-3 text-[11px] font-mono text-slate-400">
-                <span className="text-cyan-400 font-bold">▲ North (Uttara)</span>
-                <span className="text-amber-400 font-bold">► East (Purva)</span>
-                <span className="text-rose-400 font-bold">▼ South (Dakshina)</span>
-                <span className="text-indigo-400 font-bold">◄ West (Paschima)</span>
-              </div>
+              <span className="text-[10.5px] font-mono text-amber-400/90 hidden sm:inline">
+                Directional Energy Alignment
+              </span>
             </div>
 
-            {/* The 9x9 Grid */}
-            <div className="w-full aspect-square max-w-[620px] mx-auto grid grid-cols-9 gap-1 bg-slate-900/90 p-2 rounded-2xl border-2 border-amber-500/40 relative shadow-2xl">
-              {Array.from({ length: 9 }).map((_, r) =>
-                Array.from({ length: 9 }).map((_, c) => {
-                  const pada = getVastuPada(r, c);
-                  const isSelected = selectedCell?.row === r && selectedCell?.col === c;
-                  const placement = placements.find((p) => p.row === r && p.col === c);
-                  const isBrahma = pada.category === "Brahma";
-                  const isOuter = pada.category === "OuterPerimeter";
+            {/* Grid Container with 4-Side Directional Borders */}
+            <div className="w-full max-w-[660px] mx-auto flex flex-col items-center gap-1">
+              {/* TOP: NORTH (UTTARA) & CORNER LABELS */}
+              <div className="w-full flex items-center justify-between px-1 text-[10px] sm:text-[11px] font-mono select-none">
+                <div className="flex items-center gap-1 text-slate-400 bg-slate-900/90 px-2 py-0.5 rounded-md border border-slate-800">
+                  <span className="text-slate-500 font-bold">NW</span>
+                  <span className="text-indigo-300 font-bold hidden sm:inline">Vāyavya (Air)</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-cyan-300 font-black bg-cyan-950/60 px-3 py-1 rounded-lg border border-cyan-500/50 shadow-sm text-xs sm:text-sm">
+                  <span>▲</span>
+                  <span>NORTH (Uttara / उत्तर) • Water 💧</span>
+                </div>
+                <div className="flex items-center gap-1 text-slate-400 bg-slate-900/90 px-2 py-0.5 rounded-md border border-slate-800">
+                  <span className="text-cyan-300 font-bold hidden sm:inline">Īśānya (Water)</span>
+                  <span className="text-slate-500 font-bold">NE</span>
+                </div>
+              </div>
 
-                  let bgClass = "bg-slate-950 hover:bg-slate-850 border-slate-800";
-                  if (isBrahma) bgClass = "bg-amber-500/15 border-amber-500/40 hover:bg-amber-500/25";
-                  if (pada.isAuspiciousDoorPada) bgClass = "bg-emerald-950/60 border-emerald-500/50 hover:bg-emerald-900/70";
-                  if (isSelected) bgClass = "ring-2 ring-amber-400 bg-amber-500/30 border-amber-300";
+              {/* MIDDLE ROW: WEST + 9x9 GRID CANVAS + EAST */}
+              <div className="w-full flex items-center justify-center gap-1.5 sm:gap-2">
+                {/* WEST SIDEBAR */}
+                <div className="flex items-center justify-center py-4 px-1.5 rounded-xl bg-indigo-950/40 border border-indigo-500/40 text-indigo-300 font-bold text-[9px] sm:text-xs [writing-mode:vertical-lr] rotate-180 select-none shadow-md flex-shrink-0">
+                  <span className="tracking-widest font-black uppercase flex items-center gap-1">
+                    <span>◄</span>
+                    <span>WEST (Paschima / पश्चिम) • Air 💨</span>
+                  </span>
+                </div>
 
-                  const roomMeta = placement ? ROOM_OPTIONS.find((ro) => ro.type === placement.roomType) : null;
+                {/* The 9x9 Grid */}
+                <div className="flex-1 aspect-square max-w-[560px] grid grid-cols-9 gap-1 bg-slate-900/90 p-1.5 sm:p-2 rounded-2xl border-2 border-amber-500/40 relative shadow-2xl">
+                  {Array.from({ length: 9 }).map((_, r) =>
+                    Array.from({ length: 9 }).map((_, c) => {
+                      const pada = getVastuPada(r, c);
+                      const isSelected = selectedCell?.row === r && selectedCell?.col === c;
+                      const placement = placements.find((p) => p.row === r && p.col === c);
+                      const isBrahma = pada.category === "Brahma";
+                      const isOuter = pada.category === "OuterPerimeter";
 
-                  return (
-                    <button
-                      key={`${r}_${c}`}
-                      type="button"
-                      onClick={() => handleCellClick(r, c)}
-                      className={`relative flex flex-col items-center justify-center p-0.5 rounded-lg border text-[9px] transition-all cursor-pointer overflow-hidden ${bgClass}`}
-                      title={`${pada.deitySanskrit} (${pada.deityEnglish}) • ${pada.direction}`}
-                    >
-                      {/* Auspicious Door Badge */}
-                      {pada.isAuspiciousDoorPada && (
-                        <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm" />
-                      )}
+                      let bgClass = "bg-slate-950 hover:bg-slate-850 border-slate-800";
+                      if (isBrahma) bgClass = "bg-amber-500/15 border-amber-500/40 hover:bg-amber-500/25";
+                      if (pada.isAuspiciousDoorPada) bgClass = "bg-emerald-950/60 border-emerald-500/50 hover:bg-emerald-900/70";
+                      if (isSelected) bgClass = "ring-2 ring-amber-400 bg-amber-500/30 border-amber-300";
 
-                      {/* Placed Room Icon */}
-                      {placement ? (
-                        <div className="flex flex-col items-center justify-center animate-in zoom-in-75 duration-150">
-                          <span className="text-base sm:text-lg leading-none">{roomMeta?.icon || "🏠"}</span>
-                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-amber-200 truncate max-w-[45px] leading-tight">
-                            {placement.customLabel}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center opacity-80 group-hover:opacity-100">
-                          <span className={`text-[8px] sm:text-[9px] font-bold truncate max-w-[48px] ${isBrahma ? "text-amber-300 font-black" : "text-slate-300"}`}>
-                            {pada.deitySanskrit.split(" ")[0]}
-                          </span>
-                          <span className="text-[6.5px] sm:text-[7.5px] text-slate-500 truncate max-w-[45px]">
-                            {isOuter ? pada.id.split("_")[0] : ""}
-                          </span>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })
-              )}
+                      const roomMeta = placement ? ROOM_OPTIONS.find((ro) => ro.type === placement.roomType) : null;
+
+                      return (
+                        <button
+                          key={`${r}_${c}`}
+                          type="button"
+                          onClick={() => handleCellClick(r, c)}
+                          className={`relative flex flex-col items-center justify-center p-0.5 rounded-lg border text-[9px] transition-all cursor-pointer overflow-hidden ${bgClass}`}
+                          title={`${pada.deitySanskrit} (${pada.deityEnglish}) • ${pada.direction}`}
+                        >
+                          {/* Auspicious Door Badge */}
+                          {pada.isAuspiciousDoorPada && (
+                            <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm" />
+                          )}
+
+                          {/* Placed Room Icon */}
+                          {placement ? (
+                            <div className="flex flex-col items-center justify-center animate-in zoom-in-75 duration-150">
+                              <span className="text-base sm:text-lg leading-none">{roomMeta?.icon || "🏠"}</span>
+                              <span className="text-[7.5px] sm:text-[8.5px] font-black text-amber-200 truncate max-w-[45px] leading-tight">
+                                {placement.customLabel}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center opacity-80 group-hover:opacity-100">
+                              <span className={`text-[8px] sm:text-[9px] font-bold truncate max-w-[48px] ${isBrahma ? "text-amber-300 font-black" : "text-slate-300"}`}>
+                                {pada.deitySanskrit.split(" ")[0]}
+                              </span>
+                              <span className="text-[6.5px] sm:text-[7.5px] text-slate-500 truncate max-w-[45px]">
+                                {isOuter ? pada.id.split("_")[0] : ""}
+                              </span>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* EAST SIDEBAR */}
+                <div className="flex items-center justify-center py-4 px-1.5 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-300 font-bold text-[9px] sm:text-xs [writing-mode:vertical-lr] select-none shadow-md flex-shrink-0">
+                  <span className="tracking-widest font-black uppercase flex items-center gap-1">
+                    <span>EAST (Purva / पूर्व) • Light 🔥</span>
+                    <span>►</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* BOTTOM: SOUTH (DAKSHINA) & CORNER LABELS */}
+              <div className="w-full flex items-center justify-between px-1 text-[10px] sm:text-[11px] font-mono select-none">
+                <div className="flex items-center gap-1 text-slate-400 bg-slate-900/90 px-2 py-0.5 rounded-md border border-slate-800">
+                  <span className="text-slate-500 font-bold">SW</span>
+                  <span className="text-rose-300 font-bold hidden sm:inline">Nairṛtya (Earth)</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-rose-400 font-black bg-rose-950/60 px-3 py-1 rounded-lg border border-rose-500/50 shadow-sm text-xs sm:text-sm">
+                  <span>▼</span>
+                  <span>SOUTH (Dakshina / दक्षिण) • Earth ⛰️</span>
+                </div>
+                <div className="flex items-center gap-1 text-slate-400 bg-slate-900/90 px-2 py-0.5 rounded-md border border-slate-800">
+                  <span className="text-amber-300 font-bold hidden sm:inline">Āgneya (Fire)</span>
+                  <span className="text-slate-500 font-bold">SE</span>
+                </div>
+              </div>
             </div>
 
             {/* Grid Footnote / Legend */}
