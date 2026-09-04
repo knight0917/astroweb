@@ -4349,3 +4349,102 @@ test("Chatbot Persistent Ground-Truth Memory & Anti-Hallucination Protocol (Rule
   assert.ok(systemInstruction.includes("0N. **BINARY MARITAL & STATUS QUERY PROTOCOL"), "Rule 0N must exist");
   assert.ok(systemInstruction.includes("NEVER ASK FOR DATE OF BIRTH, TIME, OR LOCATION"), "Rule 0 must exist");
 });
+
+test("Classical Birth Time Rectification (BTR) & Event-Based Dasha Timeline Engine (BPHS, K.N. Rao, Dr. B.V. Raman) Verification", async () => {
+  const {
+    calculateKundaShodhana,
+    calculatePranapada,
+    calculateTattvaShodhana,
+    calculateVargaSensitivities,
+    buildFullChronologicalDashaTimeline,
+    locateDashaAtExactDate,
+    generateBtrMasterSummary,
+  } = await import("../src/engine/btrEngine.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { buildChatSystemInstruction } = await import("../src/engine/chatPrompt.ts");
+
+  const location = { cityName: "Allahabad", country: "India", latitude: 25.4358, longitude: 81.8463, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1998-09-17T12:58:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Kunda Shodhana
+  const kunda = calculateKundaShodhana(natalEphem);
+  assert.ok(typeof kunda.kundaLongitude === "number");
+  assert.ok(kunda.kundaNakshatra);
+  assert.ok(kunda.janmaNakshatraName);
+  assert.ok(kunda.lagnaNakshatraName);
+  assert.ok(typeof kunda.isTrikonaMatchWithMoon === "boolean");
+  assert.ok(kunda.classicalVerdict.length > 10);
+
+  // 2. Pranapada
+  const pranapada = calculatePranapada(natalEphem);
+  assert.ok(typeof pranapada.pranapadaLongitude === "number");
+  assert.ok(pranapada.pranapadaRashi);
+  assert.ok(pranapada.pranapadaHouseFromLagna >= 1 && pranapada.pranapadaHouseFromLagna <= 12);
+  assert.ok(typeof pranapada.isAuspiciousBhava === "boolean");
+  assert.ok(pranapada.classicalVerdict.length > 10);
+
+  // 3. Tattva Shodhana
+  const tattva = calculateTattvaShodhana(natalEphem, "male");
+  assert.ok(tattva.primaryTattva);
+  assert.ok(tattva.antarTattva);
+  assert.ok(["Male", "Female"].includes(tattva.antarTattvaGender));
+  assert.ok(typeof tattva.isGenderHarmonious === "boolean");
+  assert.ok(tattva.classicalVerdict.length > 10);
+
+  // 4. Varga Sensitivities (D-1, D-3, D-7, D-9, D-10, D-24, D-60)
+  const vSens = calculateVargaSensitivities(natalEphem);
+  assert.ok(Array.isArray(vSens));
+  assert.strictEqual(vSens.length, 7);
+  const d1 = vSens.find((v) => v.vargaId === "D1");
+  const d9 = vSens.find((v) => v.vargaId === "D9");
+  const d60 = vSens.find((v) => v.vargaId === "D60");
+  assert.ok(d1 && d1.timeSpanMinutesTotal === 120);
+  assert.ok(d9 && d9.timeSpanMinutesTotal > 0);
+  assert.ok(d60 && d60.timeSpanMinutesTotal === 2);
+  assert.ok(d60.windowStartLocalTime);
+  assert.ok(d60.windowEndLocalTime);
+
+  // 5. Full Chronological Dasha Timeline
+  const timeline = buildFullChronologicalDashaTimeline(natalEphem);
+  assert.ok(Array.isArray(timeline));
+  assert.ok(timeline.length >= 20, "Must contain at least 20 chronological Mahadasha/Antardasha spans");
+  for (const span of timeline) {
+    assert.ok(span.mahadashaLord);
+    assert.ok(span.antardashaLord);
+    assert.ok(span.startDate instanceof Date);
+    assert.ok(span.endDate instanceof Date);
+    assert.ok(span.startFormatted);
+    assert.ok(span.endFormatted);
+    assert.ok(span.nativeAgeStart >= 0);
+    assert.ok(span.nativeAgeEnd >= span.nativeAgeStart);
+  }
+
+  // 6. Locate Dasha at Exact Past Date (e.g. 2021-06-15)
+  const pastEventDate = new Date("2021-06-15");
+  const runningDasha = locateDashaAtExactDate(natalEphem, pastEventDate);
+  assert.ok(runningDasha.mahadasha);
+  assert.ok(runningDasha.antardasha);
+  assert.ok(runningDasha.pratyantardasha);
+  assert.ok(runningDasha.mdSpan);
+
+  // 7. Master Summary Section 73
+  const summary = generateBtrMasterSummary(natalEphem, "male");
+  assert.ok(summary.includes("73. CLASSICAL BIRTH TIME RECTIFICATION (BTR)"));
+  assert.ok(summary.includes("Kunda Shodhana"));
+  assert.ok(summary.includes("Pranapada Lagna"));
+  assert.ok(summary.includes("Tattva & Antar-Tattva Shodhana"));
+  assert.ok(summary.includes("Varga Sensitivity Windows"));
+  assert.ok(summary.includes("Full Chronological Vimshottari Event Timeline"));
+
+  // 8. Dossier Section 73 inclusion
+  const transitEphem = calculateVedicEphemeris(new Date(), location, "Lahiri", "WholeSign", "Mean");
+  const dossier = buildAstroDossier(natalEphem, transitEphem, new Date(), "male");
+  assert.ok(dossier.includes("73. CLASSICAL BIRTH TIME RECTIFICATION (BTR)"));
+
+  // 9. Chat System Instruction Rule 0O inclusion
+  const sysInst = buildChatSystemInstruction(dossier, ["Married"]);
+  assert.ok(sysInst.includes("0O. **AUTHENTIC EVENT-BASED BTR & CHRONOLOGICAL DASHA TIMING PROTOCOL"));
+  assert.ok(sysInst.includes("The Mathematical Sensitivity Law"));
+});
+

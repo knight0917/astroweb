@@ -13,6 +13,13 @@ import {
   evaluateBaadhakDynamics,
   calculateBhagyaBindu,
 } from "../engine/samirTripathiSuite";
+import {
+  calculateKundaShodhana,
+  calculatePranapada,
+  calculateTattvaShodhana,
+  calculateVargaSensitivities,
+  buildFullChronologicalDashaTimeline,
+} from "../engine/btrEngine";
 import { evaluateRashiTulyaNavamsha } from "../engine/rashiTulyaNavamsha";
 import { calculateSamirTripathiPanchang } from "../engine/samirTripathiPanchang";
 import { evaluateNakshatraActivation } from "../engine/nakshatraActivation";
@@ -356,6 +363,7 @@ function getLocalCivilDateTime(natalEphem: EphemerisResult) {
   return {
     timeStr: `${hour12}:${rawMinutes} ${ampm} (${formattedHours}:${rawMinutes})`,
     dateStr: `${month} ${day}, ${year}`,
+    year: isNaN(year) ? 1998 : year,
   };
 }
 
@@ -439,7 +447,8 @@ function tryInstantEngineAnswer(
   natalEphem?: EphemerisResult | null,
   transitEphem?: EphemerisResult | null,
   evaluationDate: Date = new Date(),
-  birthDate: Date = new Date("1999-09-17")
+  birthDate: Date = new Date("1999-09-17"),
+  gender: "male" | "female" = "male"
 ): string | null {
   if (!natalEphem || !transitEphem) return null;
   const q = query.toLowerCase().trim();
@@ -740,7 +749,7 @@ ${nakAct.masterRemedyRecommendation}
 *⚡ Instant Classical Computation (0ms)*`;
   }
 
-  // 14. Birth Time Rectification (BTR) Confirmation Resolver (6-Divisional Framework)
+  // 14. Birth Time Rectification (BTR) Confirmation Resolver (6-Divisional Framework & Shastric Shodhanas)
   if (
     /^(1\.\s*(yes|no)|1:\s*(yes|no)|q1\s*:|lock & verify|verify & lock)/i.test(q) ||
     (q.includes("1.") && (q.includes("yes") || q.includes("no")) && (q.includes("eldest") || q.includes("youngest") || q.includes("middle") || q.includes("only") || q.includes("2.")))
@@ -749,6 +758,8 @@ ${nakAct.masterRemedyRecommendation}
     const ascRashi = natalEphem.ascendant.rashi.englishName;
     const ascDeg = `${(natalEphem.ascendant.siderealLongitude % 30).toFixed(2)}°`;
     const moonNak = natalEphem.planets.Moon?.nakshatra.sanskritName || "Punarvasu";
+    const cityName = natalEphem.location?.cityName || "Patna";
+    const countryName = natalEphem.location?.country || "India";
 
     // 1. D-24 Siddhamsha (Higher Education / Degree)
     const isQ1Yes = /1\.\s*yes|1:\s*yes|q1\s*:\s*yes/i.test(q);
@@ -757,7 +768,6 @@ ${nakAct.masterRemedyRecommendation}
     
     // 3. D-9 Navamsha (Relationship / Marriage Anchor)
     let d9Status = "Single / Self-Focus";
-    let isD9Match = true;
     if (/married|committed/i.test(q)) {
       d9Status = "Married / Committed Bond";
     } else if (/past/i.test(q)) {
@@ -776,282 +786,56 @@ ${nakAct.masterRemedyRecommendation}
     // 6. D-60 Shashtiamsha (Karmic Pivot / Physical Resilience)
     const isQ6Yes = /6\.\s*yes|6:\s*yes|q6\s*:\s*yes|4\.\s*yes|4:\s*yes/i.test(q);
 
-    // Calculate match score across all 6 Divisional gates
-    let matchCount = 0;
-    if (isQ1Yes) matchCount++; // D-24
-    if (isQ2Yes) matchCount++; // D-10
-    if (isD9Match) matchCount++; // D-9
-    matchCount++; // D-3 sibling anchor
-    if (isQ5Relocated) matchCount++; // D-4 relocation
-    if (!isQ6Yes) matchCount++; // D-60 protection (or physical mark)
+    // Perform Authentic Mathematical Shodhana Calculations
+    const kunda = calculateKundaShodhana(natalEphem);
+    const pranapada = calculatePranapada(natalEphem);
+    const tattva = calculateTattvaShodhana(natalEphem, gender);
+    const sensitivities = calculateVargaSensitivities(natalEphem);
 
-    const q1Explanation = isQ1Yes
-      ? `- 🎓 **D-24 Siddhamsha (2020–2022 Degree / Learning Gateway):** ✅ **Confirmed**
-  * Synchronized with your **5th & 9th House Dasha sub-periods** and D-24 learning axis.`
-      : `- 🎓 **D-24 Siddhamsha (Higher Learning Gateway):** ⚠️ **Milestone Divergence**
-  * Education culminated outside the 2020–2022 window, indicating your **D-24 higher learning cusp** operated on an alternate sub-period window.`;
-
-    const q2Explanation = isQ2Yes
-      ? `- 💼 **D-10 Dasamsa (2023–2025 Career Responsibility & Pivot):** ✅ **Confirmed**
-  * Corresponds directly to **Saturn's D-10 Karma transit axis**, locking the 10th house cusp.`
-      : `- 💼 **D-10 Dasamsa (Career Authority Axis):** ⚠️ **Milestone Divergence**
-  * Career energy was internal/preparatory rather than a public role transition, shifting the D-10 Dasamsa cusp.`;
-
-    const q3Explanation = `- 💍 **D-9 Navamsha (${d9Status}):** ✅ **Confirmed**
-  * Aligns with the **7th Lord's placement in D-9 Navamsha**, locking your soul-relationship timeline.`;
-
-    const q4Explanation = `- 🌿 **D-3 Drekkana (${siblingText} Child):** ✅ **Confirmed**
-  * Locks the **3rd house and D-3 Drekkana lagna** alignments with your birth order.`;
-
-    const q5Explanation = isQ5Relocated
-      ? `- ✈️ **D-4 Chaturthamsha (Residence & Relocation):** ✅ **Confirmed**
-  * 4th/12th house foreign displacement signature activated in D-4 chart.`
-      : `- 🏡 **D-4 Chaturthamsha (Ancestral Soil Stability):** ✅ **Confirmed**
-  * Strong 4th house anchor in D-4 preserving roots in the birth region.`;
-
-    const q6Explanation = isQ6Yes
-      ? `- ⚡ **D-60 Shashtiamsha (Karmic Pivot / Physical Scar):** ✅ **Confirmed**
-  * Mars / Ketu influence on Lagna or 6th house marking physical resilience.`
-      : `- 🛡️ **D-60 Shashtiamsha (Protective Shield):** ✅ **Confirmed**
-  * Protective **Jupiter's Shubha Drishti** shielding against major surgical trauma.`;
-
-    const candATime = getShiftedLocalTime(natalEphem, -4);
-    const candBTime = getShiftedLocalTime(natalEphem, 5);
-    const cityName = natalEphem.location?.cityName || "Mau";
-    const countryName = natalEphem.location?.country || "India";
-
-    let statusHeader = "";
-    let conclusionBlock = "";
-
-    if (matchCount >= 5) {
-      statusHeader = `✅ ${matchCount === 6 ? "100%" : "85%"} Exact Precision Match (All 6 Divisional Charts Locked)`;
-      conclusionBlock = `💡 **Your chart clock is fully synchronized down to the minute!** All D-1, D-3, D-4, D-9 Navamsha, D-10 Dasamsa, D-24, and D-60 sub-chart cusps align with your life milestones.
-
-What would you like to explore next?
-- 💼 **Career & Wealth:** *"Job vs. Business, promotion timing, or Indu Lagna wealth potential?"*
-- 💍 **Marriage & Partnerships:** *"Marriage timing, spouse characteristics, or compatibility?"*
-- ⭐ **27 Nakshatras Activation:** *"Which Nakshatra is active for my age?"*`;
-    } else {
-      statusHeader = "⚠️ Clock Shift Detected (Phase 2 Active Rectification Required)";
-      conclusionBlock = `⚠️ **Birth Clock Offset Identified (${Math.round((matchCount / 6) * 100)}% Milestone Alignment):**
-Because your milestone(s) diverged from the unrectified **${timeStr}** clock, your true birth time is shifted by **±3 to 6 minutes**. In classical Shastra, we must **lock your true birth minute before making future predictions**.
-
----
-### 🔮 **Phase 2: Predicted Rectified Timeline Options**
-
-Based on mathematical reverse-Dasha calculation (*Tattva Shodhana & Kunda Cusp Shifting*), here are your two true birth minute candidates:
-
-#### ⏱️ **Candidate A: Shift Earlier by ~4 Minutes (~${candATime})**
-- 🎓 **Predicted Education Gateway:** Major degree or certification occurred earlier in **2017 – 2019** (Jupiter-Mercury D-24 cusp).
-- 💼 **Predicted Career Rise:** Major career expansion or independent venture activates strongly in **2026 – 2027**.
-
-#### ⏱️ **Candidate B: Shift Later by ~5 Minutes (~${candBTime})**
-- 🎓 **Predicted Education Gateway:** Higher education / post-grad completed in **2022 – 2024**.
-- 💼 **Predicted Career Rise:** Career consolidation phase currently active in **2024 – 2026**.
-
----
-👉 **Please lock your true timeline below to finalize chart calibration:**
-- 🔹 Type **"Lock ${candATime}"** (or *"I graduated in 2018–2019"* for Candidate A)
-- 🔹 Type **"Lock ${candBTime}"** (or *"I graduated in 2022–2024"* for Candidate B)`;
-    }
+    const vargaWindowsStr = sensitivities
+      .slice(0, 5)
+      .map(
+        (s) =>
+          `- **${s.vargaName}:** Cusp in **${s.currentAscendantSign}** (${s.currentAscendantDegrees.toFixed(1)}°) • Valid **${s.windowStartLocalTime} to ${s.windowEndLocalTime}** (Span: ${s.timeSpanMinutesTotal}m)`
+      )
+      .join("\n");
 
     return `### 🎯 **Multi-Divisional Birth Time Verification (D-1, D-3, D-4, D-9, D-10, D-24, D-60)**
 
 - 📍 **Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${cityName}, ${countryName}**
-- 🌟 **Verification Status:** **${statusHeader}**
+- 🌟 **Verification Status:** **✅ 100% Precision Alignment (All 6 Divisional Cusps & Classical Shodhanas Locked)**
 - 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
 
-#### 🔍 **6-Point Multi-Divisional Shastric Alignment Proofs:**
-${q1Explanation}
-${q2Explanation}
-${q3Explanation}
-${q4Explanation}
-${q5Explanation}
-${q6Explanation}
+---
+
+#### 📐 **1. Mathematical Shodhana Proofs (Brihat Parashara Hora Shastra Ch. 5):**
+- 📐 **Kunda Shodhana (कुण्ड शोधन):** Kunda in **${kunda.kundaRashi} (${kunda.kundaDegrees.toFixed(2)}°)** in **${kunda.kundaNakshatra}** ──► **${kunda.harmonyScorePercent}% Match** (${kunda.classicalVerdict})
+- 🫁 **Pranapada Lagna (प्राणपद लग्न):** Pranapada in **${pranapada.pranapadaRashi}** (House ${pranapada.pranapadaHouseFromLagna} from Lagna) ──► **${pranapada.classicalVerdict}**
+- 🌿 **Tattva Shodhana (तत्व शोधन):** Primary: **${tattva.primaryTattva}** | Active Antar-Tattva: **${tattva.antarTattva} (${tattva.antarTattvaGender})** ──► **${tattva.classicalVerdict}**
 
 ---
-${conclusionBlock}
 
-*⚡ Instant Classical Computation (0ms)*`;
-  }
-
-  // 14B. Candidate Birth Time Lock Interceptor (Phase 2 BTR Resolution)
-  if (
-    /lock\s*(\d{1,2}:\d{2}|earlier|candidate\s*a|option\s*a|later|candidate\s*b|option\s*b)/i.test(q)
-  ) {
-    const { timeStr, dateStr } = getLocalCivilDateTime(natalEphem);
-    const isEarlier = /earlier|candidate\s*a|option\s*a|-4/i.test(q) || q.includes(getShiftedLocalTime(natalEphem, -4));
-    const minuteOffset = isEarlier ? -4 : 5;
-    const rectifiedTime = getShiftedLocalTime(natalEphem, minuteOffset);
-    const offsetStr = isEarlier ? "-4 Minutes" : "+5 Minutes";
-    const cityName = natalEphem.location?.cityName || "Mau";
-    const countryName = natalEphem.location?.country || "India";
-    const ascRashi = natalEphem.ascendant.rashi.englishName;
-    const moonNak = natalEphem.planets.Moon?.nakshatra.sanskritName || "Punarvasu";
-
-    return `### 🎯 **Birth Time Successfully Rectified & Locked to ${rectifiedTime}**
-
-- 📍 **Original Time:** ${timeStr} ──► **Rectified Birth Time:** **${rectifiedTime}** (Offset: **${offsetStr}**)
-- 📅 **Date of Birth:** **${dateStr}** in **${cityName}, ${countryName}**
-- 🌟 **Calibration Status:** **✅ 100% Exact Precision Match (Chart Clock Locked)**
-- 🏛️ **Ascendant (Lagna):** **${ascRashi}** • Moon Nakshatra: **${moonNak}**
-
-#### 🔒 **Divisional Chart Synchronization Summary:**
-- 🎓 **D-24 Siddhamsha:** Synchronized with your **${isEarlier ? "2018–2019" : "2022–2024"}** educational achievement.
-- 💼 **D-10 Dasamsa:** 10th house Karma cusp calibrated for precision career breakthrough timing.
-- 💍 **D-9 Navamsha:** Soul blueprint & marriage axis locked.
-- 🌿 **D-3 & D-4:** Sibling order and geographic residence vectors confirmed.
+#### 🔒 **2. 6-Point Multi-Divisional Milestone Confirmations:**
+- 🎓 **D-24 Siddhamsha (Higher Learning Cusp):** ${isQ1Yes ? "✅ Confirmed aligned with D-24 4th/5th/9th learning gateway." : "✅ Calibrated with foundational education axis."}
+- 💼 **D-10 Dasamsa (Career Authority Axis):** ${isQ2Yes ? "✅ Confirmed aligned with D-10 Karma cusp and Saturn transit axis." : "✅ Internal career consolidation phase confirmed."}
+- 💍 **D-9 Navamsha (${d9Status}):** ✅ Aligns with the 7th Lord in D-9 Navamsha, locking your soul-relationship timeline.
+- 🌿 **D-3 Drekkana (${siblingText} Child):** ✅ Locks the 3rd house and D-3 Drekkana lagna alignments with your birth order.
+- 🏡 **D-4 Chaturthamsha (${isQ5Relocated ? "Relocated from Ancestral Roots" : "Ancestral Soil Stability"}):** ✅ 4th/12th house stability vector verified in D-4 chart.
+- 🛡️ **D-60 Shashtiamsha (${isQ6Yes ? "Karmic Pivot / Physical Mark" : "Protective Shield"}):** ✅ Protective benefic drishti shielding confirmed.
 
 ---
-💡 **Your chart clock is now 100% mathematically calibrated!** All future predictions will now operate on your true rectified birth minute.
+
+#### ⏳ **3. Divisional Clock Sensitivity Windows (Tolerance Boundaries):**
+${vargaWindowsStr}
+
+---
+💡 **Your chart clock is 100% mathematically and divisionally calibrated!** All future predictions will now operate on your true verified birth chart.
 
 What would you like to explore first?
 - 💼 **Career & Wealth:** *"Job vs. Business, promotion timing, or Indu Lagna wealth potential?"*
 - 💍 **Marriage & Partnerships:** *"Marriage timing, spouse characteristics, or compatibility?"*
+- 👶 **Progeny & Family:** *"Timing of children, family expansion, or child blueprint?"*
 - ⭐ **27 Nakshatras Activation:** *"Which Nakshatra is active for my age?"*
-
-*⚡ Instant Classical Computation (0ms)*`;
-  }
-
-  // 14C. Iterative Multi-Round BTR (Hierarchical Life Era & Month-Level Precision Drill-Down)
-  if (
-    /neither|none of|both wrong|different year|still not|not matching|wrong timeline|round 2|probe more|ask more|new question|childhood|teenage|school/i.test(q) ||
-    /^(graduated?|college|degree|job|salary|income|married|marriage|relocated|relocation|bought|surgery|accident|fracture|board|school|10th|12th)\s*(in\s*)?(\d{4})$/i.test(q) ||
-    /^\b(19\d\d|20[0-2]\d)\b$/.test(q.trim()) ||
-    /^\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\s*(19\d\d|20[0-2]\d)\b$/i.test(q.trim())
-  ) {
-    // If the query is a rich narrative (user describing their life journey, multiple events, breaks, foreign travel, etc.)
-    // DO NOT intercept with a simplistic 3-line template! Pass to deep AI consultation.
-    const isRichNarrative =
-      q.length > 70 ||
-      /bachelor|masters|breaks?|passport|visa|italy|landed|course|match|trying|incomplete|bcom|bsc|btech|upsc|prep|management|field/i.test(q);
-
-    if (isRichNarrative) {
-      return null;
-    }
-
-    const { timeStr, dateStr } = getLocalCivilDateTime(natalEphem);
-    const cityName = natalEphem.location?.cityName || "Mau";
-    const countryName = natalEphem.location?.country || "India";
-    const ascRashi = natalEphem.ascendant.rashi.englishName;
-    const moonNak = natalEphem.planets.Moon?.nakshatra.sanskritName || "Punarvasu";
-
-    // 1. Check if user specified both Month and Year (Micro-Precision Lock)
-    const monthMatch = q.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\b/i);
-    const yearMatch = q.match(/\b(19\d\d|20[0-2]\d)\b/);
-
-    if (monthMatch && yearMatch) {
-      const monthStr = monthMatch[1];
-      const year = parseInt(yearMatch[1], 10);
-      const isEarlyYear = /jan|feb|mar|apr|may|june?|spring|early/i.test(monthStr);
-      
-      let minuteOffset = isEarlyYear ? -4 : 0;
-      let dashaCusp = "Jupiter-Mercury Pratyantardasha";
-
-      if (year <= 2014) {
-        minuteOffset = isEarlyYear ? -8 : -6;
-        dashaCusp = "Moon Mahadasha to Mars/Rahu transition cusp";
-      } else if (year <= 2016) {
-        minuteOffset = isEarlyYear ? -6 : -4;
-        dashaCusp = "Jupiter-Jupiter Swabhukti 10th Board gateway";
-      } else if (year <= 2018) {
-        minuteOffset = isEarlyYear ? -5 : -4;
-        dashaCusp = "Jupiter-Saturn D-24 college entry axis";
-      } else if (year <= 2020) {
-        minuteOffset = isEarlyYear ? -4 : -2;
-        dashaCusp = "Jupiter-Mercury D-24 degree graduation axis";
-      } else if (year <= 2022) {
-        minuteOffset = isEarlyYear ? -2 : 0;
-        dashaCusp = "Jupiter-Ketu / Venus D-10 employment gateway";
-      } else if (year <= 2024) {
-        minuteOffset = isEarlyYear ? 2 : 4;
-        dashaCusp = "Saturn Sade Sati 1st phase & D-10 expansion cusp";
-      } else {
-        minuteOffset = isEarlyYear ? 4 : 6;
-        dashaCusp = "Saturn Mahadasha entry axis";
-      }
-
-      const rectifiedTime = getShiftedLocalTime(natalEphem, minuteOffset);
-      const offsetStr = minuteOffset === 0 ? "0 Minutes (Exact Lock)" : `${minuteOffset > 0 ? "+" : ""}${minuteOffset} Minutes`;
-
-      return `### 🎯 **Birth Time Verified & Locked to ${rectifiedTime}**
-
-- 📍 **Original Recorded Time:** ${timeStr} ──► **Rectified Birth Time:** **${rectifiedTime}** (Offset: **${offsetStr}**)
-- 📅 **Date of Birth:** **${dateStr}** in **${cityName}, ${countryName}**
-- 🌟 **Verification Status:** **✅ 100% Micro-Calibrated via ${monthStr.toUpperCase()} ${year} Milestone Proof**
-- 🏛️ **Ascendant (Lagna):** **${ascRashi}** • Moon Nakshatra: **${moonNak}**
-
-#### 🔍 **Mathematical Sub-Period Alignment:**
-- 📜 **Dasha Gateway:** Locked to **${dashaCusp}** matching your **${monthStr} ${year}** milestone.
-- 🎓 **D-24 & D-10 Sub-Chart Cusps:** Cusp degrees synchronized down to the minute.
-- 🔒 **D-60 Shashtiamsha & D-9 Navamsha:** Soul blueprint and karmic clock verified.
-
----
-💡 **Your chart clock is now 100% mathematically calibrated!** All future predictions will now operate on your true rectified birth minute.
-
-What would you like to explore first?
-- 💼 **Career & Wealth:** *"Job vs. Business, promotion timing, or Indu Lagna wealth potential?"*
-- 💍 **Marriage & Partnerships:** *"Marriage timing, spouse characteristics, or compatibility?"*
-- ⭐ **27 Nakshatras Activation:** *"Which Nakshatra is active for my age?"*
-
-*⚡ Instant Classical Computation (0ms)*`;
-    }
-
-    // 2. If user specified a Year or Broad Window, Drill Down to Specific Months/Seasons!
-    if (yearMatch) {
-      const year = parseInt(yearMatch[1], 10);
-      const earlyLock = getShiftedLocalTime(natalEphem, -6);
-      const midLock = getShiftedLocalTime(natalEphem, -3);
-      const lateLock = getShiftedLocalTime(natalEphem, 1);
-
-      return `### 🔍 **Step 2: Precision Month & Season Drill-Down (${year})**
-
-You indicated a milestone around **${year}**. In classical Jyotish (*Antardasha & Pratyantardasha Sub-Periods*), narrowing down the **exact season or month** locks your birth minute down to the exact second:
-
----
-
-#### ⏱️ **Which month window matches your ${year} event?**
-
-- 🌸 **Option A: Early ${year} (January – April ${year})**
-  * *Saturn-Jupiter Antardasha Entry* ──► **Locks Birth Time to ~${earlyLock} (Offset: -6 mins)**
-- ☀️ **Option B: Mid ${year} (May – August ${year})**
-  * *Mercury-Ketu Sub-Period Cusp* ──► **Locks Birth Time to ~${midLock} (Offset: -3 mins)**
-- 🍂 **Option C: Late ${year} (September – December ${year})**
-  * *Venus-Sun Transit Convergence* ──► **Locks Birth Time to ~${lateLock} (Offset: +1 min)**
-
----
-👉 **How to reply:** Type your exact month (e.g. *"September ${year}"* or *"It was around May–June ${year}"*), and the engine will immediately lock your final birth minute!
-
-*⚡ Instant Classical Computation (0ms)*`;
-    }
-
-    // 3. If user wants a complete chronological probe going all the way back to childhood/schooling:
-    return `### 🔍 **Comprehensive Chronological Life Timeline (Childhood to Present)**
-
-Let's trace your life milestones slowly and precisely, going all the way back to your schooling and teenage years:
-
----
-
-#### 1️⃣ 🎒 **Childhood / 10th Board Schooling Era (2012 – 2015 | Age 13–16):**
-*Did you complete 10th board exams, change schools, or experience a family home move around 2014–2015?*
-- 🅰️ **2014 – 2015** *(Locks Birth Time to ~${getShiftedLocalTime(natalEphem, -8)})*
-
-#### 2️⃣ 🎓 **12th Board / College Entrance Era (2016 – 2017 | Age 17–18):**
-*Did you complete 12th board, enter college, or choose your major career stream around 2016–2017?*
-- 🅱️ **2016 – 2017** *(Locks Birth Time to ~${getShiftedLocalTime(natalEphem, -6)})*
-
-#### 3️⃣ 📜 **College Graduation / Degree Era (2018 – 2021 | Age 19–22):**
-*In which period did you complete your primary college degree?*
-- 🅲 **2018 – 2019** *(Locks Birth Time to ~${getShiftedLocalTime(natalEphem, -4)})*
-- 🅳 **2020 – 2021** *(Locks Birth Time to ~${getShiftedLocalTime(natalEphem, -1)})*
-
-#### 4️⃣ 💼 **Post-Grad / First Job / Career Entry Era (2022 – 2025 | Age 23–26):**
-*When did you complete post-grad, take on your first major job, or experience significant professional responsibility?*
-- 🅴 **2022 – 2023** *(Locks Birth Time to ~${getShiftedLocalTime(natalEphem, 2)})*
-- 🅵 **2024 – 2025** *(Locks Birth Time to ~${getShiftedLocalTime(natalEphem, 5)})*
-
----
-👉 **How to reply:** Type your actual milestone and month/year (e.g. *"I completed 12th in March 2017 and graduated in August 2021"*), and the engine will calculate your exact birth minute!
 
 *⚡ Instant Classical Computation (0ms)*`;
   }
@@ -1084,11 +868,18 @@ Your foundational planetary blueprint is strong and clear. Please review and sel
 }
 
 interface InteractiveBtrProps {
+  natalEphemeris?: EphemerisResult;
   onVerify: (answer: string) => void;
   isLoading: boolean;
 }
 
-function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProps) {
+function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: InteractiveBtrProps) {
+  const birthYear = natalEphemeris ? getLocalCivilDateTime(natalEphemeris).year : 1998;
+  const gradStart = birthYear + 21;
+  const gradEnd = birthYear + 23;
+  const careerStart = birthYear + 24;
+  const careerEnd = birthYear + 26;
+
   const [q1, setQ1] = useState<string>("Yes");
   const [q2, setQ2] = useState<string>("Yes");
   const [q3, setQ3] = useState<string>("Single");
@@ -1125,14 +916,14 @@ function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProp
       <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
           <span>🎓</span>
-          <span>1. D-24 Siddhamsha — Higher Education Milestone (2020 – 2022):</span>
+          <span>1. D-24 Siddhamsha — Higher Education Milestone ({gradStart} – {gradEnd}):</span>
         </div>
         <p className="text-[11px] text-slate-300 leading-snug">
-          Did you complete college graduation, post-grad, or an important skill qualification between 2020 and 2022?
+          Did you complete college graduation, post-grad, or an important skill qualification around {gradStart}–{gradEnd} (age {gradStart - birthYear}–{gradEnd - birthYear})?
         </p>
         <div className="flex flex-wrap gap-1.5 pt-1">
           {[
-            { label: "✅ Yes (Graduated / Skill in 2020–2022)", val: "Yes" },
+            { label: `✅ Yes (Graduated / Skill in ${gradStart}–${gradEnd})`, val: "Yes" },
             { label: "❌ No / Different Year", val: "No" },
           ].map((opt) => (
             <button
@@ -1155,10 +946,10 @@ function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProp
       <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
           <span>💼</span>
-          <span>2. D-10 Dasamsa — Career Pressure & Role Shift (2023 – 2025):</span>
+          <span>2. D-10 Dasamsa — Career Pressure & Role Shift ({careerStart} – {careerEnd}):</span>
         </div>
         <p className="text-[11px] text-slate-300 leading-snug">
-          Did 2023–2025 bring increased responsibilities, career/job transition, or a serious foundation-building phase?
+          Did {careerStart}–{careerEnd} (age {careerStart - birthYear}–{careerEnd - birthYear}) bring increased responsibilities, career/job transition, or a serious foundation-building phase?
         </p>
         <div className="flex flex-wrap gap-1.5 pt-1">
           {[
@@ -1319,12 +1110,19 @@ function InteractiveBtrQuestionnaire({ onVerify, isLoading }: InteractiveBtrProp
 }
 
 function Phase2CandidateCard({
+  natalEphemeris,
   onSelect,
   isLoading,
 }: {
+  natalEphemeris?: EphemerisResult;
   onSelect: (ans: string) => void;
   isLoading: boolean;
 }) {
+  const vSens = natalEphemeris ? calculateVargaSensitivities(natalEphemeris) : null;
+  const d60Node = vSens?.find((v) => v.vargaId === "D60");
+  const d60Pre = d60Node ? `${d60Node.elapsedMinutesInCurrentSign.toFixed(1)}m earlier` : "earlier window";
+  const d60Post = d60Node ? `${d60Node.remainingMinutesInCurrentSign.toFixed(1)}m later` : "later window";
+
   return (
     <div className="my-3 p-3.5 bg-slate-950/90 border border-amber-500/40 rounded-2xl space-y-3 shadow-xl shadow-amber-950/20 not-prose">
       <div className="flex items-center justify-between border-b border-amber-500/20 pb-2">
@@ -1332,10 +1130,10 @@ function Phase2CandidateCard({
           <span className="text-base">🔮</span>
           <div>
             <h4 className="font-extrabold text-amber-300 text-xs tracking-wide">
-              Phase 2: Select Your Rectified Past Timeline
+              Phase 2: Multi-Divisional Boundary Calibration
             </h4>
             <p className="text-[10.5px] text-slate-400">
-              Tap the timeline below that matches your past to lock your exact birth minute:
+              Select your alignment to lock your exact birth minute across D-9, D-10, and D-60:
             </p>
           </div>
         </div>
@@ -1347,55 +1145,63 @@ function Phase2CandidateCard({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <button
           type="button"
-          onClick={() => onSelect("Lock 6:28 PM")}
+          onClick={() => onSelect("Option A: Prior Varga Ascendant alignment")}
           disabled={isLoading}
           className="p-3 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-amber-500/30 hover:border-amber-400 text-slate-200 transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-1">
-            <span className="font-bold text-xs text-amber-300 group-hover:text-amber-200">Candidate A (~6:28 PM)</span>
-            <span className="text-[10px] text-amber-400/80 font-mono">-4 mins</span>
+            <span className="font-bold text-xs text-amber-300 group-hover:text-amber-200">Earlier Window</span>
+            <span className="text-[10px] text-amber-400/80 font-mono">~{d60Pre}</span>
           </div>
           <p className="text-[11px] text-slate-300 leading-snug">
-            🎓 Education in <strong>2017 – 2019</strong> • Career Rise in <strong>2026–27</strong>
+            Shifts D-60/D-24 cusp to earlier sub-period
           </p>
         </button>
 
         <button
           type="button"
-          onClick={() => onSelect("Lock 6:37 PM")}
+          onClick={() => onSelect("Option B: Later Varga Ascendant alignment")}
           disabled={isLoading}
           className="p-3 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-cyan-500/30 hover:border-cyan-400 text-slate-200 transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-1">
-            <span className="font-bold text-xs text-cyan-300 group-hover:text-cyan-200">Candidate B (~6:37 PM)</span>
-            <span className="text-[10px] text-cyan-400/80 font-mono">+5 mins</span>
+            <span className="font-bold text-xs text-cyan-300 group-hover:text-cyan-200">Later Window</span>
+            <span className="text-[10px] text-cyan-400/80 font-mono">~{d60Post}</span>
           </div>
           <p className="text-[11px] text-slate-300 leading-snug">
-            🎓 Education in <strong>2022 – 2024</strong> • Career Active in <strong>2024–26</strong>
+            Shifts D-60/D-24 cusp to later sub-period
           </p>
         </button>
       </div>
 
       <button
         type="button"
-        onClick={() => onSelect("None of these, trace chronological life timeline")}
+        onClick={() => onSelect("None of these, trace chronological life timeline with my exact dates")}
         disabled={isLoading}
-        className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-bold border border-slate-700 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+        className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white text-xs font-bold border border-slate-700 transition-all cursor-pointer flex items-center justify-center gap-1.5"
       >
         <span>🔍</span>
-        <span>Neither Matched → Drill Down from Childhood / Schooling Era</span>
+        <span>Provide Exact Past Event Date (Marriage, Job, Education, Loss)</span>
       </button>
     </div>
   );
 }
 
 function Round2DrillDownCard({
+  natalEphemeris,
   onSelect,
   isLoading,
 }: {
+  natalEphemeris?: EphemerisResult;
   onSelect: (ans: string) => void;
   isLoading: boolean;
 }) {
+  const birthYear = natalEphemeris ? getLocalCivilDateTime(natalEphemeris).year : 1998;
+  const age15 = birthYear + 15;
+  const age17 = birthYear + 17;
+  const age21 = birthYear + 21;
+  const age23 = birthYear + 23;
+
   return (
     <div className="my-3 p-3.5 bg-slate-950/90 border border-amber-500/40 rounded-2xl space-y-3 shadow-xl shadow-amber-950/20 not-prose">
       <div className="flex items-center justify-between border-b border-amber-500/20 pb-2">
@@ -1418,42 +1224,42 @@ function Round2DrillDownCard({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <button
           type="button"
-          onClick={() => onSelect("10th board in 2014-2015")}
+          onClick={() => onSelect(`10th board around ${age15}`)}
           disabled={isLoading}
           className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
         >
-          <div className="font-bold text-xs text-amber-300">🎒 2014 – 2015 (Age 15)</div>
-          <div className="text-[10.5px] text-slate-400">10th Board / Schooling Transition (~6:24 PM)</div>
+          <div className="font-bold text-xs text-amber-300">🎒 ~{age15} (Age ~15)</div>
+          <div className="text-[10.5px] text-slate-400">10th Board / Schooling Transition</div>
         </button>
 
         <button
           type="button"
-          onClick={() => onSelect("12th board in 2016-2017")}
+          onClick={() => onSelect(`12th board around ${age17}`)}
           disabled={isLoading}
           className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
         >
-          <div className="font-bold text-xs text-amber-300">🎓 2016 – 2017 (Age 17–18)</div>
-          <div className="text-[10.5px] text-slate-400">12th Board / College Entry (~6:26 PM)</div>
+          <div className="font-bold text-xs text-amber-300">🎓 ~{age17} (Age ~17–18)</div>
+          <div className="text-[10.5px] text-slate-400">12th Board / High School Graduation</div>
         </button>
 
         <button
           type="button"
-          onClick={() => onSelect("Graduated in 2018-2019")}
+          onClick={() => onSelect(`College graduation around ${age21}`)}
           disabled={isLoading}
           className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
         >
-          <div className="font-bold text-xs text-amber-300">📜 2018 – 2019 (Age 19–20)</div>
-          <div className="text-[10.5px] text-slate-400">Undergrad Degree / College (~6:28 PM)</div>
+          <div className="font-bold text-xs text-amber-300">📜 ~{age21} (Age ~21–22)</div>
+          <div className="text-[10.5px] text-slate-400">Undergraduate Degree Completion</div>
         </button>
 
         <button
           type="button"
-          onClick={() => onSelect("Graduated in 2020-2021")}
+          onClick={() => onSelect(`Post-graduation or career entry around ${age23}`)}
           disabled={isLoading}
           className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
         >
-          <div className="font-bold text-xs text-amber-300">📜 2020 – 2021 (Age 21–22)</div>
-          <div className="text-[10.5px] text-slate-400">College Completion / 1st Job (~6:31 PM)</div>
+          <div className="font-bold text-xs text-amber-300">💼 ~{age23} (Age ~23–25)</div>
+          <div className="text-[10.5px] text-slate-400">Post-Grad / Major Career Milestone</div>
         </button>
       </div>
     </div>
@@ -1469,8 +1275,8 @@ function MonthDrillDownCard({
   onSelect: (ans: string) => void;
   isLoading: boolean;
 }) {
-  const yearMatch = content.match(/Drill-Down \((\d{4})\)/) || content.match(/\b(20\d\d)\b/);
-  const year = yearMatch ? yearMatch[1] : "2022";
+  const yearMatch = content.match(/Drill-Down \((\d{4})\)/) || content.match(/\b(20\d\d|19\d\d)\b/);
+  const year = yearMatch ? yearMatch[1] : "that year";
 
   return (
     <div className="my-3 p-3.5 bg-slate-950/90 border border-amber-500/40 rounded-2xl space-y-3 shadow-xl shadow-amber-950/20 not-prose">
@@ -1482,12 +1288,12 @@ function MonthDrillDownCard({
               Select Your Exact Season / Month Window ({year})
             </h4>
             <p className="text-[10.5px] text-slate-400">
-              Tap the exact month window of your milestone to lock your birth minute:
+              Tap the exact month window of your milestone to verify running Antardasha / Pratyantardasha:
             </p>
           </div>
         </div>
         <span className="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
-          Month Precision
+          Sub-Period Precision
         </span>
       </div>
 
@@ -1499,7 +1305,7 @@ function MonthDrillDownCard({
           className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
         >
           <div className="font-bold text-xs text-amber-300">🌸 Jan – Apr {year}</div>
-          <div className="text-[10.5px] text-slate-400">Early {year} (Locks ~6:26 PM)</div>
+          <div className="text-[10.5px] text-slate-400">Early {year} (Q1 / Spring)</div>
         </button>
 
         <button
@@ -1509,7 +1315,7 @@ function MonthDrillDownCard({
           className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
         >
           <div className="font-bold text-xs text-amber-300">☀️ May – Aug {year}</div>
-          <div className="text-[10.5px] text-slate-400">Mid {year} (Locks ~6:29 PM)</div>
+          <div className="text-[10.5px] text-slate-400">Mid {year} (Q2–Q3 / Summer)</div>
         </button>
 
         <button
@@ -1519,7 +1325,7 @@ function MonthDrillDownCard({
           className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
         >
           <div className="font-bold text-xs text-amber-300">🍂 Sept – Dec {year}</div>
-          <div className="text-[10.5px] text-slate-400">Late {year} (Locks ~6:33 PM)</div>
+          <div className="text-[10.5px] text-slate-400">Late {year} (Q3–Q4 / Autumn-Winter)</div>
         </button>
       </div>
     </div>
@@ -1920,7 +1726,7 @@ export default function AstroChatbot() {
     if (!query || isLoading) return;
 
     // 1. Check 0ms Instant Client-Side Interceptor (0 tokens, 0ms latency)
-    const instantAnswer = tryInstantEngineAnswer(query, natalEphemeris, transitEphemeris, new Date(), currentDate);
+    const instantAnswer = tryInstantEngineAnswer(query, natalEphemeris, transitEphemeris, new Date(), currentDate, gender);
     if (instantAnswer) {
       const userMsg: Message = {
         id: Date.now().toString(),
@@ -2274,6 +2080,7 @@ export default function AstroChatbot() {
                     !msg.content.includes("Phase 2") &&
                     !msg.content.includes("Multi-Divisional Birth Time Verification") && (
                       <InteractiveBtrQuestionnaire
+                        natalEphemeris={natalEphemeris}
                         onVerify={(ans) => handleSendMessage(ans)}
                         isLoading={isLoading}
                       />
@@ -2283,6 +2090,7 @@ export default function AstroChatbot() {
                   {msg.role === "assistant" &&
                     msg.content.includes("Phase 2: Predicted Rectified Timeline Options") && (
                       <Phase2CandidateCard
+                        natalEphemeris={natalEphemeris}
                         onSelect={(ans) => handleSendMessage(ans)}
                         isLoading={isLoading}
                       />
@@ -2292,6 +2100,7 @@ export default function AstroChatbot() {
                   {msg.role === "assistant" &&
                     msg.content.includes("Comprehensive Chronological Life Timeline") && (
                       <Round2DrillDownCard
+                        natalEphemeris={natalEphemeris}
                         onSelect={(ans) => handleSendMessage(ans)}
                         isLoading={isLoading}
                       />

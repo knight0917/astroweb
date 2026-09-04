@@ -81,6 +81,7 @@ import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
 import { calculateDayMuhurta } from "./muhurta";
 import { calculateAshtakavargaVastuStrength, calculateAyadiShadvarga, calculateJaiminiArudhaVastu } from "./vastuEngine";
+import { generateBtrMasterSummary } from "./btrEngine";
 import { GeoLocation } from "./types";
 import { RASHI_NAMES } from "./constants";
 
@@ -1749,6 +1750,12 @@ export function buildAstroDossier(
     nakshatraActivationSummary = generateNakshatraActivationSummary(natalEphemeris, birthDate, evaluationDate);
   } catch (_) {}
 
+  // 73. Classical Birth Time Rectification (BTR) & Full Event Dasha Timeline
+  let btrMasterSummary = "";
+  try {
+    btrMasterSummary = generateBtrMasterSummary(natalEphemeris, gender);
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -1926,6 +1933,9 @@ export function buildAstroDossier(
     );
   } else if (intent === "btr_verification") {
     lines.push(
+      "",
+      "#### ⏱️ 73. CLASSICAL BIRTH TIME RECTIFICATION (BTR), PRANAPADA, KUNDA, TATTVA & FULL EVENT DASHA TIMELINE:",
+      btrMasterSummary,
       "",
       "#### 🎯 42. VEDIC ASTROLOGY AND PREDICTIONS (MULTI-TIER EVENT FORECASTING & MILESTONES) DOSSIER:",
       vedicPredictionsSummary,
@@ -2149,7 +2159,10 @@ export function buildAstroDossier(
       nakshatraActivationSummary,
       "",
       "#### 🏛️ 72. CLASSICAL VĀSTU ŚĀSTRA, 81-GRID PURUSHA MANDALA & JAIMINI ARUDHA DIRECTIONAL DOSSIER:",
-      vastuSummary
+      vastuSummary,
+      "",
+      "#### ⏱️ 73. CLASSICAL BIRTH TIME RECTIFICATION (BTR), PRANAPADA, KUNDA, TATTVA & FULL EVENT DASHA TIMELINE:",
+      btrMasterSummary
     );
   }
 
