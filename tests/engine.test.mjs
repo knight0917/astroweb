@@ -4219,6 +4219,34 @@ test("Jaimini Arudha Lagna (AL) & Upapada Lagna (UL) Vāstu Spatial Telemetry Ve
   assert.ok(dossier.includes("11th from AL"), "11th from AL missing in Section 72");
 });
 
+test("Janma Panchanga (Birth Panchang 5 Limbs) & Disambiguation Verification", async () => {
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1998-05-24T18:46:51.000Z"), location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date("2026-08-31T00:00:00.000Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const dossier = buildAstroDossier(natalEphem, transitEphem, new Date("2026-08-31T00:00:00.000Z"), "male");
+
+  // 1. Verify Section 1B Header
+  assert.ok(dossier.includes("#### 📜 1B. JANMA PANCHANGA (NATIVE'S 5 CELESTIAL LIMBS AT BIRTH — जन्म पञ्चाङ्ग):"), "Section 1B header missing in dossier");
+
+  // 2. Verify all 5 birth limbs are explicitly present
+  assert.ok(dossier.includes("- **1. Janma Tithi (जन्म तिथि):**"), "Janma Tithi missing in Section 1B");
+  assert.ok(dossier.includes("- **2. Janma Vara (जन्म वार / Birth Weekday):**"), "Janma Vara missing in Section 1B");
+  assert.ok(dossier.includes("- **3. Janma Nakshatra (जन्म नक्षत्र):**"), "Janma Nakshatra missing in Section 1B");
+  assert.ok(dossier.includes("- **4. Janma Nitya Yoga (जन्म योग):**"), "Janma Nitya Yoga missing in Section 1B");
+  assert.ok(dossier.includes("- **5. Janma Karana (जन्म करण):**"), "Janma Karana missing in Section 1B");
+
+  // 3. Verify values match birth ephemeris
+  assert.ok(dossier.includes(natalEphem.panchanga.tithi.name), "Birth Tithi name missing");
+  assert.ok(dossier.includes(natalEphem.panchanga.vara.name), "Birth Vara name missing");
+  assert.ok(dossier.includes(natalEphem.panchanga.yoga.name), "Birth Yoga name missing");
+  assert.ok(dossier.includes(natalEphem.panchanga.karana.name), "Birth Karana name missing");
+});
+
+
 
 
 

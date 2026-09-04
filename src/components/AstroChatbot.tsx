@@ -529,8 +529,38 @@ function tryInstantEngineAnswer(
 *⚡ Instant Classical Computation (0ms)*`;
   }
 
-  // 6. Real-time Live Panchang Today
-  if (/^(today panchang|aaj ka panchang|panchang today|rahu kalam today|what is today's tithi|panchang)\??$/i.test(q)) {
+  // 6A. Janma Panchanga (Native's Birth Panchang)
+  if (
+    /^(what is my panchang|my panchang|birth panchang|janma panchang|read my panchang|tell me my panchang|what was the panchang when i was born|mera panchang|apna panchang|my birth panchang|janma tithi|my tithi|my vara|my yoga|my karana)\??$/i.test(q) ||
+    (q.includes("panchang") && (q.includes("my") || q.includes("birth") || q.includes("janma") || q.includes("born") || q.includes("mera") || q.includes("apna") || q.includes("kundli") || q.includes("chart"))) ||
+    (q.includes("tithi") && (q.includes("my") || q.includes("birth") || q.includes("janma") || q.includes("born") || q.includes("mera")))
+  ) {
+    const p = natalEphem.panchanga;
+    const loc = natalEphem.location;
+    const bDate = new Date(natalEphem.utcDate);
+    return `### 📜 **Your Classical Janma Panchanga (जन्म पञ्चाङ्ग — Birth Celestial Limbs):**
+- 📍 **Birth Location:** ${loc.cityName || "Birth City"}, ${loc.country || ""}
+- 📅 **Date of Birth:** ${bDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+- ⏰ **Birth Time (UTC):** ${bDate.toUTCString().slice(17, 22)} UTC (${natalEphem.ayanamshaType} Ayanamsha)
+
+#### 🕉️ **The 5 Sacred Birth Angas (जन्म पञ्चाङ्ग अङ्ग):**
+- **1. Janma Tithi (जन्म तिथि):** **${p.tithi.name} (${p.tithi.paksha} Paksha, Tithi #${p.tithi.index})**
+  - *Signification:* Governs emotional disposition, relationship capacity, and element (Jala/Water prana).
+- **2. Janma Vara (जन्म वार / Birth Weekday):** **${p.vara.name}** (Ruling Planet / Day Lord: **${p.vara.lord}**)
+  - *Signification:* Governs physical vitality, stamina, and longevity (Agni/Fire prana).
+- **3. Janma Nakshatra (जन्म नक्षत्र):** **${p.nakshatra.sanskritName} (Pada ${p.nakshatra.pada})** • Lord: **${p.nakshatra.lord}** • Deity: **${p.nakshatra.deity}**
+  - *Signification:* Governs mental constitution, karmic trajectory, and subconscious mind (Vayu/Air prana).
+- **4. Janma Nitya Yoga (जन्म नित्य योग):** **${p.yoga.name}** (Yoga #${p.yoga.index})
+  - *Signification:* Governs health, character alignment, and harmony of soul & body (Akasha/Ether prana).
+- **5. Janma Karana (जन्म करण):** **${p.karana.name}** (Karana #${p.karana.index})
+  - *Signification:* Governs professional success, material accomplishments, and actions (Prithvi/Earth prana).
+${p.masa ? `- **Janma Masa (वैदिक मास):** **${p.masa}**` : ""}
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
+  // 6B. Real-time Live Panchang Today
+  if (/^(today panchang|aaj ka panchang|panchang today|rahu kalam today|what is today's tithi|today's panchang|live panchang)\??$/i.test(q)) {
     const p = transitEphem.panchanga;
     const loc = transitEphem.location;
     return `### 📅 **Real-Time Live Panchanga for ${loc.cityName || "Current Location"}, ${loc.country || ""}:**
@@ -636,9 +666,7 @@ ${topPlanets}
 
   // 12. Dr. Samir Tripathi Daily Panchanga, Lucky Color & Disha Shool
   if (
-    q.includes("panchang") ||
-    q.includes("panchanga") ||
-    q.includes("panchaang") ||
+    ((q.includes("panchang") || q.includes("panchanga") || q.includes("panchaang")) && (q.includes("today") || q.includes("aaj") || q.includes("daily") || q.includes("now") || q.includes("current") || (!q.includes("my") && !q.includes("birth") && !q.includes("janma")))) ||
     (q.includes("muhurta") && (q.includes("today") || q.includes("aaj") || q.includes("now"))) ||
     q.includes("lucky color") ||
     q.includes("shubh rang") ||
