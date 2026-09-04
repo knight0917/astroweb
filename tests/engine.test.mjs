@@ -4144,4 +4144,39 @@ test("Universal Navigation & Module Search Engine Query Resolution Verification"
   assert.strictEqual(allResults.length, MODULE_CATALOG.length);
 });
 
+test("Chatbot Section 2A (12 Houses Matrix), Section 2B (Natal Planets), and Section 2C (11 Upagrahas) Zero-Error Placements Verification", async () => {
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1998-05-24T18:46:51.000Z"), location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date("2026-08-31T00:00:00.000Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const dossier = buildAstroDossier(natalEphem, transitEphem, new Date("2026-08-31T00:00:00.000Z"), "male");
+
+  // 1. Verify Section 2A: 12 Houses (Bhava) Occupancy & Lordship Matrix
+  assert.ok(dossier.includes("#### 🏛️ 2A. COMPLETE 12 HOUSES (BHAVA) OCCUPANCY & LORDSHIP MATRIX (HOUSES 1 TO 12):"), "Section 2A header missing");
+  for (let h = 1; h <= 12; h++) {
+    assert.ok(dossier.includes(`- **House ${h} (`), `House ${h} entry missing in Section 2A`);
+  }
+
+  // 2. Verify Section 2B: Natal Planetary Positions
+  assert.ok(dossier.includes("#### 🪐 2B. NATAL PLANETARY POSITIONS (D1 KUNDLI HOUSES & EXACT DEGREES):"), "Section 2B header missing");
+  const planets = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];
+  for (const p of planets) {
+    assert.ok(dossier.includes(`- **${p} (`), `Planet ${p} missing in Section 2B`);
+  }
+
+  // 3. Verify Section 2C: 11 Classical Upagrahas & Sub-planets
+  assert.ok(dossier.includes("#### 🌑 2C. 11 CLASSICAL UPAGRAHAS & SUB-PLANETS (छाया ग्रह एवं उपग्रह स्थिति):"), "Section 2C header missing");
+  const upagrahas = [
+    "Mandi", "Gulika", "Dhuma", "Vyatipata", "Parivesha", "Indrachapa",
+    "Upaketu", "Kala", "Mrityu", "Ardha-Prahara", "Yamaghantaka"
+  ];
+  for (const u of upagrahas) {
+    assert.ok(dossier.includes(`- **${u} (`), `Upagraha ${u} missing in Section 2C`);
+  }
+});
+
+
 

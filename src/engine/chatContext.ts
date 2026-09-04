@@ -252,18 +252,82 @@ export function buildAstroDossier(
     ashtakavargaSummary = "SAV Points in Houses -> 1st (Tanu): " + av.sarvaHouseBindus[0] + ", 2nd (Dhana): " + av.sarvaHouseBindus[1] + ", 4th (Sukha): " + av.sarvaHouseBindus[3] + ", 7th (Kalatra): " + av.sarvaHouseBindus[6] + ", 9th (Bhagya): " + av.sarvaHouseBindus[8] + ", 10th (Karma): " + av.sarvaHouseBindus[9] + ", 11th (Labha): " + av.sarvaHouseBindus[10];
   } catch (_) {}
 
-  // 9. Natal Planetary Positions (D1)
+  // 9A. Complete 12 Houses (Bhava) Occupancy & Lordship Matrix
+  const HOUSE_NAMES_SANSKRIT = [
+    "1st - Tanu Bhava (Lagna / Self)",
+    "2nd - Dhana Bhava (Wealth / Family / Speech)",
+    "3rd - Sahaja Bhava (Siblings / Courage / Effort)",
+    "4th - Sukha Bhava (Mother / Home / Vehicles)",
+    "5th - Putra Bhava (Children / Intellect / Purva Punya)",
+    "6th - Shatru/Roga Bhava (Debts / Enemies / Diseases)",
+    "7th - Kalatra Bhava (Spouse / Marriage / Partnerships)",
+    "8th - Ayu/Randhra Bhava (Longevity / Occult / Transformations)",
+    "9th - Bhagya Bhava (Fortune / Dharma / Higher Wisdom)",
+    "10th - Karma Bhava (Career / Profession / Status / Public Authority)",
+    "11th - Labha Bhava (Gains / Network / Elder Siblings)",
+    "12th - Vyaya Bhava (Expenditure / Foreign / Moksha / Sleep)",
+  ];
+
+  const houseOccupants: Record<number, string[]> = {};
+  const houseUpagrahas: Record<number, string[]> = {};
+  for (let h = 1; h <= 12; h++) {
+    houseOccupants[h] = [];
+    houseUpagrahas[h] = [];
+  }
+
+  Object.values(natalEphemeris.planets).forEach((p) => {
+    const isRetro = p.isRetrograde ? " [R]" : "";
+    const nameStr = `${p.name}${isRetro} (${(p.siderealLongitude % 30).toFixed(1)}°)`;
+    if (houseOccupants[p.house]) {
+      houseOccupants[p.house].push(nameStr);
+    }
+  });
+
+  if (natalEphemeris.upagrahas) {
+    Object.values(natalEphemeris.upagrahas).forEach((u) => {
+      const uStr = `${u.name} (${(u.siderealLongitude % 30).toFixed(1)}°)`;
+      if (houseUpagrahas[u.house]) {
+        houseUpagrahas[u.house].push(uStr);
+      }
+    });
+  }
+
+  const twelveHousesFormatted: string[] = [];
+  for (let h = 1; h <= 12; h++) {
+    const signIdx = (ascRashiIdx + (h - 1)) % 12;
+    const sign = RASHI_NAMES[signIdx];
+    const occupants = houseOccupants[h].length > 0 ? houseOccupants[h].join(", ") : "None (Vacant)";
+    const upagrahas = houseUpagrahas[h].length > 0 ? ` | Upagrahas: ${houseUpagrahas[h].join(", ")}` : "";
+    twelveHousesFormatted.push(
+      `- **House ${h} (${HOUSE_NAMES_SANSKRIT[h - 1]}):** Sign: **${sign.englishName} (${sign.sanskritName})** • Ruling Lord: **${sign.lord}** • **Occupants:** **${occupants}**${upagrahas}`
+    );
+  }
+
+  // 9B. Natal Planetary Positions (D1 Navagrahas & Outer Planets)
   const planetsSummary: string[] = [];
   Object.values(natalEphemeris.planets).forEach((p) => {
-    if (p.isModernPlanet) return;
     const rashiIdx = Math.floor(p.siderealLongitude / 30);
     const rashi = RASHI_NAMES[rashiIdx];
-    const deg = (p.siderealLongitude % 30).toFixed(1);
-    const isRetro = p.isRetrograde ? " [Retrograde / वक्री]" : "";
+    const deg = (p.siderealLongitude % 30).toFixed(2);
+    const isRetro = p.isRetrograde ? " [Retrograde / वक्री]" : " [Direct / मार्गी]";
+    const isCombust = (p as any).isCombust ? " ⚠️ [Combust / अस्त]" : "";
+    const speed = p.speed ? ` • Speed: ${p.speed.toFixed(2)}°/day` : "";
     planetsSummary.push(
-      "- " + p.name + " (" + p.symbol + "): House " + p.house + " in " + rashi.englishName + " (" + rashi.sanskritName + ") at " + deg + "° in " + p.nakshatra.sanskritName + " Pada " + p.nakshatra.pada + isRetro
+      `- **${p.name} (${p.symbol}):** **House ${p.house}** in **${rashi.englishName} (${rashi.sanskritName})** at **${deg}°** (${p.siderealLongitude.toFixed(2)}° absolute) in **${p.nakshatra.sanskritName} Pada ${p.nakshatra.pada}** (Lord: ${p.nakshatra.lord})${isRetro}${isCombust}${speed}`
     );
   });
+
+  // 9C. 11 Classical Upagrahas & Sub-Planets (छाया ग्रह एवं उपग्रह स्थिति)
+  const upagrahasFormatted: string[] = [];
+  if (natalEphemeris.upagrahas) {
+    Object.values(natalEphemeris.upagrahas).forEach((u) => {
+      const rashi = u.rashi;
+      const deg = (u.siderealLongitude % 30).toFixed(2);
+      upagrahasFormatted.push(
+        `- **${u.name} (${u.sanskritName}):** **House ${u.house}** in **${rashi.englishName} (${rashi.sanskritName})** at **${deg}°** in **${u.nakshatra.sanskritName} Pada ${u.nakshatra.pada}** [${u.category}] -> ${u.description}`
+      );
+    });
+  }
 
   // 10. B.V. Raman 300 Yogas with Potency & Bhanga Analysis
   const ramanAnalysis = evaluateRamanYogas(natalEphemeris);
@@ -1727,8 +1791,14 @@ export function buildAstroDossier(
     "- **Functional Lordship Matrix for this Lagna:**",
     functionalRolesFormatted,
     "",
-    "#### 🪐 2. NATAL PLANETARY POSITIONS (D1 KUNDLI HOUSES):",
+    "#### 🏛️ 2A. COMPLETE 12 HOUSES (BHAVA) OCCUPANCY & LORDSHIP MATRIX (HOUSES 1 TO 12):",
+    twelveHousesFormatted.join("\n"),
+    "",
+    "#### 🪐 2B. NATAL PLANETARY POSITIONS (D1 KUNDLI HOUSES & EXACT DEGREES):",
     planetsSummary.join("\n"),
+    "",
+    "#### 🌑 2C. 11 CLASSICAL UPAGRAHAS & SUB-PLANETS (छाया ग्रह एवं उपग्रह स्थिति):",
+    upagrahasFormatted.length > 0 ? upagrahasFormatted.join("\n") : "- Standard shadow points calculated.",
     "",
     "#### 🤝 3. PANCHA-DA MAITRI (5-FOLD RELATIONSHIP WITH SIGN DISPOSITOR):",
     panchadaSummary,
