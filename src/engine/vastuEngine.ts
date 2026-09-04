@@ -175,6 +175,186 @@ export function getDirectionFromCoords(row: number, col: number): VastuDirection
 // 2. ROOM COMPATIBILITY RULES
 // ============================================================================
 
+export interface VastuRoomOption {
+  type: VastuRoomType;
+  label: string;
+  hindiLabel: string;
+  icon: string;
+  bestDir: string;
+  bestDirHindi: string;
+  secondaryDir: string;
+  prohibitedDir: string;
+  shastraReason: string;
+}
+
+export const ROOM_OPTIONS: VastuRoomOption[] = [
+  {
+    type: "pooja_room",
+    label: "Pooja Mandir",
+    hindiLabel: "पूजा घर / देवस्थान",
+    icon: "🛕",
+    bestDir: "North-East (Īśānya)",
+    bestDirHindi: "ईशान कोण (उत्तर-पूर्व)",
+    secondaryDir: "East (Pūrva), North (Uttara)",
+    prohibitedDir: "South-West, South, Brahmasthāna",
+    shastraReason: "Shiva & Jupiter divine portal; sacred water-space confluence channels cosmic consciousness.",
+  },
+  {
+    type: "kitchen",
+    label: "Kitchen / Cooktop",
+    hindiLabel: "रसोईघर / पाकशाल",
+    icon: "🍳",
+    bestDir: "South-East (Āgneya)",
+    bestDirHindi: "आग्नेय कोण (दक्षिण-पूर्व)",
+    secondaryDir: "North-West (Vāyavya), East (Pūrva)",
+    prohibitedDir: "North-East, South-West, North, Center",
+    shastraReason: "Agni Lord realm; cooking facing East optimizes digestive fire (Jatharagni) & family vitality.",
+  },
+  {
+    type: "master_bedroom",
+    label: "Master Bedroom",
+    hindiLabel: "मुख्य शयनकक्ष",
+    icon: "👑",
+    bestDir: "South-West (Nairṛtya)",
+    bestDirHindi: "नैर्ऋत्य कोण (दक्षिण-पश्चिम)",
+    secondaryDir: "South (Dakṣiṇa), West (Paścima)",
+    prohibitedDir: "North-East, South-East, Center",
+    shastraReason: "Heavy Earth element (Prithvi) anchors stability, patriarchal leadership, wealth retention & deep sleep.",
+  },
+  {
+    type: "living_room",
+    label: "Living / Drawing Room",
+    hindiLabel: "बैठक कक्ष",
+    icon: "🛋️",
+    bestDir: "North / East / North-East",
+    bestDirHindi: "उत्तर / पूर्व / ईशान",
+    secondaryDir: "North-West (Vāyavya), West",
+    prohibitedDir: "South-West (Nairṛtya)",
+    shastraReason: "Channels fresh morning prana, social prestige, vibrant conversation, and auspicious visitors.",
+  },
+  {
+    type: "dining_room",
+    label: "Dining Room",
+    hindiLabel: "भोजन कक्ष",
+    icon: "🍽️",
+    bestDir: "West (Paścima)",
+    bestDirHindi: "पश्चिम दिशा",
+    secondaryDir: "East (Pūrva), North (Uttara)",
+    prohibitedDir: "South-West, North-East",
+    shastraReason: "Varuna & Pushpadanta zone nurtures steady nourishment, family harmony, and healthy metabolic assimilation.",
+  },
+  {
+    type: "study_room",
+    label: "Study Room / Office",
+    hindiLabel: "अध्ययन कक्ष / कार्यालय",
+    icon: "📚",
+    bestDir: "North-East / North / East",
+    bestDirHindi: "ईशान / उत्तर / पूर्व",
+    secondaryDir: "West (Paścima)",
+    prohibitedDir: "South-West, South-East, South",
+    shastraReason: "Mercury & Jupiter synergy activates Buddhi, deep concentration, academic genius, and business clarity.",
+  },
+  {
+    type: "kids_bedroom",
+    label: "Children's Bedroom",
+    hindiLabel: "बाल कक्ष",
+    icon: "🧸",
+    bestDir: "North-West / West",
+    bestDirHindi: "वायव्य / पश्चिम",
+    secondaryDir: "East (Pūrva), North (Uttara)",
+    prohibitedDir: "South-West (causes lethargy)",
+    shastraReason: "Vayu air vibrations stimulate youthful enthusiasm, sharp learning reflexes, and creative growth.",
+  },
+  {
+    type: "guest_room",
+    label: "Guest Bedroom",
+    hindiLabel: "अतिथि कक्ष",
+    icon: "🧳",
+    bestDir: "North-West (Vāyavya)",
+    bestDirHindi: "वायव्य कोण (उत्तर-पश्चिम)",
+    secondaryDir: "West (Paścima), North (Uttara)",
+    prohibitedDir: "South-West (overstaying dominance)",
+    shastraReason: "Governed by Vayu (Air deity); guests feel welcomed, cherished, and depart harmoniously on schedule.",
+  },
+  {
+    type: "main_door",
+    label: "Main Entrance (Simha Dvara)",
+    hindiLabel: "मुख्य सिंह द्वार",
+    icon: "🚪",
+    bestDir: "East (Jayanta/Indra) / North (Mukhya)",
+    bestDirHindi: "पूर्व (जयन्त/इन्द्र) / उत्तर (मुख्य/भल्लाट)",
+    secondaryDir: "West (Sugriva/Pushpadanta), South (Vitatha/Grihakshata)",
+    prohibitedDir: "South-West (Pitru/Dauvarika), South-East (Agni)",
+    shastraReason: "Principal energy mouth; channeling auspicious deity padas unlocks royal recognition and prosperity.",
+  },
+  {
+    type: "toilet",
+    label: "Toilet / Commode",
+    hindiLabel: "शौचालय",
+    icon: "🚽",
+    bestDir: "West (W4-W5) / South (S4-S5)",
+    bestDirHindi: "पश्चिम (पुष्पदन्त/वरुण) / दक्षिण (गृहक्षत/यम)",
+    secondaryDir: "North-West (Vāyavya NW2-NW3)",
+    prohibitedDir: "North-East (Mahadosha!), Brahmasthāna, North",
+    shastraReason: "Zone of waste elimination; strictly forbidden in Ishanya/North/Center to avert bio-energy toxicity.",
+  },
+  {
+    type: "water_tank_underground",
+    label: "Underground Water / Borewell",
+    hindiLabel: "भूमिगत जल / बोरवेल",
+    icon: "💧",
+    bestDir: "North-East (Īśānya)",
+    bestDirHindi: "ईशान कोण (उत्तर-पूर्व)",
+    secondaryDir: "North (Uttara), East (Pūrva)",
+    prohibitedDir: "South-West (Severe Loss!), South, South-East",
+    shastraReason: "Low depression + pure water in Ishanya draws celestial influx, peace, and permanent liquidity.",
+  },
+  {
+    type: "water_tank_overhead",
+    label: "Overhead Water Tank",
+    hindiLabel: "ऊपरी पानी की टंकी",
+    icon: "🚰",
+    bestDir: "South-West (Nairṛtya)",
+    bestDirHindi: "नैर्ऋत्य कोण (दक्षिण-पश्चिम)",
+    secondaryDir: "West (Paścima), South (Dakṣiṇa)",
+    prohibitedDir: "North-East (Crushes Prana!), Brahmasthāna",
+    shastraReason: "Heavy gravitational mass must anchor the highest, most stable Nairritya quadrant.",
+  },
+  {
+    type: "septic_tank",
+    label: "Septic Tank",
+    hindiLabel: "सेप्टिक टैंक (मलकुंड)",
+    icon: "🕳️",
+    bestDir: "North-West (Vāyavya)",
+    bestDirHindi: "वायव्य कोण (उत्तर-पश्चिम)",
+    secondaryDir: "West-North-West (WNW)",
+    prohibitedDir: "North-East (Severe Illness!), South-West, Center",
+    shastraReason: "Air current dissipates waste gases safely without hindering magnetic wealth vibrations.",
+  },
+  {
+    type: "staircase",
+    label: "Staircase (Clockwise)",
+    hindiLabel: "सीढ़ियां (प्रदक्षिणावर्त)",
+    icon: "🪜",
+    bestDir: "South / West / South-West",
+    bestDirHindi: "दक्षिण / पश्चिम / नैर्ऋत्य",
+    secondaryDir: "North-West, South-East",
+    prohibitedDir: "North-East, Brahmasthāna, North",
+    shastraReason: "Heavy structural verticality belongs in heavy Earth/Fire-Earth sectors; ascend clockwise.",
+  },
+  {
+    type: "open_balcony",
+    label: "Open Balcony / Terrace",
+    hindiLabel: "खुली बालकनी / छत",
+    icon: "🌿",
+    bestDir: "North / East / North-East",
+    bestDirHindi: "उत्तर / पूर्व / ईशान",
+    secondaryDir: "North-West (Vāyavya)",
+    prohibitedDir: "South-West, South",
+    shastraReason: "Allows maximum cosmic sunlight, ultraviolet morning frequencies, and magnetic prana into the home.",
+  },
+];
+
 export interface RoomScoreRule {
   idealDirections: VastuDirection[];
   acceptableDirections: VastuDirection[];

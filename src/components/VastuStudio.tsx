@@ -16,25 +16,9 @@ import {
   calculateAshtakavargaVastuStrength,
   calculateVastuSynthesis,
   ROOM_COMPATIBILITY_RULES,
+  ROOM_OPTIONS,
+  VastuRoomOption,
 } from "@/engine/vastuEngine";
-
-const ROOM_OPTIONS: { type: VastuRoomType; label: string; icon: string; defaultDir: string }[] = [
-  { type: "pooja_room", label: "Pooja Mandir (पूजा घर)", icon: "🛕", defaultDir: "North-East" },
-  { type: "kitchen", label: "Kitchen / Cooktop (रसोईघर)", icon: "🍳", defaultDir: "South-East" },
-  { type: "master_bedroom", label: "Master Bedroom (मुख्य शयनकक्ष)", icon: "👑", defaultDir: "South-West" },
-  { type: "living_room", label: "Living / Drawing Room (बैठक)", icon: "🛋️", defaultDir: "North / East" },
-  { type: "dining_room", label: "Dining Room (भोजन कक्ष)", icon: "🍽️", defaultDir: "West" },
-  { type: "study_room", label: "Study Room / Office (अध्ययन)", icon: "📚", defaultDir: "North-East / North" },
-  { type: "kids_bedroom", label: "Children's Bedroom (बाल कक्ष)", icon: "🧸", defaultDir: "North-West / West" },
-  { type: "guest_room", label: "Guest Room (अतिथि कक्ष)", icon: "🧳", defaultDir: "North-West" },
-  { type: "main_door", label: "Main Entrance Door (सिंह द्वार)", icon: "🚪", defaultDir: "East / North" },
-  { type: "toilet", label: "Toilet / Commode (शौचालय)", icon: "🚽", defaultDir: "West / South" },
-  { type: "water_tank_underground", label: "Underground Water / Borewell (भूमिगत जल)", icon: "💧", defaultDir: "North-East" },
-  { type: "water_tank_overhead", label: "Overhead Water Tank (ऊपरी टंकी)", icon: "🚰", defaultDir: "South-West" },
-  { type: "septic_tank", label: "Septic Tank (मलकुंड)", icon: "🕳️", defaultDir: "North-West" },
-  { type: "staircase", label: "Staircase (सीढ़ियां)", icon: "🪜", defaultDir: "South / West" },
-  { type: "open_balcony", label: "Open Balcony (बालकनी)", icon: "🌿", defaultDir: "North / East" },
-];
 
 export default function VastuStudio() {
   const { ephemeris: natalEphem, location } = useAstroStore();
@@ -42,6 +26,7 @@ export default function VastuStudio() {
   const [activeTab, setActiveTab] = useState<"mandala" | "ayadi" | "ashtakavarga" | "remedies">("mandala");
   const [selectedRoomType, setSelectedRoomType] = useState<VastuRoomType>("pooja_room");
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>({ row: 0, col: 8 });
+  const [showAllRoomsTable, setShowAllRoomsTable] = useState<boolean>(false);
 
   // Default Sample House Placements
   const [placements, setPlacements] = useState<VastuRoomPlacement[]>([
@@ -66,6 +51,12 @@ export default function VastuStudio() {
     return calculateVastuSynthesis(placements, plotLength, plotBreadth, nativeMoonNak, savList, natalEphem);
   }, [placements, plotLength, plotBreadth, nativeMoonNak, savList, natalEphem]);
 
+  const selectedRoomMeta = useMemo(() => {
+    return ROOM_OPTIONS.find((r) => r.type === selectedRoomType) || ROOM_OPTIONS[0];
+  }, [selectedRoomType]);
+
+  const selectedRoomRules = ROOM_COMPATIBILITY_RULES[selectedRoomType];
+
   // Handle cell click on 81-grid
   const handleCellClick = (row: number, col: number) => {
     setSelectedCell({ row, col });
@@ -74,8 +65,7 @@ export default function VastuStudio() {
       return;
     }
 
-    const roomMeta = ROOM_OPTIONS.find((r) => r.type === selectedRoomType);
-    const newPlacement = evaluateRoomPlacement(selectedRoomType, row, col, roomMeta?.label.split(" (")[0]);
+    const newPlacement = evaluateRoomPlacement(selectedRoomType, row, col, selectedRoomMeta.label);
     setPlacements((prev) => [...prev, newPlacement]);
   };
 
@@ -146,275 +136,439 @@ export default function VastuStudio() {
 
       {/* 2. TAB CONTENT: MANDALA STUDIO */}
       {activeTab === "mandala" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: 81-Grid Canvas */}
-          <div className="lg:col-span-8 glass-panel p-5 rounded-3xl border border-slate-800 bg-slate-950/90 space-y-4 shadow-xl">
-            {/* Canvas Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs font-black text-slate-200 tracking-wide uppercase">
-                  81-Pada Purusha Mandala (45 Deities)
-                </span>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Column: 81-Grid Canvas */}
+            <div className="lg:col-span-7 xl:col-span-8 glass-panel p-5 rounded-3xl border border-slate-800 bg-slate-950/90 space-y-4 shadow-xl">
+              {/* Canvas Header */}
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-xs font-black text-slate-200 tracking-wide uppercase">
+                    81-Pada Purusha Mandala (45 Deities)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-500/40">
+                    Active: {selectedRoomMeta.icon} {selectedRoomMeta.label}
+                  </span>
+                </div>
               </div>
-              <span className="text-[10.5px] font-mono text-amber-400/90 hidden sm:inline">
-                Directional Energy Alignment
-              </span>
+
+              {/* Grid Container with 4-Side Directional Borders */}
+              <div className="w-full max-w-[660px] mx-auto flex flex-col items-center gap-1">
+                {/* TOP: NORTH (UTTARA) & CORNER LABELS */}
+                <div className="w-full flex items-center justify-between px-1 text-[10px] sm:text-[11px] font-mono select-none">
+                  <div className="flex items-center gap-1 text-slate-400 bg-slate-900/90 px-2 py-0.5 rounded-md border border-slate-800">
+                    <span className="text-slate-500 font-bold">NW</span>
+                    <span className="text-indigo-300 font-bold hidden sm:inline">Vāyavya (Air)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-cyan-300 font-black bg-cyan-950/60 px-3 py-1 rounded-lg border border-cyan-500/50 shadow-sm text-xs sm:text-sm">
+                    <span>▲</span>
+                    <span>NORTH (Uttara / उत्तर) • Water 💧</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-slate-400 bg-slate-900/90 px-2 py-0.5 rounded-md border border-slate-800">
+                    <span className="text-cyan-300 font-bold hidden sm:inline">Īśānya (Water)</span>
+                    <span className="text-slate-500 font-bold">NE</span>
+                  </div>
+                </div>
+
+                {/* MIDDLE ROW: WEST + 9x9 GRID CANVAS + EAST */}
+                <div className="w-full flex items-center justify-center gap-1.5 sm:gap-2">
+                  {/* WEST SIDEBAR */}
+                  <div className="flex items-center justify-center py-4 px-1.5 rounded-xl bg-indigo-950/40 border border-indigo-500/40 text-indigo-300 font-bold text-[9px] sm:text-xs [writing-mode:vertical-lr] rotate-180 select-none shadow-md flex-shrink-0">
+                    <span className="tracking-widest font-black uppercase flex items-center gap-1">
+                      <span>◄</span>
+                      <span>WEST (Paschima / पश्चिम) • Air 💨</span>
+                    </span>
+                  </div>
+
+                  {/* The 9x9 Grid */}
+                  <div className="flex-1 aspect-square max-w-[560px] grid grid-cols-9 gap-1 bg-slate-900/90 p-1.5 sm:p-2 rounded-2xl border-2 border-amber-500/40 relative shadow-2xl">
+                    {Array.from({ length: 9 }).map((_, r) =>
+                      Array.from({ length: 9 }).map((_, c) => {
+                        const pada = getVastuPada(r, c);
+                        const isSelected = selectedCell?.row === r && selectedCell?.col === c;
+                        const placement = placements.find((p) => p.row === r && p.col === c);
+                        const isBrahma = pada.category === "Brahma";
+                        const isOuter = pada.category === "OuterPerimeter";
+                        const isIdealForActiveRoom = selectedRoomRules?.idealDirections?.includes(pada.direction);
+
+                        let bgClass = "bg-slate-950 hover:bg-slate-850 border-slate-800";
+                        if (isBrahma) bgClass = "bg-amber-500/15 border-amber-500/40 hover:bg-amber-500/25";
+                        if (pada.isAuspiciousDoorPada) bgClass = "bg-emerald-950/60 border-emerald-500/50 hover:bg-emerald-900/70";
+                        if (isIdealForActiveRoom && !placement && !isSelected) {
+                          bgClass = isBrahma
+                            ? "bg-amber-500/25 border-emerald-400/80 ring-1 ring-emerald-400/40"
+                            : "bg-emerald-950/40 border-emerald-400/70 ring-1 ring-emerald-400/30 hover:bg-emerald-900/50";
+                        }
+                        if (isSelected) bgClass = "ring-2 ring-amber-400 bg-amber-500/30 border-amber-300";
+
+                        const roomMeta = placement ? ROOM_OPTIONS.find((ro) => ro.type === placement.roomType) : null;
+
+                        return (
+                          <button
+                            key={`${r}_${c}`}
+                            type="button"
+                            onClick={() => handleCellClick(r, c)}
+                            className={`relative flex flex-col items-center justify-center p-0.5 rounded-lg border text-[9px] transition-all cursor-pointer overflow-hidden ${bgClass}`}
+                            title={`${pada.deitySanskrit} (${pada.deityEnglish}) • ${pada.direction}${isIdealForActiveRoom ? " • ⭐ Ideal for " + selectedRoomMeta.label : ""}`}
+                          >
+                            {/* Auspicious Door Badge */}
+                            {pada.isAuspiciousDoorPada && (
+                              <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm" />
+                            )}
+
+                            {/* Placed Room Icon */}
+                            {placement ? (
+                              <div className="flex flex-col items-center justify-center animate-in zoom-in-75 duration-150">
+                                <span className="text-base sm:text-lg leading-none">{roomMeta?.icon || "🏠"}</span>
+                                <span className="text-[7.5px] sm:text-[8.5px] font-black text-amber-200 truncate max-w-[45px] leading-tight">
+                                  {placement.customLabel}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center opacity-85 group-hover:opacity-100">
+                                <div className="flex items-center gap-0.5">
+                                  {isIdealForActiveRoom && (
+                                    <span className="text-[7px] text-emerald-400 font-black">⭐</span>
+                                  )}
+                                  <span className={`text-[8px] sm:text-[9px] font-bold truncate max-w-[44px] ${
+                                    isIdealForActiveRoom ? "text-emerald-300 font-black" : isBrahma ? "text-amber-300 font-black" : "text-slate-300"
+                                  }`}>
+                                    {pada.deitySanskrit.split(" ")[0]}
+                                  </span>
+                                </div>
+                                <span className={`text-[6.5px] sm:text-[7.5px] truncate max-w-[45px] ${isIdealForActiveRoom ? "text-emerald-400/80 font-bold" : "text-slate-500"}`}>
+                                  {isIdealForActiveRoom ? "Ideal" : isOuter ? pada.id.split("_")[0] : ""}
+                                </span>
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* EAST SIDEBAR */}
+                  <div className="flex items-center justify-center py-4 px-1.5 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-300 font-bold text-[9px] sm:text-xs [writing-mode:vertical-lr] select-none shadow-md flex-shrink-0">
+                    <span className="tracking-widest font-black uppercase flex items-center gap-1">
+                      <span>EAST (Purva / पूर्व) • Light 🔥</span>
+                      <span>►</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* BOTTOM: SOUTH (DAKSHINA) & CORNER LABELS */}
+                <div className="w-full flex items-center justify-between px-1 text-[10px] sm:text-[11px] font-mono select-none">
+                  <div className="flex items-center gap-1 text-slate-400 bg-slate-900/90 px-2 py-0.5 rounded-md border border-slate-800">
+                    <span className="text-slate-500 font-bold">SW</span>
+                    <span className="text-rose-300 font-bold hidden sm:inline">Nairṛtya (Earth)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-rose-400 font-black bg-rose-950/60 px-3 py-1 rounded-lg border border-rose-500/50 shadow-sm text-xs sm:text-sm">
+                    <span>▼</span>
+                    <span>SOUTH (Dakshina / दक्षिण) • Earth ⛰️</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-slate-400 bg-slate-900/90 px-2 py-0.5 rounded-md border border-slate-800">
+                    <span className="text-amber-300 font-bold hidden sm:inline">Āgneya (Fire)</span>
+                    <span className="text-slate-500 font-bold">SE</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Grid Footnote / Legend */}
+              <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-800/80 gap-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded bg-emerald-500/30 border border-emerald-400" />
+                    <span className="text-emerald-300 font-semibold">⭐ Ideal for {selectedRoomMeta.label}</span>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded bg-amber-500/30 border border-amber-500/60" />
+                    <span>Brahmasthāna Core</span>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded bg-emerald-950 border border-emerald-500/60" />
+                    <span>Auspicious Door Gate</span>
+                  </span>
+                </div>
+                <span className="text-slate-400 italic">Tap any cell to place or inspect room</span>
+              </div>
             </div>
 
-            {/* Grid Container with 4-Side Directional Borders */}
-            <div className="w-full max-w-[660px] mx-auto flex flex-col items-center gap-1">
-              {/* TOP: NORTH (UTTARA) & CORNER LABELS */}
-              <div className="w-full flex items-center justify-between px-1 text-[10px] sm:text-[11px] font-mono select-none">
-                <div className="flex items-center gap-1 text-slate-400 bg-slate-900/90 px-2 py-0.5 rounded-md border border-slate-800">
-                  <span className="text-slate-500 font-bold">NW</span>
-                  <span className="text-indigo-300 font-bold hidden sm:inline">Vāyavya (Air)</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-cyan-300 font-black bg-cyan-950/60 px-3 py-1 rounded-lg border border-cyan-500/50 shadow-sm text-xs sm:text-sm">
-                  <span>▲</span>
-                  <span>NORTH (Uttara / उत्तर) • Water 💧</span>
-                </div>
-                <div className="flex items-center gap-1 text-slate-400 bg-slate-900/90 px-2 py-0.5 rounded-md border border-slate-800">
-                  <span className="text-cyan-300 font-bold hidden sm:inline">Īśānya (Water)</span>
-                  <span className="text-slate-500 font-bold">NE</span>
-                </div>
-              </div>
-
-              {/* MIDDLE ROW: WEST + 9x9 GRID CANVAS + EAST */}
-              <div className="w-full flex items-center justify-center gap-1.5 sm:gap-2">
-                {/* WEST SIDEBAR */}
-                <div className="flex items-center justify-center py-4 px-1.5 rounded-xl bg-indigo-950/40 border border-indigo-500/40 text-indigo-300 font-bold text-[9px] sm:text-xs [writing-mode:vertical-lr] rotate-180 select-none shadow-md flex-shrink-0">
-                  <span className="tracking-widest font-black uppercase flex items-center gap-1">
-                    <span>◄</span>
-                    <span>WEST (Paschima / पश्चिम) • Air 💨</span>
+            {/* Right Column: Room Selector & Active Cell Inspector */}
+            <div className="lg:col-span-5 xl:col-span-4 space-y-4">
+              {/* 1. Room Palette Selector with Prominent Best Directions */}
+              <div className="glass-panel p-4 rounded-2xl border border-slate-800 bg-slate-950/90 space-y-2.5 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase text-amber-400 block tracking-wide">
+                    1. Select Room Type to Place:
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {ROOM_OPTIONS.length} Shastric Rooms
                   </span>
                 </div>
 
-                {/* The 9x9 Grid */}
-                <div className="flex-1 aspect-square max-w-[560px] grid grid-cols-9 gap-1 bg-slate-900/90 p-1.5 sm:p-2 rounded-2xl border-2 border-amber-500/40 relative shadow-2xl">
-                  {Array.from({ length: 9 }).map((_, r) =>
-                    Array.from({ length: 9 }).map((_, c) => {
-                      const pada = getVastuPada(r, c);
-                      const isSelected = selectedCell?.row === r && selectedCell?.col === c;
-                      const placement = placements.find((p) => p.row === r && p.col === c);
-                      const isBrahma = pada.category === "Brahma";
-                      const isOuter = pada.category === "OuterPerimeter";
-
-                      let bgClass = "bg-slate-950 hover:bg-slate-850 border-slate-800";
-                      if (isBrahma) bgClass = "bg-amber-500/15 border-amber-500/40 hover:bg-amber-500/25";
-                      if (pada.isAuspiciousDoorPada) bgClass = "bg-emerald-950/60 border-emerald-500/50 hover:bg-emerald-900/70";
-                      if (isSelected) bgClass = "ring-2 ring-amber-400 bg-amber-500/30 border-amber-300";
-
-                      const roomMeta = placement ? ROOM_OPTIONS.find((ro) => ro.type === placement.roomType) : null;
-
-                      return (
-                        <button
-                          key={`${r}_${c}`}
-                          type="button"
-                          onClick={() => handleCellClick(r, c)}
-                          className={`relative flex flex-col items-center justify-center p-0.5 rounded-lg border text-[9px] transition-all cursor-pointer overflow-hidden ${bgClass}`}
-                          title={`${pada.deitySanskrit} (${pada.deityEnglish}) • ${pada.direction}`}
-                        >
-                          {/* Auspicious Door Badge */}
-                          {pada.isAuspiciousDoorPada && (
-                            <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm" />
-                          )}
-
-                          {/* Placed Room Icon */}
-                          {placement ? (
-                            <div className="flex flex-col items-center justify-center animate-in zoom-in-75 duration-150">
-                              <span className="text-base sm:text-lg leading-none">{roomMeta?.icon || "🏠"}</span>
-                              <span className="text-[7.5px] sm:text-[8.5px] font-black text-amber-200 truncate max-w-[45px] leading-tight">
-                                {placement.customLabel}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+                  {ROOM_OPTIONS.map((ro) => {
+                    const isSelected = selectedRoomType === ro.type;
+                    return (
+                      <button
+                        key={ro.type}
+                        type="button"
+                        onClick={() => setSelectedRoomType(ro.type)}
+                        className={`p-2.5 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                          isSelected
+                            ? "bg-amber-500 text-slate-950 border-amber-300 shadow-md shadow-amber-500/30 ring-1 ring-amber-400"
+                            : "bg-slate-900/85 text-slate-200 border-slate-800 hover:border-amber-500/50 hover:bg-slate-850"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-base">{ro.icon}</span>
+                            <div>
+                              <span className={`text-xs font-bold leading-tight block ${isSelected ? "text-slate-950 font-black" : "text-slate-100"}`}>
+                                {ro.label}
+                              </span>
+                              <span className={`text-[9.5px] block ${isSelected ? "text-slate-900 font-semibold" : "text-amber-300/80"}`}>
+                                {ro.hindiLabel}
                               </span>
                             </div>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center opacity-80 group-hover:opacity-100">
-                              <span className={`text-[8px] sm:text-[9px] font-bold truncate max-w-[48px] ${isBrahma ? "text-amber-300 font-black" : "text-slate-300"}`}>
-                                {pada.deitySanskrit.split(" ")[0]}
-                              </span>
-                              <span className="text-[6.5px] sm:text-[7.5px] text-slate-500 truncate max-w-[45px]">
-                                {isOuter ? pada.id.split("_")[0] : ""}
-                              </span>
-                            </div>
+                          </div>
+                          {isSelected && (
+                            <span className="w-2 h-2 rounded-full bg-slate-950" />
                           )}
-                        </button>
-                      );
-                    })
+                        </div>
+                        <div className={`px-2 py-0.5 rounded-md text-[9.5px] font-mono font-bold flex items-center justify-between ${
+                          isSelected
+                            ? "bg-slate-950/90 text-amber-300 border border-slate-900"
+                            : "bg-emerald-950/60 text-emerald-300 border border-emerald-500/40"
+                        }`}>
+                          <span className="truncate">⭐ Best: {ro.bestDir}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. Active Selected Room Direction Guide */}
+              {selectedRoomMeta && (
+                <div className="glass-panel p-4 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-950/30 via-slate-900 to-slate-950 space-y-2.5 shadow-lg">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{selectedRoomMeta.icon}</span>
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-amber-400">Directional Guide</span>
+                        <h4 className="text-xs font-black text-slate-100">
+                          {selectedRoomMeta.label} ({selectedRoomMeta.hindiLabel})
+                        </h4>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                      ⭐ Ideal: {selectedRoomMeta.bestDir}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-[10px]">
+                    <div className="p-2 rounded-xl bg-emerald-950/40 border border-emerald-500/40">
+                      <span className="text-[9px] font-bold uppercase text-emerald-400 block">🟢 Best (सर्वोत्तम)</span>
+                      <span className="font-bold text-emerald-200 block">{selectedRoomMeta.bestDir}</span>
+                      <span className="text-[8.5px] text-emerald-300/70">{selectedRoomMeta.bestDirHindi}</span>
+                    </div>
+                    <div className="p-2 rounded-xl bg-amber-950/40 border border-amber-500/40">
+                      <span className="text-[9px] font-bold uppercase text-amber-400 block">🟡 Secondary (स्वीकार्य)</span>
+                      <span className="font-bold text-amber-200 block">{selectedRoomMeta.secondaryDir}</span>
+                    </div>
+                    <div className="p-2 rounded-xl bg-rose-950/40 border border-rose-500/40">
+                      <span className="text-[9px] font-bold uppercase text-rose-400 block">🔴 Forbidden (वर्जित)</span>
+                      <span className="font-bold text-rose-200 block">{selectedRoomMeta.prohibitedDir}</span>
+                    </div>
+                  </div>
+
+                  <p className="text-[10.5px] text-slate-300 leading-relaxed italic bg-slate-950/70 p-2 rounded-lg border border-slate-800/80">
+                    📜 <strong>Shastric Rule:</strong> {selectedRoomMeta.shastraReason}
+                  </p>
+                </div>
+              )}
+
+              {/* 3. Active Cell Pada Inspector */}
+              {activeCellPada && (
+                <div className="glass-panel p-4 rounded-2xl border border-amber-500/40 bg-slate-900/90 space-y-2.5 shadow-lg">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-amber-400">Selected Grid Pada</span>
+                      <h3 className="text-sm font-black text-slate-100">
+                        {activeCellPada.deitySanskrit} ({activeCellPada.deityEnglish})
+                      </h3>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-slate-950 text-slate-300 border border-slate-800 font-mono">
+                      Row {activeCellPada.row}, Col {activeCellPada.col}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2 rounded-xl bg-slate-950 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Direction:</span>
+                      <span className="font-bold text-amber-300">{activeCellPada.direction}</span>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-950 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Element (Tattva):</span>
+                      <span className="font-bold text-cyan-300">{activeCellPada.element}</span>
+                    </div>
+                  </div>
+
+                  {activeCellPlacement ? (
+                    <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs text-slate-200">
+                          {activeCellPlacement.customLabel}
+                        </span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          activeCellPlacement.grade.includes("Ideal")
+                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                            : activeCellPlacement.grade.includes("Acceptable")
+                            ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                            : "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                        }`}>
+                          {activeCellPlacement.grade} ({activeCellPlacement.complianceScore}%)
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-relaxed">
+                        {activeCellPlacement.feedback}
+                      </p>
+                      {activeCellPlacement.pariharaRemedy && (
+                        <div className="p-2 rounded-lg bg-amber-950/40 border border-amber-500/30 text-[10.5px] text-amber-200">
+                          <strong>🌿 Parihara:</strong> {activeCellPlacement.pariharaRemedy}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const idx = placements.findIndex((p) => p.row === activeCellPada.row && p.col === activeCellPada.col);
+                          if (idx !== -1) removePlacement(idx);
+                        }}
+                        className="w-full py-1 rounded-lg bg-rose-950/50 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 text-[10.5px] font-bold transition-all cursor-pointer"
+                      >
+                        🗑️ Remove Room from this Pada
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-center space-y-2">
+                      <p className="text-[11px] text-slate-400">
+                        Empty pada. Tap below to place the currently selected room here.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleCellClick(activeCellPada.row, activeCellPada.col)}
+                        className="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all cursor-pointer"
+                      >
+                        + Place {selectedRoomMeta.label}
+                      </button>
+                    </div>
                   )}
                 </div>
+              )}
 
-                {/* EAST SIDEBAR */}
-                <div className="flex items-center justify-center py-4 px-1.5 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-300 font-bold text-[9px] sm:text-xs [writing-mode:vertical-lr] select-none shadow-md flex-shrink-0">
-                  <span className="tracking-widest font-black uppercase flex items-center gap-1">
-                    <span>EAST (Purva / पूर्व) • Light 🔥</span>
-                    <span>►</span>
-                  </span>
-                </div>
-              </div>
-
-              {/* BOTTOM: SOUTH (DAKSHINA) & CORNER LABELS */}
-              <div className="w-full flex items-center justify-between px-1 text-[10px] sm:text-[11px] font-mono select-none">
-                <div className="flex items-center gap-1 text-slate-400 bg-slate-900/90 px-2 py-0.5 rounded-md border border-slate-800">
-                  <span className="text-slate-500 font-bold">SW</span>
-                  <span className="text-rose-300 font-bold hidden sm:inline">Nairṛtya (Earth)</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-rose-400 font-black bg-rose-950/60 px-3 py-1 rounded-lg border border-rose-500/50 shadow-sm text-xs sm:text-sm">
-                  <span>▼</span>
-                  <span>SOUTH (Dakshina / दक्षिण) • Earth ⛰️</span>
-                </div>
-                <div className="flex items-center gap-1 text-slate-400 bg-slate-900/90 px-2 py-0.5 rounded-md border border-slate-800">
-                  <span className="text-amber-300 font-bold hidden sm:inline">Āgneya (Fire)</span>
-                  <span className="text-slate-500 font-bold">SE</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Grid Footnote / Legend */}
-            <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-800/80">
-              <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded bg-amber-500/30 border border-amber-500/60" />
-                  <span>Brahmasthāna Core</span>
+              {/* 4. 5 Elemental Balance Gauges */}
+              <div className="glass-panel p-4 rounded-2xl border border-slate-800 bg-slate-950/90 space-y-2 shadow-lg">
+                <span className="text-xs font-black uppercase text-amber-400 block tracking-wide">
+                  2. Elemental Balance (पञ्चमहाभूत संतुलन):
                 </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded bg-emerald-950 border border-emerald-500/60" />
-                  <span>Auspicious Door Gate</span>
-                </span>
+                <div className="space-y-1.5 text-[11px]">
+                  {[
+                    { label: "💧 Water (Jala - NE / North)", score: vastuReport.elementalBalance.waterScore, color: "bg-cyan-500" },
+                    { label: "🔥 Fire (Agni - SE / East)", score: vastuReport.elementalBalance.fireScore, color: "bg-rose-500" },
+                    { label: "⛰️ Earth (Prithvi - SW / South)", score: vastuReport.elementalBalance.earthScore, color: "bg-amber-500" },
+                    { label: "💨 Air (Vayu - NW / West)", score: vastuReport.elementalBalance.airScore, color: "bg-indigo-500" },
+                    { label: "🌌 Space (Akasha - Center)", score: vastuReport.elementalBalance.spaceScore, color: "bg-purple-500" },
+                  ].map((elem) => (
+                    <div key={elem.label} className="space-y-0.5">
+                      <div className="flex justify-between text-slate-300">
+                        <span>{elem.label}</span>
+                        <span className="font-mono font-bold">{elem.score}%</span>
+                      </div>
+                      <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                        <div className={`h-full rounded-full ${elem.color}`} style={{ width: `${elem.score}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <span className="text-slate-500 italic">Tap any cell to place or inspect room</span>
             </div>
           </div>
 
-          {/* Right Column: Room Selector & Active Cell Inspector */}
-          <div className="lg:col-span-4 space-y-4">
-            {/* Active Cell Inspector */}
-            {activeCellPada && (
-              <div className="glass-panel p-4 rounded-2xl border border-amber-500/40 bg-slate-900/90 space-y-2.5 shadow-lg">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-amber-400">Selected Grid Pada</span>
-                    <h3 className="text-sm font-black text-slate-100">
-                      {activeCellPada.deitySanskrit} ({activeCellPada.deityEnglish})
-                    </h3>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-slate-950 text-slate-300 border border-slate-800 font-mono">
-                    Row {activeCellPada.row}, Col {activeCellPada.col}
-                  </span>
+          {/* Master 15 Rooms Direction Reference Table */}
+          <div className="glass-panel p-5 rounded-3xl border border-slate-800 bg-slate-950/90 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3 cursor-pointer" onClick={() => setShowAllRoomsTable(!showAllRoomsTable)}>
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">📋</span>
+                <div>
+                  <h3 className="text-sm font-black text-slate-100 flex items-center gap-2">
+                    <span>All 15 Rooms Best Direction Master Reference Table</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      King Bhoja Standard
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Comprehensive Shastric matrix detailing ideal (सर्वोत्तम), allowed secondary (स्वीकार्य), and strictly prohibited (वर्जित) directional portals.
+                  </p>
                 </div>
+              </div>
+              <button
+                type="button"
+                className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-amber-300 hover:bg-slate-850 hover:border-amber-500/50 transition-all cursor-pointer"
+              >
+                {showAllRoomsTable ? "Hide Master Table ▲" : "Expand All 15 Rooms Table ▼"}
+              </button>
+            </div>
 
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2 rounded-xl bg-slate-950 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block">Direction:</span>
-                    <span className="font-bold text-amber-300">{activeCellPada.direction}</span>
-                  </div>
-                  <div className="p-2 rounded-xl bg-slate-950 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block">Element (Tattva):</span>
-                    <span className="font-bold text-cyan-300">{activeCellPada.element}</span>
-                  </div>
-                </div>
-
-                {activeCellPlacement ? (
-                  <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-slate-200">
-                        {activeCellPlacement.customLabel}
-                      </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                        activeCellPlacement.grade.includes("Ideal")
-                          ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-                          : activeCellPlacement.grade.includes("Acceptable")
-                          ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                          : "bg-rose-500/20 text-rose-300 border-rose-500/40"
-                      }`}>
-                        {activeCellPlacement.grade} ({activeCellPlacement.complianceScore}%)
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-300 leading-relaxed">
-                      {activeCellPlacement.feedback}
-                    </p>
-                    {activeCellPlacement.pariharaRemedy && (
-                      <div className="p-2 rounded-lg bg-amber-950/40 border border-amber-500/30 text-[10.5px] text-amber-200">
-                        <strong>🌿 Parihara:</strong> {activeCellPlacement.pariharaRemedy}
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const idx = placements.findIndex((p) => p.row === activeCellPada.row && p.col === activeCellPada.col);
-                        if (idx !== -1) removePlacement(idx);
-                      }}
-                      className="w-full py-1 rounded-lg bg-rose-950/50 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 text-[10.5px] font-bold transition-all cursor-pointer"
-                    >
-                      🗑️ Remove Room from this Pada
-                    </button>
-                  </div>
-                ) : (
-                  <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-center space-y-2">
-                    <p className="text-[11px] text-slate-400">
-                      Empty pada. Select a room below and tap here to assign it.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => handleCellClick(activeCellPada.row, activeCellPada.col)}
-                      className="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all cursor-pointer"
-                    >
-                      + Place {ROOM_OPTIONS.find((r) => r.type === selectedRoomType)?.label.split(" (")[0]}
-                    </button>
-                  </div>
-                )}
+            {showAllRoomsTable && (
+              <div className="overflow-x-auto custom-scrollbar pt-1">
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-400 text-[10.5px] uppercase font-mono bg-slate-900/60">
+                      <th className="py-2.5 px-3 rounded-l-xl">Room / Utility</th>
+                      <th className="py-2.5 px-3 text-emerald-400">🟢 Best Direction (सर्वोत्तम)</th>
+                      <th className="py-2.5 px-3 text-amber-300">🟡 Secondary (स्वीकार्य)</th>
+                      <th className="py-2.5 px-3 text-rose-400">🔴 Strictly Prohibited (वर्जित)</th>
+                      <th className="py-2.5 px-3 rounded-r-xl">📜 Shastric Rationale</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-850">
+                    {ROOM_OPTIONS.map((ro) => {
+                      const isSelected = selectedRoomType === ro.type;
+                      return (
+                        <tr
+                          key={ro.type}
+                          onClick={() => setSelectedRoomType(ro.type)}
+                          className={`hover:bg-slate-900/80 cursor-pointer transition-colors ${
+                            isSelected ? "bg-amber-500/10 font-bold" : ""
+                          }`}
+                        >
+                          <td className="py-3 px-3 flex items-center gap-2 whitespace-nowrap">
+                            <span className="text-base">{ro.icon}</span>
+                            <div>
+                              <span className="text-slate-100 font-bold block">{ro.label}</span>
+                              <span className="text-[10px] text-amber-300/80 block">{ro.hindiLabel}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-950/80 text-emerald-300 font-bold border border-emerald-500/40 inline-block">
+                              {ro.bestDir}
+                            </span>
+                            <span className="block text-[10px] text-emerald-400/80 mt-0.5">{ro.bestDirHindi}</span>
+                          </td>
+                          <td className="py-3 px-3 text-slate-300 whitespace-nowrap">{ro.secondaryDir}</td>
+                          <td className="py-3 px-3 text-rose-300/90 whitespace-nowrap">{ro.prohibitedDir}</td>
+                          <td className="py-3 px-3 text-slate-400 text-[11px] leading-relaxed max-w-xs">{ro.shastraReason}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
-
-            {/* Room Palette Selector */}
-            <div className="glass-panel p-4 rounded-2xl border border-slate-800 bg-slate-950/90 space-y-2.5">
-              <span className="text-xs font-black uppercase text-amber-400 block tracking-wide">
-                1. Select Room Type to Place:
-              </span>
-              <div className="grid grid-cols-2 gap-1.5 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
-                {ROOM_OPTIONS.map((ro) => (
-                  <button
-                    key={ro.type}
-                    type="button"
-                    onClick={() => setSelectedRoomType(ro.type)}
-                    className={`p-2 text-left rounded-xl border text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                      selectedRoomType === ro.type
-                        ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
-                        : "bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700"
-                    }`}
-                  >
-                    <span>{ro.icon}</span>
-                    <span className="truncate">{ro.label.split(" (")[0]}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 5 Elemental Balance Gauges */}
-            <div className="glass-panel p-4 rounded-2xl border border-slate-800 bg-slate-950/90 space-y-2">
-              <span className="text-xs font-black uppercase text-amber-400 block tracking-wide">
-                2. Elemental Balance (पञ्चमहाभूत संतुलन):
-              </span>
-              <div className="space-y-1.5 text-[11px]">
-                {[
-                  { label: "💧 Water (Jala - NE / North)", score: vastuReport.elementalBalance.waterScore, color: "bg-cyan-500" },
-                  { label: "🔥 Fire (Agni - SE / East)", score: vastuReport.elementalBalance.fireScore, color: "bg-rose-500" },
-                  { label: "⛰️ Earth (Prithvi - SW / South)", score: vastuReport.elementalBalance.earthScore, color: "bg-amber-500" },
-                  { label: "💨 Air (Vayu - NW / West)", score: vastuReport.elementalBalance.airScore, color: "bg-indigo-500" },
-                  { label: "🌌 Space (Akasha - Center)", score: vastuReport.elementalBalance.spaceScore, color: "bg-purple-500" },
-                ].map((elem) => (
-                  <div key={elem.label} className="space-y-0.5">
-                    <div className="flex justify-between text-slate-300">
-                      <span>{elem.label}</span>
-                      <span className="font-mono font-bold">{elem.score}%</span>
-                    </div>
-                    <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                      <div className={`h-full rounded-full ${elem.color}`} style={{ width: `${elem.score}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       )}

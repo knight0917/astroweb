@@ -4246,6 +4246,78 @@ test("Janma Panchanga (Birth Panchang 5 Limbs) & Disambiguation Verification", a
   assert.ok(dossier.includes(natalEphem.panchanga.karana.name), "Birth Karana name missing");
 });
 
+test("Vāstu Studio All 15 Rooms Best Direction & Shastric Matrix Verification", async () => {
+  const {
+    ROOM_OPTIONS,
+    ROOM_COMPATIBILITY_RULES,
+    evaluateRoomPlacement,
+    getVastuPada,
+  } = await import("../src/engine/vastuEngine.ts");
+
+  // 1. Verify All 15 Room Types Exist
+  assert.strictEqual(ROOM_OPTIONS.length, 15, "ROOM_OPTIONS must have exactly 15 room types");
+
+  const expectedTypes = [
+    "pooja_room",
+    "kitchen",
+    "master_bedroom",
+    "living_room",
+    "dining_room",
+    "study_room",
+    "kids_bedroom",
+    "guest_room",
+    "main_door",
+    "toilet",
+    "water_tank_underground",
+    "water_tank_overhead",
+    "septic_tank",
+    "staircase",
+    "open_balcony",
+  ];
+
+  for (const expectedType of expectedTypes) {
+    const option = ROOM_OPTIONS.find((ro) => ro.type === expectedType);
+    assert.ok(option, `Room option for ${expectedType} must exist`);
+    assert.ok(option.label && option.label.length > 2, `${expectedType} must have label`);
+    assert.ok(option.hindiLabel && option.hindiLabel.length > 2, `${expectedType} must have hindiLabel`);
+    assert.ok(option.icon && option.icon.length > 0, `${expectedType} must have icon`);
+    assert.ok(option.bestDir && option.bestDir.length > 2, `${expectedType} must have bestDir`);
+    assert.ok(option.bestDirHindi && option.bestDirHindi.length > 2, `${expectedType} must have bestDirHindi`);
+    assert.ok(option.secondaryDir && option.secondaryDir.length > 2, `${expectedType} must have secondaryDir`);
+    assert.ok(option.prohibitedDir && option.prohibitedDir.length > 2, `${expectedType} must have prohibitedDir`);
+    assert.ok(option.shastraReason && option.shastraReason.length > 10, `${expectedType} must have shastraReason`);
+
+    // Verify compatibility rule exists
+    const rule = ROOM_COMPATIBILITY_RULES[expectedType];
+    assert.ok(rule, `Compatibility rule for ${expectedType} must exist`);
+    assert.ok(rule.idealDirections.length > 0, `Ideal directions for ${expectedType} must not be empty`);
+    assert.ok(rule.defectiveDirections.length > 0, `Defective directions for ${expectedType} must not be empty`);
+  }
+
+  // 2. Specific Classical Placements
+  // Pooja Mandir in NE (0,8) -> Ideal
+  const poojaPlacement = evaluateRoomPlacement("pooja_room", 0, 8);
+  assert.strictEqual(poojaPlacement.complianceScore, 100);
+  assert.strictEqual(poojaPlacement.grade, "Ideal (सर्वोत्तम)");
+
+  // Kitchen in SE (8,8) -> Ideal
+  const kitchenPlacement = evaluateRoomPlacement("kitchen", 8, 8);
+  assert.strictEqual(kitchenPlacement.complianceScore, 100);
+  assert.strictEqual(kitchenPlacement.grade, "Ideal (सर्वोत्तम)");
+
+  // Master Bedroom in SW (8,0) -> Ideal
+  const masterBedPlacement = evaluateRoomPlacement("master_bedroom", 8, 0);
+  assert.strictEqual(masterBedPlacement.complianceScore, 100);
+  assert.strictEqual(masterBedPlacement.grade, "Ideal (सर्वोत्तम)");
+
+  // Toilet in NE (0,8) -> Defective (Mahadosha)
+  const toiletInNE = evaluateRoomPlacement("toilet", 0, 8);
+  assert.strictEqual(toiletInNE.complianceScore, 15);
+  assert.strictEqual(toiletInNE.grade, "Defective (दोष)");
+  assert.ok(toiletInNE.pariharaRemedy, "Defective toilet must have a parihara remedy");
+});
+
+
 
 
 
