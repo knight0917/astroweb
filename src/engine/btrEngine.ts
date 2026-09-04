@@ -483,9 +483,26 @@ export function generateBtrMasterSummary(
     )
     .join("\n");
 
+  const now = new Date();
+  const nativeAgeYears = Math.max(0, (now.getTime() - birthDate.getTime()) / (365.25 * 24 * 3600 * 1000));
+  let lifeStageTitle = "Adult (Praudha Jataka - प्रौढ़ जातक)";
+  let lifeStageGuidance = "Standard adult life event cross-examination applies (higher learning, career shifts, marriage, progeny).";
+  if (nativeAgeYears < 3) {
+    lifeStageTitle = `Newborn / Infant (Bala Jataka - बाल जातक, Age: ${nativeAgeYears < 1 ? "< 1 year" : `${Math.floor(nativeAgeYears)} yr(s)`})`;
+    lifeStageGuidance = "CRITICAL: Native is an infant/newborn! DO NOT probe or ask about adult life milestones like college graduation, career, or marriage. Birth time is rectified strictly via Parashari mathematical Shodhanas (Kunda, Pranapada, Tattva), delivery circumstances (normal vs surgical/induced), and parental indicators (D-12).";
+  } else if (nativeAgeYears < 18) {
+    lifeStageTitle = `Child / Minor (Kishora Jataka - किशोर जातक, Age: ${Math.floor(nativeAgeYears)} yrs)`;
+    lifeStageGuidance = "Native is a child/minor. Only early childhood milestones (speech, sibling arrival, early schooling aptitude D-24) apply. DO NOT ask about marriage or adult career.";
+  } else if (nativeAgeYears < 25) {
+    lifeStageTitle = `Young Adult (Yuva Jataka - युवा जातक, Age: ${Math.floor(nativeAgeYears)} yrs)`;
+    lifeStageGuidance = "Native is a young adult. Focus on 10th/12th board exams, college qualification, and first career foundation.";
+  }
+
   return `
 #### ⏱️ 73. CLASSICAL BIRTH TIME RECTIFICATION (BTR), PRANAPADA, KUNDA, TATTVA & FULL EVENT DASHA TIMELINE:
 - 📍 **Recorded Birth Moment:** **${dateFormatted} at ${hh}:${mm}** in **${location?.cityName || "Patna"}, ${location?.country || "India"}**
+- 👶 **Native Life Stage & Age:** **${lifeStageTitle}** (Running Age: ~${(Math.round(nativeAgeYears * 10) / 10).toFixed(1)} yrs)
+  * *Guidance:* ${lifeStageGuidance}
 - 📐 **Kunda Shodhana (कुण्ड शोधन - BPHS):**
   * Kunda Point: **${kunda.kundaRashi} (${kunda.kundaDegrees.toFixed(2)}°)** in Nakshatra **${kunda.kundaNakshatra}**
   * Harmony with Moon (${kunda.janmaNakshatraName}) & Lagna (${kunda.lagnaNakshatraName}): **${kunda.harmonyScorePercent}% Match** (${kunda.classicalVerdict})

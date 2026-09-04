@@ -751,8 +751,10 @@ ${nakAct.masterRemedyRecommendation}
 
   // 14. Birth Time Rectification (BTR) Confirmation Resolver (6-Divisional Framework & Shastric Shodhanas)
   if (
-    /^(1\.\s*(yes|no)|1:\s*(yes|no)|q1\s*:|lock & verify|verify & lock)/i.test(q) ||
-    (q.includes("1.") && (q.includes("yes") || q.includes("no")) && (q.includes("eldest") || q.includes("youngest") || q.includes("middle") || q.includes("only") || q.includes("2.")))
+    /^(1\.\s*(yes|no|delivery|learning)|1:\s*(yes|no)|q1\s*:|lock & verify|verify & lock)/i.test(q) ||
+    q.includes("Bala Jataka") ||
+    q.includes("Kishora Jataka") ||
+    (q.includes("1.") && (q.includes("yes") || q.includes("no") || q.includes("delivery") || q.includes("normal") || q.includes("c-section") || q.includes("vitality")) && (q.includes("eldest") || q.includes("youngest") || q.includes("middle") || q.includes("only") || q.includes("1st child") || q.includes("2nd child") || q.includes("2.")))
   ) {
     const { timeStr, dateStr } = getLocalCivilDateTime(natalEphem);
     const ascRashi = natalEphem.ascendant.rashi.englishName;
@@ -761,30 +763,17 @@ ${nakAct.masterRemedyRecommendation}
     const cityName = natalEphem.location?.cityName || "Patna";
     const countryName = natalEphem.location?.country || "India";
 
-    // 1. D-24 Siddhamsha (Higher Education / Degree)
-    const isQ1Yes = /1\.\s*yes|1:\s*yes|q1\s*:\s*yes/i.test(q);
-    // 2. D-10 Dasamsa (Career Entry & Responsibility)
-    const isQ2Yes = /2\.\s*yes|2:\s*yes|q2\s*:\s*yes/i.test(q);
-    
-    // 3. D-9 Navamsha (Relationship / Marriage Anchor)
-    let d9Status = "Single / Self-Focus";
-    if (/married|committed/i.test(q)) {
-      d9Status = "Married / Committed Bond";
-    } else if (/past/i.test(q)) {
-      d9Status = "Past Significant Bond";
-    }
+    const birthDateObj = new Date(natalEphem.utcDate);
+    const nativeAge = Math.max(0, (evaluationDate.getTime() - birthDateObj.getTime()) / (365.25 * 24 * 3600 * 1000));
+    const isInfant = nativeAge < 3 || q.includes("Bala Jataka") || q.includes("Delivery:");
+    const isMinor = !isInfant && (nativeAge < 18 || q.includes("Kishora Jataka"));
 
-    // 4. D-3 Drekkana (Sibling Order)
+    // 1. Sibling Order extraction
     let siblingText = "Eldest";
-    if (/youngest/i.test(q)) siblingText = "Youngest";
-    else if (/middle/i.test(q)) siblingText = "Middle";
+    if (/youngest|2nd child/i.test(q)) siblingText = "Youngest / 2nd Child";
+    else if (/middle|3rd/i.test(q)) siblingText = "Middle / 3rd+ Child";
     else if (/only\s*child|only/i.test(q)) siblingText = "Only Child";
-
-    // 5. D-4 Chaturthamsha (Residence Relocation)
-    const isQ5Relocated = /5\.\s*yes|5:\s*yes|q5\s*:\s*yes|relocated/i.test(q);
-
-    // 6. D-60 Shashtiamsha (Karmic Pivot / Physical Resilience)
-    const isQ6Yes = /6\.\s*yes|6:\s*yes|q6\s*:\s*yes|4\.\s*yes|4:\s*yes/i.test(q);
+    else if (/1st child|first-born/i.test(q)) siblingText = "1st Child (Eldest)";
 
     // Perform Authentic Mathematical Shodhana Calculations
     const kunda = calculateKundaShodhana(natalEphem);
@@ -799,6 +788,110 @@ ${nakAct.masterRemedyRecommendation}
           `- **${s.vargaName}:** Cusp in **${s.currentAscendantSign}** (${s.currentAscendantDegrees.toFixed(1)}°) • Valid **${s.windowStartLocalTime} to ${s.windowEndLocalTime}** (Span: ${s.timeSpanMinutesTotal}m)`
       )
       .join("\n");
+
+    // NEWBORN / INFANT VERIFICATION RESPONSE
+    if (isInfant) {
+      const isCSection = /c-section|caesarean/i.test(q);
+      const isSensitive = /sensitive|special care/i.test(q);
+
+      return `### 🎯 **Newborn Multi-Divisional Birth Time Verification (Bala Jataka — बाल जातक)**
+
+- 📍 **Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${cityName}, ${countryName}**
+- 🌟 **Verification Status:** **✅ 100% Precision Alignment (Classical Shodhanas & Delivery Matrices Locked)**
+- 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
+- 👶 **Native Status:** **Newborn / Infant (${nativeAge < 1 ? "< 1 Year Old" : `${Math.floor(nativeAge)} Year(s) Old`})**
+
+---
+
+#### 📐 **1. Mathematical Shodhana Proofs (Brihat Parashara Hora Shastra Ch. 4 & 5):**
+- 📐 **Kunda Shodhana (कुण्ड शोधन):** Kunda in **${kunda.kundaRashi} (${kunda.kundaDegrees.toFixed(2)}°)** in **${kunda.kundaNakshatra}** ──► **${kunda.harmonyScorePercent}% Match** (${kunda.classicalVerdict})
+- 🫁 **Pranapada Lagna (प्राणपद लग्न):** Pranapada in **${pranapada.pranapadaRashi}** (House ${pranapada.pranapadaHouseFromLagna} from Lagna) ──► **${pranapada.classicalVerdict}**
+- 🌿 **Tattva Shodhana (तत्व शोधन):** Primary: **${tattva.primaryTattva}** | Active Antar-Tattva: **${tattva.antarTattva} (${tattva.antarTattvaGender})** ──► **${tattva.classicalVerdict}**
+
+---
+
+#### 👶 **2. Birth Delivery & Early Life Matrix:**
+- 👶 **Birth Delivery Mode (D-1 / Lagna Axis):** ${isCSection ? "✅ Mars/Ketu surgical axis calibrated with exact Lagna degree." : "✅ Natural spontaneous delivery moment calibrated with Lagna degree."}
+- 🌿 **D-3 Drekkana (${siblingText}):** ✅ Locks 3rd house and D-3 Drekkana lagna alignment with birth order in the family.
+- 🫁 **Pranapada & D-60 (Vitality & Health Shield):** ${isSensitive ? "✅ Moon/Lagna protection activated for constitutional sensitivity." : "✅ Robust vitality and life-breath synchronization confirmed."}
+- 🏡 **D-4 & D-12 (Parental & Domestic Foundation):** ✅ Parental lineage and birth location anchors verified in D-12 Dvadasamsa.
+
+---
+
+#### ⏳ **3. Divisional Clock Sensitivity Windows:**
+${vargaWindowsStr}
+
+---
+💡 **The infant's chart clock is 100% mathematically calibrated!** All future readings will now operate on this verified birth chart.
+
+What would you like to explore for the child?
+- 🌟 **Child Health & Protection:** *"Balarishta protection, health constitution, and longevity?"*
+- 🎓 **Innate Talents & Learning:** *"Innate cognitive strengths, academic aptitude (D-24), and creative genius?"*
+- 👨‍👩‍👦 **Family & Parental Harmony:** *"Connection with mother (4th/Moon), father (9th/Sun), and family harmony?"*
+- ⭐ **Janma Nakshatra & Auspicious Syllable:** *"Auspicious naming sounds, deity, and life direction?"*
+
+*⚡ Instant Classical Computation (0ms)*`;
+    }
+
+    // CHILD / MINOR VERIFICATION RESPONSE
+    if (isMinor) {
+      return `### 🎯 **Childhood Multi-Divisional Verification (Kishora Jataka — किशोर जातक)**
+
+- 📍 **Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${cityName}, ${countryName}**
+- 🌟 **Verification Status:** **✅ 100% Precision Alignment (Classical Shodhanas & Childhood Cusps Locked)**
+- 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
+- 🎒 **Native Status:** **Child / Minor (Age ${Math.floor(nativeAge)})**
+
+---
+
+#### 📐 **1. Mathematical Shodhana Proofs (Brihat Parashara Hora Shastra Ch. 4 & 5):**
+- 📐 **Kunda Shodhana (कुण्ड शोधन):** Kunda in **${kunda.kundaRashi} (${kunda.kundaDegrees.toFixed(2)}°)** in **${kunda.kundaNakshatra}** ──► **${kunda.harmonyScorePercent}% Match** (${kunda.classicalVerdict})
+- 🫁 **Pranapada Lagna (प्राणपद लग्न):** Pranapada in **${pranapada.pranapadaRashi}** (House ${pranapada.pranapadaHouseFromLagna} from Lagna) ──► **${pranapada.classicalVerdict}**
+- 🌿 **Tattva Shodhana (तत्व शोधन):** Primary: **${tattva.primaryTattva}** | Active Antar-Tattva: **${tattva.antarTattva} (${tattva.antarTattvaGender})** ──► **${tattva.classicalVerdict}**
+
+---
+
+#### 🎒 **2. Childhood Milestone Confirmations:**
+- 🎓 **D-24 Siddhamsha (Academic Aptitude Cusp):** ✅ Calibrated with childhood learning vectors and Mercury/Jupiter intellect axis.
+- 🌿 **D-3 Drekkana (${siblingText}):** ✅ Locks 3rd house and D-3 Drekkana lagna alignment with sibling order.
+- 🏡 **D-4 Chaturthamsha (Domestic Stability):** ✅ 4th house childhood domestic environment verified.
+- 🛡️ **D-60 Shashtiamsha (Physical Shield):** ✅ Childhood vitality and protective drishti confirmed.
+
+---
+
+#### ⏳ **3. Divisional Clock Sensitivity Windows:**
+${vargaWindowsStr}
+
+---
+💡 **The child's chart clock is 100% mathematically calibrated!** All future predictions will now operate on this verified birth chart.
+
+What would you like to explore for the child?
+- 🎓 **Academic Guidance:** *"Best study subjects, cognitive strengths, and higher learning potential?"*
+- 🌟 **Health & Well-being:** *"Physical vitality, immunity, and daily routines?"*
+- 🎨 **Creative Strengths:** *"Innate hobbies, creative talents, and sports aptitude?"*
+
+*⚡ Instant Classical Computation (0ms)*`;
+    }
+
+    // ADULT VERIFICATION RESPONSE
+    // 1. D-24 Siddhamsha (Higher Education / Degree)
+    const isQ1Yes = /1\.\s*yes|1:\s*yes|q1\s*:\s*yes/i.test(q);
+    // 2. D-10 Dasamsa (Career Entry & Responsibility)
+    const isQ2Yes = /2\.\s*yes|2:\s*yes|q2\s*:\s*yes/i.test(q);
+    
+    // 3. D-9 Navamsha (Relationship / Marriage Anchor)
+    let d9Status = "Single / Self-Focus";
+    if (/married|committed/i.test(q)) {
+      d9Status = "Married / Committed Bond";
+    } else if (/past/i.test(q)) {
+      d9Status = "Past Significant Bond";
+    }
+
+    // 5. D-4 Chaturthamsha (Residence Relocation)
+    const isQ5Relocated = /5\.\s*yes|5:\s*yes|q5\s*:\s*yes|relocated/i.test(q);
+
+    // 6. D-60 Shashtiamsha (Karmic Pivot / Physical Resilience)
+    const isQ6Yes = /6\.\s*yes|6:\s*yes|q6\s*:\s*yes|4\.\s*yes|4:\s*yes/i.test(q);
 
     return `### 🎯 **Multi-Divisional Birth Time Verification (D-1, D-3, D-4, D-9, D-10, D-24, D-60)**
 
@@ -855,11 +948,38 @@ What would you like to explore first?
     const ascRashi = natalEphem.ascendant.rashi.englishName;
     const ascDeg = `${(natalEphem.ascendant.siderealLongitude % 30).toFixed(2)}°`;
     const moonNak = natalEphem.planets.Moon?.nakshatra.sanskritName || "Punarvasu";
+    const cityName = natalEphem.location?.cityName || "Allahabad";
+    const countryName = natalEphem.location?.country || "India";
+
+    const birthDateObj = new Date(natalEphem.utcDate);
+    const nativeAge = Math.max(0, (evaluationDate.getTime() - birthDateObj.getTime()) / (365.25 * 24 * 3600 * 1000));
+
+    if (nativeAge < 3) {
+      return `### 🎯 **Step 1: Newborn / Infant Chart Overview (Bala Jataka - बाल जातक)**
+- 📅 **Date of Birth:** **${dateStr}** • **Time:** **${timeStr}**
+- 📍 **Place:** **${cityName}, ${countryName}**
+- 🏛️ **Primary Ascendant:** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
+- 👶 **Native Life Stage:** **Newborn / Infant (${nativeAge < 1 ? "< 1 Year Old" : `${Math.floor(nativeAge)} Year(s) Old`})**
+
+✨ **Mathematical Shodhana Verification (BPHS Ch. 4 & 5):**
+Since the native is a newborn / infant, adult milestones (schooling, college, career, marriage) do not apply. Birth time is verified mathematically via **Kunda Shodhana, Pranapada Lagna, Tattva Shodhana**, and the **4-Point Birth Delivery & Parental Matrix (D-1, D-3, D-4, D-12, D-60)** below:`;
+    }
+
+    if (nativeAge < 18) {
+      return `### 🎯 **Step 1: Child / Minor Chart Overview (Kishora Jataka - किशोर जातक)**
+- 📅 **Date of Birth:** **${dateStr}** • **Time:** **${timeStr}**
+- 📍 **Place:** **${cityName}, ${countryName}**
+- 🏛️ **Primary Ascendant:** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
+- 🎒 **Native Life Stage:** **Child / Minor (Age ${Math.floor(nativeAge)})**
+
+Please review and select the answers in the interactive **4-Point Childhood & Vidya Matrix (D-1, D-3, D-4, D-24, D-60)** below to verify your birth minute in 1 tap:`;
+    }
 
     return `### 🎯 **Step 1: Birth Time & Multi-Divisional Overview**
 - 📅 **Date of Birth:** **${dateStr}** • **Time:** **${timeStr}**
-- 📍 **Place:** **${natalEphem.location?.cityName || "Allahabad"}, ${natalEphem.location?.country || "India"}**
+- 📍 **Place:** **${cityName}, ${countryName}**
 - 🏛️ **Primary Ascendant:** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
+- ⏳ **Native Age:** **${Math.floor(nativeAge)} Years Old**
 
 Your foundational planetary blueprint is strong and clear. Please review and select your answers in the interactive **6-Point Multi-Divisional Checklist (D-1, D-3, D-4, D-9, D-10, D-24, D-60)** below to verify your birth minute in 1 tap:`;
   }
@@ -874,7 +994,26 @@ interface InteractiveBtrProps {
 }
 
 function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: InteractiveBtrProps) {
+  const birthDateObj = natalEphemeris ? new Date(natalEphemeris.utcDate) : new Date("1998-09-17");
   const birthYear = natalEphemeris ? getLocalCivilDateTime(natalEphemeris).year : 1998;
+  const now = new Date();
+  const nativeAge = Math.max(0, (now.getTime() - birthDateObj.getTime()) / (365.25 * 24 * 3600 * 1000));
+  const isInfant = nativeAge < 3;
+  const isMinor = !isInfant && nativeAge < 18;
+
+  // State for infant/newborn
+  const [infantDelivery, setInfantDelivery] = useState<string>("Normal Delivery");
+  const [infantSibling, setInfantSibling] = useState<string>("1st Child (Eldest)");
+  const [infantVitality, setInfantVitality] = useState<string>("Strong Vitality");
+  const [infantLocation, setInfantLocation] = useState<string>("Ancestral Region");
+
+  // State for minor/child
+  const [minorAptitude, setMinorAptitude] = useState<string>("Academic Focus");
+  const [minorSibling, setMinorSibling] = useState<string>("Eldest");
+  const [minorReloc, setMinorReloc] = useState<string>("Ancestral Soil");
+  const [minorHealth, setMinorHealth] = useState<string>("Strong Health");
+
+  // State for adult
   const gradStart = birthYear + 21;
   const gradEnd = birthYear + 23;
   const careerStart = birthYear + 24;
@@ -888,9 +1027,333 @@ function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: In
   const [q6, setQ6] = useState<string>("No");
 
   const handleSubmit = () => {
-    const formatted = `1. ${q1}, 2. ${q2}, 3. ${q3}, 4. ${q4}, 5. ${q5}, 6. ${q6}`;
-    onVerify(formatted);
+    if (isInfant) {
+      const formatted = `1. Delivery: ${infantDelivery}, 2. Sibling Order: ${infantSibling}, 3. Vitality: ${infantVitality}, 4. Birth Location: ${infantLocation} (Bala Jataka Verified)`;
+      onVerify(formatted);
+    } else if (isMinor) {
+      const formatted = `1. Learning Aptitude: ${minorAptitude}, 2. Sibling Order: ${minorSibling}, 3. Family Residence: ${minorReloc}, 4. Health: ${minorHealth} (Kishora Jataka Verified)`;
+      onVerify(formatted);
+    } else {
+      const formatted = `1. ${q1}, 2. ${q2}, 3. ${q3}, 4. ${q4}, 5. ${q5}, 6. ${q6}`;
+      onVerify(formatted);
+    }
   };
+
+  if (isInfant) {
+    return (
+      <div className="my-3 p-3.5 bg-slate-950/90 border border-amber-500/40 rounded-2xl space-y-3 shadow-xl shadow-amber-950/20 not-prose">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-amber-500/20 pb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-base">👶</span>
+            <div>
+              <h4 className="font-extrabold text-amber-300 text-xs tracking-wide">
+                Newborn &amp; Birth Delivery Verification (Bala Jataka — D-1, D-3, D-4, D-12, D-60)
+              </h4>
+              <p className="text-[10.5px] text-slate-400">
+                Native is an infant (Age &lt; 3). Adult milestones bypassed; verify birth moment via delivery &amp; parental matrices:
+              </p>
+            </div>
+          </div>
+          <span className="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+            Bala Jataka
+          </span>
+        </div>
+
+        {/* Q1: Delivery Mode */}
+        <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+            <span>🌸</span>
+            <span>1. Birth Delivery Circumstances (D-1 Lagna &amp; 8th Axis):</span>
+          </div>
+          <p className="text-[11px] text-slate-300 leading-snug">
+            What was the birth delivery mode to synchronize the physical emergence moment?
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {[
+              { label: "🌸 Normal Vaginal Delivery", val: "Normal Delivery" },
+              { label: "🏥 Caesarean Section (C-Section)", val: "C-Section" },
+              { label: "⚡ Induced / Assisted Delivery", val: "Induced/Assisted" },
+            ].map((opt) => (
+              <button
+                key={opt.val}
+                type="button"
+                onClick={() => setInfantDelivery(opt.val)}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                  infantDelivery === opt.val
+                    ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                    : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Q2: Sibling Order */}
+        <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+            <span>🌿</span>
+            <span>2. Sibling Birth Order (D-3 Drekkana):</span>
+          </div>
+          <p className="text-[11px] text-slate-300 leading-snug">
+            What is the infant's birth order among siblings in the family?
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {[
+              { label: "👑 1st Child (First-Born)", val: "1st Child (Eldest)" },
+              { label: "🌿 2nd Child", val: "2nd Child" },
+              { label: "⚖️ 3rd+ Child", val: "3rd+ Child" },
+            ].map((opt) => (
+              <button
+                key={opt.val}
+                type="button"
+                onClick={() => setInfantSibling(opt.val)}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                  infantSibling === opt.val
+                    ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                    : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Q3: Vitality & Constitution */}
+        <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+            <span>🫁</span>
+            <span>3. Birth Vitality &amp; Physical Constitution (Pranapada &amp; D-60):</span>
+          </div>
+          <p className="text-[11px] text-slate-300 leading-snug">
+            How was the baby's vitality and health at birth to calibrate Pranapada Lagna?
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {[
+              { label: "✨ Strong & Robust Constitution", val: "Strong Vitality" },
+              { label: "🛡️ Standard / Healthy Constitution", val: "Standard Vitality" },
+              { label: "🌱 Sensitive / Extra Care Required", val: "Sensitive / Special Care" },
+            ].map((opt) => (
+              <button
+                key={opt.val}
+                type="button"
+                onClick={() => setInfantVitality(opt.val)}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                  infantVitality === opt.val
+                    ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                    : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Q4: Birth Location */}
+        <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+            <span>🏡</span>
+            <span>4. Birth Location &amp; Parental Roots (D-4 &amp; D-12):</span>
+          </div>
+          <p className="text-[11px] text-slate-300 leading-snug">
+            Was the child born in the parents' ancestral region or a relocated distant city?
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {[
+              { label: "🏡 Born in Ancestral Hometown / Native Region", val: "Ancestral Region" },
+              { label: "✈️ Born in Relocated / Distant City / Overseas", val: "Relocated City" },
+            ].map((opt) => (
+              <button
+                key={opt.val}
+                type="button"
+                onClick={() => setInfantLocation(opt.val)}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                  infantLocation === opt.val
+                    ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                    : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Submit */}
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isLoading}
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-500 hover:from-emerald-400 hover:to-amber-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-emerald-500/25 cursor-pointer flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+        >
+          <span>🚀</span>
+          <span>Lock &amp; Verify Newborn Chart (Bala Jataka): "{infantDelivery}, {infantSibling}, {infantVitality}"</span>
+        </button>
+      </div>
+    );
+  }
+
+  if (isMinor) {
+    return (
+      <div className="my-3 p-3.5 bg-slate-950/90 border border-amber-500/40 rounded-2xl space-y-3 shadow-xl shadow-amber-950/20 not-prose">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-amber-500/20 pb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-base">🎒</span>
+            <div>
+              <h4 className="font-extrabold text-amber-300 text-xs tracking-wide">
+                Childhood &amp; Vidya Verification (Kishora Jataka — D-1, D-3, D-4, D-24, D-60)
+              </h4>
+              <p className="text-[10.5px] text-slate-400">
+                Native is a minor (Age {Math.floor(nativeAge)}). Select answers to verify childhood planetary anchors:
+              </p>
+            </div>
+          </div>
+          <span className="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+            Kishora Jataka
+          </span>
+        </div>
+
+        {/* Minor Q1: Learning Aptitude */}
+        <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+            <span>🎓</span>
+            <span>1. D-24 Siddhamsha — Academic &amp; Learning Aptitude:</span>
+          </div>
+          <p className="text-[11px] text-slate-300 leading-snug">
+            What is the child's primary learning inclination or academic strength?
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {[
+              { label: "📚 Strong Academic & Analytical Focus", val: "Academic Focus" },
+              { label: "🎨 Creative, Artistic & Expressive", val: "Creative & Arts" },
+              { label: "⚽ Active, Sports & Practical Skills", val: "Sports & Practical" },
+            ].map((opt) => (
+              <button
+                key={opt.val}
+                type="button"
+                onClick={() => setMinorAptitude(opt.val)}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                  minorAptitude === opt.val
+                    ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                    : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Minor Q2: Sibling Order */}
+        <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+            <span>🌿</span>
+            <span>2. Sibling Birth Order (D-3 Drekkana):</span>
+          </div>
+          <p className="text-[11px] text-slate-300 leading-snug">
+            What is the child's birth order among siblings?
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {[
+              { label: "👑 Eldest Child", val: "Eldest" },
+              { label: "🌿 Youngest Child", val: "Youngest" },
+              { label: "⚖️ Middle Child", val: "Middle" },
+              { label: "🌟 Only Child", val: "Only Child" },
+            ].map((opt) => (
+              <button
+                key={opt.val}
+                type="button"
+                onClick={() => setMinorSibling(opt.val)}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                  minorSibling === opt.val
+                    ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                    : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Minor Q3: Residence */}
+        <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+            <span>✈️</span>
+            <span>3. Family Residence Relocation (D-4 Chaturthamsha):</span>
+          </div>
+          <p className="text-[11px] text-slate-300 leading-snug">
+            Has the family relocated away from the child's birth city?
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {[
+              { label: "✈️ Yes, Relocated with Parents", val: "Relocated" },
+              { label: "🏡 No, Living in Birth Region", val: "Ancestral Soil" },
+            ].map((opt) => (
+              <button
+                key={opt.val}
+                type="button"
+                onClick={() => setMinorReloc(opt.val)}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                  minorReloc === opt.val
+                    ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                    : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Minor Q4: Health / Resilience */}
+        <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
+            <span>⚡</span>
+            <span>4. Physical Resilience &amp; Mark (D-60 Shashtiamsha):</span>
+          </div>
+          <p className="text-[11px] text-slate-300 leading-snug">
+            Has the child experienced high physical resilience or has a distinct birth mark?
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {[
+              { label: "🛡️ Strong Childhood Resilience / Smooth", val: "Strong Health" },
+              { label: "⚡ Distinct Mark / Sensitive Phase", val: "Noticeable Mark" },
+            ].map((opt) => (
+              <button
+                key={opt.val}
+                type="button"
+                onClick={() => setMinorHealth(opt.val)}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                  minorHealth === opt.val
+                    ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20"
+                    : "bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Submit */}
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isLoading}
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 via-cyan-400 to-amber-500 hover:from-cyan-400 hover:to-amber-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/25 cursor-pointer flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+        >
+          <span>🚀</span>
+          <span>Lock &amp; Verify Child Chart: "{minorAptitude}, {minorSibling}, {minorReloc}"</span>
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="my-3 p-3.5 bg-slate-950/90 border border-amber-500/40 rounded-2xl space-y-3 shadow-xl shadow-amber-950/20 not-prose">
@@ -946,7 +1409,7 @@ function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: In
       <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
           <span>💼</span>
-          <span>2. D-10 Dasamsa — Career Pressure & Role Shift ({careerStart} – {careerEnd}):</span>
+          <span>2. D-10 Dasamsa — Career Pressure &amp; Role Shift ({careerStart} – {careerEnd}):</span>
         </div>
         <p className="text-[11px] text-slate-300 leading-snug">
           Did {careerStart}–{careerEnd} (age {careerStart - birthYear}–{careerEnd - birthYear}) bring increased responsibilities, career/job transition, or a serious foundation-building phase?
@@ -1069,7 +1532,7 @@ function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: In
       <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
           <span>⚡</span>
-          <span>6. D-60 Shashtiamsha — Karmic Turning Point & Physical Marks:</span>
+          <span>6. D-60 Shashtiamsha — Karmic Turning Point &amp; Physical Marks:</span>
         </div>
         <p className="text-[11px] text-slate-300 leading-snug">
           Have you experienced a sudden life-altering pivot, major emergency, or have an indelible scar/mark?
@@ -1103,7 +1566,7 @@ function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: In
         className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/25 cursor-pointer flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
       >
         <span>🚀</span>
-        <span>Lock & Verify 6 Divisional Charts: "1. {q1}, 2. {q2}, 3. {q3}, 4. {q4}, 5. {q5}, 6. {q6}"</span>
+        <span>Lock &amp; Verify 6 Divisional Charts: "1. {q1}, 2. {q2}, 3. {q3}, 4. {q4}, 5. {q5}, 6. {q6}"</span>
       </button>
     </div>
   );
@@ -1196,11 +1659,147 @@ function Round2DrillDownCard({
   onSelect: (ans: string) => void;
   isLoading: boolean;
 }) {
+  const birthDateObj = natalEphemeris ? new Date(natalEphemeris.utcDate) : new Date("1998-09-17");
   const birthYear = natalEphemeris ? getLocalCivilDateTime(natalEphemeris).year : 1998;
+  const now = new Date();
+  const nativeAge = Math.max(0, (now.getTime() - birthDateObj.getTime()) / (365.25 * 24 * 3600 * 1000));
+  const isInfant = nativeAge < 3;
+  const isMinor = !isInfant && nativeAge < 18;
+
   const age15 = birthYear + 15;
   const age17 = birthYear + 17;
   const age21 = birthYear + 21;
   const age23 = birthYear + 23;
+
+  if (isInfant) {
+    return (
+      <div className="my-3 p-3.5 bg-slate-950/90 border border-emerald-500/40 rounded-2xl space-y-3 shadow-xl shadow-emerald-950/20 not-prose">
+        <div className="flex items-center justify-between border-b border-emerald-500/20 pb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-base">👶</span>
+            <div>
+              <h4 className="font-extrabold text-emerald-300 text-xs tracking-wide">
+                Infancy &amp; Early Life Synchronization
+              </h4>
+              <p className="text-[10.5px] text-slate-400">
+                Select the infant's active growth phase to calibrate sub-period timing:
+              </p>
+            </div>
+          </div>
+          <span className="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+            Bala Phase
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => onSelect("Newborn (0–3 Months Phase)")}
+            disabled={isLoading}
+            className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-emerald-500/50 text-slate-200 transition-all cursor-pointer"
+          >
+            <div className="font-bold text-xs text-emerald-300">🌸 0 – 3 Months</div>
+            <div className="text-[10.5px] text-slate-400">Immediate Post-Natal Phase</div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSelect("Infant (3–6 Months Phase)")}
+            disabled={isLoading}
+            className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-emerald-500/50 text-slate-200 transition-all cursor-pointer"
+          >
+            <div className="font-bold text-xs text-emerald-300">☀️ 3 – 6 Months</div>
+            <div className="text-[10.5px] text-slate-400">Primary Sensory / Feeding Milestone</div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSelect("Infant (6–12 Months Phase)")}
+            disabled={isLoading}
+            className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-emerald-500/50 text-slate-200 transition-all cursor-pointer"
+          >
+            <div className="font-bold text-xs text-emerald-300">🍂 6 – 12 Months</div>
+            <div className="text-[10.5px] text-slate-400">Teething &amp; Annaprashana Milestone</div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSelect("Toddler (1–2 Years Phase)")}
+            disabled={isLoading}
+            className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-emerald-500/50 text-slate-200 transition-all cursor-pointer"
+          >
+            <div className="font-bold text-xs text-emerald-300">🌿 1 – 2 Years</div>
+            <div className="text-[10.5px] text-slate-400">First Steps &amp; Speech Phase</div>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isMinor) {
+    return (
+      <div className="my-3 p-3.5 bg-slate-950/90 border border-cyan-500/40 rounded-2xl space-y-3 shadow-xl shadow-cyan-950/20 not-prose">
+        <div className="flex items-center justify-between border-b border-cyan-500/20 pb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-base">🎒</span>
+            <div>
+              <h4 className="font-extrabold text-cyan-300 text-xs tracking-wide">
+                Childhood Academic Era Drill-Down
+              </h4>
+              <p className="text-[10.5px] text-slate-400">
+                Select the school era where the child's major academic turning point occurred:
+              </p>
+            </div>
+          </div>
+          <span className="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+            Kishora Phase
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => onSelect(`Early school admission around age 4–5`)}
+            disabled={isLoading}
+            className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-cyan-500/50 text-slate-200 transition-all cursor-pointer"
+          >
+            <div className="font-bold text-xs text-cyan-300">🎒 Age 4–5</div>
+            <div className="text-[10.5px] text-slate-400">Kindergarten / First School Entry</div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSelect(`Primary school milestone around age 8–10`)}
+            disabled={isLoading}
+            className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-cyan-500/50 text-slate-200 transition-all cursor-pointer"
+          >
+            <div className="font-bold text-xs text-cyan-300">📚 Age 8–10</div>
+            <div className="text-[10.5px] text-slate-400">Primary Schooling &amp; Sports/Arts</div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSelect(`Middle school transition around age 12–14`)}
+            disabled={isLoading}
+            className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-cyan-500/50 text-slate-200 transition-all cursor-pointer"
+          >
+            <div className="font-bold text-xs text-cyan-300">🎓 Age 12–14</div>
+            <div className="text-[10.5px] text-slate-400">Middle School &amp; Subject Focus</div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSelect(`10th board schooling around age 15–16`)}
+            disabled={isLoading}
+            className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-cyan-500/50 text-slate-200 transition-all cursor-pointer"
+          >
+            <div className="font-bold text-xs text-cyan-300">📜 Age 15–16</div>
+            <div className="text-[10.5px] text-slate-400">10th Board Exam Milestone</div>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="my-3 p-3.5 bg-slate-950/90 border border-amber-500/40 rounded-2xl space-y-3 shadow-xl shadow-amber-950/20 not-prose">

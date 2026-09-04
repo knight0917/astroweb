@@ -4445,6 +4445,13 @@ test("Classical Birth Time Rectification (BTR) & Event-Based Dasha Timeline Engi
   // 9. Chat System Instruction Rule 0O inclusion
   const sysInst = buildChatSystemInstruction(dossier, ["Married"]);
   assert.ok(sysInst.includes("0O. **AUTHENTIC EVENT-BASED BTR & CHRONOLOGICAL DASHA TIMING PROTOCOL"));
+  assert.ok(sysInst.includes("NATIVE AGE & LIFE STAGE AWARENESS (CRITICAL INFANT / BALA JATAKA PROTOCOL)"));
   assert.ok(sysInst.includes("The Mathematical Sensitivity Law"));
+
+  // 10. Newborn / Infant (2026 DOB) Life Stage Verification
+  const infantEphem = calculateVedicEphemeris(new Date("2026-09-04T19:40:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const infantSummary = generateBtrMasterSummary(infantEphem, "male");
+  assert.ok(infantSummary.includes("Bala Jataka"), "Infant summary must identify Bala Jataka");
+  assert.ok(infantSummary.includes("DO NOT probe or ask about adult life milestones"), "Infant summary must instruct to bypass adult milestones");
 });
 
