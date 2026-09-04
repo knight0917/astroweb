@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useAstroStore, ViewMode } from "../store/useAstroStore";
 import { POPULAR_CITIES } from "../engine/constants";
@@ -13,6 +13,27 @@ export default function HeaderNav() {
   const [showCoordinatesDropdown, setShowCoordinatesDropdown] = useState(false);
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
   const [showMenuDrawer, setShowMenuDrawer] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [drawerSearchQuery, setDrawerSearchQuery] = useState("");
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("All");
+  const [searchSelectedIndex, setSearchSelectedIndex] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Global Keyboard Shortcut (Ctrl+K or Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setShowSearchModal((prev) => !prev);
+      }
+      if (e.key === "Escape") {
+        setShowSearchModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -320,6 +341,52 @@ export default function HeaderNav() {
     },
   ];
 
+  // Flattened modules with categories for high-speed universal search
+  const flatModules = useMemo(() => {
+    return ALL_MODULES.flatMap((group) =>
+      group.items.map((item) => ({
+        ...item,
+        category: group.category,
+      }))
+    );
+  }, [ALL_MODULES]);
+
+  // Live filtered search results
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return flatModules.filter((m) => {
+      if (selectedCategoryFilter !== "All" && !m.category.toLowerCase().includes(selectedCategoryFilter.toLowerCase())) {
+        return false;
+      }
+      if (!q) return true;
+      return (
+        m.label.toLowerCase().includes(q) ||
+        m.hindiLabel.toLowerCase().includes(q) ||
+        m.desc.toLowerCase().includes(q) ||
+        m.category.toLowerCase().includes(q) ||
+        (m.badge && m.badge.toLowerCase().includes(q)) ||
+        m.mode.toLowerCase().includes(q)
+      );
+    });
+  }, [flatModules, searchQuery, selectedCategoryFilter]);
+
+  // Filtered modules for the side drawer
+  const drawerFilteredModules = useMemo(() => {
+    if (!drawerSearchQuery.trim()) return ALL_MODULES;
+    const q = drawerSearchQuery.trim().toLowerCase();
+    return ALL_MODULES.map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) =>
+          item.label.toLowerCase().includes(q) ||
+          item.hindiLabel.toLowerCase().includes(q) ||
+          item.desc.toLowerCase().includes(q) ||
+          (item.badge && item.badge.toLowerCase().includes(q)) ||
+          item.mode.toLowerCase().includes(q)
+      ),
+    })).filter((group) => group.items.length > 0);
+  }, [ALL_MODULES, drawerSearchQuery]);
+
   // Find currently active module metadata
   const currentModule = useMemo(() => {
     for (const group of ALL_MODULES) {
@@ -395,6 +462,32 @@ export default function HeaderNav() {
           </button>
         </div>
 
+        {/* Center: Universal Quick Search Trigger Bar */}
+        <div className="flex-1 max-w-xs md:max-w-md mx-1 sm:mx-3">
+          <button
+            onClick={() => {
+              setShowSearchModal(true);
+              setSearchQuery("");
+              setSearchSelectedIndex(0);
+            }}
+            className="w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/60 text-slate-300 hover:text-white transition-all shadow-inner group cursor-pointer text-xs"
+            title="Search any menu or module (Ctrl+K)"
+          >
+            <div className="flex items-center gap-2 truncate">
+              <svg className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <span className="text-slate-400 group-hover:text-slate-200 truncate">
+                Search modules, kundli, vastu...
+              </span>
+            </div>
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9.5px] font-mono font-semibold text-slate-400 bg-slate-800/90 border border-slate-700 rounded shadow-xs flex-shrink-0">
+              <span className="text-[10px]">Ctrl</span>K
+            </kbd>
+          </button>
+        </div>
+
         {/* Right: Location Chip & Settings */}
         <div className="flex items-center gap-1.5 md:gap-2 text-xs">
           {/* Location Trigger Chip */}
@@ -466,6 +559,182 @@ export default function HeaderNav() {
         </div>
       </div>
 
+
+      {/* UNIVERSAL COMMAND PALETTE SEARCH MODAL (via Portal) */}
+      {mounted && showSearchModal && createPortal(
+        <div className="fixed inset-0 z-[999999] flex items-start justify-center pt-16 sm:pt-24 px-3 sm:px-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div
+            className="fixed inset-0"
+            onClick={() => setShowSearchModal(false)}
+          />
+
+          <div className="relative z-10 w-full max-w-2xl bg-slate-950 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in-95 duration-150">
+            {/* Search Input Bar */}
+            <div className="p-3 sm:p-4 border-b border-slate-800 bg-slate-900/90 flex items-center gap-3">
+              <svg className="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                ref={searchInputRef}
+                autoFocus
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSearchSelectedIndex(0);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    if (searchResults.length > 0) {
+                      setSearchSelectedIndex((prev) => (prev + 1) % searchResults.length);
+                    }
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    if (searchResults.length > 0) {
+                      setSearchSelectedIndex((prev) => (prev - 1 + searchResults.length) % searchResults.length);
+                    }
+                  } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (searchResults[searchSelectedIndex]) {
+                      setViewMode(searchResults[searchSelectedIndex].mode);
+                      setShowSearchModal(false);
+                    }
+                  } else if (e.key === "Escape") {
+                    setShowSearchModal(false);
+                  }
+                }}
+                placeholder="Type to search any module (e.g. Vastu, Dasha, Matchmaking, Gochar, Shadbala)..."
+                className="w-full bg-transparent text-sm sm:text-base text-slate-100 placeholder:text-slate-500 focus:outline-none font-medium"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="p-1 rounded-md text-slate-400 hover:text-white text-xs bg-slate-800 hover:bg-slate-700 cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+              <kbd className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono text-slate-400 bg-slate-800/80 border border-slate-700 rounded">
+                ESC
+              </kbd>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-slate-950 border-b border-slate-800/80 overflow-x-auto custom-scrollbar text-xs">
+              {["All", "Charts", "Timing", "Strengths", "Panchanga", "Observatory"].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setSelectedCategoryFilter(cat);
+                    setSearchSelectedIndex(0);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer ${
+                    selectedCategoryFilter === cat
+                      ? "bg-amber-500 text-slate-950 shadow-sm font-black"
+                      : "bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+              <span className="text-[10px] text-slate-500 ml-auto font-mono flex-shrink-0">
+                {searchResults.length} {searchResults.length === 1 ? "module" : "modules"}
+              </span>
+            </div>
+
+            {/* Search Results List */}
+            <div className="overflow-y-auto p-2 space-y-1.5 flex-1 custom-scrollbar">
+              {searchResults.length === 0 ? (
+                <div className="py-12 text-center space-y-2">
+                  <div className="text-3xl">🔍</div>
+                  <h4 className="font-bold text-sm text-slate-300">No modules found matching &ldquo;{searchQuery}&rdquo;</h4>
+                  <p className="text-xs text-slate-500">
+                    Try searching for keywords like &ldquo;Kundli&rdquo;, &ldquo;Dasha&rdquo;, &ldquo;Vastu&rdquo;, &ldquo;Panchang&rdquo;, &ldquo;Shadbala&rdquo;, or &ldquo;36 Gunas&rdquo;.
+                  </p>
+                </div>
+              ) : (
+                searchResults.map((item, idx) => {
+                  const isSelected = idx === searchSelectedIndex;
+                  const isActiveView = viewMode === item.mode;
+                  return (
+                    <button
+                      key={item.mode}
+                      onClick={() => {
+                        setViewMode(item.mode);
+                        setShowSearchModal(false);
+                      }}
+                      onMouseEnter={() => setSearchSelectedIndex(idx)}
+                      className={`w-full p-2.5 sm:p-3 rounded-xl border text-left transition-all flex items-start gap-3 cursor-pointer ${
+                        isSelected
+                          ? "bg-amber-500/15 border-amber-400 text-amber-200 shadow-md ring-1 ring-amber-400/40"
+                          : "bg-slate-900/60 hover:bg-slate-900 border-slate-800/80 text-slate-300"
+                      }`}
+                    >
+                      <div className="pt-0.5">
+                        <span
+                          className={`w-2 h-2 rounded-full block ${
+                            isActiveView
+                              ? "bg-amber-400 ring-4 ring-amber-400/30"
+                              : isSelected
+                              ? "bg-amber-300"
+                              : "bg-slate-600"
+                          }`}
+                        />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 truncate">
+                            <span className={`font-bold text-xs sm:text-sm truncate ${isSelected ? "text-amber-300" : "text-slate-100"}`}>
+                              {item.label}
+                            </span>
+                            <span className="text-[10px] text-amber-400/80 font-medium">
+                              ({item.hindiLabel})
+                            </span>
+                            {item.badge && (
+                              <span className="text-[8.5px] font-black px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                                {item.badge}
+                              </span>
+                            )}
+                          </div>
+                          {isActiveView && (
+                            <span className="text-[8.5px] font-black px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-widest flex-shrink-0">
+                              Active
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
+                          {item.desc}
+                        </p>
+
+                        <div className="mt-1 flex items-center gap-2 text-[9.5px] text-slate-500">
+                          <span className="text-slate-500 font-mono">Category:</span>
+                          <span className="text-slate-400">{item.category}</span>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Footer Navigation Help */}
+            <div className="p-2.5 bg-slate-950 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+              <div className="flex items-center gap-3">
+                <span><kbd className="px-1 py-0.5 bg-slate-800 rounded border border-slate-700">↑</kbd> <kbd className="px-1 py-0.5 bg-slate-800 rounded border border-slate-700">↓</kbd> Navigate</span>
+                <span><kbd className="px-1 py-0.5 bg-slate-800 rounded border border-slate-700">↵</kbd> Select</span>
+                <span><kbd className="px-1 py-0.5 bg-slate-800 rounded border border-slate-700">ESC</kbd> Close</span>
+              </div>
+              <span className="hidden sm:inline">Vedic Sky AI Navigation</span>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* SLIDE-OVER LEFT NAVIGATION DRAWER (via Portal) */}
       {mounted && showMenuDrawer && createPortal(
         <div className="fixed inset-0 z-[99999] flex items-stretch bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
@@ -506,9 +775,43 @@ export default function HeaderNav() {
                 </button>
               </div>
 
+              {/* In-Drawer Live Search Box */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={drawerSearchQuery}
+                  onChange={(e) => setDrawerSearchQuery(e.target.value)}
+                  placeholder="Filter drawer modules (e.g. Dasha, Vastu, Transit)..."
+                  className="w-full bg-slate-900/90 border border-slate-700/90 text-slate-100 text-xs rounded-xl pl-8 pr-7 py-2 focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder:text-slate-500"
+                />
+                <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+                {drawerSearchQuery && (
+                  <button
+                    onClick={() => setDrawerSearchQuery("")}
+                    className="absolute right-2.5 top-2 text-slate-400 hover:text-white text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
               {/* Categorized Module List */}
               <div className="space-y-4">
-                {ALL_MODULES.map((group) => (
+                {drawerFilteredModules.length === 0 ? (
+                  <div className="py-8 text-center space-y-1.5">
+                    <p className="text-xs text-slate-400">No modules match &ldquo;{drawerSearchQuery}&rdquo;</p>
+                    <button
+                      onClick={() => setDrawerSearchQuery("")}
+                      className="text-[11px] text-amber-400 hover:underline font-bold"
+                    >
+                      Clear search filter
+                    </button>
+                  </div>
+                ) : (
+                  drawerFilteredModules.map((group) => (
                   <div key={group.category} className="space-y-1.5">
                     <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block px-1">
                       {group.category}
@@ -566,7 +869,7 @@ export default function HeaderNav() {
                       })}
                     </div>
                   </div>
-                ))}
+                )))}
               </div>
             </div>
 

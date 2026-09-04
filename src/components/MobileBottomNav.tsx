@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useAstroStore, ViewMode } from "../store/useAstroStore";
 
 export default function MobileBottomNav() {
   const { viewMode, setViewMode } = useAstroStore();
   const [showMoreDrawer, setShowMoreDrawer] = useState(false);
+  const [mobileSearch, setMobileSearch] = useState("");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -83,6 +84,18 @@ export default function MobileBottomNav() {
 
   const isMoreActive = MORE_MODULES.some((m) => m.mode === viewMode);
 
+  const filteredMoreModules = useMemo(() => {
+    if (!mobileSearch.trim()) return MORE_MODULES;
+    const q = mobileSearch.trim().toLowerCase();
+    return MORE_MODULES.filter(
+      (m) =>
+        m.label.toLowerCase().includes(q) ||
+        m.hindiLabel.toLowerCase().includes(q) ||
+        m.desc.toLowerCase().includes(q) ||
+        m.mode.toLowerCase().includes(q)
+    );
+  }, [mobileSearch]);
+
   return (
     <>
       {/* Mobile More Modules Sheet Drawer Modal via Portal */}
@@ -93,14 +106,19 @@ export default function MobileBottomNav() {
             onClick={() => setShowMoreDrawer(false)}
           ></div>
 
-          <div className="relative z-10 glass-panel bg-slate-950/98 border-t border-slate-800 rounded-t-3xl p-5 safe-bottom max-h-[80vh] overflow-y-auto space-y-4 shadow-2xl animate-in slide-in-from-bottom duration-250">
+          <div className="relative z-10 glass-panel bg-slate-950/98 border-t border-slate-800 rounded-t-3xl p-5 safe-bottom max-h-[80vh] overflow-y-auto space-y-3.5 shadow-2xl animate-in slide-in-from-bottom duration-250">
             {/* Header Handle */}
             <div className="flex flex-col items-center">
               <div className="w-12 h-1 bg-slate-700 rounded-full mb-3"></div>
               <div className="flex items-center justify-between w-full pb-2 border-b border-slate-800">
-                <h3 className="font-bold text-xs uppercase tracking-widest text-slate-200">
-                  All Jyotish Modules
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-xs uppercase tracking-widest text-slate-200">
+                    All Jyotish Modules
+                  </h3>
+                  <span className="text-[10px] text-amber-400 font-mono">
+                    ({filteredMoreModules.length})
+                  </span>
+                </div>
                 <button
                   onClick={() => setShowMoreDrawer(false)}
                   className="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs cursor-pointer"
@@ -110,40 +128,75 @@ export default function MobileBottomNav() {
               </div>
             </div>
 
-            {/* Grid of Modules */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {MORE_MODULES.map((m) => {
-                const isActive = viewMode === m.mode;
-                return (
-                  <button
-                    key={m.mode}
-                    onClick={() => {
-                      setViewMode(m.mode);
-                      setShowMoreDrawer(false);
-                    }}
-                    className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all cursor-pointer ${
-                      isActive
-                        ? "bg-amber-500/10 border-amber-400 text-amber-300 shadow-md"
-                        : "bg-slate-900/70 border-slate-800 text-slate-300 hover:bg-slate-850"
-                    }`}
-                  >
-                    <div className="pt-1">
-                      <span className={`w-1.5 h-1.5 rounded-full block ${isActive ? "bg-amber-400" : "bg-slate-600"}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-slate-100 truncate">{m.label}</span>
-                        {isActive && (
-                          <span className="text-[8px] font-bold text-amber-400 uppercase tracking-widest">Active</span>
-                        )}
-                      </div>
-                      <span className="text-[10px] text-amber-400/80 block font-medium">{m.hindiLabel}</span>
-                      <span className="text-[9.5px] text-slate-400 block line-clamp-1 mt-0.5">{m.desc}</span>
-                    </div>
-                  </button>
-                );
-              })}
+            {/* Live Search Input */}
+            <div className="relative">
+              <input
+                type="text"
+                value={mobileSearch}
+                onChange={(e) => setMobileSearch(e.target.value)}
+                placeholder="Search modules (e.g. Vastu, Dasha, Match)..."
+                className="w-full bg-slate-900/90 border border-slate-700 text-slate-100 text-xs rounded-xl pl-8 pr-7 py-2 focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder:text-slate-500"
+              />
+              <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              {mobileSearch && (
+                <button
+                  onClick={() => setMobileSearch("")}
+                  className="absolute right-2.5 top-2 text-slate-400 hover:text-white text-xs"
+                >
+                  ✕
+                </button>
+              )}
             </div>
+
+            {/* Grid of Modules */}
+            {filteredMoreModules.length === 0 ? (
+              <div className="py-8 text-center space-y-1.5">
+                <p className="text-xs text-slate-400">No modules match &ldquo;{mobileSearch}&rdquo;</p>
+                <button
+                  onClick={() => setMobileSearch("")}
+                  className="text-[11px] text-amber-400 hover:underline font-bold"
+                >
+                  Reset search
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {filteredMoreModules.map((m) => {
+                  const isActive = viewMode === m.mode;
+                  return (
+                    <button
+                      key={m.mode}
+                      onClick={() => {
+                        setViewMode(m.mode);
+                        setShowMoreDrawer(false);
+                      }}
+                      className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-amber-500/10 border-amber-400 text-amber-300 shadow-md"
+                          : "bg-slate-900/70 border-slate-800 text-slate-300 hover:bg-slate-850"
+                      }`}
+                    >
+                      <div className="pt-1">
+                        <span className={`w-1.5 h-1.5 rounded-full block ${isActive ? "bg-amber-400" : "bg-slate-600"}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-slate-100 truncate">{m.label}</span>
+                          {isActive && (
+                            <span className="text-[8px] font-bold text-amber-400 uppercase tracking-widest">Active</span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-amber-400/80 block font-medium">{m.hindiLabel}</span>
+                        <span className="text-[9.5px] text-slate-400 block line-clamp-1 mt-0.5">{m.desc}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>,
         document.body

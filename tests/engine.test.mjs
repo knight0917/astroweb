@@ -4088,3 +4088,60 @@ test("Classical Vāstu Śāstra (81-Grid Purusha Mandala, Ayadi Shadvarga & SAV 
   assert.ok(synthesis.masterVastuGuidance.length > 20);
 });
 
+test("Universal Navigation & Module Search Engine Query Resolution Verification", async () => {
+  const MODULE_CATALOG = [
+    { mode: "kundli-north", label: "Traditional Kundli Chart", hindiLabel: "जन्म कुण्डली (उत्तर व दक्षिण)", desc: "North/South Indian charts with Jaimini Chara Karakas (AK to DK)", category: "Charts & Divisionals", badge: "Core" },
+    { mode: "shodashavarga", label: "16 Vargas (Shodashavarga)", hindiLabel: "षोडशवर्ग (D1 - D60)", desc: "Complete Parashari 16 divisional charts with interactive inspect", category: "Charts & Divisionals", badge: "D1–D60" },
+    { mode: "vastu", label: "Classical Vāstu Studio", hindiLabel: "वास्तु शास्त्र एवं 81 पद मण्डल", desc: "81-Grid Purusha Mandala, 45 Deities, Ayadi Shadvarga & SAV Dhana-Disha", category: "Classical Strengths & Analysis", badge: "Vāstu 81" },
+    { mode: "dasha", label: "Vimshottari Dasha (120 Yrs)", hindiLabel: "विम्शोत्तरी दशा चक्र", desc: "Complete Mahadasha, Antardasha & Pratyantardasha hierarchy with live active tracker", category: "Predictive Timing & Transits", badge: "120 Yrs" },
+    { mode: "gochar", label: "Planetary Transits & Sade Sati", hindiLabel: "ग्रह गोचर एवं साढ़े साती", desc: "Live transits over Natal Moon & Lagna, 5-phase Sade Sati & Dual Transit Chart", category: "Predictive Timing & Transits", badge: "Live" },
+    { mode: "matchmaking", label: "Kundli Milan (36 Gunas)", hindiLabel: "अष्टकूट ३६ गुण मिलान", desc: "Ashtakoota compatibility, Nadi/Bhakoot cancellation & Manglik check", category: "Charts & Divisionals", badge: "36 Gunas" },
+    { mode: "choghadiya", label: "Real-Time Choghadiya & Horas", hindiLabel: "चौघड़िया एवं ग्रह होरा", desc: "Live Day & Night Choghadiyas, countdown timer, and 24 Planetary Horas", category: "Panchanga, Calendar & Muhurta", badge: "Live" },
+  ];
+
+  function searchModules(query, categoryFilter = "All") {
+    const q = query.trim().toLowerCase();
+    return MODULE_CATALOG.filter((m) => {
+      if (categoryFilter !== "All" && !m.category.toLowerCase().includes(categoryFilter.toLowerCase())) {
+        return false;
+      }
+      if (!q) return true;
+      return (
+        m.label.toLowerCase().includes(q) ||
+        m.hindiLabel.toLowerCase().includes(q) ||
+        m.desc.toLowerCase().includes(q) ||
+        m.category.toLowerCase().includes(q) ||
+        (m.badge && m.badge.toLowerCase().includes(q)) ||
+        m.mode.toLowerCase().includes(q)
+      );
+    });
+  }
+
+  // 1. Search by exact keyword
+  const vastuResults = searchModules("vastu");
+  assert.strictEqual(vastuResults.length, 1);
+  assert.strictEqual(vastuResults[0].mode, "vastu");
+
+  // 2. Search by Hindi / Devanagari script
+  const hindiDasha = searchModules("विम्शोत्तरी");
+  assert.strictEqual(hindiDasha.length, 1);
+  assert.strictEqual(hindiDasha[0].mode, "dasha");
+
+  // 3. Search by partial English phrase
+  const matchResults = searchModules("36 gunas");
+  assert.strictEqual(matchResults.length, 1);
+  assert.strictEqual(matchResults[0].mode, "matchmaking");
+
+  // 4. Search with Category Filter
+  const chartsCategory = searchModules("", "Charts");
+  assert.ok(chartsCategory.length >= 2);
+  for (const item of chartsCategory) {
+    assert.ok(item.category.includes("Charts"));
+  }
+
+  // 5. Empty search returns full catalog
+  const allResults = searchModules("");
+  assert.strictEqual(allResults.length, MODULE_CATALOG.length);
+});
+
+
