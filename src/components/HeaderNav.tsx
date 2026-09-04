@@ -247,6 +247,13 @@ export default function HeaderNav() {
           hindiLabel: "अष्टकवर्ग चक्र",
           desc: "Sarvashtakavarga 337 bindus & 7 Bhinnashtakavarga score matrices",
         },
+        {
+          mode: "vastu",
+          label: "Classical Vāstu Studio",
+          hindiLabel: "वास्तु शास्त्र एवं 81 पद मण्डल",
+          desc: "81-Grid Purusha Mandala, 45 Deities, Ayadi Shadvarga & SAV Dhana-Disha",
+          badge: "Vāstu 81",
+        },
       ],
     },
     {

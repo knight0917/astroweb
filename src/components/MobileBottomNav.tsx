@@ -72,6 +72,7 @@ export default function MobileBottomNav() {
     { mode: "gochar", label: "Transits & Sade Sati", hindiLabel: "ग्रह गोचर एवं साढ़े साती", desc: "Live Transits & Sade Sati" },
     { mode: "3d", label: "3D Celestial Dome", hindiLabel: "3D खगोलीय आकाश", desc: "Interactive WebGL Sky & Star Dome" },
     { mode: "ashtakavarga", label: "Ashtakavarga Suite", hindiLabel: "अष्टकवर्ग चक्र", desc: "Sarva & Bhinna 8-Grid Charts" },
+    { mode: "vastu", label: "Classical Vāstu Studio", hindiLabel: "वास्तु शास्त्र (81 पद)", desc: "81-Grid Mandala, Ayadi & Dhana-Disha" },
     { mode: "choghadiya", label: "Choghadiya & Horas", hindiLabel: "चौघड़िया एवं होरा", desc: "Real-Time Muhurtas & Horas" },
     { mode: "numerology", label: "Vedic Numerology", hindiLabel: "वैदिक अंकशास्त्र", desc: "Mulank, Bhagyank & Lo Shu Grid" },
     { mode: "tithi-calendar", label: "Tithi Calendar", hindiLabel: "तिथि पञ्चाङ्ग कैलेण्डर", desc: "Daily Tithi, Moon Phases & Festivals" },

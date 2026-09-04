@@ -1708,32 +1708,131 @@ export interface PatelAshtakavargaAnalysis {
   masterPatelSynthesis: string;
 }
 
+// ==========================================
+// 72. CLASSICAL VASTU SHASTRA & AYADI ENGINE
+// ==========================================
 
+export type VastuDirection =
+  | "Northeast (Ishanya)"
+  | "East (Purva)"
+  | "Southeast (Agneya)"
+  | "South (Dakshina)"
+  | "Southwest (Nairritya)"
+  | "West (Paschima)"
+  | "Northwest (Vayavya)"
+  | "North (Uttara)"
+  | "Brahmasthana (Center)";
 
+export type VastuElement =
+  | "Water (Jala)"
+  | "Fire (Agni)"
+  | "Earth (Prithvi)"
+  | "Air (Vayu)"
+  | "Space (Akasha)"
+  | "Light (Agni-Vayu)"
+  | "Air-Water (Vayu-Jala)"
+  | "Air-Water"
+  | "Earth-Fire";
 
+export type VastuRoomType =
+  | "pooja_room"
+  | "kitchen"
+  | "master_bedroom"
+  | "living_room"
+  | "dining_room"
+  | "study_room"
+  | "kids_bedroom"
+  | "guest_room"
+  | "toilet"
+  | "water_tank_overhead"
+  | "water_tank_underground"
+  | "septic_tank"
+  | "main_door"
+  | "staircase"
+  | "open_balcony";
 
+export interface VastuPada {
+  id: string; // e.g. "E3", "Brahma_1", etc.
+  row: number; // 0 to 8
+  col: number; // 0 to 8
+  deitySanskrit: string;
+  deityEnglish: string;
+  category: "Brahma" | "InnerCardinal" | "Upadevata" | "OuterPerimeter";
+  direction: VastuDirection;
+  element: VastuElement;
+  isAuspiciousDoorPada?: boolean;
+  doorSignificance?: string;
+}
 
+export interface AyadiShadvargaResult {
+  lengthFeet: number;
+  breadthFeet: number;
+  perimeterFeet: number;
+  areaSqFeet: number;
+  lengthHasta: number;
+  breadthHasta: number;
+  perimeterHasta: number;
+  ayaNumber: number; // 1 to 12
+  ayaName: string; // Dhvaja, Dhuma, Simha, Shvana, Vrisha, Khara, Gaja, Vayasa
+  ayaGrade: "Auspicious (उत्तम)" | "Moderate (मध्यम)" | "Inauspicious (अशुभ)";
+  vyayaNumber: number; // 1 to 10
+  isAyaGreaterThanVyaya: boolean;
+  yoniNumber: number; // 1 to 8
+  yoniName: string;
+  yoniDirection: string;
+  yoniGrade: "Auspicious (उत्तम)" | "Inauspicious (अशुभ)";
+  vastuNakshatraNumber: number; // 1 to 27
+  vastuNakshatraName: string;
+  ayusLongevityYears: number; // 0-100
+  varaName: string;
+  tithiName: string;
+  janmaTaraCompatibility: {
+    nativeJanmaNakshatra: string;
+    taraType: "Sampat (Wealth)" | "Kshema (Safety)" | "Sadhaka (Success)" | "Mitra (Friend)" | "Parama Mitra (Supreme Friend)" | "Janma (Body/Self)" | "Vipat (Danger)" | "Pratyak (Obstacle)" | "Vadha (Destruction)";
+    isFavorable: boolean;
+    verdict: string;
+  };
+  overallAyadiVerdict: string;
+}
 
+export interface VastuRoomPlacement {
+  roomType: VastuRoomType;
+  customLabel?: string;
+  row: number; // 0 to 8 in 9x9 grid
+  col: number; // 0 to 8 in 9x9 grid
+  direction: VastuDirection;
+  padaName: string;
+  complianceScore: number; // 0 to 100
+  grade: "Ideal (सर्वोत्तम)" | "Acceptable (मध्यम)" | "Defective (दोष)";
+  feedback: string;
+  pariharaRemedy?: string;
+}
 
+export interface AshtakavargaVastuStrength {
+  eastSAV: number;
+  southSAV: number;
+  westSAV: number;
+  northSAV: number;
+  peakDirection: VastuDirection;
+  peakDirectionTheme: string;
+  vulnerableDirection: VastuDirection;
+  vulnerableDirectionWarning: string;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export interface VastuSynthesisReport {
+  overallScore: number; // 0 to 100%
+  grade: "Vaastu Siddha (परम शुभ)" | "Balanced (शुभ)" | "Needs Remediation (सुधार योग्य)" | "High Vastu Dosa (दोषयुक्त)";
+  placements: VastuRoomPlacement[];
+  elementalBalance: {
+    waterScore: number;
+    fireScore: number;
+    earthScore: number;
+    airScore: number;
+    spaceScore: number;
+  };
+  marmaPiercingAlerts: string[];
+  ashtakavargaDirectionalPower: AshtakavargaVastuStrength;
+  ayadiAnalysis: AyadiShadvargaResult;
+  topNonDestructiveRemedies: string[];
+  masterVastuGuidance: string;
+}

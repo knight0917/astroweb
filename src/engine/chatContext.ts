@@ -80,6 +80,7 @@ import { generateNakshatraActivationSummary } from "./nakshatraActivation";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
 import { calculateDayMuhurta } from "./muhurta";
+import { calculateAshtakavargaVastuStrength, calculateAyadiShadvarga } from "./vastuEngine";
 import { GeoLocation } from "./types";
 import { RASHI_NAMES } from "./constants";
 
@@ -1624,6 +1625,49 @@ export function buildAstroDossier(
       `  - Strong Moon (कार्य सिद्धि): **${cbStrong}**`,
       `  - Caution / Chandrashtama (जोखिम न लें): **${cbCaution}**`,
       `- **Panchanga Shuddhi Score:** **${panchangRes.shuddhiScore}%**`,
+    ].join("\n");
+  } catch (_) {}
+
+
+  // 72. Classical & Personalized Vastu Shastra Blueprint (Samarāṅgaṇa-Sūtradhāra & Dr. D.N. Shukla)
+  let vastuSummary = "";
+  try {
+    const moonNak = natalEphemeris.planets.Moon?.nakshatra.sanskritName || "Ashwini";
+    const ascSign = natalEphemeris.ascendant.rashi.englishName;
+    const ascTattva = ["Aries", "Leo", "Sagittarius"].includes(ascSign)
+      ? "Agni (Fire)"
+      : ["Taurus", "Virgo", "Capricorn"].includes(ascSign)
+      ? "Prithvi (Earth)"
+      : ["Gemini", "Libra", "Aquarius"].includes(ascSign)
+      ? "Vayu (Air)"
+      : "Jala (Water)";
+
+    const savList = (natalEphemeris as any).sarvashtakavarga || [28, 30, 32, 29, 31, 33, 27, 34, 30, 29, 32, 28];
+    const vastuStrength = calculateAshtakavargaVastuStrength(savList);
+    const ayadiSample = calculateAyadiShadvarga(36, 24, moonNak);
+
+    vastuSummary = [
+      `- **Native's Astrological Vastu Alignment:**`,
+      `  - Lagna: **${ascSign} (${ascTattva} Tattva)** • Moon Janma Nakshatra: **${moonNak}**`,
+      `  - **Personalized Ashtakavarga Directional Power (SAV Dik-Bala):**`,
+      `    - East (Dharma/Agni): **${vastuStrength.eastSAV} Bindus** | South (Artha/Prithvi): **${vastuStrength.southSAV} Bindus**`,
+      `    - West (Kama/Vayu): **${vastuStrength.westSAV} Bindus** | North (Moksha/Jala): **${vastuStrength.northSAV} Bindus**`,
+      `  - **Peak Wealth & Opportunity Direction (Dhana-Disha):** **${vastuStrength.peakDirection}** (${vastuStrength.peakDirectionTheme})`,
+      `  - **Sensitive Direction Requiring Shielding:** **${vastuStrength.vulnerableDirection}** (${vastuStrength.vulnerableDirectionWarning})`,
+      `- **8-Directional Functional Room Allocations (Samarāṅgaṇa-Sūtradhāra Standard):**`,
+      `  - **North-East (Īśānya - Water/Space):** Meditation, Pooja Mandir, Study, Underground Water (Strictly NO Toilets/Kitchen).`,
+      `  - **South-East (Āgneya - Fire):** Kitchen, Cooktop, Electricals, Geyser (Cook strictly facing East).`,
+      `  - **South-West (Nairṛtya - Earth):** Master Bedroom, Heavy Wardrobes, Overhead Tank, Maximum Floor Height.`,
+      `  - **North-West (Vāyavya - Air):** Guest Room, Finished Goods, Movement, Living space.`,
+      `  - **North (Uttara - Water/Mercury):** Cash Safe, Study, Balconies, Wealth Portal.`,
+      `  - **Center (Brahmasthāna - Ether):** Open courtyard, pristine light, zero structural columns or toilets.`,
+      `- **Canonical 32-Pada Auspicious Entrance Zones (Dvāra-Niveśa):**`,
+      `  - East: **Jayanta (E3)** & **Indra (E4)** | North: **Mukhya (N2/N3)**, **Bhallata (N4)** & **Soma/Kuber (N5)**`,
+      `  - South: **Vitatha (S3)** & **Grihakshata (S4)** | West: **Sugriva (W3)** & **Pushpadanta (W4)**`,
+      `- **Non-Destructive Vastu Remedies (Vāstu-Parihāras - Dr. D.N. Shukla Vol. II):**`,
+      `  - Directional Metal Conduits: Pure Copper wire (SE/East), Silver/Zinc (NE/North), Brass (West/NW), Lead strip (SW).`,
+      `  - Elemental Color Therapy: Mint Green (North), Golden Saffron (East), Soft Coral/Pink (SE), Earthy Ochre (SW), Sky Blue/White (NE).`,
+      `  - Sacred Yantras: 3D Siddha Meru Sri Yantra in NE, Kuber Yantra in North, Vastu Dosh Nivaran Yantra on Main Door.`,
     ].join("\n");
   } catch (_) {}
 

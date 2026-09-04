@@ -29,7 +29,8 @@ export type ViewMode =
   | "adhana"
   | "reviews"
   | "table"
-  | "dual";
+  | "dual"
+  | "vastu";
 export type SkyViewType = "ecliptic" | "horizontal";
 
 export interface BirthProfile {

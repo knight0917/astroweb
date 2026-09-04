@@ -3953,3 +3953,138 @@ test("24-Hour Device Cache Invalidation & Duplicate Email Data Sync Verification
   // Function should safely resolve (null if not in DB yet)
   assert.ok(existingChart === null || typeof existingChart === "object");
 });
+
+test("Classical Vāstu Śāstra (81-Grid Purusha Mandala, Ayadi Shadvarga & SAV Dhana-Disha) Verification", async () => {
+  const {
+    getVastuPada,
+    evaluateRoomPlacement,
+    calculateAyadiShadvarga,
+    calculateAshtakavargaVastuStrength,
+    detectMarmaPiercing,
+    calculateVastuSynthesis,
+    VASTU_81_GRID_MAP,
+  } = await import("../src/engine/vastuEngine.ts");
+
+  // 1. Grid Size and Deity Integrity
+  const totalKeys = Object.keys(VASTU_81_GRID_MAP).length;
+  assert.strictEqual(totalKeys, 81, "81-Grid Mandala must contain exactly 81 padas");
+
+  // Test Brahmasthana (e.g. row 4, col 4)
+  const brahmaCenter = getVastuPada(4, 4);
+  assert.ok(brahmaCenter.deityEnglish.includes("Brahma"));
+  assert.strictEqual(brahmaCenter.category, "Brahma");
+  assert.strictEqual(brahmaCenter.element, "Space (Akasha)");
+
+  // Test Northeast corner (row 0, col 8) -> Shikhi/Ishana
+  const ishaPada = getVastuPada(0, 8);
+  assert.ok(ishaPada.deityEnglish.includes("Ishana") || ishaPada.deityEnglish.includes("Shikhi"));
+  assert.strictEqual(ishaPada.direction, "Northeast (Ishanya)");
+  assert.strictEqual(ishaPada.element, "Water (Jala)");
+
+  // Test Auspicious Doorway (Jayanta - E3, row 2, col 8)
+  const jayantaDoor = getVastuPada(2, 8);
+  assert.ok(jayantaDoor.deityEnglish.includes("Jayanta"));
+  assert.strictEqual(jayantaDoor.isAuspiciousDoorPada, true);
+
+  // 2. Room Evaluation Matrix
+  const pujaInNE = evaluateRoomPlacement("pooja_room", 0, 8);
+  assert.strictEqual(pujaInNE.grade, "Ideal (सर्वोत्तम)");
+  assert.strictEqual(pujaInNE.complianceScore, 100);
+
+  const kitchenInSE = evaluateRoomPlacement("kitchen", 8, 8);
+  assert.strictEqual(kitchenInSE.grade, "Ideal (सर्वोत्तम)");
+  assert.strictEqual(kitchenInSE.complianceScore, 100);
+
+  const toiletInNE = evaluateRoomPlacement("toilet", 0, 8);
+  assert.strictEqual(toiletInNE.grade, "Defective (दोष)");
+  assert.strictEqual(toiletInNE.complianceScore, 15);
+  assert.ok(toiletInNE.pariharaRemedy && toiletInNE.pariharaRemedy.length > 20, "Must provide non-destructive remedy");
+
+  // 3. Ayadi Shadvarga Mathematical Formulas
+  // Test 36 ft x 24 ft (Area = 864 sq ft, Perimeter = 120 ft)
+  const ayadi = calculateAyadiShadvarga(36, 24, "Pushya");
+  assert.ok(ayadi.ayaNumber >= 0);
+  assert.ok(ayadi.vyayaNumber >= 0);
+  assert.ok(ayadi.yoniNumber >= 1 && ayadi.yoniNumber <= 8);
+  assert.ok(ayadi.ayusLongevityYears > 0);
+  assert.ok(ayadi.vastuNakshatraName);
+  assert.strictEqual(typeof ayadi.isAyaGreaterThanVyaya, "boolean");
+
+  // 4. Ashtakavarga SAV Directional Power
+  const savStrength = calculateAshtakavargaVastuStrength([28, 30, 32, 29, 31, 33, 27, 34, 30, 29, 32, 28]);
+  assert.ok(savStrength.eastSAV > 0);
+  assert.ok(savStrength.southSAV > 0);
+  assert.ok(savStrength.westSAV > 0);
+  assert.ok(savStrength.northSAV > 0);
+  assert.strictEqual(
+    savStrength.eastSAV + savStrength.southSAV + savStrength.westSAV + savStrength.northSAV,
+    363,
+    "Sum of directional SAV bindus must equal total evaluated bindus"
+  );
+  assert.ok(savStrength.peakDirection, "Dhana Disha peak direction must be computed");
+
+  // 5. Marma Piercing
+  const marmaTest = detectMarmaPiercing([
+    {
+      roomType: "toilet",
+      row: 4,
+      col: 4,
+      customLabel: "Main Toilet",
+      direction: "Brahmasthana (Center)",
+      padaName: "Brahma",
+      complianceScore: 0,
+      grade: "Defective (दोष)",
+      feedback: "Defective",
+    },
+  ]);
+  assert.ok(marmaTest.length >= 1, "Must detect Brahmasthana piercing");
+  assert.ok(marmaTest[0].includes("BRAHMASTHANA PIERCING"));
+
+  // 6. Comprehensive Vastu Synthesis
+  const synthesis = calculateVastuSynthesis(
+    [
+      {
+        roomType: "pooja_room",
+        row: 0,
+        col: 8,
+        direction: "Northeast (Ishanya)",
+        padaName: "Shikhi",
+        complianceScore: 100,
+        grade: "Ideal (सर्वोत्तम)",
+        feedback: "Ideal",
+      },
+      {
+        roomType: "kitchen",
+        row: 8,
+        col: 8,
+        direction: "Southeast (Agneya)",
+        padaName: "Agni",
+        complianceScore: 100,
+        grade: "Ideal (सर्वोत्तम)",
+        feedback: "Ideal",
+      },
+      {
+        roomType: "master_bedroom",
+        row: 8,
+        col: 0,
+        direction: "Southwest (Nairritya)",
+        padaName: "Pitarah",
+        complianceScore: 100,
+        grade: "Ideal (सर्वोत्तम)",
+        feedback: "Ideal",
+      },
+    ],
+    36,
+    24,
+    "Pushya"
+  );
+
+  assert.ok(synthesis.overallScore >= 80, "Auspicious configuration should score high");
+  assert.ok(synthesis.elementalBalance.fireScore >= 0);
+  assert.ok(synthesis.elementalBalance.waterScore >= 0);
+  assert.ok(synthesis.elementalBalance.spaceScore >= 0);
+  assert.ok(synthesis.elementalBalance.airScore >= 0);
+  assert.ok(synthesis.elementalBalance.earthScore >= 0);
+  assert.ok(synthesis.masterVastuGuidance.length > 20);
+});
+

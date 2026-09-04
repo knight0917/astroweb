@@ -117,6 +117,11 @@ const ReviewSection = dynamic(() => import("../components/ReviewSection"), {
   loading: () => <ModuleLoadingSkeleton title="Community Reviews & Feedback" />,
 });
 
+const VastuStudio = dynamic(() => import("../components/VastuStudio"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Classical Vāstu Studio & 81-Grid Maṇḍala" />,
+});
+
 const EntityDetailModal = dynamic(() => import("../components/EntityDetailModal"), {
   ssr: false,
 });
@@ -243,6 +248,12 @@ export default function HomePage() {
         {viewMode === "adhana" && (
           <div className="w-full">
             <AdhanaKundliView />
+          </div>
+        )}
+
+        {viewMode === "vastu" && (
+          <div className="w-full">
+            <VastuStudio />
           </div>
         )}
 
