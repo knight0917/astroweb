@@ -4178,5 +4178,47 @@ test("Chatbot Section 2A (12 Houses Matrix), Section 2B (Natal Planets), and Sec
   }
 });
 
+test("Jaimini Arudha Lagna (AL) & Upapada Lagna (UL) Vāstu Spatial Telemetry Verification", async () => {
+  const { calculateJaiminiArudhaVastu, calculateVastuSynthesis } = await import("../src/engine/vastuEngine.ts");
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1998-05-24T18:46:51.000Z"), location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date("2026-08-31T00:00:00.000Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Calculate Jaimini Vastu Report
+  const jaiminiVastu = calculateJaiminiArudhaVastu(natalEphem);
+  assert.ok(jaiminiVastu, "Jaimini Vastu report must exist");
+  assert.ok(jaiminiVastu.arudhaLagna, "Arudha Lagna (AL) must exist");
+  assert.strictEqual(jaiminiVastu.arudhaLagna.code, "AL");
+  assert.ok(jaiminiVastu.arudhaLagna.direction, "AL direction must exist");
+  assert.ok(jaiminiVastu.arudhaLagna.gainZone11th?.direction, "11th from AL direction must exist");
+  assert.ok(jaiminiVastu.arudhaLagna.lossZone12th?.direction, "12th from AL direction must exist");
+
+  assert.ok(jaiminiVastu.upapadaLagna, "Upapada Lagna (UL) must exist");
+  assert.strictEqual(jaiminiVastu.upapadaLagna.code, "UL");
+  assert.ok(jaiminiVastu.upapadaLagna.direction, "UL direction must exist");
+  assert.ok(jaiminiVastu.upapadaLagna.gainZone11th?.direction, "2nd from UL direction must exist");
+
+  assert.ok(jaiminiVastu.daraPada, "Dara Pada (A7) must exist");
+  assert.ok(jaiminiVastu.rajyaPada, "Rajya Pada (A10) must exist");
+  assert.ok(jaiminiVastu.masterJaiminiVastuGuidance.length > 20);
+
+  // 2. Calculate Vastu Synthesis with Ephemeris
+  const synthesis = calculateVastuSynthesis([], 40, 30, undefined, undefined, natalEphem);
+  assert.ok(synthesis.jaiminiVastu);
+  assert.strictEqual(synthesis.jaiminiVastu.arudhaLagna.code, "AL");
+  assert.strictEqual(synthesis.jaiminiVastu.upapadaLagna.code, "UL");
+
+  // 3. Verify in Astro Chat Dossier Section 72
+  const dossier = buildAstroDossier(natalEphem, transitEphem, new Date("2026-08-31T00:00:00.000Z"), "male");
+  assert.ok(dossier.includes("#### 🏛️ 72. CLASSICAL VĀSTU ŚĀSTRA, 81-GRID PURUSHA MANDALA & JAIMINI ARUDHA DIRECTIONAL DOSSIER:"), "Section 72 header missing in dossier");
+  assert.ok(dossier.includes("Arudha Lagna (AL"), "Arudha Lagna missing in Section 72");
+  assert.ok(dossier.includes("Upapada Lagna (UL"), "Upapada Lagna missing in Section 72");
+  assert.ok(dossier.includes("11th from AL"), "11th from AL missing in Section 72");
+});
+
+
 
 

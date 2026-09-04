@@ -7,8 +7,13 @@ import {
   AyadiShadvargaResult,
   AshtakavargaVastuStrength,
   VastuSynthesisReport,
+  JaiminiArudhaVastuInfo,
+  JaiminiVastuReport,
+  EphemerisResult,
 } from "./types";
-import { NAKSHATRAS, RASHIS } from "./constants";
+import { NAKSHATRAS, RASHIS, RASHI_NAMES } from "./constants";
+import { calculateArudhaPadas } from "./jaimini";
+
 
 // ============================================================================
 // 1. 81-PADA PARAMASHAYIKA VASTU PURUSHA MANDALA (45 DEITIES MAPPING)
@@ -608,7 +613,117 @@ export function detectMarmaPiercing(placements: VastuRoomPlacement[]): string[] 
 }
 
 // ============================================================================
-// 6. MASTER VASTU SYNTHESIS & REPORT GENERATION
+// 6. JAIMINI ARUDHA VASTU ALIGNMENT (AL, UL, A7, A10 DIRECTIONAL MATRIX)
+// ============================================================================
+
+export function getRashiCompassDirection(signIndex: number): VastuDirection {
+  // Fire Triad (0: Aries, 4: Leo, 8: Sagittarius) -> East (Purva)
+  if ([0, 4, 8].includes(signIndex)) return "East (Purva)";
+  // Earth Triad (1: Taurus, 5: Virgo, 9: Capricorn) -> South (Dakshina)
+  if ([1, 5, 9].includes(signIndex)) return "South (Dakshina)";
+  // Air Triad (2: Gemini, 6: Libra, 10: Aquarius) -> West (Paschima)
+  if ([2, 6, 10].includes(signIndex)) return "West (Paschima)";
+  // Water Triad (3: Cancer, 7: Scorpio, 11: Pisces) -> North (Uttara)
+  return "North (Uttara)";
+}
+
+export function calculateJaiminiArudhaVastu(ephem: EphemerisResult): JaiminiVastuReport {
+  const padas = calculateArudhaPadas(ephem);
+  const alPada = padas[0]; // AL (Pada 1)
+  const ulPada = padas[11]; // UL (Pada 12)
+  const a7Pada = padas[6]; // A7 (Pada 7)
+  const a10Pada = padas[9]; // A10 (Pada 10)
+
+  // 11th and 12th from AL (Gain & Loss directions)
+  const gainSignIdx = (alPada.padaSignIndex + 10) % 12;
+  const gainSign = RASHI_NAMES[gainSignIdx];
+  const gainDir = getRashiCompassDirection(gainSignIdx);
+
+  const lossSignIdx = (alPada.padaSignIndex + 11) % 12;
+  const lossSign = RASHI_NAMES[lossSignIdx];
+  const lossDir = getRashiCompassDirection(lossSignIdx);
+
+  // 2nd from UL (Sustenance of Marriage)
+  const sustenanceSignIdx = (ulPada.padaSignIndex + 1) % 12;
+  const sustenanceSign = RASHI_NAMES[sustenanceSignIdx];
+  const sustenanceDir = getRashiCompassDirection(sustenanceSignIdx);
+
+  const arudhaLagna: JaiminiArudhaVastuInfo = {
+    code: "AL",
+    name: "Arudha Lagna (Public Facade & Wealth Portal)",
+    sanskritName: "आरूढ़ लग्न",
+    houseNumberInD1: alPada.padaHouse,
+    signName: alPada.padaSign.englishName,
+    signLord: alPada.lordName,
+    direction: getRashiCompassDirection(alPada.padaSignIndex),
+    purpose: "Governs public reputation, social stature, main residence facade, and perceived wealth.",
+    spatialRecommendation: `Align main entrance, living room, public reception, or primary house nameplate with **${getRashiCompassDirection(alPada.padaSignIndex)}** to project high stature and invite noble visitors.`,
+    gainZone11th: {
+      signName: gainSign.englishName,
+      direction: gainDir,
+      description: `11th from AL (${gainSign.englishName}) in **${gainDir}**: Primary financial inflow and wealth accumulation zone. Keep bright, clean, and energize with cash locker/investments.`,
+    },
+    lossZone12th: {
+      signName: lossSign.englishName,
+      direction: lossDir,
+      description: `12th from AL (${lossSign.englishName}) in **${lossDir}**: Expenditure and dissipation zone. Keep clutter-free, avoid heavy open safes or gambling items.`,
+    },
+  };
+
+  const upapadaLagna: JaiminiArudhaVastuInfo = {
+    code: "UL",
+    name: "Upapada Lagna (Marital Sanctum & Spouse Vitality)",
+    sanskritName: "उपपद लग्न (गौण पद)",
+    houseNumberInD1: ulPada.padaHouse,
+    signName: ulPada.padaSign.englishName,
+    signLord: ulPada.lordName,
+    direction: getRashiCompassDirection(ulPada.padaSignIndex),
+    purpose: "Governs marital harmony, bedroom sanctity, spouse's longevity, and domestic peace.",
+    spatialRecommendation: `Locate Master Bedroom or marital bed in or facing **${getRashiCompassDirection(ulPada.padaSignIndex)}**. Ensure **NO toilets, dustbins, or sharp objects** in this zone to prevent domestic disputes.`,
+    gainZone11th: {
+      signName: sustenanceSign.englishName,
+      direction: sustenanceDir,
+      description: `2nd from UL (${sustenanceSign.englishName}) in **${sustenanceDir}**: Governs sustenance of marital bond, nutrition, and peaceful coexistence.`,
+    },
+  };
+
+  const daraPada: JaiminiArudhaVastuInfo = {
+    code: "A7",
+    name: "Dara Pada (Commercial Partnerships & Alliances)",
+    sanskritName: "दारा पद",
+    houseNumberInD1: a7Pada.padaHouse,
+    signName: a7Pada.padaSign.englishName,
+    signLord: a7Pada.lordName,
+    direction: getRashiCompassDirection(a7Pada.padaSignIndex),
+    purpose: "Governs business co-founders, trade clients, and contractual agreements.",
+    spatialRecommendation: `Place meeting rooms, client sofas, or contract signing desks in **${getRashiCompassDirection(a7Pada.padaSignIndex)}**.`,
+  };
+
+  const rajyaPada: JaiminiArudhaVastuInfo = {
+    code: "A10",
+    name: "Rajya Pada (Career Command & Authority)",
+    sanskritName: "राज्य पद",
+    houseNumberInD1: a10Pada.padaHouse,
+    signName: a10Pada.padaSign.englishName,
+    signLord: a10Pada.lordName,
+    direction: getRashiCompassDirection(a10Pada.padaSignIndex),
+    purpose: "Governs professional reputation, executive leadership, promotions, and career authority.",
+    spatialRecommendation: `Face **${getRashiCompassDirection(a10Pada.padaSignIndex)}** while seated at your work desk or place corporate awards, certificates, and seals here.`,
+  };
+
+  const masterJaiminiVastuGuidance = `Native's Arudha Lagna (AL) in **${arudhaLagna.signName} (H${arudhaLagna.houseNumberInD1})** projects social power through **${arudhaLagna.direction}**, with supreme financial gain zone in **${gainDir} (11th from AL)**. Upapada Lagna (UL) in **${upapadaLagna.signName} (H${upapadaLagna.houseNumberInD1})** anchors marital longevity in **${upapadaLagna.direction}**.`;
+
+  return {
+    arudhaLagna,
+    upapadaLagna,
+    daraPada,
+    rajyaPada,
+    masterJaiminiVastuGuidance,
+  };
+}
+
+// ============================================================================
+// 7. MASTER VASTU SYNTHESIS & REPORT GENERATION
 // ============================================================================
 
 export function calculateVastuSynthesis(
@@ -616,7 +731,8 @@ export function calculateVastuSynthesis(
   lengthFeet: number = 40,
   breadthFeet: number = 30,
   nativeJanmaNakshatra?: string,
-  sarvashtakavargaPoints?: number[]
+  sarvashtakavargaPoints?: number[],
+  ephemeris?: EphemerisResult
 ): VastuSynthesisReport {
   const evaluatedPlacements = placements.map((p) =>
     evaluateRoomPlacement(p.roomType, p.row, p.col, p.customLabel)
@@ -660,9 +776,11 @@ export function calculateVastuSynthesis(
     }
   }
 
+  const effectiveNakshatra = nativeJanmaNakshatra || ephemeris?.planets?.Moon?.nakshatra?.sanskritName || "Ashwini";
   const marmaPiercingAlerts = detectMarmaPiercing(evaluatedPlacements);
-  const ayadiAnalysis = calculateAyadiShadvarga(lengthFeet, breadthFeet, nativeJanmaNakshatra);
+  const ayadiAnalysis = calculateAyadiShadvarga(lengthFeet, breadthFeet, effectiveNakshatra);
   const ashtakavargaDirectionalPower = calculateAshtakavargaVastuStrength(sarvashtakavargaPoints);
+  const jaiminiVastu = ephemeris ? calculateJaiminiArudhaVastu(ephemeris) : undefined;
 
   const topNonDestructiveRemedies: string[] = [
     "🌿 North-East (Īśānya) Healing: Keep clean, install a water fountain or brass bowl with holy water, and install a 3D Siddha Meru Sri Yantra.",
@@ -672,9 +790,13 @@ export function calculateVastuSynthesis(
     "🪙 North (Uttara) Kuber Activation: Place a consecrated Kuber Yantra facing South and paint walls in soothing mint green or pistachio tones.",
   ];
 
-  const masterVastuGuidance = `This space operates at **${totalScore}% Vastu Compliance (${grade})**. 
+  let masterVastuGuidance = `This space operates at **${totalScore}% Vastu Compliance (${grade})**. 
 The native's personal **Dhana-Disha (Peak Ashtakavarga Wealth Direction)** is **${ashtakavargaDirectionalPower.peakDirection}** with ${ashtakavargaDirectionalPower.eastSAV}–${ashtakavargaDirectionalPower.northSAV} bindu strength.
 Āyādi Shadvarga confirms **Āya (${ayadiAnalysis.ayaNumber}) ${ayadiAnalysis.isAyaGreaterThanVyaya ? ">" : "<"} Vyaya (${ayadiAnalysis.vyayaNumber})**, with building Nakshatra **${ayadiAnalysis.vastuNakshatraName}** forming **${ayadiAnalysis.janmaTaraCompatibility.taraType}** with native's Janma Nakshatra.`;
+
+  if (jaiminiVastu) {
+    masterVastuGuidance += ` Jaimini Arudha Lagna (AL) in **${jaiminiVastu.arudhaLagna.signName}** activates public prestige in **${jaiminiVastu.arudhaLagna.direction}**, while Upapada Lagna (UL) in **${jaiminiVastu.upapadaLagna.signName}** stabilizes marital longevity in **${jaiminiVastu.upapadaLagna.direction}**.`;
+  }
 
   return {
     overallScore: totalScore,
@@ -690,7 +812,9 @@ The native's personal **Dhana-Disha (Peak Ashtakavarga Wealth Direction)** is **
     marmaPiercingAlerts,
     ashtakavargaDirectionalPower,
     ayadiAnalysis,
+    jaiminiVastu,
     topNonDestructiveRemedies,
     masterVastuGuidance,
   };
 }
+

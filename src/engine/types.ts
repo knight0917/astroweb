@@ -1819,6 +1819,28 @@ export interface AshtakavargaVastuStrength {
   vulnerableDirectionWarning: string;
 }
 
+export interface JaiminiArudhaVastuInfo {
+  code: string;
+  name: string;
+  sanskritName: string;
+  houseNumberInD1: number;
+  signName: string;
+  signLord: string;
+  direction: VastuDirection;
+  purpose: string;
+  spatialRecommendation: string;
+  gainZone11th?: { signName: string; direction: VastuDirection; description: string };
+  lossZone12th?: { signName: string; direction: VastuDirection; description: string };
+}
+
+export interface JaiminiVastuReport {
+  arudhaLagna: JaiminiArudhaVastuInfo; // AL (Status, Nameplate, Facade)
+  upapadaLagna: JaiminiArudhaVastuInfo; // UL (Marital Sanctum, Master Bed)
+  daraPada: JaiminiArudhaVastuInfo; // A7 (Partnerships & Alliances)
+  rajyaPada: JaiminiArudhaVastuInfo; // A10 (Career Desk / Authority)
+  masterJaiminiVastuGuidance: string;
+}
+
 export interface VastuSynthesisReport {
   overallScore: number; // 0 to 100%
   grade: "Vaastu Siddha (परम शुभ)" | "Balanced (शुभ)" | "Needs Remediation (सुधार योग्य)" | "High Vastu Dosa (दोषयुक्त)";
@@ -1833,6 +1855,8 @@ export interface VastuSynthesisReport {
   marmaPiercingAlerts: string[];
   ashtakavargaDirectionalPower: AshtakavargaVastuStrength;
   ayadiAnalysis: AyadiShadvargaResult;
+  jaiminiVastu?: JaiminiVastuReport;
   topNonDestructiveRemedies: string[];
   masterVastuGuidance: string;
 }
+

@@ -63,8 +63,8 @@ export default function VastuStudio() {
 
   // Master Vastu Synthesis
   const vastuReport = useMemo(() => {
-    return calculateVastuSynthesis(placements, plotLength, plotBreadth, nativeMoonNak, savList);
-  }, [placements, plotLength, plotBreadth, nativeMoonNak, savList]);
+    return calculateVastuSynthesis(placements, plotLength, plotBreadth, nativeMoonNak, savList, natalEphem);
+  }, [placements, plotLength, plotBreadth, nativeMoonNak, savList, natalEphem]);
 
   // Handle cell click on 81-grid
   const handleCellClick = (row: number, col: number) => {
@@ -608,6 +608,126 @@ export default function VastuStudio() {
               <p className="text-xs text-slate-300 mt-0.5">{vastuReport.ashtakavargaDirectionalPower.peakDirectionTheme}</p>
             </div>
           </div>
+
+          {/* Jaimini Arudha & Upapada Lagna Directional Portals */}
+          {vastuReport.jaiminiVastu && (
+            <div className="space-y-4 pt-4 border-t border-slate-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[10.5px] font-bold text-amber-400 uppercase tracking-wider block">
+                    Maharshi Jaimini Upadesha Sutras (BPHS Ch. 30–33)
+                  </span>
+                  <h3 className="text-lg font-black text-slate-100 flex items-center gap-2">
+                    <span>🕉️ Jaimini Arudha (AL) & Upapada (UL) Directional Portals</span>
+                  </h3>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                {/* 1. Arudha Lagna (AL) */}
+                <div className="p-5 rounded-2xl bg-gradient-to-b from-amber-950/30 to-slate-900/90 border border-amber-500/40 space-y-3 shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-lg bg-amber-500 text-slate-950 font-black text-xs">
+                        AL
+                      </span>
+                      <span className="font-bold text-amber-200">{vastuReport.jaiminiVastu.arudhaLagna.name}</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-mono font-bold text-[11px] border border-amber-500/30">
+                      {vastuReport.jaiminiVastu.arudhaLagna.direction}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 text-[11px] space-y-1">
+                    <div className="flex justify-between text-slate-300">
+                      <span>Rashi & House:</span>
+                      <strong className="text-amber-300">{vastuReport.jaiminiVastu.arudhaLagna.signName} (House #{vastuReport.jaiminiVastu.arudhaLagna.houseNumberInD1})</strong>
+                    </div>
+                    <div className="flex justify-between text-slate-300">
+                      <span>Ruling Lord:</span>
+                      <strong className="text-slate-200">{vastuReport.jaiminiVastu.arudhaLagna.signLord}</strong>
+                    </div>
+                  </div>
+
+                  <p className="text-[11.5px] text-slate-200 leading-relaxed">
+                    {vastuReport.jaiminiVastu.arudhaLagna.spatialRecommendation}
+                  </p>
+
+                  {vastuReport.jaiminiVastu.arudhaLagna.gainZone11th && (
+                    <div className="p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-[11px] text-emerald-300">
+                      <strong>💰 11th from AL (Gain Portal):</strong> {vastuReport.jaiminiVastu.arudhaLagna.gainZone11th.description}
+                    </div>
+                  )}
+
+                  {vastuReport.jaiminiVastu.arudhaLagna.lossZone12th && (
+                    <div className="p-2.5 rounded-xl bg-rose-950/30 border border-rose-500/30 text-[11px] text-rose-300">
+                      <strong>⚠️ 12th from AL (Loss/Leakage Zone):</strong> {vastuReport.jaiminiVastu.arudhaLagna.lossZone12th.description}
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Upapada Lagna (UL) */}
+                <div className="p-5 rounded-2xl bg-gradient-to-b from-rose-950/30 to-slate-900/90 border border-rose-500/40 space-y-3 shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-lg bg-rose-500 text-white font-black text-xs">
+                        UL
+                      </span>
+                      <span className="font-bold text-rose-200">{vastuReport.jaiminiVastu.upapadaLagna.name}</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 font-mono font-bold text-[11px] border border-rose-500/30">
+                      {vastuReport.jaiminiVastu.upapadaLagna.direction}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 text-[11px] space-y-1">
+                    <div className="flex justify-between text-slate-300">
+                      <span>Rashi & House:</span>
+                      <strong className="text-rose-300">{vastuReport.jaiminiVastu.upapadaLagna.signName} (House #{vastuReport.jaiminiVastu.upapadaLagna.houseNumberInD1})</strong>
+                    </div>
+                    <div className="flex justify-between text-slate-300">
+                      <span>Ruling Lord:</span>
+                      <strong className="text-slate-200">{vastuReport.jaiminiVastu.upapadaLagna.signLord}</strong>
+                    </div>
+                  </div>
+
+                  <p className="text-[11.5px] text-slate-200 leading-relaxed">
+                    {vastuReport.jaiminiVastu.upapadaLagna.spatialRecommendation}
+                  </p>
+
+                  {vastuReport.jaiminiVastu.upapadaLagna.gainZone11th && (
+                    <div className="p-2.5 rounded-xl bg-amber-950/30 border border-amber-500/30 text-[11px] text-amber-300">
+                      <strong>💍 2nd from UL (Marital Sustenance):</strong> {vastuReport.jaiminiVastu.upapadaLagna.gainZone11th.description}
+                    </div>
+                  )}
+
+                  <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[10.5px] text-slate-400">
+                    🛡️ <strong>Sanctity Rule:</strong> Strictly preserve this zone from clutter, dirt, or sharp edges to protect long-term domestic peace.
+                  </div>
+                </div>
+
+                {/* 3. Rajya Pada (A10) */}
+                <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-amber-300">💼 A10 - Rajya Pada (Career Command)</span>
+                    <span className="font-mono text-xs font-bold text-amber-400">{vastuReport.jaiminiVastu.rajyaPada.direction}</span>
+                  </div>
+                  <span className="text-[10.5px] text-slate-400 block">Sign: {vastuReport.jaiminiVastu.rajyaPada.signName} (Lord: {vastuReport.jaiminiVastu.rajyaPada.signLord})</span>
+                  <p className="text-[11px] text-slate-300">{vastuReport.jaiminiVastu.rajyaPada.spatialRecommendation}</p>
+                </div>
+
+                {/* 4. Dara Pada (A7) */}
+                <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-indigo-300">🤝 A7 - Dara Pada (Partnerships & Alliances)</span>
+                    <span className="font-mono text-xs font-bold text-indigo-400">{vastuReport.jaiminiVastu.daraPada.direction}</span>
+                  </div>
+                  <span className="text-[10.5px] text-slate-400 block">Sign: {vastuReport.jaiminiVastu.daraPada.signName} (Lord: {vastuReport.jaiminiVastu.daraPada.signLord})</span>
+                  <p className="text-[11px] text-slate-300">{vastuReport.jaiminiVastu.daraPada.spatialRecommendation}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -80,7 +80,7 @@ import { generateNakshatraActivationSummary } from "./nakshatraActivation";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
 import { calculateDayMuhurta } from "./muhurta";
-import { calculateAshtakavargaVastuStrength, calculateAyadiShadvarga } from "./vastuEngine";
+import { calculateAshtakavargaVastuStrength, calculateAyadiShadvarga, calculateJaiminiArudhaVastu } from "./vastuEngine";
 import { GeoLocation } from "./types";
 import { RASHI_NAMES } from "./constants";
 
@@ -1709,6 +1709,7 @@ export function buildAstroDossier(
     const savList = (natalEphemeris as any).sarvashtakavarga || [28, 30, 32, 29, 31, 33, 27, 34, 30, 29, 32, 28];
     const vastuStrength = calculateAshtakavargaVastuStrength(savList);
     const ayadiSample = calculateAyadiShadvarga(36, 24, moonNak);
+    const jVastu = calculateJaiminiArudhaVastu(natalEphemeris);
 
     vastuSummary = [
       `- **Native's Astrological Vastu Alignment:**`,
@@ -1718,6 +1719,13 @@ export function buildAstroDossier(
       `    - West (Kama/Vayu): **${vastuStrength.westSAV} Bindus** | North (Moksha/Jala): **${vastuStrength.northSAV} Bindus**`,
       `  - **Peak Wealth & Opportunity Direction (Dhana-Disha):** **${vastuStrength.peakDirection}** (${vastuStrength.peakDirectionTheme})`,
       `  - **Sensitive Direction Requiring Shielding:** **${vastuStrength.vulnerableDirection}** (${vastuStrength.vulnerableDirectionWarning})`,
+      `- **🕉️ Jaimini Arudha & Upapada Directional Alignment:**`,
+      `  - **Arudha Lagna (AL - Public Facade & Wealth Portal):** In **${jVastu.arudhaLagna.signName} (House #${jVastu.arudhaLagna.houseNumberInD1})** -> Aligns with **${jVastu.arudhaLagna.direction}**. ${jVastu.arudhaLagna.spatialRecommendation}`,
+      jVastu.arudhaLagna.gainZone11th ? `  - **11th from AL (Supreme Inflow Zone):** In **${jVastu.arudhaLagna.gainZone11th.direction}** (${jVastu.arudhaLagna.gainZone11th.signName})` : "",
+      jVastu.arudhaLagna.lossZone12th ? `  - **12th from AL (Expense/Leakage Zone):** In **${jVastu.arudhaLagna.lossZone12th.direction}** (${jVastu.arudhaLagna.lossZone12th.signName})` : "",
+      `  - **Upapada Lagna (UL - Marital Sanctum & Bedroom Harmony):** In **${jVastu.upapadaLagna.signName} (House #${jVastu.upapadaLagna.houseNumberInD1})** -> Aligns with **${jVastu.upapadaLagna.direction}**. ${jVastu.upapadaLagna.spatialRecommendation}`,
+      jVastu.upapadaLagna.gainZone11th ? `  - **2nd from UL (Marital Sustenance):** In **${jVastu.upapadaLagna.gainZone11th.direction}** (${jVastu.upapadaLagna.gainZone11th.signName})` : "",
+      `  - **Rajya Pada (A10 - Career Authority):** In **${jVastu.rajyaPada.direction}** (${jVastu.rajyaPada.signName}) • **Dara Pada (A7 - Partnerships):** In **${jVastu.daraPada.direction}** (${jVastu.daraPada.signName})`,
       `- **8-Directional Functional Room Allocations (Samarāṅgaṇa-Sūtradhāra Standard):**`,
       `  - **North-East (Īśānya - Water/Space):** Meditation, Pooja Mandir, Study, Underground Water (Strictly NO Toilets/Kitchen).`,
       `  - **South-East (Āgneya - Fire):** Kitchen, Cooktop, Electricals, Geyser (Cook strictly facing East).`,
@@ -1732,7 +1740,7 @@ export function buildAstroDossier(
       `  - Directional Metal Conduits: Pure Copper wire (SE/East), Silver/Zinc (NE/North), Brass (West/NW), Lead strip (SW).`,
       `  - Elemental Color Therapy: Mint Green (North), Golden Saffron (East), Soft Coral/Pink (SE), Earthy Ochre (SW), Sky Blue/White (NE).`,
       `  - Sacred Yantras: 3D Siddha Meru Sri Yantra in NE, Kuber Yantra in North, Vastu Dosh Nivaran Yantra on Main Door.`,
-    ].join("\n");
+    ].filter(Boolean).join("\n");
   } catch (_) {}
 
   // 71. 27 Nakshatras Activation Years & Cosmic Awakening Dossier (Dr. Samir Tripathi & Nadi Shastra)
@@ -2130,7 +2138,10 @@ export function buildAstroDossier(
       samirPanchangSummary,
       "",
       "#### 🌟 71. 27 NAKSHATRA ACTIVATION YEARS & COSMIC AWAKENING DOSSIER:",
-      nakshatraActivationSummary
+      nakshatraActivationSummary,
+      "",
+      "#### 🏛️ 72. CLASSICAL VĀSTU ŚĀSTRA, 81-GRID PURUSHA MANDALA & JAIMINI ARUDHA DIRECTIONAL DOSSIER:",
+      vastuSummary
     );
   }
 
