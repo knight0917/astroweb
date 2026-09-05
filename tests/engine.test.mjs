@@ -4455,3 +4455,48 @@ test("Classical Birth Time Rectification (BTR) & Event-Based Dasha Timeline Engi
   assert.ok(infantSummary.includes("DO NOT probe or ask about adult life milestones"), "Infant summary must instruct to bypass adult milestones");
 });
 
+test("Classical Svara Jyotish (Avakahada Chakra & 108 Padas), Relative Names & Chatbot Token Routing Verification", async () => {
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const { buildChatSystemInstruction, extractUserConfirmedFacts } = await import("../src/engine/chatPrompt.ts");
+  const { AVAKAHADA_CHAKRA_SYLLABLES } = await import("../src/engine/nameAnalysis.ts");
+
+  // 1. Avakahada Chakra Syllables (108 Padas across 27 Nakshatras)
+  assert.strictEqual(Object.keys(AVAKAHADA_CHAKRA_SYLLABLES).length, 27);
+  // Jyeshtha (Index 17) Pada 4 = "Yu"
+  const jyeshthaPada4 = AVAKAHADA_CHAKRA_SYLLABLES[17][4];
+  assert.ok(jyeshthaPada4);
+  assert.strictEqual(jyeshthaPada4.sanskrit, "यू");
+  assert.strictEqual(jyeshthaPada4.english, "Yu");
+
+  // 2. Chat System Instruction Rule 0P Verification
+  const location = { cityName: "Allahabad", country: "India", latitude: 25.4358, longitude: 81.8463, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1999-09-17T13:02:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const sysInst = buildChatSystemInstruction("Sample Dossier", ["Single"]);
+  
+  assert.ok(sysInst.includes("0P. **CLASSICAL SVARA JYOTISH, RELATIVE NAME & DIVISIONAL QUESTIONNAIRE PROTOCOL"));
+  assert.ok(sysInst.includes("Janma Nama (Sacred Birth Star Syllable)"));
+  assert.ok(sysInst.includes("STRICT PROHIBITION ON ALPHABET SHOTGUNNING"));
+  assert.ok(sysInst.includes("STRICT PROHIBITION ON POST-HOC RETROFITTING & AD-HOC EXCUSES"));
+  assert.ok(sysInst.includes("DIVISIONAL QUESTIONNAIRE SYNTHESIS (D-60 SANCHITA KARMA & D-10 DASAMSA FEEDBACK)"));
+
+  // 3. User Confirmed Facts & Relative Names Extraction
+  const sampleMessages = [
+    { role: "user", content: "Yes, I am single and youngest child in my family." },
+    { role: "user", content: "my father name starts with v" },
+    { role: "user", content: "i can say m and certifies name a" },
+    { role: "user", content: "sister name starts with r" },
+    { role: "user", content: "it's de" },
+    { role: "user", content: "love interest name starts with m" },
+  ];
+  const facts = extractUserConfirmedFacts(sampleMessages);
+  assert.ok(facts.some((f) => f.includes("Single / Unmarried")));
+  assert.ok(facts.some((f) => f.includes("Youngest Child")));
+  assert.ok(facts.some((f) => f.includes("Father's Name Initial") && f.includes('"V"')));
+  assert.ok(facts.some((f) => f.includes("Mother's Name Initial") && f.includes('"M"')));
+  assert.ok(facts.some((f) => f.includes("Certified Calling Name") && f.includes('"A"')));
+  assert.ok(facts.some((f) => f.includes("Older Sister's Name Initial") && f.includes('"R"')));
+  assert.ok(facts.some((f) => f.includes("Sister's First Child Initial") && f.includes('"De"')));
+  assert.ok(facts.some((f) => f.includes("Past Connection Initial") && f.includes('"M"')));
+});
+
+

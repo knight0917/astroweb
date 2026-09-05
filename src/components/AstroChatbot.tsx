@@ -750,12 +750,21 @@ ${nakAct.masterRemedyRecommendation}
   }
 
   // 14. Birth Time Rectification (BTR) Confirmation Resolver (6-Divisional Framework & Shastric Shodhanas)
-  if (
-    /^(1\.\s*(yes|no|delivery|learning)|1:\s*(yes|no)|q1\s*:|lock & verify|verify & lock)/i.test(q) ||
-    q.includes("Bala Jataka") ||
-    q.includes("Kishora Jataka") ||
-    (q.includes("1.") && (q.includes("yes") || q.includes("no") || q.includes("delivery") || q.includes("normal") || q.includes("c-section") || q.includes("vitality")) && (q.includes("eldest") || q.includes("youngest") || q.includes("middle") || q.includes("only") || q.includes("1st child") || q.includes("2nd child") || q.includes("2.")))
-  ) {
+  const isBtrExplicitLock =
+    q.includes("[btr_adult_verified]") ||
+    q.includes("[btr_bala_verified]") ||
+    q.includes("[btr_kishora_verified]") ||
+    q.includes("btr_adult_verified") ||
+    q.includes("btr_bala_verified") ||
+    q.includes("btr_kishora_verified") ||
+    q.includes("(bala jataka verified)") ||
+    q.includes("(kishora jataka verified)") ||
+    q.includes("lock & verify") ||
+    q.includes("verify & lock") ||
+    /^(verify|lock)\s+(my\s+)?(birth\s+time|btr|clock)/i.test(q) ||
+    (/^1\.\s*(yes|no),\s*2\.\s*(yes|no),\s*3\.\s*(single|married|committed|past),\s*4\.\s*(eldest|youngest|middle|only|\d+(?:st|nd|rd|th)?\s*child)/i.test(q));
+
+  if (isBtrExplicitLock) {
     const { timeStr, dateStr } = getLocalCivilDateTime(natalEphem);
     const ascRashi = natalEphem.ascendant.rashi.englishName;
     const ascDeg = `${(natalEphem.ascendant.siderealLongitude % 30).toFixed(2)}°`;
@@ -765,15 +774,15 @@ ${nakAct.masterRemedyRecommendation}
 
     const birthDateObj = new Date(natalEphem.utcDate);
     const nativeAge = Math.max(0, (evaluationDate.getTime() - birthDateObj.getTime()) / (365.25 * 24 * 3600 * 1000));
-    const isInfant = nativeAge < 3 || q.includes("Bala Jataka") || q.includes("Delivery:");
-    const isMinor = !isInfant && (nativeAge < 18 || q.includes("Kishora Jataka"));
+    const isInfant = nativeAge < 3 || q.includes("bala jataka") || q.includes("delivery:");
+    const isMinor = !isInfant && (nativeAge < 18 || q.includes("kishora jataka"));
 
     // 1. Sibling Order extraction
-    let siblingText = "Eldest";
+    let siblingText = "Eldest Child";
     if (/youngest|2nd child/i.test(q)) siblingText = "Youngest / 2nd Child";
     else if (/middle|3rd/i.test(q)) siblingText = "Middle / 3rd+ Child";
     else if (/only\s*child|only/i.test(q)) siblingText = "Only Child";
-    else if (/1st child|first-born/i.test(q)) siblingText = "1st Child (Eldest)";
+    else if (/1st child|first-born|eldest/i.test(q)) siblingText = "1st Child (Eldest)";
 
     // Perform Authentic Mathematical Shodhana Calculations
     const kunda = calculateKundaShodhana(natalEphem);
@@ -912,7 +921,7 @@ What would you like to explore for the child?
 - 🎓 **D-24 Siddhamsha (Higher Learning Cusp):** ${isQ1Yes ? "✅ Confirmed aligned with D-24 4th/5th/9th learning gateway." : "✅ Calibrated with foundational education axis."}
 - 💼 **D-10 Dasamsa (Career Authority Axis):** ${isQ2Yes ? "✅ Confirmed aligned with D-10 Karma cusp and Saturn transit axis." : "✅ Internal career consolidation phase confirmed."}
 - 💍 **D-9 Navamsha (${d9Status}):** ✅ Aligns with the 7th Lord in D-9 Navamsha, locking your soul-relationship timeline.
-- 🌿 **D-3 Drekkana (${siblingText} Child):** ✅ Locks the 3rd house and D-3 Drekkana lagna alignments with your birth order.
+- 🌿 **D-3 Drekkana (${siblingText}):** ✅ Locks the 3rd house and D-3 Drekkana lagna alignments with your birth order.
 - 🏡 **D-4 Chaturthamsha (${isQ5Relocated ? "Relocated from Ancestral Roots" : "Ancestral Soil Stability"}):** ✅ 4th/12th house stability vector verified in D-4 chart.
 - 🛡️ **D-60 Shashtiamsha (${isQ6Yes ? "Karmic Pivot / Physical Mark" : "Protective Shield"}):** ✅ Protective benefic drishti shielding confirmed.
 
@@ -1028,13 +1037,13 @@ function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: In
 
   const handleSubmit = () => {
     if (isInfant) {
-      const formatted = `1. Delivery: ${infantDelivery}, 2. Sibling Order: ${infantSibling}, 3. Vitality: ${infantVitality}, 4. Birth Location: ${infantLocation} (Bala Jataka Verified)`;
+      const formatted = `1. Delivery: ${infantDelivery}, 2. Sibling Order: ${infantSibling}, 3. Vitality: ${infantVitality}, 4. Birth Location: ${infantLocation} [BTR_BALA_VERIFIED]`;
       onVerify(formatted);
     } else if (isMinor) {
-      const formatted = `1. Learning Aptitude: ${minorAptitude}, 2. Sibling Order: ${minorSibling}, 3. Family Residence: ${minorReloc}, 4. Health: ${minorHealth} (Kishora Jataka Verified)`;
+      const formatted = `1. Learning Aptitude: ${minorAptitude}, 2. Sibling Order: ${minorSibling}, 3. Family Residence: ${minorReloc}, 4. Health: ${minorHealth} [BTR_KISHORA_VERIFIED]`;
       onVerify(formatted);
     } else {
-      const formatted = `1. ${q1}, 2. ${q2}, 3. ${q3}, 4. ${q4}, 5. ${q5}, 6. ${q6}`;
+      const formatted = `1. ${q1}, 2. ${q2}, 3. ${q3}, 4. ${q4}, 5. ${q5}, 6. ${q6} [BTR_ADULT_VERIFIED]`;
       onVerify(formatted);
     }
   };

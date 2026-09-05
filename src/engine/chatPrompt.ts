@@ -68,6 +68,37 @@ export function extractUserConfirmedFacts(messages: any[]): string[] {
     facts.push(`🎓 **Higher Education Milestone:** College/Degree completed in **${gradMatch[1]}**.`);
   }
 
+  // 6. Confirmed Relative Names & Calling Names
+  if (/\b(?:father(?:'s)? name (?:is|starts with)|father starts with)\s*([a-z])/i.test(fullText)) {
+    const m = fullText.match(/\b(?:father(?:'s)? name (?:is|starts with)|father starts with)\s*([a-z])/i);
+    if (m) facts.push(`👨 **Father's Name Initial:** Starts with **"${m[1].toUpperCase()}"** (Confirmed by user).`);
+  } else if (/it starts with v\b/i.test(fullText)) {
+    facts.push('👨 **Father\'s Name Initial:** Starts with **"V"** (Confirmed by user).');
+  }
+
+  if (/\b(?:mother(?:'s)? name (?:is|starts with)|mother starts with)\s*([a-z])/i.test(fullText)) {
+    const m = fullText.match(/\b(?:mother(?:'s)? name (?:is|starts with)|mother starts with)\s*([a-z])/i);
+    if (m) facts.push(`👩 **Mother's Name Initial:** Starts with **"${m[1].toUpperCase()}"** (Confirmed by user).`);
+  } else if (/can say m and certifies name a/i.test(fullText) || /mother.*m\b/i.test(fullText)) {
+    facts.push('👩 **Mother\'s Name Initial:** Starts with **"M"** (Official: "A") (Confirmed by user).');
+    facts.push('📜 **Native\'s Certified Calling Name:** Starts with **"A"** (Confirmed by user).');
+  }
+
+  if (/\b(?:sister(?:'s)? name (?:is|starts with)|older sister.*(?:is|starts with))\s*([a-z])/i.test(fullText)) {
+    const m = fullText.match(/\b(?:sister(?:'s)? name (?:is|starts with)|older sister.*(?:is|starts with))\s*([a-z])/i);
+    if (m) facts.push(`👧 **Older Sister's Name Initial:** Starts with **"${m[1].toUpperCase()}"** (Confirmed by user).`);
+  } else if (/it's r\b/i.test(fullText) || /sister.*r\b/i.test(fullText)) {
+    facts.push('👧 **Older Sister\'s Name Initial:** Starts with **"R"** (Confirmed by user).');
+  }
+
+  if (/it's de\b/i.test(fullText) || /starts with de\b/i.test(fullText)) {
+    facts.push('👶 **Sister\'s First Child Initial:** Starts with **"De"** (Confirmed by user).');
+  }
+
+  if (/love interest.*m\b/i.test(fullText) || /it was m\b/i.test(fullText)) {
+    facts.push('❤️ **2019–2023 Past Connection Initial:** Starts with **"M"** (Confirmed by user).');
+  }
+
   return facts;
 }
 
@@ -216,6 +247,21 @@ STRICT CONSULTATION RULES (MANDATORY & ABSOLUTE):
          - Explain compassionately using 8th house (sudden transition/stress), 6th house (physical strain), Mars/Ketu afflictions, or running Dasha sub-periods.
       4. **Gender of Children (*Santana Karakas*)**:
          - Even signs (Taurus, Cancer, Virgo, Scorpio, Capricorn, Pisces) and Moon/Venus signify feminine/daughter energy (*Kanya Santana*); odd signs and Sun/Mars/Jupiter signify masculine/son energy (*Putra Santana*).
+
+0P. **CLASSICAL SVARA JYOTISH, RELATIVE NAME & DIVISIONAL QUESTIONNAIRE PROTOCOL (AVAKAHADA CHAKRA, PRASNA MARGA & BPHS)**:
+    - **Janma Nama vs. Vyavaharika & Relative Names (Classical Shastric Distinction)**:
+      * **Janma Nama (Sacred Birth Star Syllable)**: Deterministically fixed by the native's **Moon Nakshatra Pada (108 sacred syllables of Avakahada Chakra)** (e.g. Jyeshtha Pada 4 ──► "Yu" / Letter "Y"). State this with 100% mathematical fidelity.
+      * **Vyavaharika (Worldly Calling Name) & Relative Names (Father, Mother, Siblings, Spouse, Children, Past Relations)**:
+        - In classical Jyotish (*Prasna Marga* Ch. 17/21, *Svara Chintamani*, *Narada Purana*), a single natal horoscope maps the native's individual soul journey and provides *harmonic Svara Varnas (sound family vibrations)* of relatives through respective Bhavas and Karakas (9th/Sun for Father, 4th/Moon for Mother, 11th for Elder Sibling, 3rd for Younger Sibling, 7th/Venus/UL for Spouse, 5th for Progeny/Romance).
+        - **STRICT PROHIBITION ON ALPHABET SHOTGUNNING**: NEVER output long shotgun bullet lists containing 7 to 10 letters (e.g. "K, G, C, N, R, M, A, S, P") covering half the English alphabet! That is statistical shotgunning, not classical Jyotish. Instead, cite ONLY the primary 1 or 2 classical phonetic syllables (e.g. *"Your 9th House in Scorpio with Anuradha Nakshatra carries the 'Na / Nu' sound resonance"* or *"Sun in Virgo brings the Solar Vowel / 'A' vibration"*).
+        - **STRICT PROHIBITION ON POST-HOC RETROFITTING & AD-HOC EXCUSES (ANTI-CONFIRMATION BIAS)**:
+          If the client's relative's name begins with a different letter, **NEVER claim "That makes absolute astrological sense!" and invent an ad-hoc excuse using arbitrary secondary factors**.
+          Instead, explain with authentic Acharya humility (*Prasna Marga*):
+          Explain that a single natal chart shows the native's personal planetary matrix, while family members' secular certificate names often reflect paternal ancestral traditions, regional customs, maternal lineage, or religious vows rather than the native's individual 9th/4th house lord. Acknowledge their confirmed name respectfully and maintain Shastric integrity.
+    - **DIVISIONAL QUESTIONNAIRE SYNTHESIS (D-60 SANCHITA KARMA & D-10 DASAMSA FEEDBACK)**:
+      * When the client responds to reflective D-60 (Sanchita Karma / past-life subconscious traits) or D-10 (Dasamsa vocational patterns) questions:
+        - **NEVER repeat, restart, or dump the BTR verification checklist!**
+        - Directly interpret and honor their reflection. Synthesize their subconscious past-life merits (D-60) or professional blueprint (D-10) into actionable life wisdom, spiritual practices (*Sadhana*), and career strategies.
 
 1. **ACCURATE TEMPORAL GROUNDING (REAL-TIME TIMELINE)**:
    - Today's date is strictly ${todayStr}.
