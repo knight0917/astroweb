@@ -521,6 +521,26 @@ export default function TimeTravelSlider() {
               />
             </div>
 
+            <span className="text-slate-600 font-mono pt-2.5">:</span>
+
+            {/* Second */}
+            <div className="flex flex-col items-center">
+              <span className="text-[8.5px] text-slate-500 font-bold">SEC</span>
+              <input
+                type="number"
+                min="0"
+                max="59"
+                value={second}
+                onFocus={() => setIsEditing(true)}
+                onChange={(e) => {
+                  setIsEditing(true);
+                  setSecond(e.target.value);
+                }}
+                onKeyDown={(e) => e.key === "Enter" && handleApplyDateTime()}
+                className="w-11 bg-slate-900 border border-slate-700 focus:border-amber-500 rounded p-1 text-xs text-center text-slate-100 font-mono font-bold"
+              />
+            </div>
+
             {/* Apply Button */}
             <button
               onClick={handleApplyDateTime}
@@ -800,7 +820,7 @@ export default function TimeTravelSlider() {
             </div>
 
             {/* Time Grid */}
-            <div className="grid grid-cols-2 gap-2 pt-1">
+            <div className="grid grid-cols-3 gap-2 pt-1">
               <div>
                 <label className="text-[10px] font-bold text-slate-400 block mb-1">HOUR (24h)</label>
                 <input
@@ -826,6 +846,21 @@ export default function TimeTravelSlider() {
                   onChange={(e) => {
                     setIsEditing(true);
                     setMinute(e.target.value);
+                  }}
+                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-xl p-2.5 text-center font-mono font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 block mb-1">SECOND</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="59"
+                  value={second}
+                  onChange={(e) => {
+                    setIsEditing(true);
+                    setSecond(e.target.value);
                   }}
                   className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-xl p-2.5 text-center font-mono font-bold"
                 />
@@ -1198,7 +1233,7 @@ export default function TimeTravelSlider() {
                 </div>
                 <div className="flex items-center justify-between text-slate-300">
                   <span>⏰ Time of Birth:</span>
-                  <span className="text-amber-300 font-bold">{hour}:{minute} (Local)</span>
+                  <span className="text-amber-300 font-bold">{hour}:{minute}:{second} (Local)</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-300">
                   <span>📍 Place of Birth:</span>

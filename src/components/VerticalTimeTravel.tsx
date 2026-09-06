@@ -34,6 +34,7 @@ export default function VerticalTimeTravel() {
   const [day, setDay] = useState(displayDate.getUTCDate().toString());
   const [hour, setHour] = useState(displayDate.getUTCHours().toString().padStart(2, "0"));
   const [minute, setMinute] = useState(displayDate.getUTCMinutes().toString().padStart(2, "0"));
+  const [second, setSecond] = useState(displayDate.getUTCSeconds().toString().padStart(2, "0"));
 
   // Location States
   const [placeName, setPlaceName] = useState(location.cityName);
@@ -51,6 +52,7 @@ export default function VerticalTimeTravel() {
       setDay(d.getUTCDate().toString());
       setHour(d.getUTCHours().toString().padStart(2, "0"));
       setMinute(d.getUTCMinutes().toString().padStart(2, "0"));
+      setSecond(d.getUTCSeconds().toString().padStart(2, "0"));
     }
   }, [currentDate, timeMode, tzOffsetMs, isEditingTime]);
 
@@ -69,9 +71,10 @@ export default function VerticalTimeTravel() {
     const d = parseInt(day, 10);
     const h = parseInt(hour, 10) || 0;
     const min = parseInt(minute, 10) || 0;
+    const s = parseInt(second, 10) || 0;
 
     if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
-      const parsedUtcMs = Date.UTC(y, m, d, h, min, 0);
+      const parsedUtcMs = Date.UTC(y, m, d, h, min, s);
       const finalDate =
         timeMode === "local"
           ? new Date(parsedUtcMs - tzOffsetMs)
@@ -388,8 +391,8 @@ export default function VerticalTimeTravel() {
                 </div>
               </div>
 
-              {/* Hour / Minute */}
-              <div className="grid grid-cols-2 gap-1.5">
+              {/* Hour / Minute / Second */}
+              <div className="grid grid-cols-3 gap-1.5">
                 <div>
                   <span className="text-[8px] text-slate-500 font-bold block mb-0.5">HH (24h)</span>
                   <input
@@ -418,6 +421,23 @@ export default function VerticalTimeTravel() {
                     onChange={(e) => {
                       setIsEditingTime(true);
                       setMinute(e.target.value);
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && handleApplyDateTime()}
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-1.5 text-xs text-center text-slate-100 font-mono font-bold"
+                  />
+                </div>
+
+                <div>
+                  <span className="text-[8px] text-slate-500 font-bold block mb-0.5">SEC</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={second}
+                    onFocus={() => setIsEditingTime(true)}
+                    onChange={(e) => {
+                      setIsEditingTime(true);
+                      setSecond(e.target.value);
                     }}
                     onKeyDown={(e) => e.key === "Enter" && handleApplyDateTime()}
                     className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-1.5 text-xs text-center text-slate-100 font-mono font-bold"
