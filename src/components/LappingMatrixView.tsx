@@ -244,7 +244,7 @@ export default function LappingMatrixView({
         </div>
       )}
 
-      {/* Dr. Samir Tripathi 8th-House Solitude & Fasting Remedy Engine */}
+      {/* Classical 8th-House Solitude & Fasting Remedy Engine */}
       <div className="p-4 rounded-xl bg-gradient-to-r from-purple-950/40 to-slate-900 border border-purple-800/50 space-y-2 text-xs font-sans">
         <div className="flex items-center gap-2 font-bold text-purple-300">
           <span className="text-base">🏔️</span>

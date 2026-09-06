@@ -4,6 +4,27 @@ import { calculateJaiminiKarakas } from "./jaimini";
 import { calculateAshtakavarga } from "./ashtakavarga";
 import { RASHI_NAMES } from "./constants";
 
+export interface D1LagnaLordInD10Analysis {
+  d1LagnaLord: string;
+  d10SignIndex: number;
+  d10SignName: string;
+  d10House: number;
+  modality: "Chara (Movable)" | "Sthira (Fixed)" | "Dvisvabhava (Dual)";
+  modalityCareerBehavior: string;
+  signArchetypeTitle: string;
+  signArchetypeDescription: string;
+  dignityInD10: "Exalted" | "Moolatrikona / Own Sign" | "Debilitated" | "Kendra" | "Trikona" | "Dusthana" | "Neutral";
+  isDebilitatedInD10: boolean;
+  debilitationSynthesis?: string;
+  saturnConnection: {
+    hasSaturnConnection: boolean;
+    connectionType: "In Saturn Sign (Capricorn/Aquarius)" | "Conjunct Saturn" | "Parivartana with Saturn" | "Aspect from Saturn" | "None";
+    leadershipVerdict: string;
+  };
+  conjunctionsInD10: string[];
+  keyVocationalSignature: string;
+}
+
 export interface CareerJobBusinessAnalysis {
   // 1. Hemisphere Balance (Left vs Right) — Handwritten Rule 15 & BPHS
   leftCount: number; // Houses 10, 11, 12, 1, 2, 3 (Eastern/Individual/Job)
@@ -31,6 +52,9 @@ export interface CareerJobBusinessAnalysis {
   d10TenthHouseOccupants: string[];
   sunUpachayaWithJupiterAspect: boolean;
   sunInKendras: boolean;
+
+  // 3b. D-1 Lagna Lord in D-10 Dasamsa (Classical Parashara & Shodashavarga Tradition)
+  d1LagnaLordInD10: D1LagnaLordInD10Analysis;
 
   // 4. Key Career Combinations — Handwritten Rules 8 to 14
   lord10House: number;
@@ -186,6 +210,199 @@ export function analyzeCareerJobBusiness(ephem: EphemerisResult): CareerJobBusin
   // D10 10th house occupants
   const d10TenthOccupants = d10Chart.entities.filter((e) => e.house === 10).map((e) => e.name);
 
+  // 3b. D-1 Lagna Lord in D-10 Dasamsa Analysis (Classical Parashara & Shodashavarga Tradition)
+  const d1LagnaSignIdx = ascSignIdx;
+  const d1LagnaLord = RASHI_NAMES[d1LagnaSignIdx].lord;
+  const pD1LagnaLord = getPlanet(d1LagnaLord);
+
+  let d1LagnaLordInD10SignIdx = 0;
+  let d1LagnaLordInD10SignName = "Aries";
+  let d1LagnaLordD10House = 1;
+  let d1LagnaLordD10Dignity: "Exalted" | "Moolatrikona / Own Sign" | "Debilitated" | "Kendra" | "Trikona" | "Dusthana" | "Neutral" = "Neutral";
+  let isDebilitatedInD10 = false;
+  let debilitationSynthesis: string | undefined = undefined;
+
+  if (pD1LagnaLord) {
+    d1LagnaLordInD10SignIdx = calculateVargaSign(pD1LagnaLord.siderealLongitude, "D10");
+    d1LagnaLordInD10SignName = RASHI_NAMES[d1LagnaLordInD10SignIdx].englishName;
+    d1LagnaLordD10House = ((d1LagnaLordInD10SignIdx - d10Chart.ascendant.vargaSignIndex + 12) % 12) + 1;
+
+    // Check exaltation / own sign / debilitation
+    const signObj = RASHI_NAMES[d1LagnaLordInD10SignIdx];
+    if (
+      (d1LagnaLord === "Sun" && signObj.englishName === "Aries") ||
+      (d1LagnaLord === "Moon" && signObj.englishName === "Taurus") ||
+      (d1LagnaLord === "Mars" && signObj.englishName === "Capricorn") ||
+      (d1LagnaLord === "Mercury" && signObj.englishName === "Virgo") ||
+      (d1LagnaLord === "Jupiter" && signObj.englishName === "Cancer") ||
+      (d1LagnaLord === "Venus" && signObj.englishName === "Pisces") ||
+      (d1LagnaLord === "Saturn" && signObj.englishName === "Libra")
+    ) {
+      d1LagnaLordD10Dignity = "Exalted";
+    } else if (
+      (d1LagnaLord === "Sun" && signObj.englishName === "Libra") ||
+      (d1LagnaLord === "Moon" && signObj.englishName === "Scorpio") ||
+      (d1LagnaLord === "Mars" && signObj.englishName === "Cancer") ||
+      (d1LagnaLord === "Mercury" && signObj.englishName === "Pisces") ||
+      (d1LagnaLord === "Jupiter" && signObj.englishName === "Capricorn") ||
+      (d1LagnaLord === "Venus" && signObj.englishName === "Virgo") ||
+      (d1LagnaLord === "Saturn" && signObj.englishName === "Aries")
+    ) {
+      d1LagnaLordD10Dignity = "Debilitated";
+      isDebilitatedInD10 = true;
+    } else if (signObj.lord === d1LagnaLord) {
+      d1LagnaLordD10Dignity = "Moolatrikona / Own Sign";
+    } else if ([1, 4, 7, 10].includes(d1LagnaLordD10House)) {
+      d1LagnaLordD10Dignity = "Kendra";
+    } else if ([5, 9].includes(d1LagnaLordD10House)) {
+      d1LagnaLordD10Dignity = "Trikona";
+    } else if ([6, 8, 12].includes(d1LagnaLordD10House)) {
+      d1LagnaLordD10Dignity = "Dusthana";
+    }
+  }
+
+  if (isDebilitatedInD10) {
+    debilitationSynthesis = `D-1 Lagna Lord ${d1LagnaLord} is Debilitated (Neecha) in D-10 ${d1LagnaLordInD10SignName}: Indicates intense initial toil, delayed societal recognition, and periods of professional dissatisfaction ('I contribute far more than the rewards I receive'). Direct vulnerability where workplace pressure impacts vitality and health; demands deliberate pacing. However, if Venus or Jupiter, it simultaneously sharpens analytical, accounting (CA), or advisory competence despite the struggle.`;
+  }
+
+  // Modality of D-1 Lagna Lord in D-10
+  let modality: "Chara (Movable)" | "Sthira (Fixed)" | "Dvisvabhava (Dual)" = "Chara (Movable)";
+  let modalityCareerBehavior = "";
+  if ([0, 3, 6, 9].includes(d1LagnaLordInD10SignIdx)) {
+    modality = "Chara (Movable)";
+    modalityCareerBehavior = "Movable (Chara) Karma: Highly dynamic, mobile, and evolving professional life. Prone to geographic movements, travel, changing environments, or launching new initiatives; struggles in static, monotonous desk routines.";
+  } else if ([1, 4, 7, 10].includes(d1LagnaLordInD10SignIdx)) {
+    modality = "Sthira (Fixed)";
+    modalityCareerBehavior = "Fixed (Sthira) Karma: Seeks deep roots, institutional stability, and long-term organizational tenure. Reluctant to jump roles frequently; thrives in established hierarchies, government or corporate anchors with enduring permanence.";
+  } else {
+    modality = "Dvisvabhava (Dual)";
+    modalityCareerBehavior = "Dual (Dvisvabhava) Karma: Inherent duality in professional expression. Thrives with multiple simultaneous projects, dual streams (consulting alongside job, or employment transitioning into independent business), multitasking, and versatile intellectual adaptability.";
+  }
+
+  // 12 Sign Archetypes (Classical Dasamsa Shastra)
+  const SIGN_ARCHETYPES: Record<number, { title: string; desc: string }> = {
+    0: { // Aries
+      title: "Pioneering Execution & Martial Leadership",
+      desc: "Entering the field of Karma as an assertive pioneer. Driven to initiate, lead from the front, and execute independent decisions. Thrives in technical execution, engineering, defense, emergency response, law, sports/fitness, or construction. Resents bureaucratic micromanagement and demands autonomous responsibility.",
+    },
+    1: { // Taurus
+      title: "Value Creation, Banking & Asset Management",
+      desc: "Entering Karma focused on tangible value, monetization, and stability. Natural affinity for banking, wealth management, finance, food/hospitality, luxury goods, and asset building. Driven by practical returns; early impulse to monetize skills and build enduring material security.",
+    },
+    2: { // Gemini
+      title: "Information, Media & Multi-Stream Commerce",
+      desc: "Entering Karma through intellectual communication, marketing, IT systems, media, writing, and networking. Highly skilled in translating complex information into actionable commerce. Flourishes with multiple parallel revenue streams and diverse intellectual projects.",
+    },
+    3: { // Cancer
+      title: "Public Welfare, Caregiving & Emotional Intuition",
+      desc: "Entering Karma with deep emotional resonance with the masses. Thrives in public relations, human resources, healthcare/nursing, hospitality, food/liquids, real estate, and coastal/water commerce. High emotional investment in work and colleagues; requires shielding against office politics or emotional exploitation.",
+    },
+    4: { // Leo
+      title: "Executive Authority, Governance & Visible Status",
+      desc: "Entering Karma with royal bearing, commanding presence, and executive stature. Oriented toward civil administration, government leadership, policy formulation, and high corporate governance. Demands visible recognition and autonomy; excels when holding supreme decision-making authority.",
+    },
+    5: { // Virgo
+      title: "Critical Problem-Solving, Audit & Trouble-Shooting",
+      desc: "Entering Karma as a precision trouble-shooter and analytical auditor. Natural aptitude for Chartered Accountancy, financial analysis, software debugging, medical/healthcare diagnostics, and process optimization. Possesses keen commercial discernment ('Baniya buddhi') to fix flaws that others overlook.",
+    },
+    6: { // Libra
+      title: "Marketplace Diplomacy, Partnerships & Client Commerce",
+      desc: "Entering Karma through relational intelligence, B2B negotiation, contracts, legal arbitration, and commercial design. Professional breakthroughs frequently accelerate post-marriage or through key female partners/allies. Master of diplomacy, consensus building, and marketplace exchange.",
+    },
+    7: { // Scorpio
+      title: "Deep Investigation, Occult & Crisis Transformation",
+      desc: "Entering Karma through transformative depth, secret strategies, and crisis management. Thrives in confidential operations, investigative research, taxation, forensic audit, occult/astrology, mining, and high-stakes engineering. Keeps professional strategies protected; undergoes profound career metamorphosis.",
+    },
+    8: { // Sagittarius
+      title: "Institutional Advisory, Mentorship & Strategic Vision",
+      desc: "Entering Karma as a knowledge carrier, ethical guide, and high-level counselor. Natural advisor to executives, CEOs, and state institutions. Oriented toward jurisprudence, economics, higher academia, philosophical systems, and expansive strategic policy.",
+    },
+    9: { // Capricorn
+      title: "High Responsibility, Organizational Infrastructure & Labor Governance",
+      desc: "Entering Karma through rigorous perseverance, institutional building from the ground up, and heavy administrative duty. Essential signature for mass governance, labor relations, public administration, and large corporate machinery. Demands humility and relentless stamina.",
+    },
+    10: { // Aquarius
+      title: "Systemic Networks, Technology & Unconventional Enterprise",
+      desc: "Entering Karma through complex networked systems, scientific innovation, disruptive technology, and mass connectivity. Often maintains a discreet or unconventional professional identity. Thrives in futuristic research, large platforms, and unconventional solutions.",
+    },
+    11: { // Pisces
+      title: "Intuitive Mastery, Subconscious Creation & Global Reach",
+      desc: "Entering Karma through elevated intuition, creative arts, music, foreign commerce, healthcare, and metaphysical healing. Excels in solitary deep work, night productivity, and higher abstract logic (especially if Mercury). Requires grounding to avoid unrealistic ideals.",
+    },
+  };
+
+  // Saturn Connection in D-10 (The Mass Politician / Public Authority / Labor Governance Rule)
+  const satEntity = d10Chart.entities.find((e) => e.name === "Saturn");
+  const satD10House = satEntity ? satEntity.house : 0;
+  const satD10SignIdx = satEntity ? satEntity.vargaSignIndex : -1;
+
+  let hasSaturnConnection = false;
+  let saturnConnectionType: "In Saturn Sign (Capricorn/Aquarius)" | "Conjunct Saturn" | "Parivartana with Saturn" | "Aspect from Saturn" | "None" = "None";
+
+  if (satEntity && pD1LagnaLord) {
+    const d1LagnaLordOwnSigns = (d1LagnaLord === "Sun") ? [4] :
+      (d1LagnaLord === "Moon") ? [3] :
+      (d1LagnaLord === "Mars") ? [0, 7] :
+      (d1LagnaLord === "Mercury") ? [2, 5] :
+      (d1LagnaLord === "Jupiter") ? [8, 11] :
+      (d1LagnaLord === "Venus") ? [1, 6] :
+      (d1LagnaLord === "Saturn") ? [9, 10] : [];
+
+    const isLagnaLordInSatSign = [9, 10].includes(d1LagnaLordInD10SignIdx);
+    const isSatInLagnaLordSign = d1LagnaLordOwnSigns.includes(satD10SignIdx);
+
+    if (isLagnaLordInSatSign && isSatInLagnaLordSign && d1LagnaLord !== "Saturn") {
+      hasSaturnConnection = true;
+      saturnConnectionType = "Parivartana with Saturn";
+    } else if (d1LagnaLordInD10SignIdx === satD10SignIdx && d1LagnaLord !== "Saturn") {
+      hasSaturnConnection = true;
+      saturnConnectionType = "Conjunct Saturn";
+    } else if (isLagnaLordInSatSign) {
+      hasSaturnConnection = true;
+      saturnConnectionType = "In Saturn Sign (Capricorn/Aquarius)";
+    } else {
+      const distFromSat = ((d1LagnaLordD10House - satD10House + 12) % 12) + 1;
+      if ([3, 7, 10].includes(distFromSat)) {
+        hasSaturnConnection = true;
+        saturnConnectionType = "Aspect from Saturn";
+      }
+    }
+  }
+
+  let saturnLeadershipVerdict = "Operates without direct Saturnian mass-pressure; career trajectory driven by independent merit, technical specialization, or commercial dexterity rather than mass-political mobilization.";
+  if (hasSaturnConnection) {
+    saturnLeadershipVerdict = `Saturnian Mass Governance & Resilience (${saturnConnectionType}): Possesses the classical signature identified for mass leaders, statesmen, public administration, and managing large workforces (as observed in prominent political charts). Grants the necessary endurance, humility, and tolerance to handle public pressure and societal responsibilities.`;
+  }
+
+  // Conjunctions in D-10 with D-1 Lagna Lord
+  const d10Conjunctions: string[] = [];
+  d10Chart.entities.forEach((e) => {
+    if (e.vargaSignIndex === d1LagnaLordInD10SignIdx && e.name !== d1LagnaLord && e.name !== "Ascendant") {
+      d10Conjunctions.push(e.name);
+    }
+  });
+
+  const d1LagnaLordInD10: D1LagnaLordInD10Analysis = {
+    d1LagnaLord,
+    d10SignIndex: d1LagnaLordInD10SignIdx,
+    d10SignName: d1LagnaLordInD10SignName,
+    d10House: d1LagnaLordD10House,
+    modality,
+    modalityCareerBehavior,
+    signArchetypeTitle: SIGN_ARCHETYPES[d1LagnaLordInD10SignIdx]?.title || "Professional Archetype",
+    signArchetypeDescription: SIGN_ARCHETYPES[d1LagnaLordInD10SignIdx]?.desc || "",
+    dignityInD10: d1LagnaLordD10Dignity,
+    isDebilitatedInD10,
+    debilitationSynthesis,
+    saturnConnection: {
+      hasSaturnConnection,
+      connectionType: saturnConnectionType,
+      leadershipVerdict: saturnLeadershipVerdict,
+    },
+    conjunctionsInD10: d10Conjunctions,
+    keyVocationalSignature: `${d1LagnaLord} in ${d1LagnaLordInD10SignName} (H${d1LagnaLordD10House} in D-10) • ${modality} • ${SIGN_ARCHETYPES[d1LagnaLordInD10SignIdx]?.title || ""}`,
+  };
+
   // Sun upachaya check
   const sunHouse = sun ? getHouse(sun.siderealLongitude) : 1;
   const jupHouse = jup ? getHouse(jup.siderealLongitude) : 1;
@@ -330,6 +547,7 @@ export function analyzeCareerJobBusiness(ephem: EphemerisResult): CareerJobBusin
     d110thLordD10House,
     d110thLordD10Dignity,
     d10TenthHouseOccupants: d10TenthOccupants,
+    d1LagnaLordInD10,
     sunUpachayaWithJupiterAspect,
     sunInKendras,
     lord10House: hLord10,

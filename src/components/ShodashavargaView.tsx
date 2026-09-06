@@ -10,6 +10,7 @@ import {
 import { evaluateRashiTulyaNavamsha } from "../engine/rashiTulyaNavamsha";
 import { calculateVedicEphemeris } from "../engine/ephemeris";
 import { RASHIS } from "../engine/constants";
+import { analyzeCareerJobBusiness } from "../engine/careerJobBusiness";
 
 export type VargaViewId = VargaId | "RTN";
 
@@ -44,6 +45,11 @@ export default function ShodashavargaView() {
     const vId: VargaId = isRtnMode ? "D9" : (selectedVarga as VargaId);
     return calculateShodashavargaChart(ephemeris, vId, showUpagrahas, showModernPlanets);
   }, [ephemeris, selectedVarga, isRtnMode, showUpagrahas, showModernPlanets]);
+
+  const d10CareerAnalysis = useMemo(() => {
+    if (selectedVarga !== "D10") return null;
+    return analyzeCareerJobBusiness(ephemeris);
+  }, [ephemeris, selectedVarga]);
 
   const allVargas = Object.values(VARGA_DEFINITIONS);
 
@@ -750,6 +756,104 @@ export default function ShodashavargaView() {
                   </div>
                 </div>
               </div>
+
+              {/* D-10 Dasamsa Career & Karma Secret Card (Classical Shodashavarga Tradition) */}
+              {selectedVarga === "D10" && d10CareerAnalysis && (
+                <div className="glass-panel p-5 rounded-2xl border border-purple-500/40 shadow-2xl bg-gradient-to-br from-slate-950/95 via-purple-950/20 to-slate-950/90 space-y-3.5">
+                  <div className="flex items-center justify-between border-b border-purple-500/20 pb-2.5">
+                    <span className="text-[10px] font-extrabold text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>⚡</span>
+                      <span>D-10 Dasamsa Secret: D-1 Lagna Lord in Karma Field</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-purple-950/80 border border-purple-500/50 text-[10px] font-mono text-purple-200 font-bold">
+                      Classical Parashari Shastra
+                    </span>
+                  </div>
+
+                  {/* Primary Banner */}
+                  <div className="bg-slate-900/90 border border-purple-500/30 p-3.5 rounded-xl space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs text-slate-300 font-medium">
+                        D-1 Lagna Lord: <strong className="text-purple-300 font-extrabold">{d10CareerAnalysis.d1LagnaLordInD10.d1LagnaLord}</strong>
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-500/50 text-[10px] font-bold text-purple-200">
+                        {d10CareerAnalysis.d1LagnaLordInD10.d10SignName} (House {d10CareerAnalysis.d1LagnaLordInD10.d10House} in D-10)
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/50 text-[10px] font-bold text-amber-300">
+                        {d10CareerAnalysis.d1LagnaLordInD10.dignityInD10}
+                      </span>
+                    </div>
+                    <div className="text-xs font-black text-slate-100 flex items-center gap-1.5 pt-1">
+                      <span className="text-amber-400">👑</span>
+                      <span>{d10CareerAnalysis.d1LagnaLordInD10.signArchetypeTitle}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 leading-relaxed font-normal">
+                      {d10CareerAnalysis.d1LagnaLordInD10.signArchetypeDescription}
+                    </p>
+                  </div>
+
+                  {/* Karma Modality */}
+                  <div className="bg-slate-900/70 border border-slate-800/90 p-3 rounded-xl space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400 font-semibold flex items-center gap-1">
+                        <span>🔄</span>
+                        <span>Career Rhythm & Modality:</span>
+                      </span>
+                      <span className="font-bold text-cyan-300">{d10CareerAnalysis.d1LagnaLordInD10.modality}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 leading-relaxed font-normal">
+                      {d10CareerAnalysis.d1LagnaLordInD10.modalityCareerBehavior}
+                    </p>
+                  </div>
+
+                  {/* Saturnian Mass-Governance Leadership Signature */}
+                  <div className="bg-slate-900/70 border border-slate-800/90 p-3 rounded-xl space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400 font-semibold flex items-center gap-1">
+                        <span>🏛️</span>
+                        <span>Saturn Mass-Governance Signature:</span>
+                      </span>
+                      <span className={`font-bold text-[10px] px-1.5 py-0.5 rounded border ${
+                        d10CareerAnalysis.d1LagnaLordInD10.saturnConnection.hasSaturnConnection
+                          ? "bg-amber-950/80 text-amber-300 border-amber-500/60"
+                          : "bg-slate-950/80 text-slate-400 border-slate-800"
+                      }`}>
+                        {d10CareerAnalysis.d1LagnaLordInD10.saturnConnection.connectionType}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 leading-relaxed font-normal">
+                      {d10CareerAnalysis.d1LagnaLordInD10.saturnConnection.leadershipVerdict}
+                    </p>
+                  </div>
+
+                  {/* Conjunctions in D-10 */}
+                  {d10CareerAnalysis.d1LagnaLordInD10.conjunctionsInD10.length > 0 && (
+                    <div className="bg-slate-900/70 border border-slate-800/90 p-2.5 rounded-xl flex items-center justify-between text-xs">
+                      <span className="text-slate-400 font-semibold">D-10 Allied Grahas:</span>
+                      <div className="flex items-center gap-1.5">
+                        {d10CareerAnalysis.d1LagnaLordInD10.conjunctionsInD10.map((c, i) => (
+                          <span key={i} className="px-1.5 py-0.5 rounded bg-purple-950/80 border border-purple-500/40 text-purple-300 font-mono text-[10px] font-bold">
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Debilitation Caveat if applicable */}
+                  {d10CareerAnalysis.d1LagnaLordInD10.debilitationSynthesis && (
+                    <div className="bg-rose-950/30 border border-rose-500/40 p-3 rounded-xl space-y-1">
+                      <span className="text-[10px] font-extrabold text-rose-300 uppercase tracking-wider flex items-center gap-1">
+                        <span>⚠️</span>
+                        <span>Neecha D-1 Lagna Lord in D-10 (Toil & Friction Dynamic)</span>
+                      </span>
+                      <p className="text-[11px] text-rose-200/90 leading-relaxed font-normal">
+                        {d10CareerAnalysis.d1LagnaLordInD10.debilitationSynthesis}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Standard Planetary Varga Positions Table */}
               <div className="glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 space-y-3">

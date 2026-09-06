@@ -86,7 +86,7 @@ export default function MuhurtaView() {
               Vedic Daily Panchanga & Shastric Guidance
             </h2>
             <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
-              Dr. Samir Tripathi Suite
+              Classical Shastric Suite
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
@@ -495,7 +495,7 @@ export default function MuhurtaView() {
             <div className="flex items-center gap-2">
               <span className="text-xl">🌟</span>
               <h3 className="text-base font-black text-amber-300">
-                Dr. Samir Tripathi Daily Shastric Astro Guidance (दैनिक ज्योतिषीय परामर्श)
+                Classical Daily Shastric Astro Guidance (दैनिक ज्योतिषीय परामर्श)
               </h3>
             </div>
 
@@ -554,7 +554,7 @@ export default function MuhurtaView() {
                     27 Nakshatras Cosmic Activation Timeline (नक्षत्र जागरण वर्ष)
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Dr. Samir Tripathi & Nadi Shastra Matrix: When your natal Nakshatras awaken to trigger career, fortune, and spiritual turning points
+                    Classical Nadi & Nakshatra Shastra Matrix: When your natal Nakshatras awaken to trigger career, fortune, and spiritual turning points
                   </p>
                 </div>
               </div>

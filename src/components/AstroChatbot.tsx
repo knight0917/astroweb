@@ -75,7 +75,7 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
       {
         icon: "💰",
         title: "My Indu Lagna (IL)",
-        prompt: "What is my Indu Lagna (IL), its exact ray Kalas, house position, and wealth potential according to Dr. Samir Tripathi's classical formula?",
+        prompt: "What is my Indu Lagna (IL), its exact ray Kalas, house position, and wealth potential according to classical Shastric formula?",
       },
       {
         icon: "🎯",
@@ -90,7 +90,7 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
       {
         icon: "⭐",
         title: "Nakshatra Activation Year",
-        prompt: "Which of my natal Nakshatras (Moon, Lagna, 10th Lord, AK) is actively awakened for my current age and what turning points will it trigger according to Dr. Samir Tripathi's Shastra?",
+        prompt: "Which of my natal Nakshatras (Moon, Lagna, 10th Lord, AK) is actively awakened for my current age and what turning points will it trigger according to classical Nadi Shastra?",
       },
     ],
   },
@@ -109,7 +109,7 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
       {
         icon: "💰",
         title: "Indu Lagna Wealth Math",
-        prompt: "What is my Indu Lagna (IL), its exact Kalas, and wealth grade according to Dr. Samir Tripathi's formula?",
+        prompt: "What is my Indu Lagna (IL), its exact Kalas, and wealth grade according to classical Shastric formula?",
       },
       {
         icon: "📈",
@@ -684,7 +684,7 @@ ${topPlanets}
     (q.includes("rahu") && (q.includes("kaal") || q.includes("kalam") || q.includes("today")))
   ) {
     const panchang = calculateSamirTripathiPanchang(evaluationDate, transitEphem.location || natalEphem.location, natalEphem.ayanamshaType);
-    return `### 🌸 **Today's Vedic Daily Panchanga & Astro Guidance (Dr. Samir Tripathi Shastra):**
+    return `### 🌸 **Today's Vedic Daily Panchanga & Astro Guidance (Classical Vedic Shastra):**
 - 📍 **Location:** ${panchang.cityName} • 📅 **Date:** ${panchang.evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
 - 🌅 **Sunrise:** ${panchang.sunriseFormatted} • 🌇 **Sunset:** ${panchang.sunsetFormatted}
 
@@ -731,7 +731,7 @@ ${topPlanets}
       (p) => `- ⏳ **Age ${p.closestActivationAge} (~${p.yearsUntilActivation} yrs):** **${p.nakshatraName} (${p.pointType})** ──► ${p.phalaDescription}`
     ).join("\n");
 
-    return `### ⭐ **Your 27 Nakshatras Cosmic Activation Timeline (Dr. Samir Tripathi Shastra):**
+    return `### ⭐ **Your 27 Nakshatras Cosmic Activation Timeline (Classical Nadi Shastra):**
 - **Current Age:** **${nakAct.completedAge} Completed Years (Running ${nakAct.runningYear}th Year)**
 
 #### 🌟 **Currently Awakened Nakshatras:**

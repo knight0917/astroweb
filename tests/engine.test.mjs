@@ -3203,6 +3203,21 @@ test("Classical Job vs Business & D-10 Dasamsa Career Engine Verification", asyn
   assert.ok(career.d10LagnaLord);
   assert.ok(career.d110thLordInD10);
   assert.ok(typeof career.d110thLordD10House === "number");
+  assert.ok(career.d1LagnaLordInD10);
+  assert.ok(career.d1LagnaLordInD10.d1LagnaLord);
+  assert.ok(typeof career.d1LagnaLordInD10.d10SignIndex === "number");
+  assert.ok(career.d1LagnaLordInD10.d10SignName);
+  assert.ok(typeof career.d1LagnaLordInD10.d10House === "number");
+  assert.ok(["Chara (Movable)", "Sthira (Fixed)", "Dvisvabhava (Dual)"].includes(career.d1LagnaLordInD10.modality));
+  assert.ok(career.d1LagnaLordInD10.modalityCareerBehavior.length > 10);
+  assert.ok(career.d1LagnaLordInD10.signArchetypeTitle.length > 5);
+  assert.ok(career.d1LagnaLordInD10.signArchetypeDescription.length > 10);
+  assert.ok(career.d1LagnaLordInD10.dignityInD10);
+  assert.strictEqual(typeof career.d1LagnaLordInD10.isDebilitatedInD10, "boolean");
+  assert.ok(typeof career.d1LagnaLordInD10.saturnConnection.hasSaturnConnection === "boolean");
+  assert.ok(career.d1LagnaLordInD10.saturnConnection.leadershipVerdict.length > 10);
+  assert.ok(Array.isArray(career.d1LagnaLordInD10.conjunctionsInD10));
+  assert.ok(career.d1LagnaLordInD10.keyVocationalSignature.length > 10);
   assert.ok(career.amatyakarakaPlanet);
   assert.ok(typeof career.savHouse6 === "number");
   assert.ok(typeof career.savHouse7 === "number");
@@ -3212,6 +3227,24 @@ test("Classical Job vs Business & D-10 Dasamsa Career Engine Verification", asyn
   assert.ok(career.primaryRecommendation);
   assert.ok(career.executiveSummary.length > 20);
   assert.ok(career.promotionsAndTimingNote.length > 20);
+});
+
+test("D-1 Lagna Lord in D-10 Dasamsa Behavioral & Leadership Architecture (Classical Dasamsa Verification)", async () => {
+  const { analyzeCareerJobBusiness } = await import("../src/engine/careerJobBusiness.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // Case: Native with known coordinates
+  const loc = { cityName: "New Delhi", country: "India", latitude: 28.61, longitude: 77.20, timezoneOffsetHours: 5.5 };
+  const ephem = calculateVedicEphemeris(new Date("1990-10-24T06:30:00.000Z"), loc, "Lahiri", "WholeSign", "Mean");
+  const analysis = analyzeCareerJobBusiness(ephem);
+
+  assert.ok(analysis.d1LagnaLordInD10);
+  assert.ok(analysis.d1LagnaLordInD10.d1LagnaLord);
+  assert.ok(analysis.d1LagnaLordInD10.d10SignName);
+  assert.ok(["Chara (Movable)", "Sthira (Fixed)", "Dvisvabhava (Dual)"].includes(analysis.d1LagnaLordInD10.modality));
+  assert.ok(analysis.d1LagnaLordInD10.signArchetypeTitle);
+  assert.ok(analysis.d1LagnaLordInD10.signArchetypeDescription);
+  assert.ok(typeof analysis.d1LagnaLordInD10.saturnConnection.hasSaturnConnection === "boolean");
 });
 
 test("Classical Pushkara Navamsha & Pushkara Bhaga Engine (Jataka Parijata) Verification", async () => {
