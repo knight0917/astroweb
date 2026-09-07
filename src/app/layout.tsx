@@ -3,9 +3,50 @@ import "./globals.css";
 import PwaRegister from "../components/PwaRegister";
 
 export const metadata: Metadata = {
-  title: "Vedic Sky AI — Precision Jyotish & Panchanga",
+  metadataBase: new URL("https://astroweb-swart.vercel.app"),
+  title: "Vedic Sky AI — Precision Jyotish, 16 Vargas & Classical Engines",
   description:
-    "Precision Vedic Astrology, 3D Celestial SkyDome, Kundli, Shadbala, and Daily Tithi Calendar.",
+    "Production-grade Vedic Astrology Platform featuring 3D Celestial SkyDome, 16 Parashari Vargas (D1–D60 with D-10 Career Secret), Vāstu Studio 81, Kundli Milan 36 Gunas, Vimshottari 120Y Dasha, and AI Jyotish Consultation.",
+  keywords: [
+    "Vedic Astrology",
+    "Jyotish",
+    "Kundli",
+    "Shodashavarga",
+    "D10 Dashamsha Career",
+    "Vāstu Śāstra",
+    "Kundli Milan",
+    "Vimshottari Dasha",
+    "Shadbala",
+    "Panchanga",
+    "Tajik Prashna",
+    "Ashtakavarga",
+    "Vedic Sky AI",
+  ],
+  authors: [{ name: "Vedic Sky AI Engineering Team" }],
+  openGraph: {
+    title: "Vedic Sky AI — Precision Jyotish, 16 Vargas & Classical Engines",
+    description:
+      "Explore 21 classical Vedic astrology engines, real-time 3D SkyDome, D-10 Dasamsa Career Secrets, Vāstu Studio 81, and AI Consultation.",
+    url: "https://astroweb-swart.vercel.app",
+    siteName: "Vedic Sky AI",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "/icons/icon-512.svg",
+        width: 512,
+        height: 512,
+        alt: "Vedic Sky AI Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Vedic Sky AI — Precision Jyotish & Classical Engines",
+    description:
+      "Explore 21 classical Vedic astrology engines, real-time 3D SkyDome, D-10 Dasamsa Career Secrets, and Vāstu Studio 81.",
+    images: ["/icons/icon-512.svg"],
+  },
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,

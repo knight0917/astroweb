@@ -1978,6 +1978,13 @@ export default function AstroChatbot() {
     if (savedKey) setUserApiKey(savedKey);
   }, []);
 
+  // Listen for global open-astro-chat event from QuickHighlightsBar
+  useEffect(() => {
+    const handleOpenChat = () => setIsOpen(true);
+    window.addEventListener("open-astro-chat", handleOpenChat);
+    return () => window.removeEventListener("open-astro-chat", handleOpenChat);
+  }, []);
+
   const handleSaveApiKey = (key: string) => {
     setUserApiKey(key);
     localStorage.setItem("vedic_gemini_api_key", key);

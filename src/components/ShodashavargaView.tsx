@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import {
   calculateShodashavargaChart,
@@ -15,10 +15,6 @@ import { analyzeCareerJobBusiness } from "../engine/careerJobBusiness";
 export type VargaViewId = VargaId | "RTN";
 
 export default function ShodashavargaView() {
-  const [selectedVarga, setSelectedVarga] = useState<VargaViewId>("D9");
-  const [chartType, setChartType] = useState<"north" | "south">("north");
-  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "Shadvarga" | "Saptavarga" | "Dashavarga" | "RTN">("ALL");
-
   const {
     ephemeris,
     location,
@@ -29,7 +25,27 @@ export default function ShodashavargaView() {
     showUpagrahas,
     selectedEntityId,
     setSelectedEntityId,
+    activeVargaId,
+    setActiveVargaId,
   } = useAstroStore();
+
+  const [selectedVarga, setSelectedVarga] = useState<VargaViewId>(() => {
+    return (activeVargaId as VargaViewId) || "D9";
+  });
+  const [chartType, setChartType] = useState<"north" | "south">("north");
+  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "Shadvarga" | "Saptavarga" | "Dashavarga" | "RTN">("ALL");
+
+  // Keep local selectedVarga in sync if activeVargaId changed externally
+  useEffect(() => {
+    if (activeVargaId && activeVargaId !== selectedVarga) {
+      setSelectedVarga(activeVargaId as VargaViewId);
+    }
+  }, [activeVargaId]);
+
+  const handleSelectVarga = (vId: VargaViewId) => {
+    setSelectedVarga(vId);
+    setActiveVargaId(vId);
+  };
 
   const isRtnMode = selectedVarga === "RTN";
 
@@ -206,8 +222,8 @@ export default function ShodashavargaView() {
                 key={cat}
                 onClick={() => {
                   setCategoryFilter(cat);
-                  if (cat === "RTN") setSelectedVarga("RTN");
-                  else if (isRtnMode) setSelectedVarga("D9");
+                  if (cat === "RTN") handleSelectVarga("RTN");
+                  else if (isRtnMode) handleSelectVarga("D9");
                 }}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
                   isActive
@@ -235,7 +251,7 @@ export default function ShodashavargaView() {
           {/* Dedicated RTN Button in Carousel */}
           <button
             onClick={() => {
-              setSelectedVarga("RTN");
+              handleSelectVarga("RTN");
               setCategoryFilter("RTN");
             }}
             className={`snap-item px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-start gap-0.5 border cursor-pointer ${
@@ -262,18 +278,33 @@ export default function ShodashavargaView() {
 
           {filteredVargas.map((v) => {
             const isSelected = selectedVarga === v.id;
+            const isD10 = v.id === "D10";
             return (
               <button
                 key={v.id}
-                onClick={() => setSelectedVarga(v.id)}
+                onClick={() => handleSelectVarga(v.id)}
                 className={`snap-item px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-start gap-0.5 border cursor-pointer ${
                   isSelected
                     ? "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 border-amber-300 shadow-lg shadow-amber-500/25 scale-105"
+                    : isD10
+                    ? "bg-gradient-to-br from-purple-950/50 via-slate-900/90 to-amber-950/40 hover:bg-purple-900/60 text-amber-200 border-amber-500/60 shadow-md shadow-amber-500/10"
                     : "bg-slate-900/70 hover:bg-slate-800/80 text-slate-300 border-slate-800"
                 }`}
               >
                 <div className="flex items-center gap-1.5 w-full justify-between">
-                  <span className="font-extrabold text-sm">{v.id}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="font-extrabold text-sm">{v.id}</span>
+                    {isD10 && (
+                      <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded flex items-center gap-0.5 tracking-tight ${
+                        isSelected
+                          ? "bg-slate-950 text-amber-300 font-mono"
+                          : "bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 font-sans shadow animate-pulse"
+                      }`}>
+                        <span>⚡</span>
+                        <span>Secret</span>
+                      </span>
+                    )}
+                  </div>
                   <span
                     className={`text-[9px] px-1.5 py-0.2 rounded font-mono ${
                       isSelected ? "bg-slate-950 text-amber-300" : "bg-slate-800 text-slate-400"

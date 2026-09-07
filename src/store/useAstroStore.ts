@@ -196,6 +196,8 @@ interface AstroState {
   setShowUpagrahas: (show: boolean) => void;
   setShowConstellations: (show: boolean) => void;
   setViewMode: (mode: ViewMode) => void;
+  activeVargaId: string;
+  setActiveVargaId: (vargaId: string) => void;
   setSkyViewType: (type: SkyViewType) => void;
   setSelectedEntityId: (id: string | null) => void;
   setInspectorEntityId: (id: string | null) => void;
@@ -234,6 +236,8 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   showUpagrahas: true,
   showConstellations: true,
   viewMode: "kundli-north",
+  activeVargaId: "D9",
+  setActiveVargaId: (vargaId: string) => set({ activeVargaId: vargaId }),
   skyViewType: "ecliptic",
   selectedEntityId: null,
   inspectorEntityId: null,
