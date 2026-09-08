@@ -4532,4 +4532,139 @@ test("Classical Svara Jyotish (Avakahada Chakra & 108 Padas), Relative Names & C
   assert.ok(facts.some((f) => f.includes("Past Connection Initial") && f.includes('"M"')));
 });
 
+test("Classical Marriage Destiny Gate & Fatal Veto Engine (विवाह निर्णय, रज्जु, वेध एवं उपपद) Verification", async () => {
+  const {
+    calculateMatchmaking,
+    evaluateRajjuKoota,
+    evaluateVedhaKoota,
+    evaluateStreeDeergha,
+    evaluateUpapadaMatch,
+    evaluateMarriageDestinyGate,
+    NAKSHATRA_RAJJU,
+    VEDHA_PAIRS,
+  } = await import("../src/engine/matchmaking.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 1. Validate All 27 Nakshatras Mapped in Rajju Koota
+  assert.equal(Object.keys(NAKSHATRA_RAJJU).length, 27, "All 27 Nakshatras must be mapped to Rajju");
+  assert.equal(NAKSHATRA_RAJJU[4].type, "Sira (Head)", "Mrigashira (4) must be Sira Rajju");
+  assert.equal(NAKSHATRA_RAJJU[13].type, "Sira (Head)", "Chitra (13) must be Sira Rajju");
+  assert.equal(NAKSHATRA_RAJJU[22].type, "Sira (Head)", "Dhanishta (22) must be Sira Rajju");
+  assert.equal(NAKSHATRA_RAJJU[3].type, "Kantha (Neck)", "Rohini (3) must be Kantha Rajju");
+  assert.equal(NAKSHATRA_RAJJU[2].type, "Kati (Waist)", "Krittika (2) must be Kati Rajju");
+  assert.equal(NAKSHATRA_RAJJU[1].type, "Uru (Thighs)", "Bharani (1) must be Uru Rajju");
+  assert.equal(NAKSHATRA_RAJJU[0].type, "Pada (Feet)", "Ashwini (0) must be Pada Rajju");
+
+  // 2. Classical Rajju Veto Consequences (Prasna Marga & BV Raman)
+  // Mrigashira & Chitra (Both Sira Rajju) -> Fatal Veto to Husband
+  const siraRajju = evaluateRajjuKoota(4, 13);
+  assert.equal(siraRajju.isDosha, true);
+  assert.equal(siraRajju.severity, "Fatal");
+  assert.equal(siraRajju.isMarriageForbidden, true);
+  assert.ok(siraRajju.doshaEffect.includes("Sira Rajju Dosha"));
+  assert.ok(siraRajju.shastricRule.includes("Na Rajju Doshe Vivahah"));
+
+  // Rohini & Ardra (Both Kantha Rajju) -> Fatal Veto to Wife
+  const kanthaRajju = evaluateRajjuKoota(3, 5);
+  assert.equal(kanthaRajju.isDosha, true);
+  assert.equal(kanthaRajju.severity, "Fatal");
+  assert.equal(kanthaRajju.isMarriageForbidden, true);
+
+  // Krittika & Punarvasu (Both Kati Rajju) -> Severe Veto to Progeny
+  const katiRajju = evaluateRajjuKoota(2, 6);
+  assert.equal(katiRajju.isDosha, true);
+  assert.equal(katiRajju.severity, "Severe");
+  assert.equal(katiRajju.isMarriageForbidden, true);
+
+  // Different Rajjus -> Harmonious Pure
+  const pureRajju = evaluateRajjuKoota(0, 4); // Ashwini (Pada) & Mrigashira (Sira)
+  assert.equal(pureRajju.isDosha, false);
+  assert.equal(pureRajju.isMarriageForbidden, false);
+
+  // 3. Classical Vedha Koota (Muhurta Chintamani Verse 28)
+  assert.ok(VEDHA_PAIRS.length >= 13, "Must have full classical Vedha pairs list");
+  // Ashwini (0) & Jyeshtha (17) -> Vedha Dosha
+  const vedha1 = evaluateVedhaKoota(0, 17, "Ashwini", "Jyeshtha");
+  assert.equal(vedha1.isDosha, true);
+  assert.ok(vedha1.doshaName?.includes("Vedha Dosha"));
+  assert.ok(vedha1.shastricRule.includes("Muhurta Chintamani"));
+
+  // Ashwini (0) & Rohini (3) -> No Vedha
+  const noVedha = evaluateVedhaKoota(0, 3, "Ashwini", "Rohini");
+  assert.equal(noVedha.isDosha, false);
+
+  // 4. Stree Deergha (Nakshatra Distance)
+  // Distance from Bride (index 0) to Groom (index 15) = 16 stars (> 14 -> Uttama)
+  const streeUttama = evaluateStreeDeergha(15, 0);
+  assert.equal(streeUttama.isAuspicious, true);
+  assert.equal(streeUttama.tier, "Uttama (> 14)");
+
+  // Distance from Bride (index 15) to Groom (index 16) = 2 stars (< 9 -> Adhama)
+  const streeAdhama = evaluateStreeDeergha(16, 15);
+  assert.equal(streeAdhama.isAuspicious, false);
+  assert.equal(streeAdhama.tier, "Adhama (< 9)");
+
+  // 5. Full End-to-End Matchmaking Gate Determinism
+  const loc = { cityName: "Varanasi", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5, country: "India" };
+  const bEphem = calculateVedicEphemeris(new Date("1998-05-25T00:16:00Z"), loc, "Lahiri", "WholeSign", "Mean");
+  const gEphem = calculateVedicEphemeris(new Date("2000-09-14T14:30:00Z"), loc, "Lahiri", "WholeSign", "Mean");
+
+  const match = calculateMatchmaking(bEphem, gEphem);
+
+  // Verify new fields exist on CompatibilityResult
+  assert.ok(match.rajju, "Match result must include Rajju analysis");
+  assert.ok(match.vedha, "Match result must include Vedha analysis");
+  assert.ok(match.streeDeergha, "Match result must include Stree Deergha analysis");
+  assert.ok(match.upapadaMatch, "Match result must include Upapada Lagna match");
+  assert.ok(match.destinyVerdict, "Match result must include deterministic Destiny Gate verdict");
+
+  // Verify Fatal Impediment Override Logic
+  if (!match.destinyVerdict.isMarriageAdvised) {
+    assert.equal(match.destinyVerdict.decisionTier, "NOT_DESTINED_FORBIDDEN");
+    assert.ok(match.destinyVerdict.decisionTitle.includes("NO — MARRIAGE NOT DESTINED"));
+    assert.equal(match.verdict, "Inauspicious (अशुभ / वर्ज्य)");
+  } else {
+    assert.ok(["DESTINED_AUSPICIOUS", "PERMISSIBLE_WITH_REMEDIES"].includes(match.destinyVerdict.decisionTier));
+  }
+});
+
+test("Chatbot Marriage Destiny Gate & Fatal Veto Synchronization (Section 24 & Rule 0Q) Verification", async () => {
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { buildChatSystemInstruction } = await import("../src/engine/chatPrompt.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const loc = { cityName: "Varanasi", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5, country: "India" };
+  const ephem = calculateVedicEphemeris(new Date("1998-05-25T00:16:00Z"), loc, "Lahiri", "WholeSign", "Mean");
+
+  const matchmakingData = {
+    boy: {
+      name: "Rohan",
+      dateIso: "1998-05-25T00:16",
+      location: loc,
+    },
+    girl: {
+      name: "Priya",
+      dateIso: "2000-09-14T14:30",
+      location: loc,
+    },
+  };
+
+  // 1. Verify Section 24 in Dossier contains Destiny Gate & Citations
+  const dossier = buildAstroDossier(ephem, ephem, new Date(), "male", matchmakingData, "marriage");
+  assert.ok(dossier.includes("Classical Marriage Destiny Gate (विवाह निर्णय पीठिका"), "Dossier must include Classical Marriage Destiny Gate");
+  assert.ok(dossier.includes("Classical Rajju Koota (रज्जु कूट"), "Dossier must include Rajju Koota");
+  assert.ok(dossier.includes("Classical Vedha Koota (वेध कूट"), "Dossier must include Vedha Koota");
+  assert.ok(dossier.includes("Upapada Lagna (UL) Cross-Check"), "Dossier must include Upapada Lagna cross-check");
+  assert.ok(dossier.includes("Classical Final Verdict Law:"), "Dossier must include Classical Final Verdict Law");
+
+  // 2. Verify Rule 0Q in Chatbot System Prompt
+  const sysInst = buildChatSystemInstruction(dossier);
+  assert.ok(sysInst.includes("0Q. **CLASSICAL MARRIAGE DESTINY GATE & FATAL VETO ENFORCEMENT PROTOCOL"), "Chat prompt must include Rule 0Q");
+  assert.ok(sysInst.includes("Na Rajju Doshe Vivahah"), "Rule 0Q must cite Na Rajju Doshe Vivahah");
+  assert.ok(sysInst.includes("Nadi Doshe Sarva Nashah"), "Rule 0Q must cite Nadi Doshe Sarva Nashah");
+  assert.ok(sysInst.includes("Upapada Lagna 6/8 Shadashtaka"), "Rule 0Q must cite Upapada Lagna 6/8 Shadashtaka");
+});
+
+
+
 

@@ -10,6 +10,7 @@ import { EphemerisResult } from "./types";
 import { RASHI_NAMES } from "./constants";
 import { calculateAshtakavarga } from "./ashtakavarga";
 import { calculateShodashavargaChart } from "./shodashavarga";
+import { evaluateUpapadaLagna } from "./jaiminiSutras";
 
 export interface KootaScore {
   name: string;
@@ -84,6 +85,64 @@ export interface D1D9CrossSynastry {
   synthesis: string;
 }
 
+export type RajjuType = "Sira (Head)" | "Kantha (Neck)" | "Kati (Waist)" | "Uru (Thighs)" | "Pada (Feet)";
+
+export interface RajjuAnalysis {
+  boyRajju: RajjuType;
+  girlRajju: RajjuType;
+  isDosha: boolean;
+  rajjuName: RajjuType;
+  severity: "None" | "Fatal" | "Severe" | "Moderate";
+  doshaEffect: string;
+  shastricRule: string;
+  isMarriageForbidden: boolean;
+}
+
+export interface VedhaAnalysis {
+  isDosha: boolean;
+  boyNakshatra: string;
+  girlNakshatra: string;
+  doshaName?: string;
+  shastricRule: string;
+  description: string;
+}
+
+export interface StreeDeerghaAnalysis {
+  nakshatraDistance: number;
+  isAuspicious: boolean;
+  tier: "Uttama (> 14)" | "Madhyama (9 - 14)" | "Adhama (< 9)";
+  description: string;
+}
+
+export interface UpapadaLagnaMatchAnalysis {
+  boyULSign: string;
+  girlULSign: string;
+  boyULSignIndex: number;
+  girlULSignIndex: number;
+  mutualRelationship: "1-1 (Identical)" | "1-7 (Samasaptaka)" | "5-9 (Navapanchama)" | "3-11 (Triteeya-Ekadasha)" | "4-10 (Kendra)" | "6-8 (Shadashtaka Affliction)" | "2-12 (Dvidwadasa Affliction)";
+  isAfflicted: boolean;
+  shastricRule: string;
+  description: string;
+}
+
+export interface FatalImpediment {
+  rule: string;
+  doshaName: string;
+  shastricSource: string;
+  consequence: string;
+  remedyOrException: string;
+}
+
+export interface MarriageDestinyVerdict {
+  isMarriageAdvised: boolean;
+  decisionTier: "DESTINED_AUSPICIOUS" | "PERMISSIBLE_WITH_REMEDIES" | "NOT_DESTINED_FORBIDDEN";
+  decisionTitle: string;
+  summaryReasoning: string;
+  fatalImpediments: FatalImpediment[];
+  mitigatingFactors: string[];
+  finalVerdictText: string;
+}
+
 export interface CompatibilityResult {
   totalScore: number;
   maxScore: 36;
@@ -109,6 +168,11 @@ export interface CompatibilityResult {
   };
   ashtakavargaCompatibility: AshtakavargaCompatibility;
   d1d9Synastry: D1D9CrossSynastry;
+  rajju: RajjuAnalysis;
+  vedha: VedhaAnalysis;
+  streeDeergha: StreeDeerghaAnalysis;
+  upapadaMatch: UpapadaLagnaMatchAnalysis;
+  destinyVerdict: MarriageDestinyVerdict;
 }
 
 // 1. VARNA DATA (Brahmin 4, Kshatriya 3, Vaishya 2, Shudra 1)
@@ -242,6 +306,56 @@ const PLANETARY_FRIENDS: Record<string, { friends: string[]; enemies: string[] }
   Venus: { friends: ["Mercury", "Saturn"], enemies: ["Sun", "Moon"] },
   Saturn: { friends: ["Mercury", "Venus"], enemies: ["Sun", "Moon", "Mars"] },
 };
+
+// 6. RAJJU KOOTA DATA (5 Rajjus: Sira, Kantha, Kati, Uru, Pada)
+export const NAKSHATRA_RAJJU: Record<number, { type: RajjuType; sanskrit: string; organ: string }> = {
+  0: { type: "Pada (Feet)", sanskrit: "पाद रज्जु", organ: "Feet / Mobility" }, // Ashwini
+  1: { type: "Uru (Thighs)", sanskrit: "ऊरु रज्जु", organ: "Thighs / Wealth" }, // Bharani
+  2: { type: "Kati (Waist)", sanskrit: "कटि रज्जु", organ: "Waist / Progeny" }, // Krittika
+  3: { type: "Kantha (Neck)", sanskrit: "कण्ठ रज्जु", organ: "Neck / Wife Longevity" }, // Rohini
+  4: { type: "Sira (Head)", sanskrit: "शिरो रज्जु", organ: "Head / Husband Longevity" }, // Mrigashira
+  5: { type: "Kantha (Neck)", sanskrit: "कण्ठ रज्जु", organ: "Neck / Wife Longevity" }, // Ardra
+  6: { type: "Kati (Waist)", sanskrit: "कटि रज्जु", organ: "Waist / Progeny" }, // Punarvasu
+  7: { type: "Uru (Thighs)", sanskrit: "ऊरु रज्जु", organ: "Thighs / Wealth" }, // Pushya
+  8: { type: "Pada (Feet)", sanskrit: "पाद रज्जु", organ: "Feet / Mobility" }, // Ashlesha
+  9: { type: "Pada (Feet)", sanskrit: "पाद रज्जु", organ: "Feet / Mobility" }, // Magha
+  10: { type: "Uru (Thighs)", sanskrit: "ऊरु रज्जु", organ: "Thighs / Wealth" }, // Purva Phalguni
+  11: { type: "Kati (Waist)", sanskrit: "कटि रज्जु", organ: "Waist / Progeny" }, // Uttara Phalguni
+  12: { type: "Kantha (Neck)", sanskrit: "कण्ठ रज्जु", organ: "Neck / Wife Longevity" }, // Hasta
+  13: { type: "Sira (Head)", sanskrit: "शिरो रज्जु", organ: "Head / Husband Longevity" }, // Chitra
+  14: { type: "Kantha (Neck)", sanskrit: "कण्ठ रज्जु", organ: "Neck / Wife Longevity" }, // Swati
+  15: { type: "Kati (Waist)", sanskrit: "कटि रज्जु", organ: "Waist / Progeny" }, // Vishakha
+  16: { type: "Uru (Thighs)", sanskrit: "ऊरु रज्जु", organ: "Thighs / Wealth" }, // Anuradha
+  17: { type: "Pada (Feet)", sanskrit: "पाद रज्जु", organ: "Feet / Mobility" }, // Jyeshtha
+  18: { type: "Pada (Feet)", sanskrit: "पाद रज्जु", organ: "Feet / Mobility" }, // Moola
+  19: { type: "Uru (Thighs)", sanskrit: "ऊरु रज्जु", organ: "Thighs / Wealth" }, // Purva Ashadha
+  20: { type: "Kati (Waist)", sanskrit: "कटि रज्जु", organ: "Waist / Progeny" }, // Uttara Ashadha
+  21: { type: "Kantha (Neck)", sanskrit: "कण्ठ रज्जु", organ: "Neck / Wife Longevity" }, // Shravana
+  22: { type: "Sira (Head)", sanskrit: "शिरो रज्जु", organ: "Head / Husband Longevity" }, // Dhanishta
+  23: { type: "Kantha (Neck)", sanskrit: "कण्ठ रज्जु", organ: "Neck / Wife Longevity" }, // Shatabhisha
+  24: { type: "Kati (Waist)", sanskrit: "कटि रज्जु", organ: "Waist / Progeny" }, // Purva Bhadrapada
+  25: { type: "Uru (Thighs)", sanskrit: "ऊरु रज्जु", organ: "Thighs / Wealth" }, // Uttara Bhadrapada
+  26: { type: "Pada (Feet)", sanskrit: "पाद रज्जु", organ: "Feet / Mobility" }, // Revati
+};
+
+// 7. VEDHA KOOTA DATA (Mutually Prohibited / Piercing Nakshatra Pairs per Muhurta Chintamani)
+export const VEDHA_PAIRS: [number, number][] = [
+  [0, 17], // Ashwini ⮂ Jyeshtha
+  [1, 16], // Bharani ⮂ Anuradha
+  [2, 15], // Krittika ⮂ Vishakha
+  [3, 14], // Rohini ⮂ Swati
+  [4, 22], // Mrigashira ⮂ Dhanishta
+  [5, 21], // Ardra ⮂ Shravana
+  [6, 20], // Punarvasu ⮂ Uttara Ashadha
+  [7, 19], // Pushya ⮂ Purva Ashadha
+  [8, 18], // Ashlesha ⮂ Moola
+  [9, 26], // Magha ⮂ Revati
+  [10, 25], // Purva Phalguni ⮂ Uttara Bhadrapada
+  [11, 24], // Uttara Phalguni ⮂ Purva Bhadrapada
+  [12, 23], // Hasta ⮂ Shatabhisha
+  [13, 22], // Chitra ⮂ Dhanishta
+  [13, 24], // Chitra ⮂ Purva Bhadrapada
+];
 
 export function calculateMatchmaking(
   boyEphem: EphemerisResult,
@@ -748,12 +862,61 @@ export function calculateMatchmaking(
     synthesis: `D-1 & D-9 Cross-Synastry is ${d1d9Verdict} (${crossSynastryScorePercent}%). D-9 Lagna Axis: ${d9LagnaRelationship}. ${d9LagnaLordCrossVerdict}`,
   };
 
+  // 10. CLASSICAL RAJJU KOOTA (रज्जु कूट - Prasna Marga & BV Raman)
+  const rajju = evaluateRajjuKoota(bNakIdx, gNakIdx);
+
+  // 11. CLASSICAL VEDHA KOOTA (वेध कूट - Muhurta Chintamani)
+  const vedha = evaluateVedhaKoota(
+    bNakIdx,
+    gNakIdx,
+    bMoon?.nakshatra?.sanskritName || "Nakshatra",
+    gMoon?.nakshatra?.sanskritName || "Nakshatra"
+  );
+
+  // 12. STREE DEERGHA (स्त्री दीर्घ)
+  const streeDeergha = evaluateStreeDeergha(bNakIdx, gNakIdx);
+
+  // 13. UPAPADA LAGNA (UL) CROSS-MATCH (BPHS & Jaimini Sutras)
+  const upapadaMatch = evaluateUpapadaMatch(boyEphem, girlEphem);
+
+  // 14. DETERMINISTIC MARRIAGE DESTINY GATE (विवाह निर्णय)
+  const destinyVerdict = evaluateMarriageDestinyGate({
+    totalScore,
+    kootas: {
+      varna,
+      vashya,
+      tara,
+      yoni,
+      grahaMaitri,
+      gana,
+      bhakoot,
+      nadi,
+    },
+    rajju,
+    vedha,
+    boyManglik,
+    girlManglik,
+    manglikCompatibility: {
+      isCompatible: isManglikCompatible,
+      statusText: manglikText,
+      description: manglikDesc,
+    },
+    upapadaMatch,
+  });
+
+  if (!destinyVerdict.isMarriageAdvised) {
+    verdict = "Inauspicious (अशुभ / वर्ज्य)";
+    verdictDescription = `${destinyVerdict.decisionTitle}: ${destinyVerdict.summaryReasoning}`;
+  }
+
   return {
     totalScore,
     maxScore: 36,
     percentage,
     verdict,
-    verdictDescription,
+    verdictDescription: !destinyVerdict.isMarriageAdvised
+      ? `${destinyVerdict.decisionTitle}: ${destinyVerdict.summaryReasoning}`
+      : verdictDescription,
     kootas: {
       varna,
       vashya,
@@ -773,6 +936,11 @@ export function calculateMatchmaking(
     },
     ashtakavargaCompatibility,
     d1d9Synastry,
+    rajju,
+    vedha,
+    streeDeergha,
+    upapadaMatch,
+    destinyVerdict,
   };
 }
 
@@ -853,5 +1021,303 @@ export function evaluateManglikDosha(ephem: EphemerisResult): ManglikAnalysis {
     marsHouseFromVenus: hVenus,
     isCancelled,
     cancellationReasons,
+  };
+}
+
+// =========================================================================
+// 8. CLASSICAL RAJJU KOOTA EVALUATION (Prasna Marga & Dr. B.V. Raman)
+// =========================================================================
+export function evaluateRajjuKoota(boyNakIdx: number, girlNakIdx: number): RajjuAnalysis {
+  const bRajju = NAKSHATRA_RAJJU[boyNakIdx] || { type: "Pada (Feet)", sanskrit: "पाद रज्जु", organ: "Feet / Mobility" };
+  const gRajju = NAKSHATRA_RAJJU[girlNakIdx] || { type: "Pada (Feet)", sanskrit: "पाद रज्जु", organ: "Feet / Mobility" };
+  const isDosha = bRajju.type === gRajju.type;
+
+  let severity: RajjuAnalysis["severity"] = "None";
+  let doshaEffect = "No Rajju Dosha. Boy and girl fall into different Rajju bodily planes, ensuring vitality, marital longevity, and auspicious progeny.";
+  let isMarriageForbidden = false;
+
+  if (isDosha) {
+    if (bRajju.type === "Sira (Head)") {
+      severity = "Fatal";
+      isMarriageForbidden = true;
+      doshaEffect = "Sira Rajju Dosha (शिरो रज्जु दोष): Both stars reside in the Head Rajju. Classical treatises declare: 'भर्तुर्नाशं शिरोरज्जौ' (Bhartur Nasham Sira Rajjau) — Fatal or acute danger to husband's longevity. Marriage is categorically forbidden.";
+    } else if (bRajju.type === "Kantha (Neck)") {
+      severity = "Fatal";
+      isMarriageForbidden = true;
+      doshaEffect = "Kantha Rajju Dosha (कण्ठ रज्जु दोष): Both stars reside in the Neck Rajju. Classical treatises declare: 'कण्ठे च पतिघातुकी / भार्यानाशः' (Bharyam Hanti) — Fatal danger or chronic physical affliction to the wife. Marriage is strongly prohibited.";
+    } else if (bRajju.type === "Kati (Waist)") {
+      severity = "Severe";
+      isMarriageForbidden = true;
+      doshaEffect = "Kati Rajju Dosha (कटि रज्जु दोष): Both stars reside in the Waist Rajju. Classical treatises declare: 'कट्यां तु सन्ततेर्नाशः' (Santater Nashah) — Severe obstruction, miscarriage risks, or total loss of lineage/progeny.";
+    } else if (bRajju.type === "Uru (Thighs)") {
+      severity = "Severe";
+      isMarriageForbidden = false;
+      doshaEffect = "Uru Rajju Dosha (ऊरु रज्जु दोष): Both stars reside in the Thigh Rajju. Classical treatises declare: 'ऊरौ वित्तविनाशनम्' (Dhananashaya) — Incessant financial drain, severe debts, or sudden loss of wealth and patrimony.";
+    } else {
+      severity = "Moderate";
+      isMarriageForbidden = false;
+      doshaEffect = "Pada Rajju Dosha (पाद रज्जु दोष): Both stars reside in the Feet Rajju. Classical treatises declare: 'पादे देशान्तरं व्रजेत्' (Deshatanam) — Incessant roaming, foreign displacement, emotional restlessness, and geographical separation.";
+    }
+  }
+
+  return {
+    boyRajju: bRajju.type,
+    girlRajju: gRajju.type,
+    isDosha,
+    rajjuName: bRajju.type,
+    severity,
+    doshaEffect,
+    shastricRule: "Prasna Marga (Slokas 14-17) & Dr. B.V. Raman (Muhurtha Ch. IX): 'न रज्जुदोषे विवाहः' (Na Rajju Doshe Vivahah). Rajju constitutes the nervous thread of marital life; its violation renders other Kootas null and void.",
+    isMarriageForbidden,
+  };
+}
+
+// =========================================================================
+// 9. CLASSICAL VEDHA KOOTA EVALUATION (Muhurta Chintamani Verse 28)
+// =========================================================================
+export function evaluateVedhaKoota(
+  boyNakIdx: number,
+  girlNakIdx: number,
+  boyNakName?: string,
+  girlNakName?: string
+): VedhaAnalysis {
+  const isDosha = VEDHA_PAIRS.some(
+    ([n1, n2]) => (boyNakIdx === n1 && girlNakIdx === n2) || (boyNakIdx === n2 && girlNakIdx === n1)
+  );
+
+  const bName = boyNakName || `Nakshatra #${boyNakIdx + 1}`;
+  const gName = girlNakName || `Nakshatra #${girlNakIdx + 1}`;
+
+  return {
+    isDosha,
+    boyNakshatra: bName,
+    girlNakshatra: gName,
+    doshaName: isDosha ? "Vedha Dosha (वेध दोष)" : undefined,
+    shastricRule: "Muhurta Chintamani (विवाह प्रकरण, Verse 28): 'वेधदोषे कुलक्षयः' (Vedhe Sati Kulakshayah). Birth stars mutually pierce and oppose each other, bringing deep grief, acrimony, and destruction of marital harmony.",
+    description: isDosha
+      ? `Vedha Dosha Present: Groom's star (${bName}) and Bride's star (${gName}) form a mutually piercing (Vedha) pair. Prohibited in classical Muhurta.`
+      : `No Vedha Dosha: Birth stars (${bName} & ${gName}) are free from mutual affliction or hostile piercing.`,
+  };
+}
+
+// =========================================================================
+// 10. STREE DEERGHA EVALUATION (Muhurta Chintamani & Kalaprakasika)
+// =========================================================================
+export function evaluateStreeDeergha(boyNakIdx: number, girlNakIdx: number): StreeDeerghaAnalysis {
+  const dist = ((boyNakIdx - girlNakIdx + 27) % 27) + 1;
+  let isAuspicious = false;
+  let tier: StreeDeerghaAnalysis["tier"] = "Adhama (< 9)";
+  let description = "";
+
+  if (dist > 14) {
+    isAuspicious = true;
+    tier = "Uttama (> 14)";
+    description = `Groom's Nakshatra is located ${dist} stars from Bride's Nakshatra (Uttama / Superior). Guarantees enduring marital longevity, mutual reverence, and uninterrupted domestic peace.`;
+  } else if (dist >= 9) {
+    isAuspicious = true;
+    tier = "Madhyama (9 - 14)";
+    description = `Groom's Nakshatra is located ${dist} stars from Bride's Nakshatra (Madhyama / Middling). Good matrimonial harmony with acceptable physical and psychological distance.`;
+  } else {
+    isAuspicious = false;
+    tier = "Adhama (< 9)";
+    description = `Groom's Nakshatra is located only ${dist} stars from Bride's Nakshatra (Adhama / Deficient). Shastras caution that when distance is under 9 stars, domestic dominance conflicts and health vulnerabilities may manifest unless cushioned by Rashi Maitri.`;
+  }
+
+  return {
+    nakshatraDistance: dist,
+    isAuspicious,
+    tier,
+    description,
+  };
+}
+
+// =========================================================================
+// 11. UPAPADA LAGNA (UL) CROSS-MATCH (BPHS Ch. 30 & Jaimini Sutras 1.4)
+// =========================================================================
+export function evaluateUpapadaMatch(boyEphem: EphemerisResult, girlEphem: EphemerisResult): UpapadaLagnaMatchAnalysis {
+  const boyULAnalysis = evaluateUpapadaLagna(boyEphem);
+  const girlULAnalysis = evaluateUpapadaLagna(girlEphem);
+
+  const bULIdx = RASHI_NAMES.findIndex((r) => r.englishName === boyULAnalysis.upapadaSign);
+  const gULIdx = RASHI_NAMES.findIndex((r) => r.englishName === girlULAnalysis.upapadaSign);
+
+  const diff = ((gULIdx - bULIdx + 12) % 12) + 1;
+  let rel: UpapadaLagnaMatchAnalysis["mutualRelationship"] = "1-1 (Identical)";
+  let isAfflicted = false;
+  let description = "";
+
+  if (diff === 1) {
+    rel = "1-1 (Identical)";
+    description = `Both Upapada Lagnas coincide in ${boyULAnalysis.upapadaSign}. Direct karmic union with shared marital values and harmonious life mission.`;
+  } else if (diff === 7) {
+    rel = "1-7 (Samasaptaka)";
+    description = `Upapada Lagnas form mutual 1-7 Samasaptaka axis (${boyULAnalysis.upapadaSign} ⇄ ${girlULAnalysis.upapadaSign}). Classic soulmate polarity creating deep mutual devotion and partnership balance.`;
+  } else if (diff === 5 || diff === 9) {
+    rel = "5-9 (Navapanchama)";
+    description = `Upapada Lagnas in mutual 5-9 Navapanchama trines. Highly auspicious, promoting spiritual righteousness, blessings of progeny, and lasting family peace.`;
+  } else if (diff === 3 || diff === 11) {
+    rel = "3-11 (Triteeya-Ekadasha)";
+    description = `Upapada Lagnas in mutual 3-11 relationship. Excellent mutual support, friendly communication, and joint financial prosperity.`;
+  } else if (diff === 4 || diff === 10) {
+    rel = "4-10 (Kendra)";
+    description = `Upapada Lagnas in mutual 4-10 Kendra alignment. Robust societal reputation, strong mutual foundation, and active family collaboration.`;
+  } else if (diff === 6 || diff === 8) {
+    rel = "6-8 (Shadashtaka Affliction)";
+    isAfflicted = true;
+    description = `Upapada Lagnas form hostile 6-8 (Shadashtaka) relationship (${boyULAnalysis.upapadaSign} vs ${girlULAnalysis.upapadaSign}). Maharishi Jaimini & Sage Parashara warn that 6/8 of Upapada Lagnas denies sustained marital longevity, breeding irreconcilable differences or legal separation.`;
+  } else {
+    // 2-12
+    rel = "2-12 (Dvidwadasa Affliction)";
+    isAfflicted = true;
+    description = `Upapada Lagnas form 2-12 (Dvidwadasa) relationship (${boyULAnalysis.upapadaSign} vs ${girlULAnalysis.upapadaSign}). Indicates mutual financial drain, physical or emotional distance, and feeling unappreciated in the marriage.`;
+  }
+
+  return {
+    boyULSign: boyULAnalysis.upapadaSign,
+    girlULSign: girlULAnalysis.upapadaSign,
+    boyULSignIndex: bULIdx,
+    girlULSignIndex: gULIdx,
+    mutualRelationship: rel,
+    isAfflicted,
+    shastricRule: "Brihat Parashara Hora Shastra (Ch. 30) & Jaimini Sutras (Adhyaya 1, Pada 4): Upapada Lagna governs the physical reality and sustenance of marriage. Shadashtaka (6/8) between ULs triggers marital dissolution.",
+    description,
+  };
+}
+
+// =========================================================================
+// 12. DETERMINISTIC MARRIAGE DESTINY GATE (विवाह निर्णय)
+// =========================================================================
+export function evaluateMarriageDestinyGate(params: {
+  totalScore: number;
+  kootas: CompatibilityResult["kootas"];
+  rajju: RajjuAnalysis;
+  vedha: VedhaAnalysis;
+  boyManglik: ManglikAnalysis;
+  girlManglik: ManglikAnalysis;
+  manglikCompatibility: CompatibilityResult["manglikCompatibility"];
+  upapadaMatch: UpapadaLagnaMatchAnalysis;
+}): MarriageDestinyVerdict {
+  const fatalImpediments: FatalImpediment[] = [];
+  const mitigatingFactors: string[] = [];
+
+  const { totalScore, kootas, rajju, vedha, boyManglik, girlManglik, manglikCompatibility, upapadaMatch } = params;
+
+  // 1. Uncancelled Nadi Dosha Veto
+  if (kootas.nadi.isDosha && !kootas.nadi.isCancelled) {
+    fatalImpediments.push({
+      rule: "Nadi Doshe Sarva Nashah (नाड़ीदोषे सर्वनाशः)",
+      doshaName: "Uncancelled Nadi Dosha (नाड़ी दोष)",
+      shastricSource: "Muhurta Chintamani (विवाह प्रकरण, Shloka 38) & Kalaprakasika",
+      consequence: "Both natives share the same bio-energetic pulse (Vata, Pitta, or Kapha). Classical authorities declare that uncancelled Nadi Dosha causes biological incompatibility, denial or affliction to progeny, and premature grief.",
+      remedyOrException: "Classical cancellation applies ONLY when Moon rashis are identical with different Nakshatras, or ruled by the same planet. Neither exception applies here.",
+    });
+  } else if (kootas.nadi.isCancelled) {
+    mitigatingFactors.push(`Nadi Dosha successfully nullified by classical exception: ${kootas.nadi.cancellationReason}`);
+  }
+
+  // 2. Fatal Rajju Dosha Veto (Sira, Kantha, or Kati)
+  if (rajju.isDosha && rajju.isMarriageForbidden) {
+    fatalImpediments.push({
+      rule: "Na Rajju Doshe Vivahah (न रज्जुदोषे विवाहः)",
+      doshaName: `${rajju.rajjuName} Dosha (रज्जु दोष)`,
+      shastricSource: "Prasna Marga (Slokas 14-17) & Dr. B.V. Raman (Muhurtha Ch. IX)",
+      consequence: rajju.doshaEffect,
+      remedyOrException: "Classical Shastras recognize NO conventional puja remedy for Sira/Kantha Rajju. Dr. B.V. Raman explicitly affirms that Rajju Dosha overrules high Guna scores.",
+    });
+  } else if (rajju.isDosha && !rajju.isMarriageForbidden) {
+    mitigatingFactors.push(`Middling Rajju (${rajju.rajjuName}) present: Does not veto marriage outright, but requires conscious patience regarding ${rajju.rajjuName.includes("Pada") ? "travel/relocation" : "finances"}.`);
+  }
+
+  // 3. Vedha Dosha Veto
+  if (vedha.isDosha) {
+    fatalImpediments.push({
+      rule: "Vedhe Sati Na Kartavyam (वेधदोषे कुलक्षयः)",
+      doshaName: "Vedha Dosha (वेध दोष)",
+      shastricSource: "Muhurta Chintamani (विवाह प्रकरण, Verse 28)",
+      consequence: `Birth stars pierce each other in mutual destruction (${vedha.boyNakshatra} ⮂ ${vedha.girlNakshatra}), causing irreconcilable hostility, domestic discord, and ruin of marital peace.`,
+      remedyOrException: "Vedha is an absolute prohibitive filter in Muhurta Jyotish.",
+    });
+  }
+
+  // 4. Fatal Upapada Lagna 6/8 Shadashtaka
+  if (upapadaMatch.isAfflicted && upapadaMatch.mutualRelationship.includes("6-8")) {
+    fatalImpediments.push({
+      rule: "Upapada Shadashtaka Dosha (उपपद षडाष्टक दोष)",
+      doshaName: "Upapada Lagna 6/8 Mutual Friction",
+      shastricSource: "Brihat Parashara Hora Shastra (Ch. 30) & Jaimini Sutras (1.4)",
+      consequence: `Groom Upapada (${upapadaMatch.boyULSign}) and Bride Upapada (${upapadaMatch.girlULSign}) sit in mutual 6th/8th houses of enmity and destruction. Indicates lack of matrimonial sustenance, deep karmic obstruction, or legal/marital fracture.`,
+      remedyOrException: "Requires dedicated Upapada Vrata fasting and Vishnu Sahasranama chanting, but represents severe structural vulnerability.",
+    });
+  }
+
+  // 5. Fatal Uncancelled Bhakoot Mrityu-Shadashtaka
+  if (kootas.bhakoot.isDosha && !kootas.bhakoot.isCancelled) {
+    fatalImpediments.push({
+      rule: "Bhakoot Mrityu-Shadashtaka (भकूट मृत्यु-षडाष्टक)",
+      doshaName: "Uncancelled Bhakoot Dosha (भकूट दोष)",
+      shastricSource: "Muhurta Chintamani (विवाह प्रकरण, Shloka 35)",
+      consequence: "Mutual Moon signs form an uncancelled adverse axis without planetary friendship. Breeds chronic financial hemorrhage, emotional alienation, or legal friction.",
+      remedyOrException: "No classical Rashi Lord friendship exists to cancel this Bhakoot.",
+    });
+  } else if (kootas.bhakoot.isCancelled) {
+    mitigatingFactors.push(`Bhakoot Dosha cancelled by friendly/identical lords: ${kootas.bhakoot.cancellationReason}`);
+  }
+
+  // 6. Severe Asymmetrical Kuja (Manglik) Dosha
+  if (!manglikCompatibility.isCompatible && (boyManglik.severity === "High" || girlManglik.severity === "High")) {
+    fatalImpediments.push({
+      rule: "Asama Kuja Dosha (असम कुज दोष)",
+      doshaName: "Severe Asymmetrical Manglik Dosha",
+      shastricSource: "Phaladeepika & Jataka Parijata",
+      consequence: "One chart bears High Kuja Dosha (Mars in 1/2/4/7/8/12 from multiple reference points) with zero cancellation, while the partner is entirely non-Manglik. Heat imbalance can lead to acute marital friction or vitality loss.",
+      remedyOrException: "Kumbh Vivah or Ark Vivah prerequisite before marriage solemnization.",
+    });
+  }
+
+  // DECISION SYNTHESIS
+  const hasFatalImpediments = fatalImpediments.length > 0;
+  let isMarriageAdvised = false;
+  let decisionTier: MarriageDestinyVerdict["decisionTier"] = "NOT_DESTINED_FORBIDDEN";
+  let decisionTitle = "";
+  let summaryReasoning = "";
+  let finalVerdictText = "";
+
+  if (hasFatalImpediments) {
+    isMarriageAdvised = false;
+    decisionTier = "NOT_DESTINED_FORBIDDEN";
+    decisionTitle = "NO — MARRIAGE NOT DESTINED / FORBIDDEN (विवाह वर्ज्य / अनुशंसित नहीं)";
+    summaryReasoning = `Even though the raw Ashtakoota score is ${totalScore}/36 Gunas (${Math.round((totalScore / 36) * 100)}%), the marriage CANNOT be recommended. Authoritative Shastras (Muhurta Chintamani, Prasna Marga, BPHS) explicitly declare that fatal classical vetoes overrule numerical Guna points. This alliance is burdened by ${fatalImpediments.length} uncancelled fatal impediment(s): ${fatalImpediments.map((f) => f.doshaName).join(", ")}.`;
+    finalVerdictText = `The classical verdict is definitive: NOT RECOMMENDED (वर्ज्य). In Vedic jurisprudence, proceeding with marriage under active ${fatalImpediments[0].doshaName} invites severe domestic fracture or life peril. Matchmaking must not proceed.`;
+  } else if (totalScore < 18) {
+    isMarriageAdvised = false;
+    decisionTier = "NOT_DESTINED_FORBIDDEN";
+    decisionTitle = "NOT RECOMMENDED — LOW GUNAS & INSUFFICIENT HARMONY (न्यून गुण / विवाह अनुशंसित नहीं)";
+    summaryReasoning = `The total Ashtakoota score of ${totalScore}/36 falls below the mandatory Shastric threshold of 18 Gunas (50%). While free of absolute fatal vetoes, the baseline emotional, lifestyle, and temperament foundation is insufficient.`;
+    finalVerdictText = `Marriage is not advised due to sub-threshold compatibility points (${totalScore}/36). Mutual friction in daily life is indicated unless comprehensive horoscopic D-9 and Dasha analysis shows extraordinary counter-balancing strength.`;
+  } else {
+    const hasMildConcerns = rajju.isDosha || kootas.gana.isDosha || !manglikCompatibility.isCompatible;
+    if (hasMildConcerns) {
+      isMarriageAdvised = true;
+      decisionTier = "PERMISSIBLE_WITH_REMEDIES";
+      decisionTitle = "PERMISSIBLE WITH SHASTRIYA REMEDIES (दोष शांति उपरांत ग्राह्य)";
+      summaryReasoning = `The match secures ${totalScore}/36 Gunas with no fatal impediments (Nadi, Sira/Kantha Rajju, and Vedha are clear). Mild secondary doshas are present, which are easily neutralized through traditional Vedic Shanti and conscious mutual understanding.`;
+      finalVerdictText = `Marriage is permissible and viable. Perform recommended Shastric remedies prior to Vivaha Muhurta to ensure harmonious longevity and domestic peace.`;
+    } else {
+      isMarriageAdvised = true;
+      decisionTier = "DESTINED_AUSPICIOUS";
+      decisionTitle = "YES — MARRIAGE DESTINED & AUSPICIOUS (विवाह अत्यंत शुभ एवं ग्राह्य)";
+      summaryReasoning = `Outstanding classical match! The alliance secures ${totalScore}/36 Gunas with complete purity across Nadi, Rajju, Vedha, Upapada Lagna, and planetary friendship.`;
+      finalVerdictText = `Marriage is highly auspicious and enthusiastically recommended. The charts exhibit deep spiritual, physical, and karmic destiny alignment for a blessed matrimonial union.`;
+    }
+  }
+
+  return {
+    isMarriageAdvised,
+    decisionTier,
+    decisionTitle,
+    summaryReasoning,
+    fatalImpediments,
+    mitigatingFactors,
+    finalVerdictText,
   };
 }

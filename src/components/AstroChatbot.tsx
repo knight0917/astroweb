@@ -160,6 +160,11 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
         title: "Relationship Harmony Advice",
         prompt: "How can I enhance understanding, emotional connection, and lasting peace in my partnership according to my Venus placement?",
       },
+      {
+        icon: "⚖️",
+        title: "Will We Get Married? (Classical Destiny Gate)",
+        prompt: "Will we both get married or not? Check our Kundli Milan, 36 Gunas, Rajju Dosha, Vedha, Upapada Lagna, and classical fatal vetoes with book citations.",
+      },
     ],
   },
   {

@@ -1419,6 +1419,26 @@ export function buildAstroDossier(
         "  - 6. Gana Koota (6 pts): **" + matchRes.kootas.gana.obtainedScore + "/6** (" + matchRes.kootas.gana.description + ")",
         "  - 7. Bhakoot Koota (7 pts): **" + matchRes.kootas.bhakoot.obtainedScore + "/7** (" + matchRes.kootas.bhakoot.description + ")",
         "  - 8. Nadi Koota (8 pts): **" + matchRes.kootas.nadi.obtainedScore + "/8** (" + matchRes.kootas.nadi.description + ")",
+        "- **Classical Marriage Destiny Gate (विवाह निर्णय पीठिका — BPHS, Muhurta Chintamani, Prasna Marga, Raman):**",
+        "  - **Decision Status:** **" + matchRes.destinyVerdict.decisionTitle + "** (Marriage Advised: " + (matchRes.destinyVerdict.isMarriageAdvised ? "YES" : "NO / FORBIDDEN") + ")",
+        "  - **Destiny Synthesis:** " + matchRes.destinyVerdict.summaryReasoning,
+        (matchRes.destinyVerdict.fatalImpediments.length > 0
+          ? "  - **FATAL CLASSICAL IMPEDIMENTS (OVERRULES NUMERICAL GUNAS):**\n" +
+            matchRes.destinyVerdict.fatalImpediments
+              .map((f) => "    * ⛔ **" + f.doshaName + "**: " + f.consequence + " [Source: " + f.shastricSource + " • Rule: " + f.rule + "]")
+              .join("\n")
+          : "  - **Fatal Classical Vetoes:** None detected (Pure / Clean foundation)."),
+        "- **Classical Rajju Koota (रज्जु कूट — Prasna Marga & Raman):**",
+        "  - Status: **" + (matchRes.rajju.isDosha ? (matchRes.rajju.isMarriageForbidden ? "FATAL DOSHA (VERBOID)" : "DOSHA") : "PURE (निर्दोष)") + "** (Groom: " + matchRes.rajju.boyRajju + " ⇄ Bride: " + matchRes.rajju.girlRajju + ")",
+        "  - Effect & Source: " + matchRes.rajju.doshaEffect + " [" + matchRes.rajju.shastricRule + "]",
+        "- **Classical Vedha Koota (वेध कूट — Muhurta Chintamani):**",
+        "  - Status: **" + (matchRes.vedha.isDosha ? "VEDHA DOSHA PRESENT" : "NO VEDHA (निर्दोष)") + "** (" + matchRes.vedha.boyNakshatra + " ⮂ " + matchRes.vedha.girlNakshatra + ")",
+        "  - Effect & Source: " + matchRes.vedha.description + " [" + matchRes.vedha.shastricRule + "]",
+        "- **Stree Deergha Koota (स्त्री दीर्घ):**",
+        "  - Distance: **" + matchRes.streeDeergha.nakshatraDistance + " Stars (" + matchRes.streeDeergha.tier + ")** -> " + matchRes.streeDeergha.description,
+        "- **Upapada Lagna (UL) Cross-Check (BPHS Ch. 30 & Jaimini Sutras 1.4):**",
+        "  - Axis: **" + matchRes.upapadaMatch.mutualRelationship + "** (Groom UL: " + matchRes.upapadaMatch.boyULSign + " ⇄ Bride UL: " + matchRes.upapadaMatch.girlULSign + ") • Afflicted: " + (matchRes.upapadaMatch.isAfflicted ? "YES (Caution)" : "NO (Harmonious)"),
+        "  - Description: " + matchRes.upapadaMatch.description,
         "- **Manglik Dosha & Bhanga Status:**",
         "  - Groom Manglik: " + (matchRes.boyManglik.isManglik ? "Manglik (Mars in H" + matchRes.boyManglik.marsHouseFromLagna + ")" : "Non-Manglik") + " • Bride Manglik: " + (matchRes.girlManglik.isManglik ? "Manglik (Mars in H" + matchRes.girlManglik.marsHouseFromLagna + ")" : "Non-Manglik"),
         "  - Manglik Harmony Verdict: **" + (matchRes.manglikCompatibility.isCompatible ? "Compatible (सम्मत)" : "Caution") + "** -> " + matchRes.manglikCompatibility.description,
@@ -1446,6 +1466,7 @@ export function buildAstroDossier(
         "  - 8th-House Solitude & Fasting Remedy: " + lappingRes.eighthHouseAnalysis.solitudeRemedy,
         "  - Masterclass Synthesis: " + lappingRes.samirTripathiVerdict,
         "- **Classical Shastric Verdict:** " + matchRes.verdictDescription,
+        "- **Classical Final Verdict Law:** " + matchRes.destinyVerdict.finalVerdictText,
       ].join("\n");
     } catch (_) {}
   }

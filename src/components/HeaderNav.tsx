@@ -423,8 +423,8 @@ export default function HeaderNav() {
             </svg>
           </button>
 
-          {/* Logo & Brand */}
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setShowMenuDrawer(true)}>
+          {/* Logo & Brand - Click returns home to Traditional Kundli Chart */}
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setViewMode("kundli-north")} title="Home — Traditional Kundli Chart">
             <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 flex items-center justify-center shadow-lg shadow-amber-500/20 flex-shrink-0 text-slate-950">
               <svg className="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="4" />

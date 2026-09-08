@@ -6,7 +6,6 @@ import HeaderNav from "../components/HeaderNav";
 import KundliChart from "../components/KundliChart";
 import PositionsTable from "../components/PositionsTable";
 import TimeTravelSlider from "../components/TimeTravelSlider";
-import QuickHighlightsBar from "../components/QuickHighlightsBar";
 import MobileBottomNav from "../components/MobileBottomNav";
 import { useAstroStore } from "../store/useAstroStore";
 
@@ -147,9 +146,6 @@ export default function HomePage() {
       <main className="flex-1 w-full px-2 sm:px-4 md:px-6 py-2 md:py-3 flex flex-col gap-3 md:gap-4">
         {/* Time Travel Control Deck (Shown for 2D charts/tables; 3D view has its own Left Dock) */}
         {viewMode !== "3d" && <TimeTravelSlider />}
-
-        {/* Featured Superpowers Quick-Access Strip */}
-        <QuickHighlightsBar />
 
         {/* View Mode Router */}
         {viewMode === "3d" && (

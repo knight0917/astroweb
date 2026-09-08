@@ -34,6 +34,7 @@ export default function ShodashavargaView() {
   });
   const [chartType, setChartType] = useState<"north" | "south">("north");
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | "Shadvarga" | "Saptavarga" | "Dashavarga" | "RTN">("ALL");
+  const [rtnLayerFilter, setRtnLayerFilter] = useState<"all" | "d9" | "d1">("all");
 
   // Keep local selectedVarga in sync if activeVargaId changed externally
   useEffect(() => {
@@ -61,6 +62,10 @@ export default function ShodashavargaView() {
     const vId: VargaId = isRtnMode ? "D9" : (selectedVarga as VargaId);
     return calculateShodashavargaChart(ephemeris, vId, showUpagrahas, showModernPlanets);
   }, [ephemeris, selectedVarga, isRtnMode, showUpagrahas, showModernPlanets]);
+
+  const d1Chart = useMemo(() => {
+    return calculateShodashavargaChart(ephemeris, "D1", showUpagrahas, showModernPlanets);
+  }, [ephemeris, showUpagrahas, showModernPlanets]);
 
   const d10CareerAnalysis = useMemo(() => {
     if (selectedVarga !== "D10") return null;
@@ -99,46 +104,117 @@ export default function ShodashavargaView() {
     return map;
   }, [isRtnMode, rtnResult]);
 
+  // Compute D1-D9 Cross-Varga Conjunctions (when D1 and D9 planets share a house/sign)
+  const crossVargaConjunctions = useMemo(() => {
+    if (!isRtnMode) return [];
+    const list: {
+      house: number;
+      rashiName: string;
+      d1Grahas: string[];
+      d9Grahas: string[];
+      vargottamaGrahas: string[];
+    }[] = [];
+
+    for (let h = 1; h <= 12; h++) {
+      const d1List = (d1Chart.houseOccupants[h] || []).filter((p) => !p.isUpagraha);
+      const d9List = rtnHouseOccupants[h] || [];
+      if (d1List.length > 0 && d9List.length > 0) {
+        const rashiIdx = (ascRashiIndex + h - 1) % 12;
+        const d1Names = d1List.map((p) => p.name);
+        const d9Names = d9List.map((p) => p.planetName);
+        const vargottama = d1Names.filter((name) => d9Names.includes(name));
+        list.push({
+          house: h,
+          rashiName: RASHIS[rashiIdx].englishName,
+          d1Grahas: d1Names,
+          d9Grahas: d9Names,
+          vargottamaGrahas: vargottama,
+        });
+      }
+    }
+    return list;
+  }, [isRtnMode, d1Chart, rtnHouseOccupants, ascRashiIndex]);
+
   const renderPlanetList = (houseNum: number) => {
     if (isRtnMode) {
-      const list = rtnHouseOccupants[houseNum] || [];
-      if (list.length === 0) return null;
+      const d1List = rtnLayerFilter === "d9" ? [] : (d1Chart.houseOccupants[houseNum] || []);
+      const d9List = rtnLayerFilter === "d1" ? [] : (rtnHouseOccupants[houseNum] || []);
 
-      const count = list.length;
+      if (d1List.length === 0 && d9List.length === 0) return null;
+
+      const totalCount = d1List.length + d9List.length;
       const badgeStyle =
-        count >= 5
-          ? "text-[8.5px] px-1 py-0.5"
-          : count >= 3
-          ? "text-[9.5px] px-1.5 py-0.5"
-          : "text-[11px] px-2 py-0.5";
+        totalCount >= 6
+          ? "text-[7.5px] px-1 py-0.2 gap-0.5"
+          : totalCount >= 4
+          ? "text-[8px] px-1.5 py-0.5 gap-0.5"
+          : totalCount >= 2
+          ? "text-[9px] px-1.5 py-0.5 gap-1"
+          : "text-[10.5px] px-2 py-0.5 gap-1";
 
       return (
-        <div className="flex flex-wrap gap-1 justify-center items-center w-full max-w-full p-1 overflow-visible">
-          {list.map((p) => {
+        <div className="flex flex-wrap gap-1 justify-center items-center w-full max-w-full p-0.5 overflow-visible">
+          {/* D-1 Natal Physical Planets */}
+          {d1List.map((p) => {
+            const isSelected = selectedEntityId === p.id;
+            return (
+              <button
+                key={`d1-${p.id}`}
+                onClick={() => setSelectedEntityId(p.id)}
+                className={`${badgeStyle} rounded font-extrabold flex items-center transition-all hover:scale-105 shadow-sm cursor-pointer ${
+                  isSelected
+                    ? "bg-sky-400 text-slate-950 ring-2 ring-white scale-105"
+                    : p.dignity === "Exalted"
+                    ? "bg-sky-950/90 text-emerald-300 border border-emerald-400 shadow-emerald-500/20"
+                    : p.dignity === "Debilitated"
+                    ? "bg-sky-950/90 text-rose-300 border border-rose-500/80 shadow-rose-500/20"
+                    : p.isUpagraha
+                    ? "bg-purple-950/90 text-purple-200 border border-purple-500/60"
+                    : "bg-slate-900/90 text-sky-200 border border-sky-500/60 hover:border-sky-400"
+                }`}
+                title={`[D1 Natal Physical] ${p.name} at ${p.natalDegrees.toFixed(1)}° in House ${houseNum} (${p.dignity || "Neutral"})`}
+              >
+                <span className="text-[6.5px] px-0.5 py-0 rounded bg-sky-950 text-sky-300 font-mono border border-sky-600/40">
+                  D1
+                </span>
+                <span>{p.name.substring(0, 2)}</span>
+                {p.dignity === "Exalted" && <span className="text-[7.5px] text-emerald-400 font-black">▲</span>}
+                {p.dignity === "Debilitated" && <span className="text-[7.5px] text-rose-400 font-black">▼</span>}
+                {p.isRetro && <span className="text-[7.5px] text-purple-400 font-black">R</span>}
+                {p.isCombust && <span className="text-[7.5px] text-orange-400">🔥</span>}
+                <span className="text-[7.5px] opacity-75 font-mono">
+                  {Math.floor(p.natalDegrees)}°
+                </span>
+              </button>
+            );
+          })}
+
+          {/* D-9 Navamsha Soul Core Planets (RTN Projection) */}
+          {d9List.map((p) => {
             const isSelected = selectedEntityId === p.planetId;
             return (
               <button
-                key={p.planetId}
+                key={`d9-${p.planetId}`}
                 onClick={() => setSelectedEntityId(p.planetId)}
-                className={`${badgeStyle} rounded-md font-extrabold flex items-center gap-1 transition-all hover:scale-110 shadow-sm cursor-pointer ${
+                className={`${badgeStyle} rounded font-extrabold flex items-center transition-all hover:scale-105 shadow-sm cursor-pointer ${
                   isSelected
                     ? "bg-amber-400 text-slate-950 ring-2 ring-white scale-105"
                     : p.isVargottama
-                    ? "bg-gradient-to-r from-cyan-900/90 to-teal-900/90 text-cyan-200 border border-cyan-400 shadow-cyan-500/20 font-black"
+                    ? "bg-gradient-to-r from-teal-950 to-cyan-950 text-cyan-200 border border-cyan-400 shadow-cyan-500/20 font-black"
                     : "bg-slate-900/90 text-amber-300 border border-amber-500/60 hover:border-amber-400"
                 }`}
-                title={p.rtnHouseSignificance}
+                title={`[D9 Soul Projection] ${p.planetName} in ${p.d9Rashi.englishName} Navamsha activating House ${houseNum}${p.isVargottama ? " (★ Vargottama)" : ""}`}
               >
-                <span>{p.planetName.substring(0, 2)}</span>
-                <span className="text-[7.5px] px-1 py-0.2 rounded bg-slate-950/80 text-slate-300 font-mono">
-                  {p.d9Rashi.englishName.substring(0, 2)}
+                <span className="text-[6.5px] px-0.5 py-0 rounded bg-amber-950 text-amber-300 font-mono border border-amber-600/40">
+                  D9
                 </span>
+                <span>{p.planetName.substring(0, 2)}</span>
                 {p.isVargottama && (
                   <span className="text-[8px] text-cyan-300 font-black" title="Vargottama (वर्गोत्तम)">
                     ★
                   </span>
                 )}
-                <span className="text-[8px] opacity-75 font-mono">
+                <span className="text-[7.5px] opacity-75 font-mono">
                   {Math.floor(p.d1Longitude % 30)}°
                 </span>
               </button>
@@ -359,24 +435,62 @@ export default function ShodashavargaView() {
               </p>
             </div>
 
-            {/* North/South Indian Switcher */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
-              <button
-                onClick={() => setChartType("north")}
-                className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
-                  chartType === "north" ? "bg-amber-500 text-slate-950 shadow" : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                North (Diamond)
-              </button>
-              <button
-                onClick={() => setChartType("south")}
-                className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
-                  chartType === "south" ? "bg-amber-500 text-slate-950 shadow" : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                South (Box)
-              </button>
+            {/* North/South Indian Switcher & RTN Layer Switcher */}
+            <div className="flex flex-wrap items-center gap-2">
+              {isRtnMode && (
+                <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
+                  <span className="text-[10px] font-bold text-slate-400 px-1">Show:</span>
+                  <button
+                    onClick={() => setRtnLayerFilter("all")}
+                    className={`px-2.5 py-1 rounded-md font-semibold transition-all cursor-pointer text-[11px] ${
+                      rtnLayerFilter === "all"
+                        ? "bg-amber-500 text-slate-950 shadow font-bold"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    Both (D1 + D9)
+                  </button>
+                  <button
+                    onClick={() => setRtnLayerFilter("d9")}
+                    className={`px-2.5 py-1 rounded-md font-semibold transition-all cursor-pointer text-[11px] ${
+                      rtnLayerFilter === "d9"
+                        ? "bg-amber-500 text-slate-950 shadow font-bold"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    🌸 D9 Only
+                  </button>
+                  <button
+                    onClick={() => setRtnLayerFilter("d1")}
+                    className={`px-2.5 py-1 rounded-md font-semibold transition-all cursor-pointer text-[11px] ${
+                      rtnLayerFilter === "d1"
+                        ? "bg-sky-500 text-slate-950 shadow font-bold"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    🔵 D1 Only
+                  </button>
+                </div>
+              )}
+
+              <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
+                <button
+                  onClick={() => setChartType("north")}
+                  className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
+                    chartType === "north" ? "bg-amber-500 text-slate-950 shadow" : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  North (Diamond)
+                </button>
+                <button
+                  onClick={() => setChartType("south")}
+                  className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
+                    chartType === "south" ? "bg-amber-500 text-slate-950 shadow" : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  South (Box)
+                </button>
+              </div>
             </div>
           </div>
 
@@ -385,14 +499,19 @@ export default function ShodashavargaView() {
             <div className="w-full mb-3 p-2.5 rounded-xl bg-gradient-to-r from-amber-950/50 via-slate-900/80 to-purple-950/50 border border-amber-500/40 flex flex-wrap items-center justify-between gap-2 text-xs shadow-inner">
               <div className="flex items-center gap-2 text-amber-200">
                 <span className="text-base">🌸</span>
-                <span className="font-bold">Deva Keralam & C.S. Patel Cross-Varga Overlay:</span>
+                <span className="font-bold">Rashi Tulya Navamsha (RTN) Cross-Varga Overlay:</span>
                 <span className="text-slate-300">
-                  D-9 Navamsha signs mapped directly onto D-1 Lagna houses.
+                  D-9 Navamsha signs mapped directly onto D-1 Lagna houses with dual planetary display.
                 </span>
               </div>
-              <span className="text-[10px] text-amber-300 font-bold bg-amber-900/60 px-2 py-0.5 rounded-md border border-amber-500/40">
-                Soul Fruit in Manifest Life
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-sky-300 font-semibold bg-sky-950/80 px-2 py-0.5 rounded-md border border-sky-500/40">
+                  🔵 D1 Physical
+                </span>
+                <span className="text-[10px] text-amber-300 font-bold bg-amber-900/60 px-2 py-0.5 rounded-md border border-amber-500/40">
+                  🌸 D9 Soul Fruit
+                </span>
+              </div>
             </div>
           )}
 
@@ -626,7 +745,7 @@ export default function ShodashavargaView() {
                     <span>Rashi Tulya Navamsha Classical Law</span>
                   </span>
                   <span className="px-2 py-0.5 rounded bg-amber-950/60 border border-amber-500/40 text-[10px] font-mono text-amber-300">
-                    Deva Keralam & C.S. Patel
+                    RTN Cross-Varga Law
                   </span>
                 </div>
 
@@ -709,6 +828,52 @@ export default function ShodashavargaView() {
                   </table>
                 </div>
               </div>
+
+              {/* D1-D9 Cross-Varga Synergies & Conjunctions Card */}
+              {crossVargaConjunctions.length > 0 && (
+                <div className="glass-panel p-4 rounded-2xl border border-sky-500/30 bg-slate-950/90 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>⚡</span>
+                      <span>D1 ⚔️ D9 Cross-Varga Co-Presence</span>
+                    </span>
+                    <span className="text-[10px] text-sky-300 font-mono bg-sky-950/80 px-2 py-0.5 rounded border border-sky-500/40">
+                      {crossVargaConjunctions.length} Houses
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-xs text-slate-300">
+                    {crossVargaConjunctions.map((cv) => (
+                      <div key={cv.house} className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-200">
+                            House {cv.house} ({cv.rashiName})
+                          </span>
+                          {cv.vargottamaGrahas.length > 0 && (
+                            <span className="text-[9.5px] font-extrabold text-cyan-300 bg-cyan-950/80 px-1.5 py-0.5 rounded border border-cyan-500/50">
+                              ★ {cv.vargottamaGrahas.join(", ")} Vargottama
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[9px] px-1 py-0.2 rounded bg-sky-950 text-sky-300 font-mono font-bold border border-sky-600/40">
+                              D1
+                            </span>
+                            <span className="text-sky-200 font-semibold">{cv.d1Grahas.join(", ")}</span>
+                          </div>
+                          <span className="text-slate-500 font-black">⮂</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[9px] px-1 py-0.2 rounded bg-amber-950 text-amber-300 font-mono font-bold border border-amber-600/40">
+                              D9
+                            </span>
+                            <span className="text-amber-200 font-semibold">{cv.d9Grahas.join(", ")}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* RTN Conjunctions & Hidden Soul Bonds Card */}
               {rtnResult.rtnConjunctions.length > 0 && (
