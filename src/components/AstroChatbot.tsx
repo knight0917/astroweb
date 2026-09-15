@@ -266,6 +266,11 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
         title: "Creative & Intellectual Talents",
         prompt: "What innate creative, analytical, or occult talents are promised in my 5th house and Navamsha?",
       },
+      {
+        icon: "🔱",
+        title: "Karmic Curses & Birth Shāntis (BPHS Ch. 83 & 85–96)",
+        prompt: "Are there any BPHS Pūrva Janma Shāpas (Sarpa, Pitri, Matri curses) or birth moment afflictions (Gandānta, Amāvāsyā, Eclipse) affecting my progeny, health, or lineage? What are the authentic Parashara remedies?",
+      },
     ],
   },
   {

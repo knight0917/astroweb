@@ -27,6 +27,7 @@ import { evaluateKnRaoTechniques } from "./knRaoTechniques";
 import { evaluateEducationStream } from "./educationStream";
 import { evaluateMultiDashaSystems } from "./dashaSystems";
 import { evaluateBphsCore } from "./bphsCore";
+import { synthesizeBphsKarmicShanti } from "./bphsKarmicShanti";
 import { evaluateBrihatJataka } from "./brihatJataka";
 import { evaluateBrihatSamhita } from "./brihatSamhita";
 import { evaluateDevaKeralam } from "./devaKeralam";
@@ -568,6 +569,21 @@ export function buildAstroDossier(
       "- **Ashtakavarga Shodhana & Pinda Sadhana (BPHS Ch. 66-70):** Total Sarvashtakavarga Yoga Pinda = " + bphs.sarvaYogaPinda + " Units",
       "- **Vishnu Avatara Archetype (BPHS Ch. 2):** **" + bphs.leadingAvatara.avataraName + "** (" + bphs.leadingAvatara.planetName + " - " + bphs.leadingAvatara.divineArchetype + ")",
       "- **Master BPHS Synthesis:** " + bphs.masterBphsSynthesis,
+    ].join("\n");
+  } catch (_) {}
+
+  // 20B. BPHS Karmic Curses (Ch. 83) & Arishta Janma Shantis (Ch. 85-96)
+  let bphsKarmicSummary = "";
+  try {
+    const ks = synthesizeBphsKarmicShanti(natalEphemeris);
+    const activeCurseList = ks.curses.filter((c) => c.isActive).map((c) => `${c.name} [${c.severity}] (${c.classicalRemedy.sanskritTitle})`);
+    const activeShantiList = ks.birthShantis.filter((s) => s.isAfflicted).map((s) => `${s.name} [Ch. ${s.bphsChapter}, ${s.severity}] (${s.classicalVedicShanti.ritualName})`);
+
+    bphsKarmicSummary = [
+      `- **Parashari Karmic Destiny Verdict:** ${ks.karmicDestinyVerdict}`,
+      `- **Active Pūrva Janma Shāpas (BPHS Ch. 83 - Progeny/Lineage Vetoes):** ${activeCurseList.length > 0 ? activeCurseList.join(" • ") : "None (Spotless Progeny Lineage / Vamsha Vriddhi)"}`,
+      `- **Active Inauspicious Birth Afflictions (BPHS Ch. 85-96):** ${activeShantiList.length > 0 ? activeShantiList.join(" • ") : "None (Auspicious Birth Moment)"}`,
+      `- **Prescribed Parashari Shānti Protocols:** ${ks.curses.filter((c) => c.isActive).map((c) => `[${c.name}]: ${c.classicalRemedy.prescription} (Mantra: ${c.classicalRemedy.mantra}) (Dāna: ${c.classicalRemedy.danaItems.join(", ")})`).concat(ks.birthShantis.filter((s) => s.isAfflicted).map((s) => `[${s.name}]: ${s.classicalVedicShanti.kalashaWorship} (Japa: ${s.classicalVedicShanti.mantraRecitation})`)).join(" || ") || "Perform regular Nitya Gayatri and Shiva Aradhana."}`
     ].join("\n");
   } catch (_) {}
 
@@ -2189,7 +2205,10 @@ export function buildAstroDossier(
       vastuSummary,
       "",
       "#### ⏱️ 73. CLASSICAL BIRTH TIME RECTIFICATION (BTR), PRANAPADA, KUNDA, TATTVA & FULL EVENT DASHA TIMELINE:",
-      btrMasterSummary
+      btrMasterSummary,
+      "",
+      "#### 🔱 74. BPHS KARMIC CURSES (CH. 83) & ARISHTA JANMA SHĀNTIS (CH. 85–96) DOSSIER:",
+      bphsKarmicSummary
     );
   }
 

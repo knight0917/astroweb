@@ -51,3 +51,11 @@
 - [x] Add the "Will We Get Married? (Classical Destiny Gate)" prompt to `TOPIC_PROMPT_BANKS` in `src/components/AstroChatbot.tsx`.
 - [x] Add unit test in `tests/engine.test.mjs` verifying chatbot context & prompt rule 0Q integration.
 - [x] Verify full test suite pass (`npm test`).
+
+## Phase 10: Classical BPHS Chapters 83–96 Codification (Pūrva Janma Shāpas & Arishta Janma Shāntis)
+- [x] Implement `src/engine/bphsKarmicShanti.ts` codifying the 8 Pūrva Janma Shāpas (Sarpa, Pitri, Matri, Bhratri, Matula, Brahmana, Patni, Preta) per BPHS Ch. 83 with authentic Parashara remedies.
+- [x] Implement BPHS Ch. 85–96 Arishta Janma diagnostics (Gandānta: Lagna, Nakshatra, Tithi; Abhukta Mūla; Jyeshthā Gandānta; Amāvāsyā; Krishna Chaturdashi 6 sextiles; Eclipse birth; Sankrānti; Bhadrā/Vishti; Trik Prasava) with classical Vedic pacification rituals.
+- [x] Create UI deck `src/components/BphsKarmicShantiDeck.tsx` and integrate it into `BhavaBalaView.tsx` and `BphsCoreDeck.tsx`.
+- [x] Inject Dossier 74 into `src/engine/chatContext.ts` and add Rule 0R into `src/engine/chatPrompt.ts` commanding the Chatbot to enforce BPHS Karmic Curses & Arishta Janma remedies.
+- [x] Add unit test suites in `tests/engine.test.mjs` covering all 8 curses, Gandanta, Amavasya, Chaturdashi sextiles, and chatbot integration.
+- [x] Verify full test suite pass (`npm test` 106/106 passing and `npm run build` static compilation passing).

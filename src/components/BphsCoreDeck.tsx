@@ -3,10 +3,11 @@
 import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { evaluateBphsCore, BphsCoreReport } from "../engine/bphsCore";
+import BphsKarmicShantiDeck from "./BphsKarmicShantiDeck";
 
 export default function BphsCoreDeck() {
   const { ephemeris } = useAstroStore();
-  const [activeTab, setActiveTab] = useState<"lagnas" | "sudarshana" | "avasthas" | "shodhana" | "avataras">("lagnas");
+  const [activeTab, setActiveTab] = useState<"lagnas" | "sudarshana" | "avasthas" | "shodhana" | "avataras" | "karmic">("lagnas");
 
   const report: BphsCoreReport = useMemo(() => {
     return evaluateBphsCore(ephemeris);
@@ -89,6 +90,16 @@ export default function BphsCoreDeck() {
           }`}
         >
           🔱 9 Vishnu Avatara Archetypes
+        </button>
+        <button
+          onClick={() => setActiveTab("karmic")}
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "karmic"
+              ? "bg-amber-500 text-slate-950 font-black shadow"
+              : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
+          }`}
+        >
+          🧬 Karmic Curses & Shāntis (Ch. 83, 85–96)
         </button>
       </div>
 
@@ -307,6 +318,11 @@ export default function BphsCoreDeck() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Tab 6: BPHS Karmic Curses & Shantis */}
+      {activeTab === "karmic" && (
+        <BphsKarmicShantiDeck />
       )}
     </div>
   );

@@ -36,6 +36,7 @@ const KnRaoTechniquesDeck = dynamic(() => import("./KnRaoTechniquesDeck"), { ssr
 const EducationStreamDeck = dynamic(() => import("./EducationStreamDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Education & Career Streams" /> });
 const DashaSystemsDeck = dynamic(() => import("./DashaSystemsDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Vimshottari & Conditional Dashas" /> });
 const BphsCoreDeck = dynamic(() => import("./BphsCoreDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="BPHS Core Principles" /> });
+const BphsKarmicShantiDeck = dynamic(() => import("./BphsKarmicShantiDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="BPHS Karmic Curses & Shantis" /> });
 const BrihatJatakaDeck = dynamic(() => import("./BrihatJatakaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Brihat Jataka" /> });
 const BrihatSamhitaDeck = dynamic(() => import("./BrihatSamhitaDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Brihat Samhita" /> });
 const DevaKeralamDeck = dynamic(() => import("./DevaKeralamDeck"), { ssr: false, loading: () => <DeckLoadingSkeleton title="Deva Keralam 150 Amshas" /> });
@@ -98,6 +99,7 @@ const DECK_MODULES: DeckModule[] = [
   { id: "table", name: "Detailed Table", category: "foundations", icon: "📋" },
   { id: "judgement", name: "Raman 12 Bhavas Judgement", category: "foundations", icon: "🏛️" },
   { id: "bphs", name: "BPHS Core Principles", category: "foundations", icon: "📖" },
+  { id: "bphskarmic", name: "BPHS Karmic Curses & Shantis (Ch. 83, 85-96)", category: "foundations", icon: "🔱" },
   { id: "jataka", name: "Brihat Jataka (Varahamihira)", category: "foundations", icon: "📜" },
   { id: "samhita", name: "Brihat Samhita (Varahamihira)", category: "foundations", icon: "🌟" },
 
@@ -155,7 +157,7 @@ const DECK_MODULES: DeckModule[] = [
 
 export default function BhavaBalaView() {
   const { ephemeris } = useAstroStore();
-  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas" | "bphs" | "jataka" | "samhita" | "keralam" | "suka" | "jaimini" | "gayatri" | "alankara" | "nirnay" | "parijata" | "saravali" | "phaladeepika" | "prasnamarga" | "samhitaskandha" | "sanketanidhi" | "chintamani" | "strijataka" | "satyajataka" | "sugam" | "uttarakalamrita" | "predictions" | "chandrika" | "chappanna" | "bhrigusamhita" | "ratnakara" | "crux" | "kcil" | "nadimaster" | "shashtiamshabcp" | "patanjaliyoga" | "kotachakra" | "raman300" | "benchmarks" | "prasnatantra" | "patelashtakavarga">("bars");
+  const [displayMode, setDisplayMode] = useState<"bars" | "stacked" | "table" | "judgement" | "bhrigu" | "karma" | "dtp" | "marriage" | "techniques" | "education" | "dashas" | "bphs" | "bphskarmic" | "jataka" | "samhita" | "keralam" | "suka" | "jaimini" | "gayatri" | "alankara" | "nirnay" | "parijata" | "saravali" | "phaladeepika" | "prasnamarga" | "samhitaskandha" | "sanketanidhi" | "chintamani" | "strijataka" | "satyajataka" | "sugam" | "uttarakalamrita" | "predictions" | "chandrika" | "chappanna" | "bhrigusamhita" | "ratnakara" | "crux" | "kcil" | "nadimaster" | "shashtiamshabcp" | "patanjaliyoga" | "kotachakra" | "raman300" | "benchmarks" | "prasnatantra" | "patelashtakavarga">("bars");
   const [selectedCategory, setSelectedCategory] = useState<DeckCategory>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -331,6 +333,11 @@ export default function BhavaBalaView() {
       {/* Primordial BPHS Classical Core View */}
       {displayMode === "bphs" && (
         <BphsCoreDeck />
+      )}
+
+      {/* BPHS Karmic Curses & Arishta Janma Shantis View */}
+      {displayMode === "bphskarmic" && (
+        <BphsKarmicShantiDeck />
       )}
 
       {/* Acharya Varahamihira Brihat Jataka View */}

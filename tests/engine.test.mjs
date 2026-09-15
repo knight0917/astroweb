@@ -4665,6 +4665,97 @@ test("Chatbot Marriage Destiny Gate & Fatal Veto Synchronization (Section 24 & R
   assert.ok(sysInst.includes("Upapada Lagna 6/8 Shadashtaka"), "Rule 0Q must cite Upapada Lagna 6/8 Shadashtaka");
 });
 
+test("BPHS Chapter 83: Pūrva Janma Shāpas (8 Karmic Progeny Curses) Engine Verification", async () => {
+  const { evaluateBphsKarmicCurses, synthesizeBphsKarmicShanti } = await import("../src/engine/bphsKarmicShanti.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
 
+  const loc = { cityName: "Varanasi", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5, country: "India" };
+  const ephem = calculateVedicEphemeris(new Date("1998-05-25T00:16:00Z"), loc, "Lahiri", "WholeSign", "Mean");
 
+  const curses = evaluateBphsKarmicCurses(ephem);
+  assert.equal(curses.length, 8, "Must evaluate all 8 BPHS Pūrva Janma Shāpas");
 
+  const expectedCurseIds = [
+    "sarpa_shapa",
+    "pitri_shapa",
+    "matri_shapa",
+    "bhratri_shapa",
+    "matula_shapa",
+    "brahmana_shapa",
+    "patni_shapa",
+    "preta_shapa",
+  ];
+
+  for (const cid of expectedCurseIds) {
+    const curse = curses.find((c) => c.id === cid);
+    assert.ok(curse, `Curse ${cid} must exist in output`);
+    assert.ok(curse.sanskritName, `Curse ${cid} must have Sanskrit name`);
+    assert.ok(curse.curseSource, `Curse ${cid} must document past-life source`);
+    assert.ok(["None", "Mild", "Moderate", "Severe / Veto"].includes(curse.severity));
+    assert.ok(curse.classicalRemedy.title, "Must have classical remedy title");
+    assert.ok(curse.classicalRemedy.prescription, "Must have authentic prescription");
+    assert.ok(curse.classicalRemedy.mantra, "Must include remedy mantra");
+    assert.ok(curse.classicalRemedy.danaItems.length > 0, "Must include prescribed dāna items");
+  }
+
+  const report = synthesizeBphsKarmicShanti(ephem);
+  assert.ok(report.karmicDestinyVerdict, "Must produce a definitive karmic verdict");
+  assert.ok(report.acharyaGuidanceSummary, "Must produce an Acharya guidance summary");
+});
+
+test("BPHS Chapters 85-96: Arishta Janma & Vedic Shāntis Diagnostic Engine Verification", async () => {
+  const { evaluateBphsBirthShantis } = await import("../src/engine/bphsKarmicShanti.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const loc = { cityName: "Ujjain", latitude: 23.1765, longitude: 75.7885, timezoneOffsetHours: 5.5, country: "India" };
+  const ephem = calculateVedicEphemeris(new Date("1998-05-25T00:16:00Z"), loc, "Lahiri", "WholeSign", "Mean");
+
+  const shantis = evaluateBphsBirthShantis(ephem);
+  assert.equal(shantis.length, 9, "Must evaluate 9 primary BPHS Inauspicious Birth Shantis");
+
+  const expectedShantiIds = [
+    "gandanta_shanti",
+    "abhukta_mula",
+    "jyeshtha_gandanta",
+    "amavasya_shanti",
+    "krishna_chaturdashi",
+    "grahana_birth",
+    "sankranti_birth",
+    "bhadra_vishti",
+    "trik_prasava",
+  ];
+
+  for (const sid of expectedShantiIds) {
+    const shanti = shantis.find((s) => s.id === sid);
+    assert.ok(shanti, `Birth shanti ${sid} must exist in output`);
+    assert.ok(shanti.bphsChapter >= 85 && shanti.bphsChapter <= 96, "Must reference valid BPHS chapter");
+    assert.ok(["None", "Mild", "Moderate", "Critical"].includes(shanti.severity));
+    assert.ok(shanti.classicalVedicShanti.ritualName, "Must have Vedic ritual name");
+    assert.ok(shanti.classicalVedicShanti.kalashaWorship, "Must specify Kalasha worship protocol");
+    assert.ok(shanti.classicalVedicShanti.mantraRecitation, "Must specify mantra recitation");
+    assert.ok(shanti.classicalVedicShanti.danaAndBhojana, "Must specify dāna and food distribution");
+  }
+});
+
+test("BPHS Karmic Curses & Shānti Dossier 74 & Rule 0R Chatbot Integration Verification", async () => {
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { buildChatSystemInstruction } = await import("../src/engine/chatPrompt.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const loc = { cityName: "Varanasi", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5, country: "India" };
+  const ephem = calculateVedicEphemeris(new Date("1998-05-25T00:16:00Z"), loc, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Verify Dossier 74 is present
+  const dossier = buildAstroDossier(ephem, ephem, new Date(), "male", undefined, "all");
+  assert.ok(dossier.includes("74. BPHS KARMIC CURSES (CH. 83) & ARISHTA JANMA SHĀNTIS (CH. 85–96) DOSSIER:"), "Dossier must include Dossier 74");
+  assert.ok(dossier.includes("Parashari Karmic Destiny Verdict:"), "Dossier 74 must include Parashari Karmic Destiny Verdict");
+  assert.ok(dossier.includes("Active Pūrva Janma Shāpas (BPHS Ch. 83"), "Dossier 74 must include BPHS Ch. 83 section");
+
+  // 2. Verify Rule 0R in Chatbot System Prompt
+  const sysInst = buildChatSystemInstruction(dossier);
+  assert.ok(sysInst.includes("0R. **CLASSICAL BPHS PŪRVA JANMA SHĀPAS (KARMIC CURSES) & ARISHTA JANMA SHĀNTI ENFORCEMENT PROTOCOL"), "Chat prompt must include Rule 0R");
+  assert.ok(sysInst.includes("Sarpa Pratishthā"), "Rule 0R must cite Sarpa Pratishtha / Nagabali");
+  assert.ok(sysInst.includes("Gayā Srāddha"), "Rule 0R must cite Gaya Shraddha");
+  assert.ok(sysInst.includes("Setu (Rameswaram)"), "Rule 0R must cite Setu Snana");
+  assert.ok(sysInst.includes("Tripindi Srāddha"), "Rule 0R must cite Tripindi Shraddha");
+});
