@@ -63,23 +63,23 @@ export default function MobileBottomNav() {
     },
   ];
 
-  const MORE_MODULES: { mode: ViewMode; label: string; hindiLabel: string; desc: string }[] = [
-    { mode: "prashna", label: "Tajik Prashna", hindiLabel: "ताजिक प्रश्न तन्त्र", desc: "16 Tajika Yogas & Horary Yes/No" },
-    { mode: "adhana", label: "Adhana Kundali", hindiLabel: "आधान कुण्डली (गर्भाधान)", desc: "Conception Epoch, 10-Month Timeline & Garbha Raksha" },
-    { mode: "muhurta", label: "Muhurta Finder", hindiLabel: "शुभ मुहूर्त शोधन", desc: "Abhijit, Brahma & Event Muhurtas" },
-    { mode: "matchmaking", label: "Kundli Milan", hindiLabel: "अष्टकूट ३६ गुण मिलान", desc: "Ashtakoota 36 Gunas & Manglik Check" },
-    { mode: "jaimini", label: "Jaimini Suite", hindiLabel: "जैमिनी ज्योतिष", desc: "Arudha Padas, Karakamsha & Chara Dasha" },
-    { mode: "dasha", label: "Vimshottari Dasha", hindiLabel: "विम्शोत्तरी दशा चक्र", desc: "120 Yrs MD/AD/PD Hierarchy" },
-    { mode: "gochar", label: "Transits & Sade Sati", hindiLabel: "ग्रह गोचर एवं साढ़े साती", desc: "Live Transits & Sade Sati" },
-    { mode: "3d", label: "3D Celestial Dome", hindiLabel: "3D खगोलीय आकाश", desc: "Interactive WebGL Sky & Star Dome" },
-    { mode: "ashtakavarga", label: "Ashtakavarga Suite", hindiLabel: "अष्टकवर्ग चक्र", desc: "Sarva & Bhinna 8-Grid Charts" },
-    { mode: "vastu", label: "Classical Vāstu Studio", hindiLabel: "वास्तु शास्त्र (81 पद)", desc: "81-Grid Mandala, Ayadi & Dhana-Disha" },
-    { mode: "choghadiya", label: "Choghadiya & Horas", hindiLabel: "चौघड़िया एवं होरा", desc: "Real-Time Muhurtas & Horas" },
-    { mode: "numerology", label: "Vedic Numerology", hindiLabel: "वैदिक अंकशास्त्र", desc: "Mulank, Bhagyank & Lo Shu Grid" },
-    { mode: "tithi-calendar", label: "Tithi Calendar", hindiLabel: "तिथि पञ्चाङ्ग कैलेण्डर", desc: "Daily Tithi, Moon Phases & Festivals" },
-    { mode: "tithi-birthday", label: "Tithi Birthday", hindiLabel: "तिथि जन्मदिन", desc: "Tithi Pravesha & Janmadin Vidhi" },
-    { mode: "table", label: "Full Ephemeris Table", hindiLabel: "ग्रह स्थिति सारणी", desc: "Sidereal Degrees & Nakshatras" },
-    { mode: "dual", label: "Dual 3D + Chart", hindiLabel: "युगल दृश्य (3D + कुण्डली)", desc: "Split-Screen Dome and Kundli" },
+  const MORE_MODULES: { mode: ViewMode; label: string; desc: string }[] = [
+    { mode: "prashna", label: "Tajik Prashna", desc: "16 Tajika Yogas & Horary Yes/No" },
+    { mode: "adhana", label: "Adhana Kundali", desc: "Conception Epoch, 10-Month Timeline & Garbha Raksha" },
+    { mode: "muhurta", label: "Muhurta Finder", desc: "Abhijit, Brahma & Event Muhurtas" },
+    { mode: "matchmaking", label: "Kundli Milan", desc: "Ashtakoota 36 Gunas & Manglik Check" },
+    { mode: "jaimini", label: "Jaimini Suite", desc: "Arudha Padas, Karakamsha & Chara Dasha" },
+    { mode: "dasha", label: "Vimshottari Dasha", desc: "120 Yrs MD/AD/PD Hierarchy" },
+    { mode: "gochar", label: "Transits & Sade Sati", desc: "Live Transits & Sade Sati" },
+    { mode: "3d", label: "3D Celestial Dome", desc: "Interactive WebGL Sky & Star Dome" },
+    { mode: "ashtakavarga", label: "Ashtakavarga Suite", desc: "Sarva & Bhinna 8-Grid Charts" },
+    { mode: "vastu", label: "Classical Vāstu Studio", desc: "81-Grid Mandala, Ayadi & Dhana-Disha" },
+    { mode: "choghadiya", label: "Choghadiya & Horas", desc: "Real-Time Muhurtas & Horas" },
+    { mode: "numerology", label: "Vedic Numerology", desc: "Mulank, Bhagyank & Lo Shu Grid" },
+    { mode: "tithi-calendar", label: "Tithi Calendar", desc: "Daily Tithi, Moon Phases & Festivals" },
+    { mode: "tithi-birthday", label: "Tithi Birthday", desc: "Tithi Pravesha & Janmadin Vidhi" },
+    { mode: "table", label: "Full Ephemeris Table", desc: "Sidereal Degrees & Nakshatras" },
+    { mode: "dual", label: "Dual 3D + Chart", desc: "Split-Screen Dome and Kundli" },
   ];
 
   const isMoreActive = MORE_MODULES.some((m) => m.mode === viewMode);
@@ -90,7 +90,6 @@ export default function MobileBottomNav() {
     return MORE_MODULES.filter(
       (m) =>
         m.label.toLowerCase().includes(q) ||
-        m.hindiLabel.toLowerCase().includes(q) ||
         m.desc.toLowerCase().includes(q) ||
         m.mode.toLowerCase().includes(q)
     );
@@ -189,7 +188,6 @@ export default function MobileBottomNav() {
                             <span className="text-[8px] font-bold text-amber-400 uppercase tracking-widest">Active</span>
                           )}
                         </div>
-                        <span className="text-[10px] text-amber-400/80 block font-medium">{m.hindiLabel}</span>
                         <span className="text-[9.5px] text-slate-400 block line-clamp-1 mt-0.5">{m.desc}</span>
                       </div>
                     </button>

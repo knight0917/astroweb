@@ -130,3 +130,94 @@ export async function searchLocationSuggestions(query: string): Promise<Location
 
   return localMatches.slice(0, 10);
 }
+
+/**
+ * Fast synchronous derivation of live user location from client timezone
+ */
+export function resolveInitialLiveLocation(): GeoLocation {
+  if (typeof window === "undefined") return POPULAR_CITIES[0];
+  try {
+    const tzOffset = -new Date().getTimezoneOffset() / 60;
+    const tzName = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    const cityNameFromTz = tzName ? tzName.split("/").pop()?.replace(/_/g, " ") : "";
+
+    if (cityNameFromTz) {
+      const directMatch = EXTENDED_LOCAL_PLACES.find(
+        (c) => c.cityName.toLowerCase() === cityNameFromTz.toLowerCase()
+      );
+      if (directMatch) {
+        return {
+          cityName: directMatch.cityName,
+          country: directMatch.country,
+          latitude: directMatch.latitude,
+          longitude: directMatch.longitude,
+          elevation: directMatch.elevation || 0,
+          timezoneOffsetHours: directMatch.timezoneOffsetHours || tzOffset,
+        };
+      }
+    }
+
+    // Match by timezone offset among popular cities
+    const tzMatch = POPULAR_CITIES.find(
+      (c) => Math.abs((c.timezoneOffsetHours || 5.5) - tzOffset) < 0.1
+    );
+    if (tzMatch) {
+      return {
+        cityName: cityNameFromTz || tzMatch.cityName,
+        country: tzMatch.country || "Local Timezone",
+        latitude: tzMatch.latitude,
+        longitude: tzMatch.longitude,
+        elevation: tzMatch.elevation || 0,
+        timezoneOffsetHours: tzOffset,
+      };
+    }
+  } catch (_) {}
+  return POPULAR_CITIES[0];
+}
+
+/**
+ * Asynchronous high-precision live location detection (via GPS + reverse geocode)
+ */
+export async function detectLiveBrowserLocation(): Promise<GeoLocation | null> {
+  if (typeof window === "undefined" || !navigator.geolocation) return null;
+
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const elev = pos.coords.altitude || 0;
+          const tz = -new Date().getTimezoneOffset() / 60;
+
+          let resolvedCity = "Current Location";
+          let resolvedCountry = "Device GPS";
+
+          try {
+            const res = await fetch(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
+            );
+            if (res.ok) {
+              const data = await res.json();
+              resolvedCity = data.city || data.locality || data.principalSubdivision || "Current Location";
+              resolvedCountry = data.countryName || "Local";
+            }
+          } catch (_) {}
+
+          resolve({
+            cityName: resolvedCity,
+            country: resolvedCountry,
+            latitude: parseFloat(lat.toFixed(4)),
+            longitude: parseFloat(lon.toFixed(4)),
+            elevation: Math.round(elev),
+            timezoneOffsetHours: tz,
+          });
+        } catch (_) {
+          resolve(null);
+        }
+      },
+      () => resolve(null),
+      { enableHighAccuracy: false, timeout: 6000 }
+    );
+  });
+}

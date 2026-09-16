@@ -8,6 +8,7 @@ import {
 } from "../engine/types";
 import { POPULAR_CITIES } from "../engine/constants";
 import { calculateVedicEphemeris } from "../engine/ephemeris";
+import { resolveInitialLiveLocation, detectLiveBrowserLocation } from "../engine/geocoding";
 
 export type ViewMode =
   | "3d"
@@ -647,6 +648,11 @@ export const useAstroStore = create<AstroState>((set, get) => ({
           targetAya = defaultProf.ayanamsha || "Lahiri";
           targetProfileName = defaultProf.name;
           if (defaultProf.gender) targetGender = defaultProf.gender;
+        } else {
+          // First-time visitor: Real-time current live date & localized observer location
+          targetDate = new Date();
+          targetLoc = resolveInitialLiveLocation();
+          targetProfileName = "🔴 Live Transit (Now)";
         }
       }
 
@@ -663,10 +669,37 @@ export const useAstroStore = create<AstroState>((set, get) => ({
         ephemeris: calculateVedicEphemeris(targetDate, targetLoc, targetAya, houseSystem, nodeType),
       });
 
+      // For first-time users, asynchronously refine to high-precision device GPS if permitted
+      if (!rawActive && profiles.length === 0) {
+        detectLiveBrowserLocation()
+          .then((geo) => {
+            if (geo) {
+              const current = get();
+              if (current.activeProfileName === "🔴 Live Transit (Now)" || !current.activeProfileName) {
+                const liveNow = new Date();
+                set({
+                  currentDate: liveNow,
+                  location: geo,
+                  activeProfileName: "🔴 Live Transit (Now)",
+                  ephemeris: calculateVedicEphemeris(
+                    liveNow,
+                    geo,
+                    current.ayanamsha,
+                    current.houseSystem,
+                    current.nodeType
+                  ),
+                });
+              }
+            }
+          })
+          .catch(() => {});
+      }
+
       // Background sync from DB if email is available
       if (storedEmail) {
         get().syncChartsWithDb(storedEmail);
       }
     } catch (_) {}
   },
+
 }));

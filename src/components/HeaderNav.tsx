@@ -172,168 +172,147 @@ export default function HeaderNav() {
 
   const ALL_MODULES: {
     category: string;
-    items: { mode: ViewMode; label: string; hindiLabel: string; desc: string; badge?: string }[];
+    items: { mode: ViewMode; label: string; desc: string; badge?: string }[];
   }[] = [
     {
-      category: "Charts & Divisionals (कुण्डली एवं वर्ग)",
+      category: "Charts & Divisionals",
       items: [
         {
           mode: "kundli-north",
           label: "Traditional Kundli Chart",
-          hindiLabel: "जन्म कुण्डली (उत्तर व दक्षिण)",
           desc: "North/South Indian charts with Jaimini Chara Karakas (AK to DK)",
           badge: "Core",
         },
         {
           mode: "shodashavarga",
           label: "16 Vargas (Shodashavarga)",
-          hindiLabel: "षोडशवर्ग (D1 - D60)",
           desc: "Complete Parashari 16 divisional charts with interactive inspect",
           badge: "D1–D60",
         },
         {
           mode: "dual",
           label: "Dual 3D + Kundli Split View",
-          hindiLabel: "युगल दृश्य (3D + कुण्डली)",
           desc: "Side-by-side interactive 3D SkyDome and Kundli chart",
         },
         {
           mode: "jaimini",
           label: "Jaimini Astrology Suite",
-          hindiLabel: "जैमिनी ज्योतिष (कारकांश व आरूढ़)",
           desc: "7 Chara Karakas, 12 Arudha Padas (AL/UL), Karakamsha & Chara Dasha",
           badge: "Jaimini",
         },
         {
           mode: "matchmaking",
           label: "Kundli Milan (36 Gunas)",
-          hindiLabel: "अष्टकूट ३६ गुण मिलान",
           desc: "Ashtakoota compatibility, Nadi/Bhakoot cancellation & Manglik check",
           badge: "36 Gunas",
         },
         {
           mode: "adhana",
           label: "Adhana Kundali (Conception Chart)",
-          hindiLabel: "आधान कुण्डली (गर्भाधान एवं १० मास)",
           desc: "Epoch conception chart, 10-month foetal development timeline, & Garbha Raksha shield",
           badge: "Epoch",
         },
       ],
     },
     {
-      category: "Predictive Timing & Transits (दशा एवं गोचर)",
+      category: "Predictive Timing & Transits",
       items: [
         {
           mode: "dasha",
           label: "Vimshottari Dasha (120 Yrs)",
-          hindiLabel: "विम्शोत्तरी दशा चक्र",
           desc: "Complete Mahadasha, Antardasha & Pratyantardasha hierarchy with live active tracker",
           badge: "120 Yrs",
         },
         {
           mode: "gochar",
           label: "Planetary Transits & Sade Sati",
-          hindiLabel: "ग्रह गोचर एवं साढ़े साती",
           desc: "Live transits over Natal Moon & Lagna, 5-phase Sade Sati & Dual Transit Chart",
           badge: "Live",
         },
         {
           mode: "prashna",
           label: "Tajik Prashna (Horary)",
-          hindiLabel: "ताजिक प्रश्न तन्त्र",
           desc: "16 Tajika Yogas (Ithasala/Ishrafa), query orbs & instant yes/no verdict",
           badge: "Tajika",
         },
       ],
     },
     {
-      category: "Classical Strengths & Analysis (बल साधन)",
+      category: "Classical Strengths & Analysis",
       items: [
         {
           mode: "shadbala",
           label: "Parashari Shadbala (6-Fold)",
-          hindiLabel: "षड्बल (6-अंग ग्रह बल)",
           desc: "Sthan, Dig, Kaal, Cheshta, Naisargika, Drik & Ishta/Kashta Phala",
           badge: "BPHS",
         },
         {
           mode: "bhavabala",
           label: "Bhava Bala (12 House Strengths)",
-          hindiLabel: "भाव बल (12 भाव शक्ति)",
           desc: "House Lords, Dig, Drishti & Kendra required Rupas analysis",
         },
         {
           mode: "ashtakavarga",
           label: "Ashtakavarga Matrix Suite",
-          hindiLabel: "अष्टकवर्ग चक्र",
           desc: "Sarvashtakavarga 337 bindus & 7 Bhinnashtakavarga score matrices",
         },
         {
           mode: "vastu",
           label: "Classical Vāstu Studio",
-          hindiLabel: "वास्तु शास्त्र एवं 81 पद मण्डल",
           desc: "81-Grid Purusha Mandala, 45 Deities, Ayadi Shadvarga & SAV Dhana-Disha",
           badge: "Vāstu 81",
         },
       ],
     },
     {
-      category: "Panchanga, Calendar & Muhurta (पञ्चाङ्ग एवं मुहूर्त)",
+      category: "Panchanga, Calendar & Muhurta",
       items: [
         {
           mode: "muhurta",
           label: "Auspicious Muhurta Finder",
-          hindiLabel: "शुभ मुहूर्त एवं पञ्चाङ्ग शुद्धि",
           desc: "Abhijit, Brahma, Amrit Kaal, Rahu Kaal, & Event Muhurta Suitability",
           badge: "Muhurta",
         },
         {
           mode: "choghadiya",
           label: "Real-Time Choghadiya & Horas",
-          hindiLabel: "चौघड़िया एवं ग्रह होरा",
           desc: "Live Day & Night Choghadiyas, countdown timer, and 24 Planetary Horas",
           badge: "Live",
         },
         {
           mode: "tithi-calendar",
           label: "Vedic Tithi Calendar",
-          hindiLabel: "तिथि पञ्चाङ्ग कैलेण्डर",
           desc: "Daily Sunrise Tithi, Moon phases & 50+ festival Shubh Muhurtas",
           badge: "New",
         },
         {
           mode: "tithi-birthday",
           label: "Vedic Tithi Birthday",
-          hindiLabel: "तिथि जन्मदिन (तिथि प्रवेश)",
           desc: "Tithi Pravesha exact recurrence and prescribed birthday rituals",
         },
         {
           mode: "numerology",
           label: "Vedic & Chaldean Numerology",
-          hindiLabel: "वैदिक अंकशास्त्र",
           desc: "Mulank, Bhagyank, Name Number & Chinese Lo Shu 3x3 Grid",
         },
       ],
     },
     {
-      category: "Observatory & Ephemeris (खगोलीय वेधशाला)",
+      category: "Observatory & Ephemeris",
       items: [
         {
           mode: "3d",
           label: "3D Celestial WebGL Dome",
-          hindiLabel: "3D खगोलीय आकाश मण्डल",
           desc: "Real-time 3D planetary orbits, Nakshatras & sky coordinates",
         },
         {
           mode: "table",
           label: "Complete Ephemeris Table",
-          hindiLabel: "ग्रह स्थिति सारणी",
           desc: "Sidereal degrees, Nakshatras, Padas, Speed & Retrograde status",
         },
         {
           mode: "reviews",
           label: "Client Reviews & Feedback",
-          hindiLabel: "समीक्षा एवं प्रतिक्रिया",
           desc: "Community feedback, consultation reviews & feature suggestions stored in DB",
           badge: "DB",
         },
@@ -361,7 +340,6 @@ export default function HeaderNav() {
       if (!q) return true;
       return (
         m.label.toLowerCase().includes(q) ||
-        m.hindiLabel.toLowerCase().includes(q) ||
         m.desc.toLowerCase().includes(q) ||
         m.category.toLowerCase().includes(q) ||
         (m.badge && m.badge.toLowerCase().includes(q)) ||
@@ -379,7 +357,6 @@ export default function HeaderNav() {
       items: group.items.filter(
         (item) =>
           item.label.toLowerCase().includes(q) ||
-          item.hindiLabel.toLowerCase().includes(q) ||
           item.desc.toLowerCase().includes(q) ||
           (item.badge && item.badge.toLowerCase().includes(q)) ||
           item.mode.toLowerCase().includes(q)
@@ -396,7 +373,6 @@ export default function HeaderNav() {
     return {
       mode: "kundli-north" as ViewMode,
       label: "Traditional Kundli",
-      hindiLabel: "जन्म कुण्डली",
       desc: "",
     };
   }, [viewMode]);
@@ -690,9 +666,6 @@ export default function HeaderNav() {
                             <span className={`font-bold text-xs sm:text-sm truncate ${isSelected ? "text-amber-300" : "text-slate-100"}`}>
                               {item.label}
                             </span>
-                            <span className="text-[10px] text-amber-400/80 font-medium">
-                              ({item.hindiLabel})
-                            </span>
                             {item.badge && (
                               <span className="text-[8.5px] font-black px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700">
                                 {item.badge}
@@ -856,9 +829,6 @@ export default function HeaderNav() {
                                     ACTIVE
                                   </span>
                                 )}
-                              </div>
-                              <div className="text-[10px] text-amber-400/80 font-medium">
-                                {item.hindiLabel}
                               </div>
                               <p className="text-[10px] text-slate-400 line-clamp-1 mt-0.5">
                                 {item.desc}
