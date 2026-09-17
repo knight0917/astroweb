@@ -392,17 +392,30 @@ export function calculateLaypersonReport(input: LaypersonReportInput): Layperson
   const dashaResult = calculateVimshottariDasha(birthDate, moonLon, new Date());
 
   // 1. Native Profile Formatting
-  const dateFormatted = birthDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const timeFormatted = birthDate.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
+  // CRITICAL: Format date and time strictly in the birthplace's local timezone (location.timezoneOffsetHours),
+  // not the viewer's device / browser locale timezone.
+  const tzOffsetHours = location.timezoneOffsetHours ?? 5.5;
+  const tzOffsetMs = tzOffsetHours * 3600 * 1000;
+  const localBirthDate = new Date(birthDate.getTime() + tzOffsetMs);
+
+  const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const MONTHS = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const weekday = WEEKDAYS[localBirthDate.getUTCDay()];
+  const month = MONTHS[localBirthDate.getUTCMonth()];
+  const day = localBirthDate.getUTCDate();
+  const year = localBirthDate.getUTCFullYear();
+  const rawHours = localBirthDate.getUTCHours();
+  const rawMinutes = String(localBirthDate.getUTCMinutes()).padStart(2, "0");
+  const hour12 = rawHours % 12 || 12;
+  const ampm = rawHours >= 12 ? "PM" : "AM";
+  const formattedHour12 = String(hour12).padStart(2, "0");
+
+  const dateFormatted = `${weekday}, ${month} ${day}, ${year}`;
+  const timeFormatted = `${formattedHour12}:${rawMinutes} ${ampm}`;
   const placeFormatted = `${location.cityName}${location.country ? `, ${location.country}` : ""}`;
 
   const cosmicEssence = `You are born under the celestial imprint of ${ascRashi} rising, anchoring your physical presence with ${RASHI_ELEMENTS[ascRashiIdx].toLowerCase()} vitality. Internally, your emotional pulse is calibrated to ${moonRashi} in the sacred nakshatra of ${moonNakshatra}, while your conscious vitality and outer mission are ignited by the ${sunRashi} Sun. Your life path is directed primarily toward the domains of House ${ascLordHouse}, where your chart ruler ${ascLord} concentrates your personal willpower.`;

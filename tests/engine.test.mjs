@@ -4860,3 +4860,34 @@ test("Layperson Comprehensive Kundli Life Report & Engine Verification (Phase 11
   assert.ok(report.remediesAndPowerTools.safeGemstones.length >= 1, "Safe gemstones must exist");
   assert.ok(report.remediesAndPowerTools.dailyMindfulPractice.length > 10, "Daily practice must be populated");
 });
+
+test("Layperson Report correctly formats birth date/time in native location timezone (independent of runner locale)", async () => {
+  const { calculateLaypersonReport } = await import("../src/engine/laypersonReportEngine.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // Native born: May 25, 1998 at 00:15 AM in Mau, India (UTC+5.5)
+  // UTC Timestamp: 1998-05-24T18:45:00.000Z
+  const mauLocation = {
+    cityName: "Mau",
+    country: "India",
+    latitude: 25.94,
+    longitude: 83.56,
+    elevation: 75,
+    timezoneOffsetHours: 5.5,
+  };
+  const birthDateUtc = new Date(Date.UTC(1998, 4, 25, 0, 15) - 5.5 * 3600 * 1000);
+  const ephem = calculateVedicEphemeris(birthDateUtc, mauLocation, "Lahiri", "WholeSign", "Mean");
+
+  const report = calculateLaypersonReport({
+    natalEphemeris: ephem,
+    birthDate: birthDateUtc,
+    location: mauLocation,
+    name: "Aarav",
+    gender: "male",
+  });
+
+  assert.equal(report.nativeProfile.birthDateFormatted, "Monday, May 25, 1998");
+  assert.equal(report.nativeProfile.birthTimeFormatted, "12:15 AM");
+  assert.equal(report.nativeProfile.placeFormatted, "Mau, India");
+});
+
