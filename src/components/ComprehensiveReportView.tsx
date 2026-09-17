@@ -220,151 +220,164 @@ export default function ComprehensiveReportView() {
             </div>
           </div>
 
-          {/* Cosmic Essence & Observable Behavioral Blueprint */}
-          <div className="p-5 sm:p-7 rounded-3xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 print:border-slate-300 space-y-6">
+          {/* Executive Cosmic Essence Narrative (Completes Page 1) */}
+          <div className="p-5 sm:p-6 rounded-2xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 print:border-slate-300 space-y-3.5 print:p-4 print:space-y-2.5">
             <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-base sm:text-lg">🌟</span>
-                <h3 className="font-black text-sm sm:text-base bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent print:text-amber-900 uppercase tracking-wide">
-                  Your Cosmic Essence & Observable Behavioral Blueprint
-                </h3>
-              </div>
-              <p className="text-xs text-slate-400 print:text-slate-600 font-medium">
-                How your celestial imprint translates into real-world personality, everyday reactions, emotional wiring, and life priorities.
+              <h3 className="font-bold text-xs uppercase tracking-wider text-amber-400 print:text-amber-800 flex items-center gap-1.5 mb-1">
+                <span>🌟</span>
+                <span>Your Cosmic Essence & Executive Soul Blueprint</span>
+              </h3>
+              <p className="text-[11px] text-slate-400 print:text-slate-600 font-medium">
+                Unified synthesis of your rising sign, lunar emotional engine, solar mission, and primary karmic focus.
               </p>
             </div>
 
-            {/* Synthesized Executive Narrative */}
-            <div className="p-4 rounded-2xl bg-slate-950/60 print:bg-white border border-slate-800/80 print:border-slate-200 text-xs sm:text-sm text-slate-300 print:text-slate-800 leading-relaxed space-y-3">
+            <div className="p-4 rounded-xl bg-slate-950/60 print:bg-white border border-slate-800/80 print:border-slate-200 text-xs sm:text-sm text-slate-300 print:text-slate-800 leading-relaxed space-y-2.5 print:text-[9.5pt] print:leading-normal">
               {report.nativeProfile.cosmicEssence.split("\n\n").map((para, idx) => (
-                <p key={idx} className="font-normal text-slate-300 print:text-slate-800 leading-relaxed">
+                <p key={idx} className="font-normal text-slate-300 print:text-slate-800">
                   {para}
                 </p>
               ))}
             </div>
-
-            {/* 4 Observable Behavioral Pillars */}
-            {report.nativeProfile.essenceBreakdown && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-                {/* 1. Outer Presence & Ascendant */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 print:bg-white border border-slate-800 print:border-slate-300 space-y-3 flex flex-col justify-between hover:border-amber-500/40 transition-colors">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-amber-400 print:text-amber-800 flex items-center gap-1.5">
-                        <span>👁️</span> Outer Presence & Demeanor
-                      </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                        {report.nativeProfile.essenceBreakdown.outerPresence.title}
-                      </span>
-                    </div>
-                    <div className="space-y-2 text-xs text-slate-300 print:text-slate-800 pt-1">
-                      <div>
-                        <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Observable Demeanor:</strong>
-                        <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.outerPresence.observableDemeanor}</p>
-                      </div>
-                      <div>
-                        <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Social Behavior:</strong>
-                        <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.outerPresence.socialPresence}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-slate-900/90 print:bg-slate-100 border border-slate-800 print:border-slate-200 text-[11px] text-slate-300 print:text-slate-800">
-                    <span className="text-amber-400 print:text-amber-800 font-bold">First Impression: </span>
-                    {report.nativeProfile.essenceBreakdown.outerPresence.firstImpression}
-                  </div>
-                </div>
-
-                {/* 2. Emotional Engine & Nakshatra Psychology */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 print:bg-white border border-slate-800 print:border-slate-300 space-y-3 flex flex-col justify-between hover:border-cyan-500/40 transition-colors">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 print:text-cyan-800 flex items-center gap-1.5">
-                        <span>🌊</span> Emotional Wiring & Mind
-                      </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
-                        {report.nativeProfile.essenceBreakdown.emotionalEngine.title}
-                      </span>
-                    </div>
-                    <div className="space-y-2 text-xs text-slate-300 print:text-slate-800 pt-1">
-                      <div>
-                        <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Emotional Engine:</strong>
-                        <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.emotionalEngine.psychologyOverview}</p>
-                      </div>
-                      <div>
-                        <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Everyday Reactions & Habits:</strong>
-                        <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.emotionalEngine.observableBehaviors}</p>
-                      </div>
-                      <div>
-                        <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Relational Loyalty & Boundaries:</strong>
-                        <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.emotionalEngine.relationalStyle}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-cyan-950/40 print:bg-cyan-50 border border-cyan-800/50 print:border-cyan-200 text-[11px] text-cyan-200 print:text-cyan-900">
-                    <span className="font-bold">⚡ Signature Superpower: </span>
-                    {report.nativeProfile.essenceBreakdown.emotionalEngine.signatureSuperpower}
-                  </div>
-                </div>
-
-                {/* 3. Conscious Mission & Sun Drive */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 print:bg-white border border-slate-800 print:border-slate-300 space-y-3 flex flex-col justify-between hover:border-amber-500/40 transition-colors">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-amber-300 print:text-amber-800 flex items-center gap-1.5">
-                        <span>☀️</span> Conscious Mission & Vitality
-                      </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                        {report.nativeProfile.essenceBreakdown.consciousMission.title}
-                      </span>
-                    </div>
-                    <div className="space-y-2 text-xs text-slate-300 print:text-slate-800 pt-1">
-                      <div>
-                        <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Core Life Ambition:</strong>
-                        <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.consciousMission.consciousAmbition}</p>
-                      </div>
-                      <div>
-                        <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Leadership & Execution:</strong>
-                        <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.consciousMission.leadershipStyle}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-slate-900/90 print:bg-slate-100 border border-slate-800 print:border-slate-200 text-[11px] text-slate-300 print:text-slate-800">
-                    <span className="text-amber-400 print:text-amber-800 font-bold">Solar Drive: </span>
-                    Provides the fuel, pride, and persistent vitality behind all your endeavors.
-                  </div>
-                </div>
-
-                {/* 4. Chart Sovereign Life Arena */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 print:bg-white border border-slate-800 print:border-slate-300 space-y-3 flex flex-col justify-between hover:border-emerald-500/40 transition-colors">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 print:text-emerald-800 flex items-center gap-1.5">
-                        <span>🎯</span> Where You Invest Life Energy
-                      </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                        {report.nativeProfile.essenceBreakdown.lifeFocus.title}
-                      </span>
-                    </div>
-                    <div className="space-y-2 text-xs text-slate-300 print:text-slate-800 pt-1">
-                      <div>
-                        <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Life Arena:</strong>
-                        <p className="leading-relaxed text-emerald-300 print:text-emerald-900 font-bold">{report.nativeProfile.essenceBreakdown.lifeFocus.arenaTitle}</p>
-                      </div>
-                      <div>
-                        <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Active Destiny Focus:</strong>
-                        <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.lifeFocus.lifeFocus}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-emerald-950/40 print:bg-emerald-50 border border-emerald-800/50 print:border-emerald-200 text-[11px] text-emerald-200 print:text-emerald-900">
-                    <span className="font-bold">🧭 Sovereign Directive: </span>
-                    Your primary life mastery is achieved by conquering the tests of this specific house.
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </section>
+
+        {/* =========================================================================
+            CHAPTER 1B: OBSERVABLE BEHAVIORAL BLUEPRINT (THE 4 PILLARS)
+           ========================================================================= */}
+        {report.nativeProfile.essenceBreakdown && (
+          <section className="print:page-break-after-always print:pt-4 border-b border-slate-800 print:border-slate-300 pb-10 print:pb-6 space-y-5">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-base sm:text-lg">🧬</span>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-100 print:text-slate-900 tracking-tight">
+                  Observable Behavioral Blueprint: Your 4 Core Pillars
+                </h2>
+              </div>
+              <p className="text-xs text-slate-400 print:text-slate-600 font-medium">
+                How your planetary placements visibly manifest in everyday demeanor, subconscious emotional wiring, and daily real-world behavior.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* 1. Outer Presence & Ascendant */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 print:bg-white border border-slate-800 print:border-slate-300 space-y-3 flex flex-col justify-between print-card hover:border-amber-500/40 transition-colors">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-amber-400 print:text-amber-800 flex items-center gap-1.5">
+                      <span>👁️</span> Outer Presence & Demeanor
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                      {report.nativeProfile.essenceBreakdown.outerPresence.title}
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-xs text-slate-300 print:text-slate-800 pt-1">
+                    <div>
+                      <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Observable Demeanor:</strong>
+                      <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.outerPresence.observableDemeanor}</p>
+                    </div>
+                    <div>
+                      <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Social Behavior:</strong>
+                      <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.outerPresence.socialPresence}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-900/90 print:bg-slate-100 border border-slate-800 print:border-slate-200 text-[11px] text-slate-300 print:text-slate-800">
+                  <span className="text-amber-400 print:text-amber-800 font-bold">First Impression: </span>
+                  {report.nativeProfile.essenceBreakdown.outerPresence.firstImpression}
+                </div>
+              </div>
+
+              {/* 2. Emotional Engine & Nakshatra Psychology */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 print:bg-white border border-slate-800 print:border-slate-300 space-y-3 flex flex-col justify-between print-card hover:border-cyan-500/40 transition-colors">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 print:text-cyan-800 flex items-center gap-1.5">
+                      <span>🌊</span> Emotional Wiring & Mind
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                      {report.nativeProfile.essenceBreakdown.emotionalEngine.title}
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-xs text-slate-300 print:text-slate-800 pt-1">
+                    <div>
+                      <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Emotional Engine:</strong>
+                      <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.emotionalEngine.psychologyOverview}</p>
+                    </div>
+                    <div>
+                      <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Everyday Reactions & Habits:</strong>
+                      <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.emotionalEngine.observableBehaviors}</p>
+                    </div>
+                    <div>
+                      <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Relational Loyalty & Boundaries:</strong>
+                      <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.emotionalEngine.relationalStyle}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-cyan-950/40 print:bg-cyan-50 border border-cyan-800/50 print:border-cyan-200 text-[11px] text-cyan-200 print:text-cyan-900">
+                  <span className="font-bold">⚡ Signature Superpower: </span>
+                  {report.nativeProfile.essenceBreakdown.emotionalEngine.signatureSuperpower}
+                </div>
+              </div>
+
+              {/* 3. Conscious Mission & Sun Drive */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 print:bg-white border border-slate-800 print:border-slate-300 space-y-3 flex flex-col justify-between print-card hover:border-amber-500/40 transition-colors">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-amber-300 print:text-amber-800 flex items-center gap-1.5">
+                      <span>☀️</span> Conscious Mission & Vitality
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                      {report.nativeProfile.essenceBreakdown.consciousMission.title}
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-xs text-slate-300 print:text-slate-800 pt-1">
+                    <div>
+                      <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Core Life Ambition:</strong>
+                      <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.consciousMission.consciousAmbition}</p>
+                    </div>
+                    <div>
+                      <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Leadership & Execution:</strong>
+                      <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.consciousMission.leadershipStyle}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-900/90 print:bg-slate-100 border border-slate-800 print:border-slate-200 text-[11px] text-slate-300 print:text-slate-800">
+                  <span className="text-amber-400 print:text-amber-800 font-bold">Solar Drive: </span>
+                  Provides the fuel, pride, and persistent vitality behind all your endeavors.
+                </div>
+              </div>
+
+              {/* 4. Chart Sovereign Life Arena */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 print:bg-white border border-slate-800 print:border-slate-300 space-y-3 flex flex-col justify-between print-card hover:border-emerald-500/40 transition-colors">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 print:text-emerald-800 flex items-center gap-1.5">
+                      <span>🎯</span> Where You Invest Life Energy
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                      {report.nativeProfile.essenceBreakdown.lifeFocus.title}
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-xs text-slate-300 print:text-slate-800 pt-1">
+                    <div>
+                      <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Life Arena:</strong>
+                      <p className="leading-relaxed text-emerald-300 print:text-emerald-900 font-bold">{report.nativeProfile.essenceBreakdown.lifeFocus.arenaTitle}</p>
+                    </div>
+                    <div>
+                      <strong className="text-slate-200 print:text-slate-950 font-bold block mb-0.5">Active Destiny Focus:</strong>
+                      <p className="leading-relaxed text-slate-400 print:text-slate-700">{report.nativeProfile.essenceBreakdown.lifeFocus.lifeFocus}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-emerald-950/40 print:bg-emerald-50 border border-emerald-800/50 print:border-emerald-200 text-[11px] text-emerald-200 print:text-emerald-900">
+                  <span className="font-bold">🧭 Sovereign Directive: </span>
+                  Your primary life mastery is achieved by conquering the tests of this specific house.
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* =========================================================================
             CHAPTER 2: THE "BIG THREE" — YOUR CORE TRIAD

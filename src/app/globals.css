@@ -99,14 +99,14 @@ button, select, input, a {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 12mm 12mm 14mm 12mm;
+    margin: 10mm 12mm 12mm 12mm;
   }
 
   body {
     background-color: #ffffff !important;
     color: #0f172a !important;
-    font-size: 11pt;
-    line-height: 1.5;
+    font-size: 10pt;
+    line-height: 1.4;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -117,8 +117,17 @@ button, select, input, a {
     print-color-adjust: exact !important;
   }
 
-  /* Prevent awkward mid-card or mid-sentence page cuts */
-  section, article, .card, div[class*="rounded-3xl"], div[class*="rounded-2xl"] {
+  /* Allow main, sections, and large grid wrappers to break across pages naturally */
+  main, section, article {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  /* Only atomic cards and specific leaf blocks avoid break inside */
+  .print-avoid-break,
+  .print-card,
+  tr,
+  td {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
