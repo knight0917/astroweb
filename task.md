@@ -57,15 +57,20 @@
 - [x] Implement BPHS Ch. 85–96 Arishta Janma diagnostics (Gandānta: Lagna, Nakshatra, Tithi; Abhukta Mūla; Jyeshthā Gandānta; Amāvāsyā; Krishna Chaturdashi 6 sextiles; Eclipse birth; Sankrānti; Bhadrā/Vishti; Trik Prasava) with classical Vedic pacification rituals.
 - [x] Create UI deck `src/components/BphsKarmicShantiDeck.tsx` and integrate it into `BhavaBalaView.tsx` and `BphsCoreDeck.tsx`.
 - [x] Inject Dossier 74 into `src/engine/chatContext.ts` and add Rule 0R into `src/engine/chatPrompt.ts` commanding the Chatbot to enforce BPHS Karmic Curses & Arishta Janma remedies.
-- [x] Add unit test suites in `tests/engine.test.mjs` covering all 8 curses, Gandanta, Amavasya, Chaturdashi sextiles, and chatbot integration.
-- [x] Verify full test suite pass (`npm test` 106/106 passing and `npm run build` static compilation passing).
-
 ## Phase 11: Layperson Comprehensive Kundli Life Report Page & PDF Export Suite
-- [x] Implement `src/engine/laypersonReportEngine.ts` translating technical ephemeris math into plain-English, empathetic life insights (Big Three, Jaimini Chara Karakas, Ashtakavarga SAV & Functional Activity Directions: Jupiter for worship, Saturn for work desk, Sun for authority, etc., Shadbala Manifestation Horsepower and Delivery Capacity, Arudha Lagna, 12 Bhavas, 4 Pillars, Yogas, Dasha Timeline, Authentic Remedies).
-- [x] Create `src/components/BirthDetailsModal.tsx` for clean birth data intake (Name, Gender, DOB, TOB, Place autocomplete) with navigation to `/report`.
-- [x] Create dedicated Next.js route `src/app/report/page.tsx` supporting URL query params and store synchronization.
-- [x] Build `src/components/ComprehensiveReportView.tsx` with 11 luxury editorial chapters, responsive layout, Jaimini Karaka cards, Ashtakavarga Functional Direction tiles, Shadbala Horsepower meters, and SVG Kundli vector chart.
-- [x] Add publication-grade `@media print` CSS rules in `src/app/globals.css` with clean page-break controls and white/navy/gold styling for one-click PDF printing.
-- [x] Integrate navigation trigger `[✨ Kundli Life Report]` in `src/components/HeaderNav.tsx` and drawer menu.
-- [x] Add automated test suite in `tests/engine.test.mjs` verifying layperson report generation with Jaimini, Ashtakavarga functional directions, and Shadbala metrics (107/107 tests passing).
-- [x] Verify full build pass (`npm test` and `npm run build`).
+- [x] Implement `src/engine/laypersonReportEngine.ts` translating technical ephemeris math into plain-English, empathetic life insights.
+- [x] Create `src/components/BirthDetailsModal.tsx` for clean birth data intake with geocoding.
+- [x] Create dedicated Next.js route `src/app/report/page.tsx` and `src/components/ComprehensiveReportView.tsx`.
+- [x] Add publication-grade `@media print` CSS rules in `src/app/globals.css`.
+- [x] Integrate navigation trigger `[✨ Kundli Life Report]` in `src/components/HeaderNav.tsx`.
+- [x] Fix timezone-aware civil birth date & time formatting to prevent client browser locale drift.
+- [x] Add automated test suite in `tests/engine.test.mjs` (108/108 tests passing).
+
+## Phase 12: Observable Real-World Personality & Nakshatra Psychology in Cosmic Essence
+- [x] Implement `ASCENDANT_OBSERVABLE_TRAITS` for all 12 signs in `src/engine/laypersonReportEngine.ts` (physical demeanor, social presence, first impressions).
+- [x] Implement `MOON_NAKSHATRA_EMOTIONAL_PROFILES` for all 27 Nakshatras in `src/engine/laypersonReportEngine.ts` (internal emotional engine, passions, relational triggers, stress response, and signature strengths e.g. Bharani intense loyalty/endurance vs Uttara Phalguni noble service/dignity).
+- [x] Implement `SUN_CONSCIOUS_DRIVE_TRAITS` and expand Lagna Lord House Focus.
+- [x] Synthesize deep multi-dimensional `cosmicEssence` and add structured `essenceBreakdown` in `LaypersonReport`.
+- [x] Enhance UI in `src/components/ComprehensiveReportView.tsx` with dedicated micro-cards for Outer Demeanor, Emotional Engine, Conscious Will, and Life Arena.
+- [x] Add automated test in `tests/engine.test.mjs` verifying observable trait generation for Bharani and Uttara Phalguni.
+- [x] Run full test verification (`npm test` 109/109 passing and `npx tsc --noEmit` passing) and push to Git.

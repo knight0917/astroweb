@@ -4891,3 +4891,74 @@ test("Layperson Report correctly formats birth date/time in native location time
   assert.equal(report.nativeProfile.placeFormatted, "Mau, India");
 });
 
+test("Layperson Report: Observable Cosmic Essence & Nakshatra Psychology Engine (Phase 12)", async () => {
+  const { calculateLaypersonReport } = await import("../src/engine/laypersonReportEngine.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const mauLocation = {
+    cityName: "Mau",
+    country: "India",
+    latitude: 25.94,
+    longitude: 83.56,
+    elevation: 75,
+    timezoneOffsetHours: 5.5,
+  };
+
+  // 1. Chart A: May 25, 1998 (Aquarius Rising, Moon in Aries in Bharani, Sun in Taurus, Lord Saturn in H3)
+  const d1998 = new Date(Date.UTC(1998, 4, 25, 0, 15) - 5.5 * 3600 * 1000);
+  const ephem1998 = calculateVedicEphemeris(d1998, mauLocation, "Lahiri", "WholeSign", "Mean");
+  const report1998 = calculateLaypersonReport({
+    natalEphemeris: ephem1998,
+    birthDate: d1998,
+    location: mauLocation,
+    name: "Satyam 1998",
+    gender: "male",
+  });
+
+  const eb1998 = report1998.nativeProfile.essenceBreakdown;
+  assert.ok(eb1998, "Must produce essenceBreakdown");
+
+  // Outer Presence (Aquarius)
+  assert.ok(eb1998.outerPresence.title.includes("Aquarius"), "Title contains Aquarius");
+  assert.ok(eb1998.outerPresence.observableDemeanor.length > 20, "Demeanor is detailed");
+  assert.ok(eb1998.outerPresence.socialPresence.length > 20, "Social presence is detailed");
+  assert.ok(eb1998.outerPresence.firstImpression.length > 20, "First impression is detailed");
+
+  // Emotional Engine (Bharani in Aries)
+  assert.equal(eb1998.emotionalEngine.title, "Moon in Aries (Bharani)");
+  assert.ok(eb1998.emotionalEngine.psychologyOverview.includes("Bharani") || eb1998.emotionalEngine.psychologyOverview.includes("Venus") || eb1998.emotionalEngine.psychologyOverview.includes("Yama"), "Contains Bharani archetype");
+  assert.ok(eb1998.emotionalEngine.observableBehaviors.length > 20, "Behaviors detailed");
+  assert.ok(eb1998.emotionalEngine.relationalStyle.length > 20, "Relational style detailed");
+  assert.ok(eb1998.emotionalEngine.signatureSuperpower.length > 10, "Signature superpower detailed");
+
+  // Conscious Mission (Taurus Sun)
+  assert.ok(eb1998.consciousMission.title.includes("Taurus"), "Title contains Taurus");
+  assert.ok(eb1998.consciousMission.consciousAmbition.length > 20, "Conscious ambition detailed");
+
+  // Life Focus (H3)
+  assert.ok(eb1998.lifeFocus.title.includes("House 3"), "Title contains House 3");
+  assert.ok(eb1998.lifeFocus.lifeFocus.length > 20, "Life focus detailed");
+
+  // Rich Cosmic Essence Synthesis
+  assert.ok(report1998.nativeProfile.cosmicEssence.length > 200, "Cosmic essence is rich multi-paragraph narrative");
+  assert.ok(report1998.nativeProfile.cosmicEssence.includes("Aquarius"), "Mentions rising sign");
+  assert.ok(report1998.nativeProfile.cosmicEssence.includes("Bharani"), "Mentions Bharani");
+
+  // 2. Chart B: May 25, 1999 (Aquarius Rising, Moon in Virgo in Uttara Phalguni)
+  const d1999 = new Date(Date.UTC(1999, 4, 25, 0, 15) - 5.5 * 3600 * 1000);
+  const ephem1999 = calculateVedicEphemeris(d1999, mauLocation, "Lahiri", "WholeSign", "Mean");
+  const report1999 = calculateLaypersonReport({
+    natalEphemeris: ephem1999,
+    birthDate: d1999,
+    location: mauLocation,
+    name: "Satyam 1999",
+    gender: "male",
+  });
+
+  const eb1999 = report1999.nativeProfile.essenceBreakdown;
+  assert.equal(eb1999.emotionalEngine.title, "Moon in Virgo (Uttara Phalguni)");
+  assert.ok(eb1999.emotionalEngine.psychologyOverview.includes("Aryaman") || eb1999.emotionalEngine.psychologyOverview.includes("Sun"), "Contains Uttara Phalguni archetype");
+  assert.ok(eb1999.emotionalEngine.signatureSuperpower.includes("Noble Patron"), "Cites Noble Patron superpower");
+});
+
+
