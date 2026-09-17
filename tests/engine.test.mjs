@@ -4759,3 +4759,104 @@ test("BPHS Karmic Curses & Shānti Dossier 74 & Rule 0R Chatbot Integration Veri
   assert.ok(sysInst.includes("Setu (Rameswaram)"), "Rule 0R must cite Setu Snana");
   assert.ok(sysInst.includes("Tripindi Srāddha"), "Rule 0R must cite Tripindi Shraddha");
 });
+
+test("Layperson Comprehensive Kundli Life Report & Engine Verification (Phase 11)", async () => {
+  const { calculateLaypersonReport } = await import("../src/engine/laypersonReportEngine.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const { POPULAR_CITIES } = await import("../src/engine/constants.ts");
+
+  const birthDate = new Date("1998-06-14T09:32:00Z");
+  const delhi = POPULAR_CITIES.find((c) => c.cityName === "New Delhi") || POPULAR_CITIES[0];
+  const ephem = calculateVedicEphemeris(birthDate, delhi, "Lahiri", "WholeSign", "Mean");
+
+  const report = calculateLaypersonReport({
+    natalEphemeris: ephem,
+    birthDate,
+    location: delhi,
+    name: "Arjun Sharma",
+    gender: "male",
+  });
+
+  // 1. Native Profile & Header
+  assert.equal(report.nativeProfile.name, "Arjun Sharma");
+  assert.equal(report.nativeProfile.gender, "male");
+  assert.ok(report.nativeProfile.ascendantSign, "Must have Ascendant Sign");
+  assert.ok(report.nativeProfile.moonSign, "Must have Moon Sign");
+  assert.ok(report.nativeProfile.sunSign, "Must have Sun Sign");
+  assert.ok(report.nativeProfile.birthNakshatra, "Must have Birth Nakshatra");
+  assert.ok(report.nativeProfile.cosmicEssence.length > 50, "Cosmic Essence must be rich narrative");
+
+  // 2. The Big Three
+  assert.ok(report.bigThree.ascendant.sign, "Must have Ascendant sign");
+  assert.ok(["Fire", "Earth", "Air", "Water"].includes(report.bigThree.ascendant.element), "Valid element");
+  assert.ok(report.bigThree.moon.nakshatra, "Moon Nakshatra must be populated");
+  assert.ok(report.bigThree.sun.outerDrive, "Sun outer drive must be populated");
+
+  // 3. Jaimini 7 Soul Archetypes
+  assert.ok(report.jaiminiArchetypes.atmakaraka.planet, "Atmakaraka planet must exist");
+  assert.ok(report.jaiminiArchetypes.amatyakaraka.planet, "Amatyakaraka planet must exist");
+  assert.ok(report.jaiminiArchetypes.darakaraka.planet, "Darakaraka planet must exist");
+  assert.ok(report.jaiminiArchetypes.karakamshaSign, "Karakamsha sign must exist");
+
+  // 4. Ashtakavarga Matrix & Functional Directions
+  assert.equal(report.ashtakavarga.totalSav, 337, "Total SAV points must equal classical 337");
+  assert.equal(report.ashtakavarga.houseScores.length, 12, "Must have 12 house scores");
+  assert.ok(report.ashtakavarga.purusharthas.dharma.score > 0, "Dharma score > 0");
+  assert.ok(report.ashtakavarga.purusharthas.artha.score > 0, "Artha score > 0");
+  assert.ok(report.ashtakavarga.purusharthas.kama.score > 0, "Kama score > 0");
+  assert.ok(report.ashtakavarga.purusharthas.moksha.score > 0, "Moksha score > 0");
+
+  // Functional Directions: Jupiter for worship, Saturn for work, Sun for authority, etc.
+  const fd = report.ashtakavarga.functionalDirections;
+  assert.ok(fd.worship.planet.includes("Jupiter"), "Worship direction must map to Jupiter");
+  assert.ok(["East", "South", "West", "North"].includes(fd.worship.direction), "Worship direction must be valid");
+  assert.ok(fd.work.planet.includes("Saturn"), "Work direction must map to Saturn");
+  assert.ok(fd.authority.planet.includes("Sun"), "Authority direction must map to Sun");
+  assert.ok(fd.business.planet.includes("Mercury"), "Business direction must map to Mercury");
+  assert.ok(fd.fitness.planet.includes("Mars"), "Fitness direction must map to Mars");
+  assert.ok(fd.artsAndLove.planet.includes("Venus"), "Arts/Love direction must map to Venus");
+  assert.ok(fd.peace.planet.includes("Moon"), "Peace direction must map to Moon");
+
+  // 5. Shadbala Manifestation Horsepower
+  assert.ok(report.shadbala.conceptExplanation.includes("horsepower"), "Concept explanation must define horsepower");
+  assert.equal(report.shadbala.planets.length, 7, "Must contain all 7 classical planets in Shadbala");
+  assert.ok(report.shadbala.topAllies.length >= 1, "Must have at least 1 top ally");
+
+  // 6. Arudha Lagna vs Janma Lagna (Perception vs Reality)
+  assert.ok(report.arudhaPerception.janmaLagnaSign, "Janma Lagna must exist");
+  assert.ok(report.arudhaPerception.arudhaLagnaSign, "Arudha Lagna must exist");
+  assert.ok(report.arudhaPerception.publicImage.length > 20, "Public image must be detailed");
+  assert.ok(report.arudhaPerception.innerTruth.length > 20, "Inner truth must be detailed");
+
+  // 7. Twelve Houses of Life
+  assert.equal(report.twelveHouses.length, 12, "Must evaluate all 12 houses");
+  for (let h = 1; h <= 12; h++) {
+    const houseData = report.twelveHouses[h - 1];
+    assert.equal(houseData.house, h, `House ${h} index match`);
+    assert.ok(houseData.name, `House ${h} name`);
+    assert.ok(houseData.sign, `House ${h} sign`);
+    assert.ok(houseData.lord, `House ${h} lord`);
+    assert.ok(houseData.interpretation.length > 10, `House ${h} interpretation`);
+  }
+
+  // 8. The 4 Life Pillars
+  assert.ok(report.pillars.career.headline, "Career headline");
+  assert.ok(report.pillars.wealth.induLagnaVerdict, "Wealth Indu Lagna verdict");
+  assert.ok(report.pillars.love.partnerTraits, "Love partner traits");
+  assert.ok(report.pillars.health.constitutionTendency, "Health constitution");
+
+  // 9. Special Yogas
+  assert.ok(report.specialYogas.length >= 1, "Must detect at least 1 yoga");
+  assert.ok(report.specialYogas[0].laymanTitle, "Yoga must have layman title");
+
+  // 10. Current Life Season (Dasha Timeline)
+  assert.ok(report.currentLifeSeason.mahadashaLord, "Must have active Mahadasha lord");
+  assert.ok(report.currentLifeSeason.antardashaLord, "Must have active Antardasha lord");
+  assert.ok(report.currentLifeSeason.whatToEmbrace, "Must give guidance on what to embrace");
+
+  // 11. Authentic Remedies & Power Tools
+  assert.ok(report.remediesAndPowerTools.luckyDay, "Lucky day must be populated");
+  assert.ok(report.remediesAndPowerTools.powerColors.length >= 1, "Power colors must exist");
+  assert.ok(report.remediesAndPowerTools.safeGemstones.length >= 1, "Safe gemstones must exist");
+  assert.ok(report.remediesAndPowerTools.dailyMindfulPractice.length > 10, "Daily practice must be populated");
+});

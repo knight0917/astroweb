@@ -6,9 +6,11 @@ import { useAstroStore, ViewMode } from "../store/useAstroStore";
 import { POPULAR_CITIES } from "../engine/constants";
 import { AyanamshaType, HouseSystem, NodeType, GeoLocation } from "../engine/types";
 import { PlaceAutocompleteInput } from "./PlaceAutocompleteInput";
+import BirthDetailsModal from "./BirthDetailsModal";
 
 export default function HeaderNav() {
   const [mounted, setMounted] = useState(false);
+  const [showBirthReportModal, setShowBirthReportModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showCoordinatesDropdown, setShowCoordinatesDropdown] = useState(false);
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
@@ -466,6 +468,21 @@ export default function HeaderNav() {
 
         {/* Right: Location Chip & Settings */}
         <div className="flex items-center gap-1.5 md:gap-2 text-xs">
+          {/* Life Report Button (For non-astrologers & quick life reading) */}
+          <button
+            onClick={() => setShowBirthReportModal(true)}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 hover:from-amber-500 hover:to-yellow-400 border border-amber-500/50 hover:border-amber-400 text-amber-300 hover:text-slate-950 font-bold transition-all shadow-sm cursor-pointer group"
+            title="Generate Complete Layperson Kundli Life Report & Download PDF"
+          >
+            <span className="text-sm">✨</span>
+            <span className="text-[11px] md:text-xs tracking-tight whitespace-nowrap">
+              Life Report
+            </span>
+            <span className="hidden xl:inline text-[8.5px] font-extrabold uppercase px-1 py-0.2 rounded bg-amber-500/30 text-amber-200 group-hover:bg-slate-900 group-hover:text-amber-300">
+              PDF
+            </span>
+          </button>
+
           {/* Location Trigger Chip */}
           <button
             onClick={() => setShowLocationModal(true)}
@@ -1218,6 +1235,14 @@ export default function HeaderNav() {
           </div>
         </div>,
         document.body
+      )}
+
+      {/* Dedicated Birth Details Intake Modal for Kundli Life Report */}
+      {mounted && showBirthReportModal && (
+        <BirthDetailsModal
+          isOpen={showBirthReportModal}
+          onClose={() => setShowBirthReportModal(false)}
+        />
       )}
     </header>
   );

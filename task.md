@@ -59,3 +59,13 @@
 - [x] Inject Dossier 74 into `src/engine/chatContext.ts` and add Rule 0R into `src/engine/chatPrompt.ts` commanding the Chatbot to enforce BPHS Karmic Curses & Arishta Janma remedies.
 - [x] Add unit test suites in `tests/engine.test.mjs` covering all 8 curses, Gandanta, Amavasya, Chaturdashi sextiles, and chatbot integration.
 - [x] Verify full test suite pass (`npm test` 106/106 passing and `npm run build` static compilation passing).
+
+## Phase 11: Layperson Comprehensive Kundli Life Report Page & PDF Export Suite
+- [x] Implement `src/engine/laypersonReportEngine.ts` translating technical ephemeris math into plain-English, empathetic life insights (Big Three, Jaimini Chara Karakas, Ashtakavarga SAV & Functional Activity Directions: Jupiter for worship, Saturn for work desk, Sun for authority, etc., Shadbala Manifestation Horsepower and Delivery Capacity, Arudha Lagna, 12 Bhavas, 4 Pillars, Yogas, Dasha Timeline, Authentic Remedies).
+- [x] Create `src/components/BirthDetailsModal.tsx` for clean birth data intake (Name, Gender, DOB, TOB, Place autocomplete) with navigation to `/report`.
+- [x] Create dedicated Next.js route `src/app/report/page.tsx` supporting URL query params and store synchronization.
+- [x] Build `src/components/ComprehensiveReportView.tsx` with 11 luxury editorial chapters, responsive layout, Jaimini Karaka cards, Ashtakavarga Functional Direction tiles, Shadbala Horsepower meters, and SVG Kundli vector chart.
+- [x] Add publication-grade `@media print` CSS rules in `src/app/globals.css` with clean page-break controls and white/navy/gold styling for one-click PDF printing.
+- [x] Integrate navigation trigger `[✨ Kundli Life Report]` in `src/components/HeaderNav.tsx` and drawer menu.
+- [x] Add automated test suite in `tests/engine.test.mjs` verifying layperson report generation with Jaimini, Ashtakavarga functional directions, and Shadbala metrics (107/107 tests passing).
+- [x] Verify full build pass (`npm test` and `npm run build`).

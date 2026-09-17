@@ -92,3 +92,50 @@ button, select, input, a {
   scroll-snap-align: start;
   flex-shrink: 0;
 }
+
+/* =========================================================================
+   PUBLICATION-GRADE PRINT & PDF EXPORT STYLESHEET
+   ========================================================================= */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 12mm 14mm 12mm;
+  }
+
+  body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt;
+    line-height: 1.5;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Force background colors and borders in print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Prevent awkward mid-card or mid-sentence page cuts */
+  section, article, .card, div[class*="rounded-3xl"], div[class*="rounded-2xl"] {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  h1, h2, h3, h4 {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Hide interactive web chrome */
+  header, nav, button, .print-hidden, [title="Close Astrologer"], [title="Open Jyotish Modules Menu"] {
+    display: none !important;
+  }
+
+  /* High-resolution vector SVG print formatting */
+  svg text {
+    fill: #0f172a !important;
+    font-weight: bold !important;
+  }
+}
