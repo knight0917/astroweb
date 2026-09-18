@@ -5076,6 +5076,114 @@ test("Layperson Report: Phase 14 Full-Spectrum 6-Module Expansion Verification",
   assert.ok(report.pocketCard.powerDirection.includes("Zone") || report.pocketCard.powerDirection.includes("East"), "Power direction included");
 });
 
+test("Phase 15: Classical Gochara Vedha, Father-Son Immunity & Rahu Conjunctions Masterclass Verification", async () => {
+  const {
+    calculateGochar,
+    VEDHA_HOUSES,
+    VIPAREETA_VEDHA_HOUSES,
+    hasFatherSonImmunity,
+  } = await import("../src/engine/gochar.ts");
+  const { detectRahuConjunctions } = await import("../src/engine/rahuConjunctionsMaster.ts");
+  const { calculateLaypersonReport } = await import("../src/engine/laypersonReportEngine.ts");
+  const { generateChatDossier } = await import("../src/engine/chatContext.ts");
+  const { getSystemPrompt } = await import("../src/engine/chatPrompt.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
 
+  // 1. Father-Son Immunity Invariants (Phaladeepika Ch. 26 Sloka 6)
+  assert.strictEqual(hasFatherSonImmunity("Sun", "Saturn"), true, "Sun and Saturn have Father-Son immunity");
+  assert.strictEqual(hasFatherSonImmunity("Saturn", "Sun"), true, "Saturn and Sun have Father-Son immunity");
+  assert.strictEqual(hasFatherSonImmunity("Moon", "Mercury"), true, "Moon and Mercury have Father-Son immunity");
+  assert.strictEqual(hasFatherSonImmunity("Mercury", "Moon"), true, "Mercury and Moon have Father-Son immunity");
+  assert.strictEqual(hasFatherSonImmunity("Sun", "Mars"), false, "Sun and Mars do NOT have immunity");
+  assert.strictEqual(hasFatherSonImmunity("Jupiter", "Saturn"), false, "Jupiter and Saturn do NOT have immunity");
 
+  // 2. Classical Vedha House Pairs
+  assert.strictEqual(VEDHA_HOUSES.Sun[3], 9, "Sun H3 obstructed by H9");
+  assert.strictEqual(VEDHA_HOUSES.Sun[6], 12, "Sun H6 obstructed by H12");
+  assert.strictEqual(VEDHA_HOUSES.Sun[10], 4, "Sun H10 obstructed by H4");
+  assert.strictEqual(VEDHA_HOUSES.Sun[11], 5, "Sun H11 obstructed by H5");
 
+  assert.strictEqual(VEDHA_HOUSES.Jupiter[2], 12, "Jupiter H2 obstructed by H12");
+  assert.strictEqual(VEDHA_HOUSES.Jupiter[5], 4, "Jupiter H5 obstructed by H4");
+  assert.strictEqual(VEDHA_HOUSES.Jupiter[7], 3, "Jupiter H7 obstructed by H3");
+  assert.strictEqual(VEDHA_HOUSES.Jupiter[9], 10, "Jupiter H9 obstructed by H10");
+  assert.strictEqual(VEDHA_HOUSES.Jupiter[11], 8, "Jupiter H11 obstructed by H8");
+
+  // 3. Vipareeta Vedha Shielding Pairs
+  assert.strictEqual(VIPAREETA_VEDHA_HOUSES.Sun[9], 3, "Sun in H9 shielded by H3");
+  assert.strictEqual(VIPAREETA_VEDHA_HOUSES.Jupiter[4], 5, "Jupiter in H4 shielded by H5");
+
+  // 4. Live Gochara Vedha Multi-pass Engine Calculation
+  const location = {
+    cityName: "New Delhi",
+    country: "India",
+    latitude: 28.6139,
+    longitude: 77.209,
+    timezoneOffsetHours: 5.5,
+  };
+  const natalDate = new Date("1995-10-24T18:30:00Z");
+  const transitDate = new Date("2026-09-18T12:00:00Z");
+  const natalEphem = calculateVedicEphemeris(natalDate, location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(transitDate, location, "Lahiri", "WholeSign", "Mean");
+
+  const gocharRes = calculateGochar(natalEphem, transitEphem);
+  assert.ok(gocharRes.transits.length >= 7, "At least 7 planets evaluated in Gochara");
+  assert.ok(typeof gocharRes.obstructedCount === "number", "Obstructed count is number");
+  assert.ok(typeof gocharRes.shieldedCount === "number", "Shielded count is number");
+
+  for (const p of gocharRes.transits) {
+    assert.ok(p.netEfficacy, "Planet has netEfficacy verdict");
+    assert.ok(typeof p.isObstructed === "boolean", "isObstructed is boolean");
+    assert.ok(Array.isArray(p.obstructingPlanets), "obstructingPlanets is array");
+    assert.ok(typeof p.isVipareetaVedha === "boolean", "isVipareetaVedha is boolean");
+    assert.ok(Array.isArray(p.shieldingPlanets), "shieldingPlanets is array");
+  }
+
+  // 5. Rahu & Ketu Conjunctions Master Engine
+  const nodalReport = detectRahuConjunctions(natalEphem);
+  assert.ok(typeof nodalReport.hasRahuConjunctions === "boolean");
+  assert.ok(typeof nodalReport.hasKetuConjunctions === "boolean");
+  assert.ok(typeof nodalReport.totalConjunctionsCount === "number");
+  assert.ok(nodalReport.karmicEvolutionSummary.length > 20);
+
+  if (nodalReport.conjunctions.length > 0) {
+    const c = nodalReport.conjunctions[0];
+    assert.ok(c.yogaName.length > 0);
+    assert.ok(c.sanskritName.length > 0);
+    assert.ok(c.exactOrbDegrees >= 0);
+    assert.ok(c.potencyScore >= 0 && c.potencyScore <= 100);
+    assert.ok(c.psychologicalImpact.length > 15);
+    assert.ok(c.signatureSuperpower.length > 15);
+    assert.ok(c.vulnerabilityToWatch.length > 15);
+    assert.ok(c.shastricRemedies.length > 0);
+  }
+
+  // 6. Layperson Report Integration
+  const report = calculateLaypersonReport({
+    natalEphemeris: natalEphem,
+    birthDate: natalDate,
+    location,
+    name: "Test Seeker",
+    gender: "male",
+  });
+  assert.ok(report.karmicWeather.vedhaTelemetry, "vedhaTelemetry exists in report");
+  assert.ok(report.karmicWeather.vedhaTelemetry.transitsWithVedha.length >= 7, "Vedha telemetry contains transits");
+  assert.ok(report.rahuConjunctions, "rahuConjunctions exists in report");
+  assert.ok(report.karmicCursesAndShanti, "karmicCursesAndShanti exists in report");
+
+  // 7. Cross-System Chatbot Dossier & Prompt Rule 0S Parity
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { buildChatSystemInstruction } = await import("../src/engine/chatPrompt.ts");
+
+  const dossier = buildAstroDossier(natalEphem, transitEphem, new Date(), "male", undefined, "all");
+  assert.ok(dossier.includes("75. CLASSICAL GOCHARA VEDHA (TRANSIT OBSTRUCTION & VIPAREETA SHIELDS) DOSSIER:"), "Dossier contains Section 75");
+  assert.ok(dossier.includes("76. ACHARYA VISHNUKRIPA RAHU & KETU CONJUNCTIONS MASTER DOSSIER:"), "Dossier contains Section 76");
+  assert.ok(dossier.includes("77. KUNDLI LIFE REPORT COMPLETE SYNTHESIS & EXECUTIVE BLUEPRINT DOSSIER:"), "Dossier contains Section 77");
+
+  const sysInst = buildChatSystemInstruction(dossier);
+  assert.ok(sysInst.includes("0S. **CLASSICAL GOCHARA VEDHA & RAHU CONJUNCTIONS MASTER PROTOCOL"), "Prompt contains Rule 0S");
+  assert.ok(sysInst.includes("VEDHA LOCKED"), "Prompt contains VEDHA LOCKED directive");
+  assert.ok(sysInst.includes("VIPAREETA SHIELDED"), "Prompt contains VIPAREETA SHIELDED directive");
+  assert.ok(sysInst.includes("Father-Son immunity invariants"), "Prompt contains Father-Son immunity clause");
+  assert.ok(sysInst.includes("Acharya Vishnukripa's classical remedies"), "Prompt contains Acharya Vishnukripa remedies reference");
+});

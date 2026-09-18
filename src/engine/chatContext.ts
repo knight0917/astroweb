@@ -83,6 +83,8 @@ import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
 import { calculateDayMuhurta } from "./muhurta";
 import { calculateAshtakavargaVastuStrength, calculateAyadiShadvarga, calculateJaiminiArudhaVastu } from "./vastuEngine";
 import { generateBtrMasterSummary } from "./btrEngine";
+import { detectRahuConjunctions } from "./rahuConjunctionsMaster";
+import { calculateLaypersonReport } from "./laypersonReportEngine";
 import { GeoLocation } from "./types";
 import { RASHI_NAMES } from "./constants";
 
@@ -1799,6 +1801,72 @@ export function buildAstroDossier(
     btrMasterSummary = generateBtrMasterSummary(natalEphemeris, gender);
   } catch (_) {}
 
+  // 75. Classical Gochara Vedha & Real-Time Transit Telemetry (Phaladeepika Ch. 26)
+  let gocharaVedhaSummary = "";
+  try {
+    const transitLines = gochar.transits.map((t) => {
+      let statusIcon = "🟢";
+      if (t.netEfficacy === "Obstructed (Vedha)") statusIcon = "⚠️ [VEDHA LOCKED]";
+      else if (t.netEfficacy === "Shielded (Vipareeta Vedha)") statusIcon = "🛡️ [VIPAREETA SHIELDED]";
+      else if (t.netEfficacy === "Inauspicious") statusIcon = "🔴 [INAUSPICIOUS]";
+      else if (t.netEfficacy === "Full Auspicious") statusIcon = "✨ [FULL AUSPICIOUS]";
+
+      const vedhaNote = t.isObstructed
+        ? ` (Obstructed by ${t.obstructingPlanets.join(", ")} in House #${t.vedhaHouse})`
+        : t.isVipareetaVedha
+        ? ` (Shielded by ${t.shieldingPlanets.join(", ")})`
+        : "";
+
+      return `- **${t.name} (${t.symbol}):** House ${t.transitHouseFromMoon} from Moon (${t.transitRashiName}) • Net Efficacy: ${statusIcon} **${t.netEfficacy}**${vedhaNote} -> ${t.effectsSummary}`;
+    });
+
+    gocharaVedhaSummary = [
+      `- **Natal Moon Sign:** ${gochar.natalMoonRashiName} • **Ascendant:** ${gochar.natalAscRashiName}`,
+      `- **Active Sade Sati / Dhaiya:** **${gochar.sadeSati.statusTitle}** (${gochar.sadeSati.phaseName})`,
+      `  - *Timing Window:* ${gochar.sadeSati.currentPhaseEndFormatted ? `Current phase ends: ${gochar.sadeSati.currentPhaseEndFormatted}` : "No active Sade Sati"} • ${gochar.sadeSati.remainingDurationFormatted || ""}`,
+      `- **Jupiter (Guru) Transit Telemetry:** House ${gochar.guruHouseFromMoon} from Moon • Auspicious: ${gochar.guruGocharAuspicious ? "YES" : "No"}`,
+      `- **Total Obstructed Transits (Vedha):** ${gochar.obstructedCount} | **Shielded Transits (Vipareeta Vedha):** ${gochar.shieldedCount}`,
+      `- **Planetary Transit Breakdown:**`,
+      ...transitLines,
+    ].join("\n");
+  } catch (_) {}
+
+  // 76. Acharya Vishnukripa Rahu & Ketu Conjunctions Master Dossier
+  let rahuConjunctionsSummary = "";
+  try {
+    const rc = detectRahuConjunctions(natalEphemeris);
+    const conjLines = rc.conjunctions.map((c) => {
+      return `- 🌪️ **${c.node} + ${c.conjoinedPlanet} (${c.yogaName} / ${c.sanskritName}):** House ${c.house} (${c.signName}) at exact orb **${c.exactOrbDegrees}°** [${c.potencyTier}] • *Superpower:* ${c.signatureSuperpower} • *Psychology:* ${c.psychologicalImpact} • *Remedy:* ${c.shastricRemedies[0]}`;
+    });
+
+    rahuConjunctionsSummary = [
+      `- **Total Nodal Conjunctions Detected:** **${rc.totalConjunctionsCount} Active Alignment(s)**`,
+      `- **Karmic Evolution Summary:** ${rc.karmicEvolutionSummary}`,
+      `- **Detailed Conjunction Profiles:**`,
+      conjLines.length > 0 ? conjLines.join("\n") : "- No tight planetary conjunctions with Rahu or Ketu (Nodal axis operates primarily through house placement).",
+    ].join("\n");
+  } catch (_) {}
+
+  // 77. Kundli Life Report Complete Synthesis & Executive Pocket Blueprint
+  let lifeReportSummary = "";
+  try {
+    const lr = calculateLaypersonReport({
+      natalEphemeris,
+      birthDate,
+      location,
+      name: "Native",
+      gender,
+    });
+    lifeReportSummary = [
+      `- **1-Page Executive Pocket Card:** ${lr.pocketCard.cosmicSignature} • Dominant Pillar: ${lr.pocketCard.dominantPillar} • Power Direction: ${lr.pocketCard.powerDirection}`,
+      `- **Timeline of Destiny (Age Milestones):** Current Age ${lr.destinyTimeline.currentAge} -> Active Focus: **${lr.destinyTimeline.currentMilestone.title}** (${lr.destinyTimeline.currentMilestone.guidance})`,
+      `- **Upcoming Future Golden Windows:** ${lr.destinyTimeline.futureWindows.map((w) => `Age ${w.age} (${w.title})`).join(" • ")}`,
+      `- **The Sacred Partner Blueprint:** ${lr.sacredPartner.spousePersona} • Upapada Lagna in ${lr.sacredPartner.upapadaLagna.sign} (Harmony Score: ${lr.sacredPartner.upapadaLagna.harmonyScore}%)`,
+      `- **Active Raja & Dhana Yogas & Indu Lagna:** Indu Lagna House #${lr.wealthYogas.induLagna.houseInD1} (${lr.wealthYogas.induLagna.sign}) -> ${lr.wealthYogas.induLagna.strategy}`,
+      `- **Soul's Guardian Deity (Ishta Devata):** **${lr.ishtaDevata.ishtaDevataName}** • Sacred Mantra: **${lr.ishtaDevata.sacredMantra}** • Path: ${lr.ishtaDevata.spiritualPath}`,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -2208,7 +2276,16 @@ export function buildAstroDossier(
       btrMasterSummary,
       "",
       "#### 🔱 74. BPHS KARMIC CURSES (CH. 83) & ARISHTA JANMA SHĀNTIS (CH. 85–96) DOSSIER:",
-      bphsKarmicSummary
+      bphsKarmicSummary,
+      "",
+      "#### ⚡ 75. CLASSICAL GOCHARA VEDHA (TRANSIT OBSTRUCTION & VIPAREETA SHIELDS) DOSSIER:",
+      gocharaVedhaSummary,
+      "",
+      "#### 🌪️ 76. ACHARYA VISHNUKRIPA RAHU & KETU CONJUNCTIONS MASTER DOSSIER:",
+      rahuConjunctionsSummary,
+      "",
+      "#### 📜 77. KUNDLI LIFE REPORT COMPLETE SYNTHESIS & EXECUTIVE BLUEPRINT DOSSIER:",
+      lifeReportSummary
     );
   }
 

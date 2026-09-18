@@ -95,3 +95,21 @@
 - [x] Implement UI chapters in `src/components/ComprehensiveReportView.tsx` with high-impact cards, badges, and print-ready styling.
 - [x] Add unit test suite in `tests/engine.test.mjs` verifying all 6 modules.
 - [x] Run full test suite (`npm test` 111/111 passing), verify types (`npx tsc --noEmit` passing), and commit & push to Git.
+
+## Phase 15: Classical Gochara Vedha, Rahu Conjunctions Master & Cross-System Parity
+- [x] Upgrade `src/engine/gochar.ts` with Gochara Vedha:
+  - [x] Define `VEDHA_MAPPINGS` (Phaladeepika Ch. 26) for all 7 planets.
+  - [x] Implement Father-Son immunity checks (Sun $\leftrightarrow$ Saturn, Moon $\leftrightarrow$ Mercury).
+  - [x] Implement direct Vedha (auspicious transit blocked) and Vipareeta Vedha (inauspicious transit shielded).
+  - [x] Extend `PlanetTransitInfo` with obstruction fields and net efficacy verdicts.
+- [x] Build `src/engine/rahuConjunctionsMaster.ts`:
+  - [x] Codify Rahu & Ketu conjunctions with Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn.
+  - [x] Compute exact separation orbs (deep eclipse $\le 3.5^\circ$, potent $\le 7^\circ$, wide $\le 12^\circ$).
+  - [x] Provide Acharya Vishnukripa psychological profiles, career superpowers, and authentic Shastric remedies.
+- [x] Implement Cross-System Synchronization:
+  - [x] Sync Gochara Vedha & Rahu Conjunctions into `src/engine/chatContext.ts` (Sections 75 & 76).
+  - [x] Sync Phase 14 Life Report modules (Timeline, Sacred Partner, Indu Lagna, Ishta Devata, Pocket Card) into `src/engine/chatContext.ts` (Section 77).
+  - [x] Surface Gochara Vedha badges and Rahu Conjunctions cards in `src/components/ComprehensiveReportView.tsx`.
+- [x] Verification & Release:
+  - [x] Add unit test suite in `tests/engine.test.mjs` verifying Vedha rules, immunity exceptions, and Rahu conjunction orbs.
+  - [x] Run full test suite (`npm test`), verify types (`npx tsc --noEmit`), and commit & push to Git.

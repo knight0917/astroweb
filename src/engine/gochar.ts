@@ -26,6 +26,14 @@ export interface PlanetTransitInfo {
   classicalRules: string;
   isRetrograde: boolean;
   transitDegree: number;
+  // Gochara Vedha (Transit Obstruction) Telemetry (Phaladeepika Ch. 26)
+  vedhaHouse?: number;
+  isObstructed: boolean;
+  obstructingPlanets: string[];
+  isVipareetaVedha: boolean;
+  shieldingPlanets: string[];
+  netEfficacy: "Full Auspicious" | "Obstructed (Vedha)" | "Inauspicious" | "Shielded (Vipareeta Vedha)" | "Neutral";
+  vedhaExplanation?: string;
 }
 
 export type SadeSatiPhaseType =
@@ -70,10 +78,12 @@ export interface GocharResult {
   sadeSati: SadeSatiAnalysis;
   guruGocharAuspicious: boolean;
   guruHouseFromMoon: number;
+  obstructedCount: number;
+  shieldedCount: number;
 }
 
 // Classical Favorable Transit Houses from Natal Moon (Phaladeepika & BPHS)
-const AUSPICIOUS_HOUSES_FROM_MOON: Record<string, number[]> = {
+export const AUSPICIOUS_HOUSES_FROM_MOON: Record<string, number[]> = {
   Sun: [3, 6, 10, 11],
   Moon: [1, 3, 6, 7, 10, 11],
   Mars: [3, 6, 11],
@@ -84,6 +94,45 @@ const AUSPICIOUS_HOUSES_FROM_MOON: Record<string, number[]> = {
   Rahu: [3, 6, 10, 11],
   Ketu: [3, 6, 11],
 };
+
+/**
+ * Classical Gochara Vedha (Transit Obstruction) Mappings (Phaladeepika Ch. 26)
+ * Maps Favorable House -> Corresponding Obstruction (Vedha) House from Moon
+ */
+export const VEDHA_HOUSES: Record<string, Record<number, number>> = {
+  Sun: { 3: 9, 6: 12, 10: 4, 11: 5 },
+  Moon: { 1: 5, 3: 9, 6: 12, 7: 2, 10: 4, 11: 8 },
+  Mars: { 3: 12, 6: 9, 11: 5 },
+  Mercury: { 2: 5, 4: 3, 6: 9, 8: 1, 10: 7, 11: 12 },
+  Jupiter: { 2: 12, 5: 4, 7: 3, 9: 10, 11: 8 },
+  Venus: { 1: 8, 2: 7, 3: 1, 4: 10, 5: 9, 8: 5, 9: 11, 11: 6, 12: 3 },
+  Saturn: { 3: 12, 6: 9, 11: 5 },
+  Rahu: { 3: 12, 6: 9, 10: 4, 11: 5 },
+  Ketu: { 3: 12, 6: 9, 11: 5 },
+};
+
+/**
+ * Reverse mapping for Vipareeta Vedha (when inauspicious transit fruit is obstructed/shielded)
+ * If planet P is in inauspicious house H, check if any planet is in its counterpart favorable house!
+ */
+export const VIPAREETA_VEDHA_HOUSES: Record<string, Record<number, number>> = {};
+for (const [planet, fwdMap] of Object.entries(VEDHA_HOUSES)) {
+  VIPAREETA_VEDHA_HOUSES[planet] = {};
+  for (const [favorableHouse, vedhaHouse] of Object.entries(fwdMap)) {
+    VIPAREETA_VEDHA_HOUSES[planet][vedhaHouse] = Number(favorableHouse);
+  }
+}
+
+/**
+ * Classical Father-Son Immunity Rules (Phaladeepika Ch. 26 Shloka 10):
+ * 1. Sun and Saturn do not cause Vedha to each other (न वेधः सूर्यशन्योः).
+ * 2. Moon and Mercury do not cause Vedha to each other (न वेधः शशिसुतयोः).
+ */
+export function hasFatherSonImmunity(p1: string, p2: string): boolean {
+  if ((p1 === "Sun" && p2 === "Saturn") || (p1 === "Saturn" && p2 === "Sun")) return true;
+  if ((p1 === "Moon" && p2 === "Mercury") || (p1 === "Mercury" && p2 === "Moon")) return true;
+  return false;
+}
 
 const PLANET_HINDI_NAMES: Record<string, string> = {
   Sun: "सूर्य",
@@ -98,7 +147,8 @@ const PLANET_HINDI_NAMES: Record<string, string> = {
 };
 
 /**
- * Calculates complete Gochar (Transit) results given Natal and Transit ephemerides
+ * Calculates complete Gochar (Transit) results given Natal and Transit ephemerides,
+ * including full-spectrum Gochara Vedha (obstruction) and Vipareeta Vedha (shielding).
  */
 export function calculateGochar(
   natalEphemeris: EphemerisResult,
@@ -107,52 +157,138 @@ export function calculateGochar(
   const natalMoonRashi = Math.floor(natalEphemeris.planets.Moon.siderealLongitude / 30);
   const natalAscRashi = Math.floor(natalEphemeris.ascendant.siderealLongitude / 30);
 
-  const transits: PlanetTransitInfo[] = [];
-
   const mainPlanetKeys = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];
+
+  // Pass 1: Catalog transit houses from Natal Moon for all planets
+  const planetTransitHouses: Record<string, number> = {};
+  const houseOccupantsFromMoon: Record<number, string[]> = {};
+  for (let h = 1; h <= 12; h++) houseOccupantsFromMoon[h] = [];
+
+  for (const key of mainPlanetKeys) {
+    const transitP = transitEphemeris.planets[key];
+    if (!transitP) continue;
+    const transitRashi = Math.floor(transitP.siderealLongitude / 30);
+    const houseFromMoon = ((transitRashi - natalMoonRashi + 12) % 12) + 1;
+    planetTransitHouses[key] = houseFromMoon;
+    houseOccupantsFromMoon[houseFromMoon].push(key);
+  }
+
+  // Pass 2: Compute transit scores, direct Vedha, and Vipareeta Vedha
+  const transits: PlanetTransitInfo[] = [];
+  let obstructedCount = 0;
+  let shieldedCount = 0;
 
   for (const key of mainPlanetKeys) {
     const natalP = natalEphemeris.planets[key];
     const transitP = transitEphemeris.planets[key];
-
     if (!natalP || !transitP) continue;
 
     const natalRashi = Math.floor(natalP.siderealLongitude / 30);
     const transitRashi = Math.floor(transitP.siderealLongitude / 30);
-
-    const houseFromMoon = ((transitRashi - natalMoonRashi + 12) % 12) + 1;
+    const houseFromMoon = planetTransitHouses[key] || 1;
     const houseFromLagna = ((transitRashi - natalAscRashi + 12) % 12) + 1;
 
     const auspiciousList = AUSPICIOUS_HOUSES_FROM_MOON[key] || [3, 6, 11];
     const isAuspicious = auspiciousList.includes(houseFromMoon);
 
-    let score: "Auspicious" | "Neutral" | "Inauspicious" = "Neutral";
-    if (isAuspicious) score = "Auspicious";
-    else if ([6, 8, 12].includes(houseFromMoon) || (key === "Saturn" && [1, 2, 4, 8, 12].includes(houseFromMoon))) {
-      score = "Inauspicious";
+    // Vedha evaluation
+    const expectedVedhaHouse = VEDHA_HOUSES[key]?.[houseFromMoon];
+    const expectedShieldHouse = VIPAREETA_VEDHA_HOUSES[key]?.[houseFromMoon];
+
+    let isObstructed = false;
+    let obstructingPlanets: string[] = [];
+    let isVipareetaVedha = false;
+    let shieldingPlanets: string[] = [];
+    let netEfficacy: "Full Auspicious" | "Obstructed (Vedha)" | "Inauspicious" | "Shielded (Vipareeta Vedha)" | "Neutral" = "Neutral";
+    let vedhaExplanation = "";
+
+    if (isAuspicious) {
+      if (expectedVedhaHouse) {
+        const potentialBlockers = houseOccupantsFromMoon[expectedVedhaHouse] || [];
+        obstructingPlanets = potentialBlockers.filter((blocker) => blocker !== key && !hasFatherSonImmunity(key, blocker));
+        if (obstructingPlanets.length > 0) {
+          isObstructed = true;
+          obstructedCount++;
+          netEfficacy = "Obstructed (Vedha)";
+          vedhaExplanation = `Auspicious transit in House ${houseFromMoon} is locked by Vedha due to ${obstructingPlanets.join(", ")} transiting House ${expectedVedhaHouse}. Blessings are stalled until the obstruction clears.`;
+        } else {
+          netEfficacy = "Full Auspicious";
+          vedhaExplanation = `Transiting auspicious House ${houseFromMoon} with zero Vedha (House ${expectedVedhaHouse} is clear). Full benefic results manifest smoothly.`;
+        }
+      } else {
+        netEfficacy = "Full Auspicious";
+        vedhaExplanation = `Auspicious transit in House ${houseFromMoon} has no classical obstruction point.`;
+      }
+    } else {
+      // Inauspicious transit: check for Vipareeta Vedha (protective counter-shield)
+      if (expectedShieldHouse) {
+        const potentialShielders = houseOccupantsFromMoon[expectedShieldHouse] || [];
+        shieldingPlanets = potentialShielders.filter((shielder) => shielder !== key && !hasFatherSonImmunity(key, shielder));
+        if (shieldingPlanets.length > 0) {
+          isVipareetaVedha = true;
+          shieldedCount++;
+          netEfficacy = "Shielded (Vipareeta Vedha)";
+          vedhaExplanation = `Challenging transit in House ${houseFromMoon} is disarmed by Vipareeta Vedha from ${shieldingPlanets.join(", ")} in House ${expectedShieldHouse}. Anticipated friction is neutralized.`;
+        } else {
+          netEfficacy = [6, 8, 12].includes(houseFromMoon) || (key === "Saturn" && [1, 2, 4, 8, 12].includes(houseFromMoon))
+            ? "Inauspicious"
+            : "Neutral";
+          vedhaExplanation = `Transiting House ${houseFromMoon}; requires conscious navigation without counter-shielding.`;
+        }
+      } else {
+        netEfficacy = [6, 8, 12].includes(houseFromMoon) || (key === "Saturn" && [1, 2, 4, 8, 12].includes(houseFromMoon))
+          ? "Inauspicious"
+          : "Neutral";
+      }
     }
+
+    let score: "Auspicious" | "Neutral" | "Inauspicious" = "Neutral";
+    if (netEfficacy === "Full Auspicious") score = "Auspicious";
+    else if (netEfficacy === "Inauspicious") score = "Inauspicious";
+    else if (netEfficacy === "Obstructed (Vedha)") score = "Neutral";
+    else if (netEfficacy === "Shielded (Vipareeta Vedha)") score = "Neutral";
 
     let effectsSummary = "";
     if (key === "Jupiter") {
-      effectsSummary = isAuspicious
-        ? `Guru transiting House ${houseFromMoon} from Moon: Highly benevolent blessings for wisdom, finances, marital harmony, and expansion.`
-        : `Guru in House ${houseFromMoon}: Requires patience in major investments and professional decisions.`;
+      if (netEfficacy === "Full Auspicious") {
+        effectsSummary = `Guru transiting House ${houseFromMoon} from Moon (Unobstructed): Radiates peak beneficence for wisdom, wealth expansion, auspicious ventures, and mentor blessings.`;
+      } else if (netEfficacy === "Obstructed (Vedha)") {
+        effectsSummary = `Guru transiting favorable House ${houseFromMoon}, but locked by Vedha from ${obstructingPlanets.join(", ")} in House ${expectedVedhaHouse}. High aspirations face temporary administrative delays.`;
+      } else if (netEfficacy === "Shielded (Vipareeta Vedha)") {
+        effectsSummary = `Guru in House ${houseFromMoon}: Potential financial stagnation is shielded by Vipareeta Vedha from ${shieldingPlanets.join(", ")} in House ${expectedShieldHouse}.`;
+      } else {
+        effectsSummary = `Guru in House ${houseFromMoon}: Demands patience, disciplined asset management, and ethical choices.`;
+      }
     } else if (key === "Saturn") {
-      effectsSummary = isAuspicious
-        ? `Shani in House ${houseFromMoon} (Upachaya): Excellent for overcoming adversaries, stamina, discipline, and long-term gains.`
-        : `Shani in House ${houseFromMoon}: Demands rigorous discipline, self-restraint, and mental equanimity.`;
+      if (netEfficacy === "Full Auspicious") {
+        effectsSummary = `Shani in House ${houseFromMoon} (Unobstructed Upachaya): Solid foundation for triumphing over obstacles, heavy career gains, and unbreakable endurance.`;
+      } else if (netEfficacy === "Obstructed (Vedha)") {
+        effectsSummary = `Shani in House ${houseFromMoon} is blocked by Vedha from ${obstructingPlanets.join(", ")} in House ${expectedVedhaHouse}. Routine efforts require extra perseverance.`;
+      } else if (netEfficacy === "Shielded (Vipareeta Vedha)") {
+        effectsSummary = `Shani in House ${houseFromMoon}: Heavy karmic pressure is significantly mitigated by Vipareeta Vedha from ${shieldingPlanets.join(", ")} in House ${expectedShieldHouse}.`;
+      } else {
+        effectsSummary = `Shani in House ${houseFromMoon}: Demands rigorous discipline, self-restraint, and mental equanimity.`;
+      }
     } else if (key === "Sun") {
-      effectsSummary = isAuspicious
-        ? `Surya in House ${houseFromMoon}: High vitality, administrative support, confidence, and victory.`
-        : `Surya in House ${houseFromMoon}: Mild ego friction, authority challenges, and eye/health care required.`;
+      if (netEfficacy === "Full Auspicious") {
+        effectsSummary = `Surya in House ${houseFromMoon} (Unobstructed): High vitality, administrative support, confidence, and public victory.`;
+      } else if (netEfficacy === "Obstructed (Vedha)") {
+        effectsSummary = `Surya in House ${houseFromMoon} is obstructed by ${obstructingPlanets.join(", ")} in House ${expectedVedhaHouse}. Guard against ego friction with leaders.`;
+      } else {
+        effectsSummary = `Surya in House ${houseFromMoon}: Focus on cardiovascular balance, modesty, and clear teamwork.`;
+      }
     } else if (key === "Mars") {
-      effectsSummary = isAuspicious
-        ? `Mangala in House ${houseFromMoon}: High physical energy, courage, competitive success, and land gains.`
-        : `Mangala in House ${houseFromMoon}: Avoid rash temper, impulsive financial moves, and vehicle haste.`;
+      if (netEfficacy === "Full Auspicious") {
+        effectsSummary = `Mangala in House ${houseFromMoon} (Unobstructed): Dynamic physical drive, swift competitive victory, and real estate stamina.`;
+      } else if (netEfficacy === "Obstructed (Vedha)") {
+        effectsSummary = `Mangala in House ${houseFromMoon} is locked by Vedha from ${obstructingPlanets.join(", ")} in House ${expectedVedhaHouse}. Channel adrenaline carefully.`;
+      } else if (netEfficacy === "Shielded (Vipareeta Vedha)") {
+        effectsSummary = `Mangala in House ${houseFromMoon}: Potential accident or conflict vulnerability is disarmed by ${shieldingPlanets.join(", ")} in House ${expectedShieldHouse}.`;
+      } else {
+        effectsSummary = `Mangala in House ${houseFromMoon}: Avoid rash temper, impulsive financial moves, and vehicle haste.`;
+      }
     } else {
-      effectsSummary = isAuspicious
-        ? `${natalP.name} in favorable House ${houseFromMoon} from Moon: Favorable support and smoother affairs.`
-        : `${natalP.name} in House ${houseFromMoon} from Moon: Routine results with focus on balance.`;
+      effectsSummary = `${natalP.name} in House ${houseFromMoon} from Moon: ${netEfficacy === "Full Auspicious" ? "Auspicious flow" : netEfficacy === "Obstructed (Vedha)" ? "Temporarily obstructed" : netEfficacy === "Shielded (Vipareeta Vedha)" ? "Protected by counter-transit" : "Standard cycle"}.`;
     }
 
     transits.push({
@@ -169,9 +305,18 @@ export function calculateGochar(
       isAuspicious,
       score,
       effectsSummary,
-      classicalRules: `Favorable in Houses: ${auspiciousList.join(", ")} from Natal Moon`,
+      classicalRules: expectedVedhaHouse
+        ? `Favorable in House ${houseFromMoon} (Vedha House: ${expectedVedhaHouse})`
+        : `Favorable in Houses: ${auspiciousList.join(", ")} from Moon`,
       isRetrograde: transitP.isRetrograde || false,
       transitDegree: transitP.siderealLongitude % 30,
+      vedhaHouse: expectedVedhaHouse,
+      isObstructed,
+      obstructingPlanets,
+      isVipareetaVedha,
+      shieldingPlanets,
+      netEfficacy,
+      vedhaExplanation,
     });
   }
 
@@ -300,6 +445,8 @@ export function calculateGochar(
     sadeSati,
     guruGocharAuspicious: guruTransit?.isAuspicious || false,
     guruHouseFromMoon: guruTransit?.transitHouseFromMoon || 1,
+    obstructedCount,
+    shieldedCount,
   };
 }
 

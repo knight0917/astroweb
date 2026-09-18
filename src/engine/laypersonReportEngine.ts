@@ -17,6 +17,8 @@ import { calculateVedicEphemeris } from "./ephemeris";
 import { detectVedicYogas } from "./yogas";
 import { calculateVargaSign } from "./shodashavarga";
 import { evaluateKarakamsha, evaluateUpapadaLagna } from "./jaiminiSutras";
+import { detectRahuConjunctions, NodalConjunctionReport } from "./rahuConjunctionsMaster";
+import { synthesizeBphsKarmicShanti, BphsKarmicShantiReport } from "./bphsKarmicShanti";
 
 export interface LaypersonReportInput {
   natalEphemeris: EphemerisResult;
@@ -284,7 +286,27 @@ export interface LaypersonReport {
       ketuHouseFromMoon: number;
       karmicEvolutionTheme: string;
     };
+    vedhaTelemetry: {
+      obstructedCount: number;
+      shieldedCount: number;
+      transitsWithVedha: {
+        planet: string;
+        symbol: string;
+        houseFromMoon: number;
+        transitSign: string;
+        netEfficacy: string;
+        isObstructed: boolean;
+        obstructingPlanets: string[];
+        vedhaHouse?: number;
+        isVipareetaVedha: boolean;
+        shieldingPlanets: string[];
+        vedhaExplanation?: string;
+      }[];
+    };
   };
+
+  rahuConjunctions: NodalConjunctionReport;
+  karmicCursesAndShanti: BphsKarmicShantiReport;
 
   sacredPartner: {
     spousePersona: string;
@@ -1704,7 +1726,27 @@ Your conscious life mission and outer vitality are powered by the ${sunRashi} Su
       ketuHouseFromMoon: ketuGoch ? ketuGoch.transitHouseFromMoon : 6,
       karmicEvolutionTheme: `Rahu in ${rahuGoch?.transitRashiName || "Pisces"} (House ${rahuGoch?.transitHouseFromMoon || 12} from Moon) prompts intuitive growth and foreign horizons, while Ketu in ${ketuGoch?.transitRashiName || "Virgo"} (House ${ketuGoch?.transitHouseFromMoon || 6}) brings natural detachment and mastery over daily obstacles.`,
     },
+    vedhaTelemetry: {
+      obstructedCount: gochar.obstructedCount,
+      shieldedCount: gochar.shieldedCount,
+      transitsWithVedha: gochar.transits.map((t) => ({
+        planet: t.name,
+        symbol: t.symbol,
+        houseFromMoon: t.transitHouseFromMoon,
+        transitSign: t.transitRashiName,
+        netEfficacy: t.netEfficacy,
+        isObstructed: t.isObstructed,
+        obstructingPlanets: t.obstructingPlanets,
+        vedhaHouse: t.vedhaHouse,
+        isVipareetaVedha: t.isVipareetaVedha,
+        shieldingPlanets: t.shieldingPlanets,
+        vedhaExplanation: t.vedhaExplanation,
+      })),
+    },
   };
+
+  const rahuConjunctions = detectRahuConjunctions(natalEphemeris);
+  const karmicCursesAndShanti = synthesizeBphsKarmicShanti(natalEphemeris);
 
   // 14. Sacred Partner Blueprint
   const upapadaRes = evaluateUpapadaLagna(natalEphemeris);
@@ -1902,6 +1944,8 @@ Your conscious life mission and outer vitality are powered by the ${sunRashi} Su
     remediesAndPowerTools,
     destinyTimeline,
     karmicWeather,
+    rahuConjunctions,
+    karmicCursesAndShanti,
     sacredPartner,
     wealthYogas,
     ishtaDevata,

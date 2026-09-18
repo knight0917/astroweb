@@ -1478,6 +1478,202 @@ export default function ComprehensiveReportView() {
                 </p>
               </div>
             </div>
+
+            {/* Gochara Vedha Telemetry (Phaladeepika Ch. 26 Transit Obstruction Engine) */}
+            {report.karmicWeather.vedhaTelemetry && report.karmicWeather.vedhaTelemetry.transitsWithVedha?.length > 0 && (
+              <div className="pt-3 border-t border-slate-800/80 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">⚔️</span>
+                    <h4 className="text-xs font-bold text-slate-200 print:text-slate-900 uppercase tracking-wider">
+                      Classical Gochara Vedha (Transit Obstruction & Shields)
+                    </h4>
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] font-mono">
+                    {report.karmicWeather.vedhaTelemetry.obstructedCount > 0 ? (
+                      <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        ⚠️ {report.karmicWeather.vedhaTelemetry.obstructedCount} Auspicious Transit(s) Vedha Locked
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        ✨ 0 Benefic Obstructions
+                      </span>
+                    )}
+                    {report.karmicWeather.vedhaTelemetry.shieldedCount > 0 && (
+                      <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                        🛡️ {report.karmicWeather.vedhaTelemetry.shieldedCount} Malefic(s) Shielded (Vipareeta Vedha)
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-slate-400 print:text-slate-600 leading-relaxed">
+                  Per <em>Phaladeepika</em> Ch. 26 and <em>Brihat Samhita</em> Ch. 104, when an auspicious transit is obstructed (<strong>Vedha</strong>) by another transiting planet in its reciprocal house from Moon, its positive fruits are locked until the obstructing planet leaves. When an inauspicious transit is blocked, it is shielded (<strong>Vipareeta Vedha</strong>). Sun-Saturn and Moon-Mercury are Father-Son immune and do not obstruct each other.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
+                  {report.karmicWeather.vedhaTelemetry.transitsWithVedha.map((t) => {
+                    const isVedha = t.isObstructed;
+                    const isVipareeta = t.isVipareetaVedha;
+                    const isPureBenefic = !isVedha && t.netEfficacy.includes("Pure Benefic");
+
+                    return (
+                      <div
+                        key={t.planet}
+                        className={`p-2.5 rounded-xl border text-xs space-y-1.5 transition-all ${
+                          isVedha
+                            ? "bg-amber-950/20 border-amber-500/40 text-amber-200"
+                            : isVipareeta
+                            ? "bg-cyan-950/20 border-cyan-500/40 text-cyan-200"
+                            : isPureBenefic
+                            ? "bg-emerald-950/20 border-emerald-500/40 text-emerald-200"
+                            : "bg-slate-950/50 border-slate-800 text-slate-300"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold flex items-center gap-1">
+                            <span>{t.symbol}</span>
+                            <span>{t.planet}</span>
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-400">
+                            H{t.houseFromMoon} ({t.transitSign.slice(0, 3)})
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {isVedha ? (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              ⚠️ Vedha Locked ({t.obstructingPlanets.join(", ")})
+                            </span>
+                          ) : isVipareeta ? (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                              🛡️ Shielded ({t.shieldingPlanets.join(", ")})
+                            </span>
+                          ) : isPureBenefic ? (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              ✨ Pure Flow
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-mono text-slate-400">
+                              Direct Malefic Flow
+                            </span>
+                          )}
+                        </div>
+
+                        {t.vedhaExplanation && (
+                          <p className="text-[10px] text-slate-400 leading-tight">
+                            {t.vedhaExplanation}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Rahu & Ketu Conjunctions Masterclass (Acharya Vishnukripa Shadow Alchemy) */}
+          <div className="p-5 rounded-3xl bg-slate-900/60 print:bg-slate-50 border border-purple-500/30 print:border-slate-300 space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🐉</span>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-black text-purple-300 print:text-purple-950 uppercase tracking-wider">
+                    Dragon's Shadow Alchemy: Natal Rahu & Ketu Conjunctions
+                  </h3>
+                  <p className="text-[11px] text-slate-400 print:text-slate-600">
+                    Acharya Vishnukripa Classical Masterclass • Nodal Psychological Imprints & Superpowers
+                  </p>
+                </div>
+              </div>
+
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
+                {report.rahuConjunctions?.conjunctions?.length > 0
+                  ? `${report.rahuConjunctions.conjunctions.length} Conjunction(s) Detected`
+                  : "Clean Autonomous Nodes"}
+              </span>
+            </div>
+
+            {report.rahuConjunctions?.conjunctions?.length > 0 ? (
+              <div className="space-y-4 pt-1">
+                {report.rahuConjunctions.conjunctions.map((c) => (
+                  <div
+                    key={c.id}
+                    className="p-4 rounded-2xl bg-slate-950/70 print:bg-white border border-purple-500/20 space-y-3"
+                  >
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-black text-amber-300 print:text-amber-900">
+                          {c.yogaName}
+                        </span>
+                        <span className="text-xs font-serif text-slate-400 italic">
+                          ({c.sanskritName})
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] font-mono font-bold">
+                        <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">
+                          {c.node} ☊ + {c.conjoinedPlanet} in {c.signName} (H{c.house})
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">
+                          Orb: {c.exactOrbDegrees.toFixed(1)}° ({c.potencyTier})
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
+                      <div className="p-3 rounded-xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 space-y-1">
+                        <strong className="text-cyan-300 print:text-cyan-900 block text-[11px]">
+                          🧠 Psychological Imprint:
+                        </strong>
+                        <p className="text-slate-300 print:text-slate-700 text-[11px] leading-relaxed">
+                          {c.psychologicalImpact}
+                        </p>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 space-y-1">
+                        <strong className="text-emerald-300 print:text-emerald-900 block text-[11px]">
+                          ⚡ Signature Superpower:
+                        </strong>
+                        <p className="text-slate-300 print:text-slate-700 text-[11px] leading-relaxed">
+                          {c.signatureSuperpower}
+                        </p>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 space-y-1">
+                        <strong className="text-rose-300 print:text-rose-900 block text-[11px]">
+                          ⚠️ Trigger & Shadow Vulnerability:
+                        </strong>
+                        <p className="text-slate-300 print:text-slate-700 text-[11px] leading-relaxed">
+                          {c.vulnerabilityToWatch}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-amber-950/20 print:bg-amber-50 border border-amber-500/30 text-xs space-y-1">
+                      <strong className="text-amber-300 print:text-amber-900 block text-[11px]">
+                        📿 Authentic Shastric Remedies (Acharya Prescription):
+                      </strong>
+                      <ul className="list-disc list-inside space-y-0.5 text-slate-300 print:text-slate-700 text-[11px]">
+                        {c.shastricRemedies.map((rem, idx) => (
+                          <li key={idx}>{rem}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-slate-950/50 print:bg-slate-100 border border-slate-800 text-xs space-y-1">
+                <span className="font-bold text-emerald-300 print:text-emerald-900 block">
+                  ✨ Clean Autonomous Nodes (No Combustion)
+                </span>
+                <p className="text-slate-300 print:text-slate-700 leading-relaxed">
+                  {report.rahuConjunctions?.karmicEvolutionSummary ||
+                    "Rahu and Ketu do not directly combust or tightly conjoin any personal planet in your birth chart. Your planetary archetype energies operate cleanly without eclipse distortions."}
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
