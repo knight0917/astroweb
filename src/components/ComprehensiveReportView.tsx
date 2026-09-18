@@ -1267,6 +1267,175 @@ export default function ComprehensiveReportView() {
         </section>
 
         {/* =========================================================================
+            CHAPTER 09B: CHILDREN, PROGENY & SAPTAMSHA (D-7) BLUEPRINT (संतान निर्णय)
+           ========================================================================= */}
+        {report.progenyBlueprint && (
+          <section className="print:page-break-inside-avoid space-y-6">
+            <div className="space-y-1">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-100 print:text-slate-900 tracking-tight flex items-center gap-2">
+                <span className="text-pink-400">09B.</span>
+                <span>Children, Progeny & Saptamsha (D-7) Blueprint (संतान निर्णय)</span>
+              </h2>
+              <p className="text-xs text-slate-400 print:text-slate-600">
+                Sage Parashara's classical Saptamsha Manduka Gati progression, gender-sensitive Beeja/Kshetra fertility vitality, and filial harmony.
+              </p>
+            </div>
+
+            {/* Fecundity & Saptamsha Lagna Master Card */}
+            <div className="p-6 rounded-3xl bg-gradient-to-r from-pink-500/10 via-rose-500/10 to-amber-500/10 print:bg-pink-50/50 border border-pink-500/30 space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">👶</span>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-black text-pink-300 print:text-pink-950">
+                      Lineage Vitality Point: {report.progenyBlueprint.primarySphuta.sphutaType}
+                    </h3>
+                    <p className="text-[11px] text-slate-400 print:text-slate-600">
+                      Located in {report.progenyBlueprint.primarySphuta.signName} ({report.progenyBlueprint.primarySphuta.degreeFormatted}) • Navamsha in {report.progenyBlueprint.primarySphuta.navamshaSignName}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs font-mono">
+                  <span className="px-2.5 py-1 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 font-bold">
+                    Vitality Score: {report.progenyBlueprint.primarySphuta.fecundityScore}%
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-slate-900 print:bg-white text-slate-300 print:text-slate-800 border border-slate-700 font-bold">
+                    {report.progenyBlueprint.impediments.overallProgenyVerdict}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-200 print:text-slate-800 leading-relaxed">
+                {report.progenyBlueprint.primarySphuta.classicalVerdict}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
+                <div className="p-3 rounded-2xl bg-slate-950/60 print:bg-white border border-pink-500/20 space-y-1">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold block">
+                    Saptamsha (D-7) Lagna Architecture
+                  </span>
+                  <p className="font-bold text-slate-100 print:text-slate-900">
+                    {report.progenyBlueprint.saptamshaLagna.signName} ({report.progenyBlueprint.saptamshaLagna.isOddSign ? "Odd / Masculine Sign" : "Even / Feminine Sign"})
+                  </p>
+                  <p className="text-[11px] text-slate-300 print:text-slate-700">
+                    Manduka Gati: {report.progenyBlueprint.saptamshaLagna.mandukaGatiMode}
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-slate-950/60 print:bg-white border border-pink-500/20 space-y-1">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold block">
+                    Lineage Safeguards & Blessings
+                  </span>
+                  <p className="font-bold text-slate-100 print:text-slate-900">
+                    {report.progenyBlueprint.impediments.hasEunuchTrineAffliction
+                      ? `⚠️ Eunuch Trines (${report.progenyBlueprint.impediments.eunuchTrinePlanets.join(", ")})`
+                      : "✨ Clean Trine Alignment (No Eunuch Afflictions)"}
+                  </p>
+                  <p className="text-[11px] text-slate-300 print:text-slate-700">
+                    {report.progenyBlueprint.impediments.hasDuttaPutraIndicator
+                      ? report.progenyBlueprint.impediments.duttaPutraExplanation
+                      : "D1 Jupiter is " + report.progenyBlueprint.impediments.jupiterDignityInD1 + " • D7 Jupiter is " + report.progenyBlueprint.impediments.jupiterDignityInD7}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Individual Child Pregnancies (D-7 Matrix) */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold text-slate-300 print:text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <span>🌱</span>
+                <span>Individual Child Pregnancies & Temperament (D-7 Matrix)</span>
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {report.progenyBlueprint.pregnancies.map((p) => (
+                  <div
+                    key={p.pregnancyOrder}
+                    className="p-4 rounded-2xl bg-slate-900/70 print:bg-slate-50 border border-slate-800 print:border-slate-300 space-y-2.5 text-xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-pink-300 print:text-pink-900 text-xs">
+                        {p.title}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">
+                        H#{p.d7HouseNumber} ({p.d7SignName.slice(0, 3)})
+                      </span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-slate-400">Ruler:</span>
+                        <span className="font-bold text-slate-200 print:text-slate-900">{p.d7Lord} (H{p.d7LordPlacementHouse})</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-slate-400">Tendency:</span>
+                        <span className="font-bold text-amber-300 print:text-amber-900">{p.genderTendency}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-slate-400">Vitality:</span>
+                        <span className="text-slate-300 print:text-slate-700">{p.vitalityAndHealth.split(" ")[0]}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-800/80 space-y-1">
+                      <span className="text-[10px] font-bold text-emerald-300 print:text-emerald-900 block">
+                        Filial Bond: {p.parentChildSambandha.relationshipDynamic.split(" ")[0]}
+                      </span>
+                      <p className="text-[10px] text-slate-400 print:text-slate-600 leading-tight">
+                        {p.parentChildSambandha.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Authentic Santana Prapti Remedies */}
+            <div className="p-5 rounded-3xl bg-slate-900/60 print:bg-slate-50 border border-amber-500/30 print:border-slate-300 space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="text-xs font-bold text-amber-400 print:text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <span>📿</span>
+                  <span>Authentic Shastric Progeny Remedies (Santana Prapti)</span>
+                </span>
+                <span className="text-[10px] font-mono text-slate-400 font-bold">
+                  BPHS Ch. 83 & Phaladeepika Protocol
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-950/70 print:bg-white border border-amber-500/20 space-y-1 text-xs">
+                <strong className="text-amber-300 print:text-amber-900 block text-[11px]">
+                  {report.progenyBlueprint.remedies.primaryMantra.name}:
+                </strong>
+                <p className="font-mono text-xs sm:text-sm text-slate-100 print:text-slate-900 font-bold leading-relaxed">
+                  {report.progenyBlueprint.remedies.primaryMantra.sanskritMantra}
+                </p>
+                <p className="text-[10px] text-slate-400 print:text-slate-600">
+                  {report.progenyBlueprint.remedies.primaryMantra.prescription}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+                <div className="space-y-1">
+                  <strong className="text-slate-300 print:text-slate-800 block text-[11px]">🕊️ Sacred Vedic Rituals:</strong>
+                  <ul className="list-disc list-inside space-y-0.5 text-slate-400 print:text-slate-600 text-[11px]">
+                    {report.progenyBlueprint.remedies.vedicRituals.map((r, i) => (
+                      <li key={i}>{r}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="space-y-1">
+                  <strong className="text-slate-300 print:text-slate-800 block text-[11px]">🌿 Ayurvedic & Mindful Actions:</strong>
+                  <p className="text-slate-400 print:text-slate-600 text-[11px] leading-relaxed">
+                    {report.progenyBlueprint.remedies.lifestyleAndAyurvedicAdvice}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* =========================================================================
             CHAPTER 10: ACTIVE RAJA & DHANA YOGAS & INDU LAGNA
            ========================================================================= */}
         <section className="print:page-break-inside-avoid space-y-6">

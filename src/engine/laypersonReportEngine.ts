@@ -19,6 +19,7 @@ import { calculateVargaSign } from "./shodashavarga";
 import { evaluateKarakamsha, evaluateUpapadaLagna } from "./jaiminiSutras";
 import { detectRahuConjunctions, NodalConjunctionReport } from "./rahuConjunctionsMaster";
 import { synthesizeBphsKarmicShanti, BphsKarmicShantiReport } from "./bphsKarmicShanti";
+import { evaluateProgenyMaster, ProgenyMasterReport } from "./progenyMaster";
 
 export interface LaypersonReportInput {
   natalEphemeris: EphemerisResult;
@@ -307,6 +308,7 @@ export interface LaypersonReport {
 
   rahuConjunctions: NodalConjunctionReport;
   karmicCursesAndShanti: BphsKarmicShantiReport;
+  progenyBlueprint: ProgenyMasterReport;
 
   sacredPartner: {
     spousePersona: string;
@@ -1897,6 +1899,8 @@ Your conscious life mission and outer vitality are powered by the ${sunRashi} Su
     luckyDayAndHours: `${luckyDay} • Morning Sunrise (6:00 AM – 8:00 AM)`,
   };
 
+  const progenyBlueprint = evaluateProgenyMaster(natalEphemeris, gender === "female" ? "female" : "male");
+
   return {
     nativeProfile: {
       name,
@@ -1946,6 +1950,7 @@ Your conscious life mission and outer vitality are powered by the ${sunRashi} Su
     karmicWeather,
     rahuConjunctions,
     karmicCursesAndShanti,
+    progenyBlueprint,
     sacredPartner,
     wealthYogas,
     ishtaDevata,

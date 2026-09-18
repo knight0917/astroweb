@@ -85,6 +85,7 @@ import { calculateAshtakavargaVastuStrength, calculateAyadiShadvarga, calculateJ
 import { generateBtrMasterSummary } from "./btrEngine";
 import { detectRahuConjunctions } from "./rahuConjunctionsMaster";
 import { calculateLaypersonReport } from "./laypersonReportEngine";
+import { evaluateProgenyMaster } from "./progenyMaster";
 import { GeoLocation } from "./types";
 import { RASHI_NAMES } from "./constants";
 
@@ -1867,6 +1868,34 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 78. Classical Progeny, Children & Saptamsha (D-7) Santana Nirnaya Dossier
+  let progenyMasterSummary = "";
+  try {
+    const pm = evaluateProgenyMaster(natalEphemeris, gender);
+    const pregLines = pm.pregnancies.map((p) => {
+      return `  - **${p.title} (D-7 House #${p.d7HouseNumber} in ${p.d7SignName}):** Ruler: ${p.d7Lord} (House #${p.d7LordPlacementHouse}, ${p.d7LordDignity}) • *Gender Tendency:* **${p.genderTendency}** (${p.genderConfidenceScore}% confidence) • *Vitality:* ${p.vitalityAndHealth} • *Bond:* **${p.parentChildSambandha.relationshipDynamic}** (${p.parentChildSambandha.description})`;
+    });
+
+    progenyMasterSummary = [
+      `- **Primary Fertility Point (${pm.primarySphuta.sphutaType}):** ${pm.primarySphuta.signName} (${pm.primarySphuta.degreeFormatted}) • Navamsha: ${pm.primarySphuta.navamshaSignName} • Score: **${pm.primarySphuta.fecundityScore}%** [**${pm.primarySphuta.fecundityStatus}**]`,
+      `  - *Classical Diagnostic:* ${pm.primarySphuta.classicalVerdict}`,
+      `- **Secondary Theoretical Point (${pm.secondarySphuta.sphutaType}):** ${pm.secondarySphuta.signName} (${pm.secondarySphuta.degreeFormatted}) • Score: ${pm.secondarySphuta.fecundityScore}%`,
+      `- **Saptamsha (D-7) Lagna:** **${pm.saptamshaLagna.signName}** (${pm.saptamshaLagna.isOddSign ? "Odd / Masculine Sign" : "Even / Feminine Sign"}) • Lord: ${pm.saptamshaLagna.lord} in House #${pm.saptamshaLagna.lordPlacementHouse}`,
+      `- **Classical Manduka Gati Pregnancy Progression:** ${pm.saptamshaLagna.mandukaGatiMode}`,
+      `- **Individual Child Pregnancies (D-7 Matrix):**`,
+      ...pregLines,
+      `- **Progeny Impediments & Lineage Safeguards:** Overall Lineage Verdict: **${pm.impediments.overallProgenyVerdict}**`,
+      pm.impediments.hasEunuchTrineAffliction ? `  - ⚠️ *Eunuch Trine Alert:* Mercury/Saturn in D-7 trines (${pm.impediments.eunuchTrinePlanets.join(", ")}). Procreation requires spiritual pacification.` : "  - ✨ *Trine Integrity:* No eunuch or barren planet blockages on D-7 trines.",
+      pm.impediments.hasDuttaPutraIndicator ? `  - 👶 *Dutta Putra Indicator:* ${pm.impediments.duttaPutraExplanation}` : "",
+      pm.impediments.karmicCursesImpactingChildren.length > 0 ? `  - ⚠️ *Active BPHS Karmic Curses:* ${pm.impediments.karmicCursesImpactingChildren.join(", ")}` : "  - 🛡️ *Pūrva Janma Purity:* No active BPHS progeny curses.",
+      `- **Authentic Classical Remedies (Santana Prapti Pariharas):**`,
+      `  - *Primary Mantra:* **${pm.remedies.primaryMantra.name}** -> \`${pm.remedies.primaryMantra.sanskritMantra}\` (${pm.remedies.primaryMantra.prescription})`,
+      `  - *Vedic Rituals:* ${pm.remedies.vedicRituals.join(" | ")}`,
+      `  - *Charities & Seva:* ${pm.remedies.recommendedCharities.join(" | ")}`,
+      `- **Executive Synthesis:** ${pm.executiveSynthesis}`,
+    ].filter(Boolean).join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -2285,7 +2314,10 @@ export function buildAstroDossier(
       rahuConjunctionsSummary,
       "",
       "#### 📜 77. KUNDLI LIFE REPORT COMPLETE SYNTHESIS & EXECUTIVE BLUEPRINT DOSSIER:",
-      lifeReportSummary
+      lifeReportSummary,
+      "",
+      "#### 👶 78. PROGENY, CHILDREN & SAPTAMSHA (D-7) SANTANA NIRNAYA DOSSIER:",
+      progenyMasterSummary
     );
   }
 

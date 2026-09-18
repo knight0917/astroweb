@@ -113,3 +113,18 @@
 - [x] Verification & Release:
   - [x] Add unit test suite in `tests/engine.test.mjs` verifying Vedha rules, immunity exceptions, and Rahu conjunction orbs.
   - [x] Run full test suite (`npm test`), verify types (`npx tsc --noEmit`), and commit & push to Git.
+
+## Phase 16: Classical Progeny, Children & Saptamsha (D-7) Master Suite (संतान निर्णय)
+- [x] Build `src/engine/progenyMaster.ts`:
+  - [x] Implement gender-sensitive Beeja Sphuta (Male) & Kshetra Sphuta (Female) algorithms with Rashi/Navamsha oddity tests and malefic affliction orbs.
+  - [x] Implement Saptamsha (D-7) division and classical *Manduka Gati* (Frog's leap) pregnancy progression for both Odd and Even D-7 Lagnas.
+  - [x] Profile individual child pregnancies (ruling lord, gender tendencies, vitality, and parent-child *Sambandha*).
+  - [x] Implement Shastric progeny impediments (Eunuch trines, barren trines, Dutta Putra adoption markers) and authentic Parashari remedies (*Santana Gopala*, *Harivamsa Purana*).
+- [x] Implement Cross-System Synchronization:
+  - [x] Inject Section 78 (*Progeny & Saptamsha Santana Nirnaya*) into `src/engine/chatContext.ts`.
+  - [x] Codify Rule 0T (*Classical Progeny & Saptamsha Protocol*) into `src/engine/chatPrompt.ts`.
+  - [x] Integrate `progenyBlueprint` into `src/engine/laypersonReportEngine.ts`.
+  - [x] Render the Children & Lineage Blueprint card in `src/components/ComprehensiveReportView.tsx`.
+- [x] Verification & Release:
+  - [x] Add unit test suite in `tests/engine.test.mjs` verifying Beeja/Kshetra Sphuta, D-7 Manduka Gati progression, gender classification, and chatbot parity.
+  - [x] Run full test suite (`npm test`), verify types (`npx tsc --noEmit`), and push to Git.

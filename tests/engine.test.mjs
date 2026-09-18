@@ -5187,3 +5187,103 @@ test("Phase 15: Classical Gochara Vedha, Father-Son Immunity & Rahu Conjunctions
   assert.ok(sysInst.includes("Father-Son immunity invariants"), "Prompt contains Father-Son immunity clause");
   assert.ok(sysInst.includes("Acharya Vishnukripa's classical remedies"), "Prompt contains Acharya Vishnukripa remedies reference");
 });
+
+test("Phase 16: Classical Progeny, Children & Saptamsha (D-7) Master Suite Verification", async () => {
+  const { evaluateProgenyMaster } = await import("../src/engine/progenyMaster.ts");
+  const { calculateLaypersonReport } = await import("../src/engine/laypersonReportEngine.ts");
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { buildChatSystemInstruction } = await import("../src/engine/chatPrompt.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const loc = {
+    cityName: "Varanasi",
+    country: "India",
+    latitude: 25.3176,
+    longitude: 82.9739,
+    timezoneOffsetHours: 5.5,
+  };
+  const natalDate = new Date("1998-05-25T00:16:00Z");
+  const natalEphem = calculateVedicEphemeris(natalDate, loc, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Male Native Evaluation (Beeja Sphuta Primary)
+  const maleReport = evaluateProgenyMaster(natalEphem, "male");
+  assert.strictEqual(maleReport.nativeGender, "male");
+  assert.strictEqual(maleReport.primarySphuta.sphutaType, "Beeja (Male Virility)");
+  assert.strictEqual(maleReport.secondarySphuta.sphutaType, "Kshetra (Female Fertility)");
+  assert.ok(maleReport.primarySphuta.longitude >= 0 && maleReport.primarySphuta.longitude < 360);
+  assert.ok(maleReport.primarySphuta.fecundityScore >= 0 && maleReport.primarySphuta.fecundityScore <= 100);
+  assert.ok(maleReport.primarySphuta.classicalVerdict.length > 20);
+
+  // 2. Female Native Evaluation (Kshetra Sphuta Primary)
+  const femaleReport = evaluateProgenyMaster(natalEphem, "female");
+  assert.strictEqual(femaleReport.nativeGender, "female");
+  assert.strictEqual(femaleReport.primarySphuta.sphutaType, "Kshetra (Female Fertility)");
+  assert.strictEqual(femaleReport.secondarySphuta.sphutaType, "Beeja (Male Virility)");
+  assert.ok(femaleReport.primarySphuta.fecundityScore >= 0 && femaleReport.primarySphuta.fecundityScore <= 100);
+
+  // 3. Saptamsha (D-7) Manduka Gati Progression
+  assert.ok(maleReport.saptamshaLagna.signName.length > 0);
+  assert.strictEqual(maleReport.pregnancies.length, 4, "Tracks 4 pregnancy milestones");
+
+  if (maleReport.saptamshaLagna.isOddSign) {
+    assert.strictEqual(maleReport.pregnancies[0].d7HouseNumber, 5, "Odd Lagna 1st pregnancy is 5th house");
+    assert.strictEqual(maleReport.pregnancies[1].d7HouseNumber, 7, "Odd Lagna 2nd pregnancy is 7th house");
+    assert.strictEqual(maleReport.pregnancies[2].d7HouseNumber, 9, "Odd Lagna 3rd pregnancy is 9th house");
+    assert.strictEqual(maleReport.pregnancies[3].d7HouseNumber, 11, "Odd Lagna 4th pregnancy is 11th house");
+  } else {
+    assert.strictEqual(maleReport.pregnancies[0].d7HouseNumber, 9, "Even Lagna 1st pregnancy is 9th house");
+    assert.strictEqual(maleReport.pregnancies[1].d7HouseNumber, 7, "Even Lagna 2nd pregnancy is 7th house");
+    assert.strictEqual(maleReport.pregnancies[2].d7HouseNumber, 5, "Even Lagna 3rd pregnancy is 5th house");
+    assert.strictEqual(maleReport.pregnancies[3].d7HouseNumber, 3, "Even Lagna 4th pregnancy is 3rd house");
+  }
+
+  // 4. Individual Child Pregnancy Profiles
+  for (const preg of maleReport.pregnancies) {
+    assert.ok(preg.pregnancyOrder >= 1 && preg.pregnancyOrder <= 4);
+    assert.ok(preg.d7Lord.length > 0);
+    assert.ok(
+      [
+        "Masculine / Putra (पुत्र)",
+        "Feminine / Kanya (कन्या)",
+        "Mixed / Twin Tendency (द्विस्वभाव)",
+      ].includes(preg.genderTendency)
+    );
+    assert.ok(preg.genderConfidenceScore >= 50 && preg.genderConfidenceScore <= 100);
+    assert.ok(preg.vitalityAndHealth.length > 5);
+    assert.ok(preg.parentChildSambandha.relationshipDynamic.length > 5);
+    assert.ok(preg.parentChildSambandha.description.length > 10);
+  }
+
+  // 5. Shastric Progeny Remedies & Impediments
+  assert.ok(maleReport.impediments.overallProgenyVerdict.length > 5);
+  assert.ok(typeof maleReport.impediments.hasEunuchTrineAffliction === "boolean");
+  assert.ok(maleReport.remedies.primaryMantra.sanskritMantra.includes("देवकीसुत"));
+  assert.ok(maleReport.remedies.vedicRituals.length >= 2);
+  assert.ok(maleReport.remedies.recommendedCharities.length >= 1);
+
+  // 6. Layperson Life Report Integration
+  const report = calculateLaypersonReport({
+    natalEphemeris: natalEphem,
+    birthDate: natalDate,
+    location: loc,
+    name: "Aarav Sharma",
+    gender: "male",
+  });
+  assert.ok(report.progenyBlueprint, "progenyBlueprint exists on LaypersonReport");
+  assert.strictEqual(report.progenyBlueprint.primarySphuta.sphutaType, "Beeja (Male Virility)");
+  assert.strictEqual(report.progenyBlueprint.pregnancies.length, 4);
+
+  // 7. Chatbot Dossier Section 78 & System Prompt Rule 0T Integration
+  const dossier = buildAstroDossier(natalEphem, natalEphem, new Date(), "male", undefined, "all");
+  assert.ok(dossier.includes("78. PROGENY, CHILDREN & SAPTAMSHA (D-7) SANTANA NIRNAYA DOSSIER:"), "Dossier includes Section 78");
+  assert.ok(dossier.includes("Beeja (Male Virility)"), "Dossier cites Beeja Sphuta");
+  assert.ok(dossier.includes("Manduka Gati"), "Dossier cites Manduka Gati");
+
+  const sysInst = buildChatSystemInstruction(dossier);
+  assert.ok(sysInst.includes("0T. **CLASSICAL PROGENY & SAPTAMSHA (D-7) SANTANA NIRNAYA PROTOCOL"), "Chat prompt includes Rule 0T");
+  assert.ok(sysInst.includes("Beeja Sphuta"), "Rule 0T cites Beeja Sphuta");
+  assert.ok(sysInst.includes("Kshetra Sphuta"), "Rule 0T cites Kshetra Sphuta");
+  assert.ok(sysInst.includes("Manduka Gati"), "Rule 0T cites Manduka Gati");
+  assert.ok(sysInst.includes("Santana Gopala"), "Rule 0T cites Santana Gopala");
+});
+
