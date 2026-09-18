@@ -12,6 +12,11 @@ import { calculateShadbala } from "./shadbala";
 import { calculateInduLagna, calculateBhagyaBindu } from "./samirTripathiSuite";
 import { evaluateRamanYogas, RamanYoga } from "./ramanYogas";
 import { calculateVimshottariDasha } from "./dasha";
+import { calculateGochar } from "./gochar";
+import { calculateVedicEphemeris } from "./ephemeris";
+import { detectVedicYogas } from "./yogas";
+import { calculateVargaSign } from "./shodashavarga";
+import { evaluateKarakamsha, evaluateUpapadaLagna } from "./jaiminiSutras";
 
 export interface LaypersonReportInput {
   natalEphemeris: EphemerisResult;
@@ -244,6 +249,98 @@ export interface LaypersonReport {
     dailyMindfulPractice: string;
     charityAction: string;
     karmicBalancingAdvice: string;
+  };
+
+  destinyTimeline: {
+    currentAge: number;
+    activeCycleHeadline: string;
+    pastMilestones: { age: number; title: string; theme: string; outcome: string }[];
+    currentMilestone: { age: number; title: string; theme: string; focus: string; guidance: string };
+    futureWindows: { age: number; title: string; theme: string; unlockOpportunity: string }[];
+  };
+
+  karmicWeather: {
+    sadeSati: {
+      hasSadeSati: boolean;
+      hasDhaiya: boolean;
+      statusTitle: string;
+      phaseName: string;
+      severity: "High" | "Moderate" | "Mild" | "None";
+      description: string;
+      remedies: string[];
+      completionFormatted?: string;
+    };
+    jupiterTransit: {
+      transitSign: string;
+      houseFromMoon: number;
+      houseFromLagna: number;
+      isAuspicious: boolean;
+      blessingTheme: string;
+    };
+    rahuKetuAxis: {
+      rahuSign: string;
+      ketuSign: string;
+      rahuHouseFromMoon: number;
+      ketuHouseFromMoon: number;
+      karmicEvolutionTheme: string;
+    };
+  };
+
+  sacredPartner: {
+    spousePersona: string;
+    physicalAndSocialVibe: string;
+    temperamentAndValues: string;
+    complementaryDynamic: string;
+    karmicBondType: string;
+    upapadaLagna: {
+      sign: string;
+      houseInD1: number;
+      harmonyScore: number;
+      longevityVerdict: string;
+      sacredRemedy: string;
+    };
+  };
+
+  wealthYogas: {
+    induLagna: {
+      sign: string;
+      houseInD1: number;
+      lord: string;
+      verdict: string;
+      strategy: string;
+    };
+    activeYogas: {
+      name: string;
+      sanskritName: string;
+      category: string;
+      participatingGrahas: string[];
+      manifestation: string;
+      activationTip: string;
+    }[];
+    financialMindsetVerdict: string;
+  };
+
+  ishtaDevata: {
+    atmakarakaPlanet: string;
+    karakamshaSign: string;
+    twelfthSignFromKL: string;
+    ishtaDevataName: string;
+    spiritualPath: string;
+    sacredMantra: string;
+    dharmaDevata: string;
+    soulLesson: string;
+  };
+
+  pocketCard: {
+    fullName: string;
+    cosmicSignature: string;
+    akAndAmk: string;
+    dominantPillar: string;
+    powerDirection: string;
+    karmicWeatherSummary: string;
+    safeGemstone: string;
+    dailyMantra: string;
+    luckyDayAndHours: string;
   };
 }
 
@@ -1460,6 +1557,304 @@ Your conscious life mission and outer vitality are powered by the ${sunRashi} Su
     karmicBalancingAdvice: `Harmonize your chart energies by honoring your parents and elders, speaking truth with gentleness, and maintaining clean, clutter-free personal spaces.`,
   };
 
+  // 12. Timeline of Destiny (Bhrigu & Nakshatra Activation Cycles)
+  const now = new Date();
+  const currentAge = Math.max(1, Math.floor((now.getTime() - birthDate.getTime()) / (365.25 * 24 * 3600 * 1000)));
+
+  const MILESTONE_DEFINITIONS = [
+    {
+      age: 16,
+      title: "Jupiter's Moral & Intellectual Foundation",
+      theme: "Awakening of ethical conscience, scholarly focus, and initial spiritual or academic identity.",
+      outcome: "Formed the mental architecture and moral standards that guide adulthood.",
+      focus: "Scholastic integrity and discovering lifelong interests.",
+      guidance: "Reflect on the mentors and core principles discovered during this period.",
+      unlockOpportunity: "First major academic or intellectual breakthrough.",
+    },
+    {
+      age: 21,
+      title: "Surya's Sovereign Ignition (Self-Assertion)",
+      theme: "Stepping into sovereign individuality, personal autonomy, and early adult career grit.",
+      outcome: "Separated personal vision from family expectations to forge an independent path.",
+      focus: "Cultivating self-respect, executive willpower, and professional direction.",
+      guidance: "Do not seek external approval; anchor every decision in internal integrity.",
+      unlockOpportunity: "First independent public or career milestone.",
+    },
+    {
+      age: 24,
+      title: "Chandra & Shukra Relational Awakening",
+      theme: "Emotional maturation, love, aesthetic taste, and discovering true personal values.",
+      outcome: "Learned what truly fulfills the heart beyond superficial social vanity.",
+      focus: "Forming authentic relational bonds and establishing healthy emotional boundaries.",
+      guidance: "Honor emotional authenticity and surround yourself with nurturing allies.",
+      unlockOpportunity: "Significant relationship commitment, creative passion, or relocation.",
+    },
+    {
+      age: 28,
+      title: "Mangala's Executive & Real Estate Fire",
+      theme: "Peak physical stamina, career aggression, home ownership, and decisive action.",
+      outcome: "High vigor to conquer professional competitors and establish independent territory.",
+      focus: "Executing bold projects without hesitation; channeling energy into durable assets.",
+      guidance: "Balance intense drive with strategic patience; avoid impulsive friction.",
+      unlockOpportunity: "Substantial property acquisition, corporate elevation, or business launch.",
+    },
+    {
+      age: 32,
+      title: "Budha & Guru Strategic Synthesis",
+      theme: "Intellectual authority, commercial acumen, advisory influence, and compounding wealth.",
+      outcome: "Transition from manual hustle into strategic advisory and scalable business systems.",
+      focus: "Building leveraged commercial operations, family expansion, and public credibility.",
+      guidance: "Let your intellect and wisdom do the heavy lifting; build scalable platforms.",
+      unlockOpportunity: "Major commercial expansion, advisory prestige, and financial compounding.",
+    },
+    {
+      age: 36,
+      title: "Shani's Sovereign Maturity & Karmic Harvest",
+      theme: "Enduring stability, institutional responsibility, leadership, and multi-generational security.",
+      outcome: "Full karmic maturation of Saturn; shedding frivolous distractions for lasting empire.",
+      focus: "Consolidating life work, assuming civic/executive accountability, and durable wealth.",
+      guidance: "Discipline is your ultimate superpower; structures built now stand for decades.",
+      unlockOpportunity: "Pivotal career summit, institutional authority, and lasting reputation.",
+    },
+    {
+      age: 42,
+      title: "Rahu's Worldly Summit & Uncharted Horizons",
+      theme: "Audacious ambition, non-traditional breakthroughs, and wide societal influence.",
+      outcome: "Breaking through conventional ceilings to master modern or global domains.",
+      focus: "Pioneering new territory, global outreach, and claiming your rightful seat at the table.",
+      guidance: "Remain spiritually anchored so worldly gains do not distract from soul purpose.",
+      unlockOpportunity: "Apex societal recognition, foreign expansion, and unprecedented rewards.",
+    },
+    {
+      age: 48,
+      title: "Ketu's Deep Spiritual Liberation & Legacy Pivot",
+      theme: "Inner peace, profound wisdom, philosophical mentorship, and philanthropic legacy.",
+      outcome: "Synthesizing decades of worldly mastery into deep spiritual purpose and philanthropy.",
+      focus: "Mentoring the next generation, spiritual contemplation, and establishing lasting dharmic impact.",
+      guidance: "Recognize that your highest legacy is the wisdom and peace you leave behind.",
+      unlockOpportunity: "Spiritual mastery, philanthropic foundations, and supreme inner contentment.",
+    },
+  ];
+
+  const pastMilestones = MILESTONE_DEFINITIONS.filter((m) => m.age < currentAge).map((m) => ({
+    age: m.age,
+    title: m.title,
+    theme: m.theme,
+    outcome: m.outcome,
+  }));
+
+  const currentMilestoneDef =
+    MILESTONE_DEFINITIONS.find((m) => Math.abs(m.age - currentAge) <= 3) ||
+    MILESTONE_DEFINITIONS.filter((m) => m.age <= currentAge).pop() ||
+    MILESTONE_DEFINITIONS[0];
+
+  const currentMilestone = {
+    age: currentMilestoneDef.age,
+    title: currentMilestoneDef.title,
+    theme: currentMilestoneDef.theme,
+    focus: currentMilestoneDef.focus,
+    guidance: currentMilestoneDef.guidance,
+  };
+
+  const futureWindows = MILESTONE_DEFINITIONS.filter((m) => m.age > currentAge).map((m) => ({
+    age: m.age,
+    title: m.title,
+    theme: m.theme,
+    unlockOpportunity: m.unlockOpportunity,
+  }));
+
+  const destinyTimeline = {
+    currentAge,
+    activeCycleHeadline: `Age ${currentAge}: Navigating ${currentMilestone.title}`,
+    pastMilestones,
+    currentMilestone,
+    futureWindows,
+  };
+
+  // 13. Karmic Weather Station (Live Transits & Sade Sati)
+  const transitEphem = calculateVedicEphemeris(now, location, "Lahiri", "WholeSign", "Mean");
+  const gochar = calculateGochar(natalEphemeris, transitEphem);
+
+  const jupGoch = gochar.transits.find((t) => t.id === "Jupiter");
+  const rahuGoch = gochar.transits.find((t) => t.id === "Rahu");
+  const ketuGoch = gochar.transits.find((t) => t.id === "Ketu");
+
+  const karmicWeather = {
+    sadeSati: {
+      hasSadeSati: gochar.sadeSati.hasSadeSati,
+      hasDhaiya: gochar.sadeSati.hasDhaiya,
+      statusTitle: gochar.sadeSati.statusTitle,
+      phaseName: gochar.sadeSati.phaseName,
+      severity: gochar.sadeSati.severity,
+      description: gochar.sadeSati.description,
+      remedies: gochar.sadeSati.remedies,
+      completionFormatted: gochar.sadeSati.totalCompletionFormatted || gochar.sadeSati.remainingDurationFormatted || "In Preparation",
+    },
+    jupiterTransit: {
+      transitSign: jupGoch ? jupGoch.transitRashiName : "Taurus",
+      houseFromMoon: jupGoch ? jupGoch.transitHouseFromMoon : 9,
+      houseFromLagna: jupGoch ? jupGoch.transitHouseFromLagna : 4,
+      isAuspicious: jupGoch ? jupGoch.isAuspicious : true,
+      blessingTheme: jupGoch ? jupGoch.effectsSummary : "Expanding higher learning, spiritual wisdom, and righteous prosperity.",
+    },
+    rahuKetuAxis: {
+      rahuSign: rahuGoch ? rahuGoch.transitRashiName : "Pisces",
+      ketuSign: ketuGoch ? ketuGoch.transitRashiName : "Virgo",
+      rahuHouseFromMoon: rahuGoch ? rahuGoch.transitHouseFromMoon : 12,
+      ketuHouseFromMoon: ketuGoch ? ketuGoch.transitHouseFromMoon : 6,
+      karmicEvolutionTheme: `Rahu in ${rahuGoch?.transitRashiName || "Pisces"} (House ${rahuGoch?.transitHouseFromMoon || 12} from Moon) prompts intuitive growth and foreign horizons, while Ketu in ${ketuGoch?.transitRashiName || "Virgo"} (House ${ketuGoch?.transitHouseFromMoon || 6}) brings natural detachment and mastery over daily obstacles.`,
+    },
+  };
+
+  // 14. Sacred Partner Blueprint
+  const upapadaRes = evaluateUpapadaLagna(natalEphemeris);
+  const d9AscSignIdx = calculateVargaSign(natalEphemeris.ascendant.siderealLongitude, "D9");
+  const d9SeventhSignIdx = (d9AscSignIdx + 6) % 12;
+  const d9SeventhSign = RASHI_NAMES[d9SeventhSignIdx]?.englishName || "Leo";
+  const d9SeventhLord = RASHI_NAMES[d9SeventhSignIdx]?.lord || "Sun";
+
+  const DK_PROFILES: Record<string, { persona: string; vibe: string; dynamic: string }> = {
+    Sun: {
+      persona: "A dignified leader with natural presence, aristocratic poise, and high self-respect.",
+      vibe: "Warm, noble, radiant, and inspiring; demands and gives mutual honor.",
+      dynamic: "Partnership thrives on mutual celebration of sovereignty; never belittle each other in public.",
+    },
+    Moon: {
+      persona: "An empathetic nurturer with profound emotional intelligence and domestic warmth.",
+      vibe: "Intuitive, gentle, deeply devoted, and sensitive to emotional atmospheres.",
+      dynamic: "Partnership is a tranquil emotional sanctuary; thrives on gentle communication and tenderness.",
+    },
+    Mars: {
+      persona: "A courageous, dynamic achiever with athletic energy and direct honesty.",
+      vibe: "Passionate, protective, action-oriented, and decisive.",
+      dynamic: "High energetic spark; requires shared active adventures and clear conflict resolution without holding grudges.",
+    },
+    Mercury: {
+      persona: "A witty, intellectually agile communicator with youthful charm and curiosity.",
+      vibe: "Playful, analytical, versatile, and an avid conversationalist.",
+      dynamic: "Best friends first, lovers second; thrives on intellectual banter, books, and shared travel.",
+    },
+    Jupiter: {
+      persona: "A wise, principled counselor with philosophical depth and high ethical character.",
+      vibe: "Generous, spiritually grounded, optimistic, and supportive of your highest growth.",
+      dynamic: "A sacred union of shared values; partners act as each other's trusted guru and anchor.",
+    },
+    Venus: {
+      persona: "An artistically gifted, charming partner with refined taste and romantic grace.",
+      vibe: "Aesthetic, affectionate, socially magnetic, and deeply appreciative of beauty.",
+      dynamic: "Filled with romance, shared artistic projects, and deep sensory and emotional harmony.",
+    },
+    Saturn: {
+      persona: "A mature, rock-solid pillar of discipline, endurance, and quiet dependability.",
+      vibe: "Pragmatic, serious, patient, and intensely loyal through all life seasons.",
+      dynamic: "Compounds in love and wealth over time; a marriage built on unbreakable loyalty and mutual respect.",
+    },
+  };
+
+  const dkProfile = DK_PROFILES[dk.planetName] || DK_PROFILES.Jupiter;
+  const ulSignIdx = RASHI_NAMES.findIndex((r) => r.englishName === upapadaRes.upapadaSign);
+  const ulHouseInD1 = ulSignIdx !== -1 ? ((ulSignIdx - ascRashiIdx + 12) % 12) + 1 : 12;
+
+  const sacredPartner = {
+    spousePersona: `Governed by Darakaraka ${dk.planetName} and D-9 Navamsha 7th house in ${d9SeventhSign} (ruled by ${d9SeventhLord}): ${dkProfile.persona}`,
+    physicalAndSocialVibe: dkProfile.vibe,
+    temperamentAndValues: `Upapada Lagna in ${upapadaRes.upapadaSign} indicates a partner from a respected background with innate moral integrity. ${upapadaRes.spouseProfile}`,
+    complementaryDynamic: dkProfile.dynamic,
+    karmicBondType: upapadaRes.maritalHarmonyScore >= 70 ? "Dharmic Soul Union (Compounding mutual elevation)" : "Karmic Growth Catalyst (Fostering emotional maturity and patience)",
+    upapadaLagna: {
+      sign: upapadaRes.upapadaSign,
+      houseInD1: ulHouseInD1,
+      harmonyScore: upapadaRes.maritalHarmonyScore,
+      longevityVerdict: upapadaRes.maritalLongevityVerdict,
+      sacredRemedy: upapadaRes.jaiminiRemedies,
+    },
+  };
+
+  // 15. Active Raja & Dhana Yogas
+  const wealthCategories = ["Raja Yoga & Eminence", "Dhana & Prosperity", "Pancha Mahapurusha"];
+  const ramanWealth = ramanYogas.yogas
+    .filter((y) => !y.isCancelled && wealthCategories.includes(y.category))
+    .map((y) => ({
+      name: y.name,
+      sanskritName: y.sanskritName,
+      category: y.category,
+      participatingGrahas: y.participatingGrahas,
+      manifestation: y.practicalEffects || y.classicalDescription,
+      activationTip: y.activationDashaLords && y.activationDashaLords.length > 0
+        ? `Activates during periods of ${y.activationDashaLords.join(", ")}.`
+        : "Enduring lifelong baseline of prosperity and social respect.",
+    }));
+
+  const rawYogas = detectVedicYogas(natalEphemeris);
+  const rawWealth = rawYogas
+    .filter((y) => ["Raja Yoga", "Dhana Yoga", "Mahapurusha Yoga", "Auspicious Yoga"].includes(y.category))
+    .map((y) => ({
+      name: y.name,
+      sanskritName: y.sanskritName,
+      category: y.category,
+      participatingGrahas: y.participatingGrahas,
+      manifestation: y.effects || y.description,
+      activationTip: y.activationDasha || `Activates during periods of ${y.participatingGrahas.join(", ")}.`,
+    }));
+
+  const combinedWealth = [...ramanWealth, ...rawWealth.filter((ry) => !ramanWealth.some((rw) => rw.name === ry.name))];
+  if (combinedWealth.length === 0) {
+    combinedWealth.push({
+      name: "Dhana Sthira Alignment",
+      sanskritName: "धन स्थिर योग",
+      category: "Dhana & Prosperity",
+      participatingGrahas: [ascLord],
+      manifestation: "A foundational alignment of self-reliance ensuring that steady disciplined labor reliably generates enduring assets.",
+      activationTip: `Activated by cultivating the strengths of Lagna Lord ${ascLord}.`,
+    });
+  }
+
+  const activeWealthYogas = combinedWealth.slice(0, 6);
+
+  const wealthYogas = {
+    induLagna: {
+      sign: induLagna.induLagnaRashi.englishName,
+      houseInD1: induLagna.induLagnaHouseFromD1,
+      lord: induLagna.induLagnaRashi.lord,
+      verdict: induLagna.wealthVerdict,
+      strategy: `Your Indu Lagna (Special Wealth Pivot) rests in House ${induLagna.induLagnaHouseFromD1} (${induLagna.induLagnaRashi.englishName}). Channeling capital into the themes of House ${induLagna.induLagnaHouseFromD1} and partnering with Lord ${induLagna.induLagnaRashi.lord} energies unlocks your highest wealth multiplier.`,
+    },
+    activeYogas: activeWealthYogas,
+    financialMindsetVerdict: activeWealthYogas.length >= 3
+      ? "Endowed with prominent classical wealth yogas. Financial compounding occurs naturally through structured long-term investments and ethical competence."
+      : "Steady wealth accumulation driven by focused disciplined effort and targeted commercial ventures.",
+  };
+
+  // 16. Soul's Guardian Deity (Ishta Devata & Spiritual Path)
+  const karakamshaRes = evaluateKarakamsha(natalEphemeris);
+  const ishta = karakamshaRes.ishtaDevata;
+
+  const ishtaDevata = {
+    atmakarakaPlanet: karakamshaRes.atmakarakaPlanet,
+    karakamshaSign: karakamshaRes.karakamshaSign,
+    twelfthSignFromKL: ishta.twelfthSignFromKL,
+    ishtaDevataName: ishta.ishtaDevataName,
+    spiritualPath: ishta.spiritualPath,
+    sacredMantra: ishta.mantraRecommendation,
+    dharmaDevata: ishta.dharmaDevataName,
+    soulLesson: `As Atmakaraka ${karakamshaRes.atmakarakaPlanet} sits in ${karakamshaRes.karakamshaSign} in Navamsha, your soul's central lesson in this incarnation is mastering ${jaimini.atmakaraka.signification.toLowerCase()}. Aligning with ${ishta.ishtaDevataName} via ${ishta.spiritualPath} clears karmic blockages and accelerates your inner liberation.`,
+  };
+
+  // 17. 1-Page Executive Pocket Card Payload
+  const pocketCard = {
+    fullName: name,
+    cosmicSignature: `${ascRashi} Ascendant • ${moonRashi} Moon (${moonNakshatra}) • ${sunRashi} Sun`,
+    akAndAmk: `Soul King (AK): ${jaimini.atmakaraka.planetName} • Career Advisor (AmK): ${jaimini.amatyakaraka.planetName}`,
+    dominantPillar: `${purusharthas.dominantPillar.title.split(" (")[0]} (${purusharthas.dominantPillar.score} pts • ${purusharthas.dominantPillar.percentage}%)`,
+    powerDirection: `${functionalDirections.cardinalPowerZone ? `${functionalDirections.cardinalPowerZone.direction} Power Zone (${functionalDirections.cardinalPowerZone.activitiesCount} Activities)` : "East (Sun/Saturn)"}`,
+    karmicWeatherSummary: gochar.sadeSati.hasSadeSati
+      ? `${gochar.sadeSati.statusTitle}`
+      : `Sade Sati Inactive • Jupiter in ${jupGoch?.transitRashiName || "Taurus"}`,
+    safeGemstone: safeGemstones.length > 0 ? safeGemstones.join(", ") : "Pearl / Yellow Sapphire",
+    dailyMantra: ishta.mantraRecommendation.split(" / ")[0] || "ॐ नमो भगवते वासुदेवाय",
+    luckyDayAndHours: `${luckyDay} • Morning Sunrise (6:00 AM – 8:00 AM)`,
+  };
+
   return {
     nativeProfile: {
       name,
@@ -1505,5 +1900,11 @@ Your conscious life mission and outer vitality are powered by the ${sunRashi} Su
     specialYogas: activeYogas,
     currentLifeSeason,
     remediesAndPowerTools,
+    destinyTimeline,
+    karmicWeather,
+    sacredPartner,
+    wealthYogas,
+    ishtaDevata,
+    pocketCard,
   };
 }

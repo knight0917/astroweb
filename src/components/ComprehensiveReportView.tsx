@@ -1214,38 +1214,111 @@ export default function ComprehensiveReportView() {
         </section>
 
         {/* =========================================================================
-            CHAPTER 10: SPECIAL COSMIC BLESSINGS & YOGAS
+            CHAPTER 09: THE SACRED PARTNER BLUEPRINT (D9 & UPAPADA)
            ========================================================================= */}
         <section className="print:page-break-inside-avoid space-y-6">
           <div className="space-y-1">
             <h2 className="text-xl sm:text-2xl font-black text-slate-100 print:text-slate-900 tracking-tight flex items-center gap-2">
-              <span className="text-amber-400">09.</span>
-              <span>Special Cosmic Blessings (Yogas & Superpowers)</span>
+              <span className="text-pink-400">09.</span>
+              <span>The Sacred Partner Blueprint (Marriage & Soulmate Destiny)</span>
             </h2>
             <p className="text-xs text-slate-400 print:text-slate-600">
-              Exceptional planetary combinations active in your chart, indicating areas of high distinction and natural luck.
+              Synthesized from D-9 Navamsha 7th House, Jaimini Darakaraka (DK), and Upapada Lagna (UL) for enduring marital harmony.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {report.specialYogas.map((y, idx) => (
+            {/* Spouse Persona */}
+            <div className="p-5 rounded-3xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 print:border-slate-300 space-y-3">
+              <span className="text-xs font-bold text-pink-400 print:text-pink-800 uppercase tracking-wider block">
+                💍 Spouse Temperament & Persona
+              </span>
+              <p className="text-xs text-slate-200 print:text-slate-800 leading-relaxed">
+                {report.sacredPartner.spousePersona}
+              </p>
+              <div className="pt-2 border-t border-slate-800 print:border-slate-200 text-xs text-slate-300 print:text-slate-700 space-y-1">
+                <p><strong className="text-pink-300 print:text-pink-900">Social Demeanor:</strong> {report.sacredPartner.physicalAndSocialVibe}</p>
+                <p><strong className="text-pink-300 print:text-pink-900">Family Lineage:</strong> {report.sacredPartner.temperamentAndValues}</p>
+              </div>
+            </div>
+
+            {/* Dynamics & Upapada Lagna */}
+            <div className="p-5 rounded-3xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 print:border-slate-300 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-400 print:text-amber-800 uppercase tracking-wider">
+                  🕊️ Karmic Bond & Upapada Lagna
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 print:bg-emerald-100 print:text-emerald-900 font-bold">
+                  Harmony: {report.sacredPartner.upapadaLagna.harmonyScore}/100
+                </span>
+              </div>
+              <p className="text-xs text-slate-200 print:text-slate-800 leading-relaxed">
+                <strong className="text-slate-100 print:text-slate-900">Partnership Dynamic:</strong> {report.sacredPartner.complementaryDynamic}
+              </p>
+              <p className="text-xs text-slate-300 print:text-slate-700">
+                <strong className="text-slate-200 print:text-slate-900">Soul Bond Type:</strong> {report.sacredPartner.karmicBondType}
+              </p>
+              <div className="p-3 rounded-2xl bg-amber-500/10 print:bg-amber-50 border border-amber-500/20 text-[11px] text-amber-200 print:text-amber-900 space-y-1">
+                <strong>Sacred Upapada Remedy:</strong>
+                <p>{report.sacredPartner.upapadaLagna.sacredRemedy}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            CHAPTER 10: ACTIVE RAJA & DHANA YOGAS & INDU LAGNA
+           ========================================================================= */}
+        <section className="print:page-break-inside-avoid space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-100 print:text-slate-900 tracking-tight flex items-center gap-2">
+              <span className="text-emerald-400">10.</span>
+              <span>Active Raja & Dhana Yogas (Your Wealth Signatures)</span>
+            </h2>
+            <p className="text-xs text-slate-400 print:text-slate-600">
+              Verified classical combinations conferring prosperity, authority, and the Indu Lagna wealth multiplier.
+            </p>
+          </div>
+
+          {/* Indu Lagna Special Wealth Card */}
+          <div className="p-5 rounded-3xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 print:bg-emerald-50 border border-emerald-500/30 space-y-2">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-xs font-bold text-emerald-400 print:text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                <span>💰</span>
+                <span>Indu Lagna: Moon-Ray Wealth Pivot in House {report.wealthYogas.induLagna.houseInD1} ({report.wealthYogas.induLagna.sign})</span>
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 print:bg-emerald-100 print:text-emerald-900 font-bold">
+                Ruler: Lord {report.wealthYogas.induLagna.lord}
+              </span>
+            </div>
+            <p className="text-xs text-slate-200 print:text-slate-800 leading-relaxed">
+              {report.wealthYogas.induLagna.verdict}
+            </p>
+            <p className="text-[11px] text-emerald-300/90 print:text-emerald-950 font-medium">
+              💡 {report.wealthYogas.induLagna.strategy}
+            </p>
+          </div>
+
+          {/* Active Yogas Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {report.wealthYogas.activeYogas.map((y, idx) => (
               <div
                 key={idx}
                 className="p-5 rounded-3xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 print:border-slate-300 space-y-2"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm text-amber-300 print:text-amber-900">
-                    ✨ {y.laymanTitle}
+                  <span className="font-bold text-sm text-emerald-300 print:text-emerald-900">
+                    👑 {y.name}
                   </span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 print:bg-amber-100 print:text-amber-900 font-bold">
-                    {y.potency}% Potency
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 print:bg-emerald-100 print:text-emerald-900 font-bold">
+                    {y.category}
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 print:text-slate-800 leading-relaxed">
-                  {y.practicalMeaning}
+                  {y.manifestation}
                 </p>
                 <p className="text-[11px] text-slate-400 print:text-slate-600 pt-1 border-t border-slate-800 print:border-slate-200">
-                  {y.activationAdvice}
+                  <strong>Activation Period:</strong> {y.activationTip}
                 </p>
               </div>
             ))}
@@ -1253,16 +1326,90 @@ export default function ComprehensiveReportView() {
         </section>
 
         {/* =========================================================================
-            CHAPTER 11: CURRENT LIFE SEASON & AUTHENTIC REMEDIES
+            CHAPTER 11: TIMELINE OF DESTINY (AGE MILESTONES)
            ========================================================================= */}
-        <section className="print:page-break-inside-avoid space-y-6 pb-12">
+        <section className="print:page-break-inside-avoid space-y-6">
           <div className="space-y-1">
             <h2 className="text-xl sm:text-2xl font-black text-slate-100 print:text-slate-900 tracking-tight flex items-center gap-2">
-              <span className="text-amber-400">10.</span>
-              <span>Current Life Season & Authentic Power Remedies</span>
+              <span className="text-amber-400">11.</span>
+              <span>Timeline of Destiny: Key Age Milestones & Turning Points</span>
             </h2>
             <p className="text-xs text-slate-400 print:text-slate-600">
-              Your active planetary timing (Vimshottari Dasha) and practical ways to balance and harmonize your energy.
+              Classical Bhrigu Nandi Nadi & Nakshatra Awakening cycles mapping past transformations, your active window, and future golden horizons.
+            </p>
+          </div>
+
+          {/* Current Age Highlight */}
+          <div className="p-5 rounded-3xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 print:bg-amber-50 border-2 border-amber-500/40 space-y-2">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-xs font-bold text-amber-400 print:text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                <span>⚡</span>
+                <span>Currently Active Life Chapter: {report.destinyTimeline.activeCycleHeadline}</span>
+              </span>
+              <span className="text-xs font-mono font-black text-amber-300 print:text-amber-900 px-2.5 py-0.5 rounded bg-amber-500/20">
+                Current Age: {report.destinyTimeline.currentAge}
+              </span>
+            </div>
+            <p className="text-xs text-slate-200 print:text-slate-800 leading-relaxed">
+              <strong>Core Theme:</strong> {report.destinyTimeline.currentMilestone.theme}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-xs">
+              <div className="p-2.5 rounded-xl bg-slate-900/60 print:bg-white border border-amber-500/20">
+                <strong className="text-amber-300 print:text-amber-900 block mb-0.5">Primary Focus:</strong>
+                <p className="text-slate-300 print:text-slate-700">{report.destinyTimeline.currentMilestone.focus}</p>
+              </div>
+              <div className="p-2.5 rounded-xl bg-slate-900/60 print:bg-white border border-amber-500/20">
+                <strong className="text-amber-300 print:text-amber-900 block mb-0.5">Dharmic Guidance:</strong>
+                <p className="text-slate-300 print:text-slate-700">{report.destinyTimeline.currentMilestone.guidance}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Past Milestones vs Future Windows */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Past Milestones */}
+            <div className="p-5 rounded-3xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 print:border-slate-300 space-y-3">
+              <span className="text-xs font-bold text-slate-300 print:text-slate-800 uppercase tracking-wider block">
+                🌱 Past Awakening Milestones Lived
+              </span>
+              <div className="space-y-2.5">
+                {report.destinyTimeline.pastMilestones.map((m) => (
+                  <div key={m.age} className="p-3 rounded-2xl bg-slate-950/60 print:bg-white border border-slate-800/80 text-xs space-y-1">
+                    <span className="font-bold text-amber-300 print:text-amber-900 block">Age {m.age}: {m.title}</span>
+                    <p className="text-slate-300 print:text-slate-700 text-[11px]">{m.outcome}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Future Golden Windows */}
+            <div className="p-5 rounded-3xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 print:border-slate-300 space-y-3">
+              <span className="text-xs font-bold text-emerald-400 print:text-emerald-800 uppercase tracking-wider block">
+                🚀 Approaching Golden Horizons & Breakthroughs
+              </span>
+              <div className="space-y-2.5">
+                {report.destinyTimeline.futureWindows.map((m) => (
+                  <div key={m.age} className="p-3 rounded-2xl bg-slate-950/60 print:bg-white border border-slate-800/80 text-xs space-y-1">
+                    <span className="font-bold text-emerald-300 print:text-emerald-900 block">Age {m.age}: {m.title}</span>
+                    <p className="text-slate-300 print:text-slate-700 text-[11px]">{m.unlockOpportunity}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            CHAPTER 12: CURRENT LIFE SEASON & KARMIC WEATHER STATION
+           ========================================================================= */}
+        <section className="print:page-break-inside-avoid space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-100 print:text-slate-900 tracking-tight flex items-center gap-2">
+              <span className="text-amber-400">12.</span>
+              <span>Current Life Season & Karmic Weather Station</span>
+            </h2>
+            <p className="text-xs text-slate-400 print:text-slate-600">
+              Active Vimshottari Dasha season, real-time Shani Sade Sati telemetry, and Jupiter's cosmic transit blessings.
             </p>
           </div>
 
@@ -1292,6 +1439,107 @@ export default function ComprehensiveReportView() {
                 <p className="text-slate-300 print:text-slate-700">{report.currentLifeSeason.whatToAvoid}</p>
               </div>
             </div>
+          </div>
+
+          {/* Karmic Weather Station */}
+          <div className="p-5 rounded-3xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 print:border-slate-300 space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-xs font-bold text-cyan-400 print:text-cyan-900 uppercase tracking-wider flex items-center gap-1.5">
+                <span>🪐</span>
+                <span>Real-Time Gochar & Sade Sati Telemetry</span>
+              </span>
+              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded ${
+                report.karmicWeather.sadeSati.hasSadeSati
+                  ? "bg-rose-500/20 text-rose-300 print:bg-rose-100 print:text-rose-900"
+                  : "bg-emerald-500/20 text-emerald-300 print:bg-emerald-100 print:text-emerald-900"
+              }`}>
+                {report.karmicWeather.sadeSati.statusTitle}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div className="p-3.5 rounded-2xl bg-slate-950/60 print:bg-white border border-slate-800 space-y-1">
+                <span className="font-bold text-slate-200 print:text-slate-900 block">🪐 Shani Sade Sati</span>
+                <p className="text-slate-300 print:text-slate-700 text-[11px]">{report.karmicWeather.sadeSati.phaseName}</p>
+                <p className="text-[10px] text-amber-300/90 print:text-amber-900 font-mono">End / Window: {report.karmicWeather.sadeSati.completionFormatted}</p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-950/60 print:bg-white border border-slate-800 space-y-1">
+                <span className="font-bold text-amber-300 print:text-amber-900 block">✨ Jupiter (Guru) Gochar</span>
+                <p className="text-slate-300 print:text-slate-700 text-[11px]">
+                  Transiting in {report.karmicWeather.jupiterTransit.transitSign} (House {report.karmicWeather.jupiterTransit.houseFromMoon} from Moon). {report.karmicWeather.jupiterTransit.blessingTheme}
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-950/60 print:bg-white border border-slate-800 space-y-1">
+                <span className="font-bold text-purple-300 print:text-purple-900 block">🐉 Rahu-Ketu Nodal Axis</span>
+                <p className="text-slate-300 print:text-slate-700 text-[11px]">
+                  {report.karmicWeather.rahuKetuAxis.karmicEvolutionTheme}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            CHAPTER 13: YOUR SOUL'S GUARDIAN DEITY (ISHTA DEVATA)
+           ========================================================================= */}
+        <section className="print:page-break-inside-avoid space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-100 print:text-slate-900 tracking-tight flex items-center gap-2">
+              <span className="text-amber-400">13.</span>
+              <span>Your Soul's Guardian Deity (Ishta Devata & Spiritual Liberation)</span>
+            </h2>
+            <p className="text-xs text-slate-400 print:text-slate-600">
+              Calculated per Maharishi Jaimini's secret formula from the 12th House of Karakamsha (Navamsha of Atmakaraka).
+            </p>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-amber-500/10 print:bg-purple-50/50 border border-purple-500/30 space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🕉️</span>
+                <h3 className="text-base font-black text-amber-300 print:text-purple-950">
+                  Ishta Devata Archetype: {report.ishtaDevata.ishtaDevataName}
+                </h3>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 print:bg-purple-100 print:text-purple-900 font-bold">
+                Karakamsha in {report.ishtaDevata.karakamshaSign}
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-200 print:text-slate-800 leading-relaxed">
+              {report.ishtaDevata.soulLesson}
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
+              <div className="p-3.5 rounded-2xl bg-slate-950/60 print:bg-white border border-purple-500/20 space-y-1">
+                <strong className="text-amber-300 print:text-amber-900 block">📿 Sacred Personal Mantra:</strong>
+                <p className="font-mono text-sm text-slate-100 print:text-slate-900 font-bold">{report.ishtaDevata.sacredMantra}</p>
+                <p className="text-[10px] text-slate-400 print:text-slate-600">Chant 11, 27, or 108 times daily in a calm posture.</p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-950/60 print:bg-white border border-purple-500/20 space-y-1">
+                <strong className="text-purple-300 print:text-purple-900 block">🌿 Spiritual Marga & Dharma Guide:</strong>
+                <p className="text-slate-300 print:text-slate-700">{report.ishtaDevata.spiritualPath}</p>
+                <p className="text-[10px] text-slate-400 print:text-slate-600">Dharma Devata: {report.ishtaDevata.dharmaDevata}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            CHAPTER 14: AUTHENTIC POWER REMEDIES
+           ========================================================================= */}
+        <section className="print:page-break-inside-avoid space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-100 print:text-slate-900 tracking-tight flex items-center gap-2">
+              <span className="text-amber-400">14.</span>
+              <span>Authentic Power Remedies & Daily Practices</span>
+            </h2>
+            <p className="text-xs text-slate-400 print:text-slate-600">
+              Empowering, safe, non-fatal remedies to harmonize your planetary energies and clear karmic friction.
+            </p>
           </div>
 
           {/* Authentic Remedies Grid */}
@@ -1346,6 +1594,66 @@ export default function ComprehensiveReportView() {
             <p className="text-slate-400 print:text-slate-600">
               {report.remediesAndPowerTools.karmicBalancingAdvice}
             </p>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            CHAPTER 15: 1-PAGE EXECUTIVE POCKET CARD & BLUEPRINT
+           ========================================================================= */}
+        <section className="print:page-break-inside-avoid space-y-4 pb-12">
+          <div className="p-6 rounded-3xl bg-slate-950 print:bg-white border-2 border-amber-500/60 print:border-slate-800 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-amber-500/30 pb-3 flex-wrap gap-2">
+              <div>
+                <span className="text-[10px] font-mono text-amber-400 print:text-amber-800 uppercase tracking-widest block">
+                  VEDIC SKY AI • EXECUTIVE POCKET CARD
+                </span>
+                <h3 className="text-lg font-black text-slate-100 print:text-slate-900 tracking-tight">
+                  {report.pocketCard.fullName} • Cosmic Life Cheat-Sheet
+                </h3>
+              </div>
+              <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-amber-500 text-slate-950">
+                DESK & WALLET REFERENCE
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+              <div className="p-3 rounded-2xl bg-slate-900/80 print:bg-slate-50 border border-slate-800 print:border-slate-300">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Cosmic Signature</span>
+                <p className="font-bold text-slate-100 print:text-slate-900 mt-0.5">{report.pocketCard.cosmicSignature}</p>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-slate-900/80 print:bg-slate-50 border border-slate-800 print:border-slate-300">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Soul & Career Kings</span>
+                <p className="font-bold text-amber-300 print:text-amber-900 mt-0.5">{report.pocketCard.akAndAmk}</p>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-slate-900/80 print:bg-slate-50 border border-slate-800 print:border-slate-300">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Dominant Goal & Power Zone</span>
+                <p className="font-bold text-emerald-300 print:text-emerald-900 mt-0.5">
+                  {report.pocketCard.dominantPillar} • {report.pocketCard.powerDirection}
+                </p>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-slate-900/80 print:bg-slate-50 border border-slate-800 print:border-slate-300">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Karmic Weather</span>
+                <p className="font-bold text-cyan-300 print:text-cyan-900 mt-0.5">{report.pocketCard.karmicWeatherSummary}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1 border-t border-slate-800 print:border-slate-200">
+              <div>
+                <strong className="text-amber-300 print:text-amber-900 block text-[11px]">💎 Safe Gemstones:</strong>
+                <p className="text-slate-300 print:text-slate-700">{report.pocketCard.safeGemstone}</p>
+              </div>
+              <div>
+                <strong className="text-purple-300 print:text-purple-900 block text-[11px]">📿 Daily Core Mantra:</strong>
+                <p className="text-slate-300 print:text-slate-700 font-mono font-bold">{report.pocketCard.dailyMantra}</p>
+              </div>
+              <div>
+                <strong className="text-emerald-300 print:text-emerald-900 block text-[11px]">☀️ Auspicious Timing:</strong>
+                <p className="text-slate-300 print:text-slate-700">{report.pocketCard.luckyDayAndHours}</p>
+              </div>
+            </div>
           </div>
         </section>
 

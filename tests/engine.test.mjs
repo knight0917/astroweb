@@ -5014,5 +5014,68 @@ test("Layperson Report: Ashtakavarga Purushartha Elements & Cardinal Power Zone 
   assert.ok(fd.cardinalPowerZone.explanation.includes("Cardinal Power Zone"), "Contains power zone explanation");
 });
 
+test("Layperson Report: Phase 14 Full-Spectrum 6-Module Expansion Verification", async () => {
+  const { calculateLaypersonReport } = await import("../src/engine/laypersonReportEngine.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const mauLocation = {
+    cityName: "Mau",
+    country: "India",
+    latitude: 25.94,
+    longitude: 83.56,
+    elevation: 75,
+    timezoneOffsetHours: 5.5,
+  };
+  const d1998 = new Date(Date.UTC(1998, 4, 25, 0, 15) - 5.5 * 3600 * 1000);
+  const ephem1998 = calculateVedicEphemeris(d1998, mauLocation, "Lahiri", "WholeSign", "Mean");
+  const report = calculateLaypersonReport({
+    natalEphemeris: ephem1998,
+    birthDate: d1998,
+    location: mauLocation,
+    name: "Aarav Sharma",
+    gender: "male",
+  });
+
+  // 1. Destiny Timeline
+  assert.ok(report.destinyTimeline, "destinyTimeline exists");
+  assert.ok(report.destinyTimeline.currentAge >= 25, "Current age calculated accurately");
+  assert.ok(report.destinyTimeline.pastMilestones.length >= 2, "Has past lived milestones");
+  assert.ok(report.destinyTimeline.currentMilestone.title.length > 0, "Current milestone has title");
+  assert.ok(report.destinyTimeline.futureWindows.length >= 2, "Has upcoming future windows");
+
+  // 2. Karmic Weather
+  assert.ok(report.karmicWeather, "karmicWeather exists");
+  assert.ok(report.karmicWeather.sadeSati.statusTitle.length > 0, "Sade Sati status title present");
+  assert.ok(report.karmicWeather.jupiterTransit.transitSign.length > 0, "Jupiter transit sign present");
+  assert.ok(report.karmicWeather.rahuKetuAxis.karmicEvolutionTheme.includes("Rahu"), "Rahu-Ketu theme includes Rahu");
+
+  // 3. Sacred Partner Blueprint
+  assert.ok(report.sacredPartner, "sacredPartner exists");
+  assert.ok(report.sacredPartner.spousePersona.includes("Darakaraka"), "Cites Darakaraka");
+  assert.ok(report.sacredPartner.upapadaLagna.sign.length > 0, "Upapada Lagna sign present");
+  assert.ok(report.sacredPartner.upapadaLagna.harmonyScore >= 20, "Marital harmony score populated");
+  assert.ok(report.sacredPartner.upapadaLagna.sacredRemedy.includes("Upapada"), "Has Upapada remedy");
+
+  // 4. Wealth Yogas & Indu Lagna
+  assert.ok(report.wealthYogas, "wealthYogas exists");
+  assert.ok(report.wealthYogas.induLagna.houseInD1 >= 1 && report.wealthYogas.induLagna.houseInD1 <= 12, "Indu Lagna house 1-12");
+  assert.ok(report.wealthYogas.induLagna.verdict.length > 10, "Indu Lagna verdict present");
+  assert.ok(report.wealthYogas.activeYogas.length >= 1, "At least one active wealth yoga detected");
+
+  // 5. Ishta Devata & Spiritual Liberation Path
+  assert.ok(report.ishtaDevata, "ishtaDevata exists");
+  assert.ok(report.ishtaDevata.ishtaDevataName.length > 0, "Ishta Devata archetype present");
+  assert.ok(report.ishtaDevata.sacredMantra.includes("ॐ"), "Has sacred Vedic mantra with Om");
+  assert.ok(report.ishtaDevata.spiritualPath.length > 0, "Spiritual path populated");
+
+  // 6. 1-Page Executive Pocket Card
+  assert.ok(report.pocketCard, "pocketCard exists");
+  assert.equal(report.pocketCard.fullName, "Aarav Sharma", "Pocket card name matches");
+  assert.ok(report.pocketCard.cosmicSignature.includes("Aquarius"), "Pocket card includes ascendant");
+  assert.ok(report.pocketCard.akAndAmk.includes("AK"), "Pocket card contains AK");
+  assert.ok(report.pocketCard.powerDirection.includes("Zone") || report.pocketCard.powerDirection.includes("East"), "Power direction included");
+});
+
+
 
 

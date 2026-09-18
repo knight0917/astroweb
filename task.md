@@ -83,3 +83,15 @@
 - [x] Add the Cardinal Power Zone explanatory banner above the Functional Directions grid.
 - [x] Add automated test in `tests/engine.test.mjs` verifying Purushartha element mapping and dominant pillar logic.
 - [x] Run full test suite (`npm test` 110/110 passing), verify types (`npx tsc --noEmit` passing), and commit & push to Git.
+
+## Phase 14: 6-Module Full-Spectrum Expansion of the Kundli Life Report
+- [x] Implement engine calculations in `src/engine/laypersonReportEngine.ts`:
+  - `destinyTimeline`: Past turning points, active age trigger, future golden windows.
+  - `karmicWeather`: Shani Sade Sati status/phase & end dates, Guru Gochara blessing, Rahu-Ketu nodal axis.
+  - `sacredPartner`: D9 Navamsha 7th house & Darakaraka spouse profile, Upapada Lagna harmony remedy.
+  - `wealthYogas`: Active Raja & Dhana Yogas, Indu Lagna wealth pivot.
+  - `ishtaDevata`: Jaimini Karakamsa 12th house liberation archetype, primary mantra, Dharma Devata.
+  - `pocketCard`: High-density executive cheat-sheet payload.
+- [x] Implement UI chapters in `src/components/ComprehensiveReportView.tsx` with high-impact cards, badges, and print-ready styling.
+- [x] Add unit test suite in `tests/engine.test.mjs` verifying all 6 modules.
+- [x] Run full test suite (`npm test` 111/111 passing), verify types (`npx tsc --noEmit` passing), and commit & push to Git.
