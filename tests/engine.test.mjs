@@ -4961,4 +4961,58 @@ test("Layperson Report: Observable Cosmic Essence & Nakshatra Psychology Engine 
   assert.ok(eb1999.emotionalEngine.signatureSuperpower.includes("Noble Patron"), "Cites Noble Patron superpower");
 });
 
+test("Layperson Report: Ashtakavarga Purushartha Elements & Cardinal Power Zone (Phase 13)", async () => {
+  const { calculateLaypersonReport } = await import("../src/engine/laypersonReportEngine.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const mauLocation = {
+    cityName: "Mau",
+    country: "India",
+    latitude: 25.94,
+    longitude: 83.56,
+    elevation: 75,
+    timezoneOffsetHours: 5.5,
+  };
+  const d1998 = new Date(Date.UTC(1998, 4, 25, 0, 15) - 5.5 * 3600 * 1000);
+  const ephem1998 = calculateVedicEphemeris(d1998, mauLocation, "Lahiri", "WholeSign", "Mean");
+  const report = calculateLaypersonReport({
+    natalEphemeris: ephem1998,
+    birthDate: d1998,
+    location: mauLocation,
+    name: "Aarav 1998",
+    gender: "male",
+  });
+
+  const p = report.ashtakavarga.purusharthas;
+  assert.equal(p.dharma.element, "Fire", "Dharma is Fire element");
+  assert.equal(p.dharma.elementSanskrit, "Agni (अग्नि)", "Dharma Sanskrit element");
+  assert.deepEqual(p.dharma.houses, [1, 5, 9], "Dharma trikona houses");
+
+  assert.equal(p.artha.element, "Earth", "Artha is Earth element");
+  assert.equal(p.artha.elementSanskrit, "Prithvi (पृथ्वी)", "Artha Sanskrit element");
+
+  assert.equal(p.kama.element, "Air", "Kama is Air element");
+  assert.equal(p.kama.elementSanskrit, "Vayu (वायु)", "Kama Sanskrit element");
+
+  assert.equal(p.moksha.element, "Water", "Moksha is Water element");
+  assert.equal(p.moksha.elementSanskrit, "Jala (जल)", "Moksha Sanskrit element");
+
+  // Dominant pillar validation
+  assert.ok(p.dominantPillar, "Dominant pillar must exist");
+  assert.equal(p.dominantPillar.id, "dharma", "Dharma is dominant pillar in 1998 chart");
+  assert.equal(p.dominantPillar.score, 92, "Dharma score is 92");
+  assert.equal(p.dominantPillar.percentage, 27, "Dharma percentage is 27%");
+  assert.ok(p.dominantPillar.coreMeaning.includes("meaning in everything you do"), "Contains meaning");
+  assert.ok(p.dominantPillar.lifeApplication.length > 20, "Contains application");
+  assert.ok(p.dominantPillar.pitfallToWatch.length > 20, "Contains pitfall guidance");
+
+  // Cardinal Power Zone validation
+  const fd = report.ashtakavarga.functionalDirections;
+  assert.ok(fd.cardinalPowerZone, "Cardinal power zone exists when multiple activities converge");
+  assert.equal(fd.cardinalPowerZone.direction, "East", "East is cardinal power zone");
+  assert.ok(fd.cardinalPowerZone.activitiesCount >= 3, "At least 3 activities converge on East");
+  assert.ok(fd.cardinalPowerZone.explanation.includes("Cardinal Power Zone"), "Contains power zone explanation");
+});
+
+
 

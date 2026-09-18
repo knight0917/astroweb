@@ -765,7 +765,7 @@ export default function ComprehensiveReportView() {
                 {report.ashtakavarga.purusharthas.dharma.score}
               </span>
               <span className="text-[10px] text-slate-400 print:text-slate-600 block">
-                {report.ashtakavarga.purusharthas.dharma.percentage}% • East
+                {report.ashtakavarga.purusharthas.dharma.percentage}% • {report.ashtakavarga.purusharthas.dharma.element} ({report.ashtakavarga.purusharthas.dharma.elementSanskrit})
               </span>
             </div>
             <div className="p-4 rounded-2xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 print:border-slate-300 space-y-1 text-center">
@@ -776,7 +776,7 @@ export default function ComprehensiveReportView() {
                 {report.ashtakavarga.purusharthas.artha.score}
               </span>
               <span className="text-[10px] text-slate-400 print:text-slate-600 block">
-                {report.ashtakavarga.purusharthas.artha.percentage}% • South
+                {report.ashtakavarga.purusharthas.artha.percentage}% • {report.ashtakavarga.purusharthas.artha.element} ({report.ashtakavarga.purusharthas.artha.elementSanskrit})
               </span>
             </div>
             <div className="p-4 rounded-2xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 print:border-slate-300 space-y-1 text-center">
@@ -787,7 +787,7 @@ export default function ComprehensiveReportView() {
                 {report.ashtakavarga.purusharthas.kama.score}
               </span>
               <span className="text-[10px] text-slate-400 print:text-slate-600 block">
-                {report.ashtakavarga.purusharthas.kama.percentage}% • West
+                {report.ashtakavarga.purusharthas.kama.percentage}% • {report.ashtakavarga.purusharthas.kama.element} ({report.ashtakavarga.purusharthas.kama.elementSanskrit})
               </span>
             </div>
             <div className="p-4 rounded-2xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 print:border-slate-300 space-y-1 text-center">
@@ -798,17 +798,73 @@ export default function ComprehensiveReportView() {
                 {report.ashtakavarga.purusharthas.moksha.score}
               </span>
               <span className="text-[10px] text-slate-400 print:text-slate-600 block">
-                {report.ashtakavarga.purusharthas.moksha.percentage}% • North
+                {report.ashtakavarga.purusharthas.moksha.percentage}% • {report.ashtakavarga.purusharthas.moksha.element} ({report.ashtakavarga.purusharthas.moksha.elementSanskrit})
               </span>
             </div>
           </div>
 
+          {/* Dominant Life Pillar & Shastric Clarification Card */}
+          {report.ashtakavarga.purusharthas.dominantPillar && (
+            <div className="p-4 rounded-2xl bg-amber-500/10 print:bg-amber-50/70 border border-amber-500/30 print:border-amber-200 space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🌟</span>
+                  <span className="text-xs sm:text-sm font-bold text-amber-300 print:text-amber-900">
+                    Dominant Life Pillar: {report.ashtakavarga.purusharthas.dominantPillar.title} ({report.ashtakavarga.purusharthas.dominantPillar.score} pts • {report.ashtakavarga.purusharthas.dominantPillar.percentage}%)
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-400/20 text-amber-300 print:bg-amber-100 print:text-amber-800 border border-amber-500/30">
+                  {report.ashtakavarga.purusharthas.dominantPillar.element} Trikona (Houses {report.ashtakavarga.purusharthas.dominantPillar.houses.join(", ")})
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 print:text-slate-700 leading-relaxed">
+                {report.ashtakavarga.purusharthas.dominantPillar.coreMeaning}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <div className="p-2.5 rounded-xl bg-slate-900/40 print:bg-white/80 border border-slate-800/80 print:border-amber-200/60 text-[11px] text-slate-300 print:text-slate-700">
+                  <strong className="text-amber-300 print:text-amber-900 block mb-0.5">🎯 How to Channel in Real Life:</strong>
+                  {report.ashtakavarga.purusharthas.dominantPillar.lifeApplication}
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-900/40 print:bg-white/80 border border-slate-800/80 print:border-amber-200/60 text-[11px] text-slate-300 print:text-slate-700">
+                  <strong className="text-rose-300 print:text-rose-900 block mb-0.5">⚠️ Pitfall to Guard Against:</strong>
+                  {report.ashtakavarga.purusharthas.dominantPillar.pitfallToWatch}
+                </div>
+              </div>
+              <div className="pt-2 border-t border-amber-500/20 text-[10px] text-amber-200/80 print:text-amber-900/80 flex items-start gap-1.5 italic">
+                <span className="mt-0.5">💡</span>
+                <span>
+                  <strong>Astrological Clarification:</strong> The 4 Purusharthas (Dharma, Artha, Kama, Moksha) represent your internal soul energy allocation across universal elemental trines (Fire, Earth, Air, Water). They are macro life pillars, not physical furniture or facing directions.
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Functional Life Directions Mapping */}
           <div className="space-y-3">
-            <h3 className="font-bold text-sm text-slate-200 print:text-slate-900 flex items-center gap-2">
-              <span>🧭</span>
-              <span>Where to Face & Place Key Life Activities (Functional Directions)</span>
-            </h3>
+            <div className="space-y-1">
+              <h3 className="font-bold text-sm text-slate-200 print:text-slate-900 flex items-center gap-2">
+                <span>🧭</span>
+                <span>Where to Face & Place Key Life Activities (Functional Directions)</span>
+              </h3>
+              <p className="text-[11px] text-slate-400 print:text-slate-600">
+                Calculated from individual planetary bindus (Bhinnashtakavarga) across directional quadrants to optimize your physical living and working spaces.
+              </p>
+            </div>
+
+            {/* Cardinal Power Zone Callout if activities converge */}
+            {report.ashtakavarga.functionalDirections.cardinalPowerZone && (
+              <div className="p-3 rounded-xl bg-indigo-950/40 print:bg-indigo-50/80 border border-indigo-500/30 print:border-indigo-200 flex items-start gap-2.5">
+                <span className="text-base mt-0.5">⚡</span>
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-indigo-300 print:text-indigo-900 block">
+                    Personal Cardinal Power Zone: {report.ashtakavarga.functionalDirections.cardinalPowerZone.direction} ({report.ashtakavarga.functionalDirections.cardinalPowerZone.activitiesCount} Key Activities Converge)
+                  </span>
+                  <p className="text-[11px] text-slate-300 print:text-slate-700 leading-relaxed">
+                    {report.ashtakavarga.functionalDirections.cardinalPowerZone.explanation}
+                  </p>
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* Worship */}
               <div className="p-3.5 rounded-2xl bg-slate-900/40 print:bg-slate-50 border border-slate-800 print:border-slate-300 flex items-start gap-3">

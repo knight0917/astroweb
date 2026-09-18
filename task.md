@@ -74,3 +74,12 @@
 - [x] Enhance UI in `src/components/ComprehensiveReportView.tsx` with dedicated micro-cards for Outer Demeanor, Emotional Engine, Conscious Will, and Life Arena.
 - [x] Add automated test in `tests/engine.test.mjs` verifying observable trait generation for Bharani and Uttara Phalguni.
 - [x] Run full test verification (`npm test` 109/109 passing and `npx tsc --noEmit` passing) and push to Git.
+
+## Phase 13: Ashtakavarga Purushartha Disambiguation & Cardinal Power Zone UX
+- [x] Extend `ashtakavarga.purusharthas` in `src/engine/laypersonReportEngine.ts` with classical elements (`Fire/Agni`, `Earth/Prithvi`, etc.) and a deep `dominantPillar` psychological analysis.
+- [x] Add `dominantDirectionSummary` in `functionalDirections` explaining compound Cardinal Power Zones (e.g. East for Sun, Saturn, and Mars).
+- [x] Update Chapter 04 in `src/components/ComprehensiveReportView.tsx` to display elements instead of confusing compass directions on the 4 Purushartha cards.
+- [x] Add the "Dominant Life Pillar: Dharma (Purpose & Integrity)" card explaining the real-world impact of scoring 92 points (27%).
+- [x] Add the Cardinal Power Zone explanatory banner above the Functional Directions grid.
+- [x] Add automated test in `tests/engine.test.mjs` verifying Purushartha element mapping and dominant pillar logic.
+- [x] Run full test suite (`npm test` 110/110 passing), verify types (`npx tsc --noEmit` passing), and commit & push to Git.

@@ -125,10 +125,22 @@ export interface LaypersonReport {
       meaning: string;
     }[];
     purusharthas: {
-      dharma: { score: number; percentage: number; verdict: string };
-      artha: { score: number; percentage: number; verdict: string };
-      kama: { score: number; percentage: number; verdict: string };
-      moksha: { score: number; percentage: number; verdict: string };
+      dharma: { score: number; percentage: number; element: string; elementSanskrit: string; houses: number[]; verdict: string };
+      artha: { score: number; percentage: number; element: string; elementSanskrit: string; houses: number[]; verdict: string };
+      kama: { score: number; percentage: number; element: string; elementSanskrit: string; houses: number[]; verdict: string };
+      moksha: { score: number; percentage: number; element: string; elementSanskrit: string; houses: number[]; verdict: string };
+      dominantPillar: {
+        id: "dharma" | "artha" | "kama" | "moksha";
+        title: string;
+        score: number;
+        percentage: number;
+        element: string;
+        elementSanskrit: string;
+        houses: number[];
+        coreMeaning: string;
+        lifeApplication: string;
+        pitfallToWatch: string;
+      };
     };
     functionalDirections: {
       worship: { direction: string; planet: string; bindus: number; activity: string; guidance: string };
@@ -138,6 +150,12 @@ export interface LaypersonReport {
       fitness: { direction: string; planet: string; bindus: number; activity: string; guidance: string };
       artsAndLove: { direction: string; planet: string; bindus: number; activity: string; guidance: string };
       peace: { direction: string; planet: string; bindus: number; activity: string; guidance: string };
+      cardinalPowerZone?: {
+        direction: string;
+        activitiesCount: number;
+        activities: string[];
+        explanation: string;
+      };
     };
   };
 
@@ -975,26 +993,120 @@ Your conscious life mission and outer vitality are powered by the ${sunRashi} Su
   const west = dirs.find((d) => d.direction === "West")?.bindus || 80;
   const north = dirs.find((d) => d.direction === "North")?.bindus || 80;
 
+  const pillarList = [
+    {
+      id: "dharma" as const,
+      title: "Dharma (Purpose & Moral Authority)",
+      score: east,
+      percentage: Math.round((east / 337) * 100),
+      element: "Fire",
+      elementSanskrit: "Agni (अग्नि)",
+      houses: [1, 5, 9],
+      verdict: east >= 85 ? "High moral purpose and natural clarity of self-direction." : "Balanced ethical focus.",
+      coreMeaning:
+        `With ${east} points (${Math.round((east / 337) * 100)}% of your chart's energy), your soul is wired for purpose and truth above pure financial expediency. Governing your physical self (House 1), creative intellect and good karma (House 5), and higher wisdom and fortune (House 9), this pillar wires you to need meaning in everything you do. Hollow or ethically questionable tasks cause swift internal moral burnout.`,
+      lifeApplication:
+        "Lead through integrity, mentorship, and principled problem-solving. People naturally sense your internal moral compass and seek your counsel in times of confusion. Ensure career pursuits align with your core values.",
+      pitfallToWatch:
+        "Avoid becoming disillusioned or overly critical when colleagues or environments operate purely on transactional shortcuts; protect your energy without carrying the weight of reforming everything alone.",
+    },
+    {
+      id: "artha" as const,
+      title: "Artha (Wealth & Practical Mastery)",
+      score: south,
+      percentage: Math.round((south / 337) * 100),
+      element: "Earth",
+      elementSanskrit: "Prithvi (पृथ्वी)",
+      houses: [2, 6, 10],
+      verdict: south >= 85 ? "Strong material endurance and high productivity stamina." : "Steady financial consistency.",
+      coreMeaning:
+        `With ${south} points (${Math.round((south / 337) * 100)}% of your chart's energy), your life energy is anchored in tangible achievement, material security, and disciplined professional output. Governing earned income (House 2), daily problem-solving stamina (House 6), and career status (House 10), this pillar equips you with tremendous endurance to build lasting wealth and durable structures.`,
+      lifeApplication:
+        "Focus on long-term compound growth, high-standard execution, and systematizing operations. Your practical pragmatism is your greatest asset in competitive markets.",
+      pitfallToWatch:
+        "Do not reduce your personal happiness or identity solely to balance sheets or professional rankings; cultivate emotional and spiritual replenishment.",
+    },
+    {
+      id: "kama" as const,
+      title: "Kama (Ambition, Networks & Alliances)",
+      score: west,
+      percentage: Math.round((west / 337) * 100),
+      element: "Air",
+      elementSanskrit: "Vayu (वायु)",
+      houses: [3, 7, 11],
+      verdict: west >= 85 ? "Powerful social ambition, networking reach, and strong life desires." : "Balanced social interactions.",
+      coreMeaning:
+        `With ${west} points (${Math.round((west / 337) * 100)}% of your chart's energy), your dominant energy circulates through social connections, collective goals, and collaborative partnerships. Governing initiative and communication (House 3), relational alliances and marriage (House 7), and broad social networks and large gains (House 11), you thrive when exchanging ideas and forging alliances.`,
+      lifeApplication:
+        "Leverage community engagement, strategic deal-making, and collective platforms. Your ability to connect people and inspire shared enthusiasm drives your biggest breakthroughs.",
+      pitfallToWatch:
+        "Guard against spreading yourself thin across too many casual associations or pursuing desires that offer short-term excitement but lack long-term substance.",
+    },
+    {
+      id: "moksha" as const,
+      title: "Moksha (Peace, Intuition & Inner Liberation)",
+      score: north,
+      percentage: Math.round((north / 337) * 100),
+      element: "Water",
+      elementSanskrit: "Jala (जल)",
+      houses: [4, 8, 12],
+      verdict: north >= 85 ? "Deep intuitive faculties, spiritual thirst, and restorative inner calm." : "Peaceful reflective balance.",
+      coreMeaning:
+        `With ${north} points (${Math.round((north / 337) * 100)}% of your chart's energy), your life energy is centered in inner peace, psychological intuition, and spiritual freedom. Governing domestic happiness (House 4), psychological depth and transformation (House 8), and solitude, rest, and transcendence (House 12), you require restorative quietude to operate at your peak.`,
+      lifeApplication:
+        "Prioritize sacred spaces, emotional equilibrium, and contemplative retreats. Trust your intuitive hunches; your inner emotional radar often anticipates outcomes before logic catches up.",
+      pitfallToWatch:
+        "Avoid retreating into emotional withdrawal or avoidance when practical life requires decisive, assertively grounded action.",
+    },
+  ];
+
+  const sortedPillars = [...pillarList].sort((a, b) => b.score - a.score);
+  const dominantPillar = sortedPillars[0];
+
   const purusharthas = {
     dharma: {
       score: east,
       percentage: Math.round((east / 337) * 100),
+      element: "Fire",
+      elementSanskrit: "Agni (अग्नि)",
+      houses: [1, 5, 9],
       verdict: east >= 85 ? "High moral purpose and natural clarity of self-direction." : "Balanced ethical focus.",
     },
     artha: {
       score: south,
       percentage: Math.round((south / 337) * 100),
+      element: "Earth",
+      elementSanskrit: "Prithvi (पृथ्वी)",
+      houses: [2, 6, 10],
       verdict: south >= 85 ? "Strong material endurance and high productivity stamina." : "Steady financial consistency.",
     },
     kama: {
       score: west,
       percentage: Math.round((west / 337) * 100),
+      element: "Air",
+      elementSanskrit: "Vayu (वायु)",
+      houses: [3, 7, 11],
       verdict: west >= 85 ? "Powerful social ambition, networking reach, and strong life desires." : "Balanced social interactions.",
     },
     moksha: {
       score: north,
       percentage: Math.round((north / 337) * 100),
+      element: "Water",
+      elementSanskrit: "Jala (जल)",
+      houses: [4, 8, 12],
       verdict: north >= 85 ? "Deep intuitive faculties, spiritual thirst, and restorative inner calm." : "Peaceful reflective balance.",
+    },
+    dominantPillar: {
+      id: dominantPillar.id,
+      title: dominantPillar.title,
+      score: dominantPillar.score,
+      percentage: dominantPillar.percentage,
+      element: dominantPillar.element,
+      elementSanskrit: dominantPillar.elementSanskrit,
+      houses: dominantPillar.houses,
+      coreMeaning: dominantPillar.coreMeaning,
+      lifeApplication: dominantPillar.lifeApplication,
+      pitfallToWatch: dominantPillar.pitfallToWatch,
     },
   };
 
@@ -1013,6 +1125,43 @@ Your conscious life mission and outer vitality are powered by the ${sunRashi} Su
   const marDir = getPlanetBestDir("Mars", "South");
   const venDir = getPlanetBestDir("Venus", "North");
   const mooDir = getPlanetBestDir("Moon", "North");
+
+  const activitiesList = [
+    { label: "Worship & Meditation", dir: jupDir.dir, planet: "Jupiter" },
+    { label: "Work Desk & Routine", dir: satDir.dir, planet: "Saturn" },
+    { label: "Authority & Leadership", dir: sunDir.dir, planet: "Sun" },
+    { label: "Business & Contracts", dir: merDir.dir, planet: "Mercury" },
+    { label: "Fitness & Active Energy", dir: marDir.dir, planet: "Mars" },
+    { label: "Arts, Aesthetics & Harmony", dir: venDir.dir, planet: "Venus" },
+    { label: "Rest & Mental Recharging", dir: mooDir.dir, planet: "Moon" },
+  ];
+
+  const dirCounts: Record<string, { count: number; activities: string[] }> = {};
+  for (const act of activitiesList) {
+    if (!dirCounts[act.dir]) {
+      dirCounts[act.dir] = { count: 0, activities: [] };
+    }
+    dirCounts[act.dir].count++;
+    dirCounts[act.dir].activities.push(`${act.label} (${act.planet})`);
+  }
+
+  let topDir = "East";
+  let maxCount = 0;
+  let topActs: string[] = [];
+  for (const [d, info] of Object.entries(dirCounts)) {
+    if (info.count > maxCount) {
+      maxCount = info.count;
+      topDir = d;
+      topActs = info.activities;
+    }
+  }
+
+  const cardinalPowerZone = maxCount >= 2 ? {
+    direction: topDir,
+    activitiesCount: maxCount,
+    activities: topActs,
+    explanation: `When multiple planetary recommendations converge on the ${topDir} (${maxCount} activities: ${topActs.join(", ")}), it reveals that ${topDir} is your chart's personal Cardinal Power Zone. Facing ${topDir} while working or making decisions creates a compound synergy, aligning executive leadership, disciplined routine, and energetic focus in a single power seat.`,
+  } : undefined;
 
   const functionalDirections = {
     worship: {
@@ -1064,6 +1213,7 @@ Your conscious life mission and outer vitality are powered by the ${sunRashi} Su
       activity: "Mental Relaxation, Dining & Hydration Recharging",
       guidance: `Unwind, read, and take restorative breaks in the ${mooDir.dir}, where the Moon brings soothing mental tranquility (${mooDir.bindus} bindus).`,
     },
+    cardinalPowerZone,
   };
 
   // 5. Shadbala Manifestation Horsepower
