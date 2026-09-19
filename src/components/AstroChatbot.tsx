@@ -6,7 +6,9 @@ import { buildAstroDossier, detectConsultationIntent, AstroConsultationIntent } 
 import { buildChatSystemInstruction, extractUserConfirmedFacts } from "../engine/chatPrompt";
 import { calculateVedicEphemeris } from "../engine/ephemeris";
 import { calculateVimshottariDasha } from "../engine/dasha";
-import { calculateJaiminiKarakas } from "../engine/jaimini";
+import { calculateJaiminiKarakas, analyzeKarakamsha } from "../engine/jaimini";
+import { calculateGochar } from "../engine/gochar";
+import { evaluateProgenyMaster } from "../engine/progenyMaster";
 import {
   calculateInduLagna,
   calculatePlanetaryAgeActivations,
@@ -91,6 +93,11 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
         icon: "⭐",
         title: "Nakshatra Activation Year",
         prompt: "Which of my natal Nakshatras (Moon, Lagna, 10th Lord, AK) is actively awakened for my current age and what turning points will it trigger according to classical Nadi Shastra?",
+      },
+      {
+        icon: "⚡",
+        title: "Gochara Vedha Transit Shields",
+        prompt: "Are any of my favorable planetary transits currently blocked by Gochara Vedha or are inauspicious transits shielded by Vipareeta Vedha according to Phaladeepika Ch. 26?",
       },
     ],
   },
@@ -260,6 +267,11 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
         icon: "👶",
         title: "Progeny & Child Prospects",
         prompt: "Analyzing my 5th house and D7 Saptamsha, what are the indications for children, parenting, and family lineage?",
+      },
+      {
+        icon: "🌱",
+        title: "Beeja / Kshetra Sphuta & Progeny Vitality",
+        prompt: "What is my Beeja / Kshetra Sphuta fecundity point, its odd/even Rashi and Navamsha status, and Saptamsha (D-7) Manduka Gati progression according to BPHS Ch. 12?",
       },
       {
         icon: "💡",
@@ -755,6 +767,77 @@ ${nakAct.executiveSynthesis}
 
 #### 🕉️ **Prescribed Upaya (Remedy):**
 ${nakAct.masterRemedyRecommendation}
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
+  // 13A. Classical Beeja & Kshetra Sphuta (Male/Female Fecundity Points)
+  if (
+    /^(what is my beeja sphuta|what is my kshetra sphuta|my beeja sphuta|my kshetra sphuta|beeja sphuta|kshetra sphuta|fecundity point|fertility point|fertility score|progeny score)\??$/i.test(q) ||
+    (q.includes("sphuta") && (q.includes("beeja") || q.includes("kshetra") || q.includes("progeny") || q.includes("fertility")))
+  ) {
+    const prog = evaluateProgenyMaster(natalEphem.planets, natalEphem.ascendant, gender);
+    const sphuta = prog.fecundity;
+    return `### 👶 **Your Classical Progeny Fecundity & Sphuta Blueprint (संतान निर्णय):**
+- **Native Evaluated As:** **${gender.toUpperCase()}** (${gender === "male" ? "Beeja Sphuta — बीज स्फुट" : "Kshetra Sphuta — क्षेत्र स्फुट"})
+- **Sphuta Longitude:** **${sphuta.sphutaLongitude.toFixed(2)}°** in **${sphuta.rashiName}** (${sphuta.isOddRashi ? "Odd Sign / अयुग्म" : "Even Sign / युग्म"})
+- **Navamsha Sign:** **${sphuta.navamshaRashiName}** (${sphuta.isOddNavamsha ? "Odd Navamsha / अयुग्म" : "Even Navamsha / युग्म"})
+- **Fecundity Status:** **${sphuta.verdict}** (${sphuta.fecundityScore}% Score)
+- **Classical Rule (BPHS Ch. 12):** ${sphuta.classicalRule}
+${sphuta.afflictions.length > 0 ? `- **Malefic Orbs (≤8°):** ⚠️ ${sphuta.afflictions.join(", ")}` : "- **Malefic Afflictions:** None (Pure Sprouting Potential)"}
+- **Saptamsha (D-7) Lagna:** **${prog.saptamshaLagna.rashiName}** (${prog.saptamshaLagna.isOdd ? "Odd Lagna — Manduka Gati Direct 5th, 7th, 9th, 11th" : "Even Lagna — Manduka Gati Reverse 9th, 7th, 5th, 3rd"})
+- **Recommended Remedy:** **${prog.remedies[0]?.mantra || "Om Devakisuta Govinda Vasudeva Jagatpate"}** (${prog.remedies[0]?.title || "Santana Gopala"})
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
+  // 13B. Classical Gochara Vedha (Transit Obstruction & Vipareeta Shields)
+  if (
+    /^(is my transit blocked|vedha status|gochara vedha|what is my vedha|transit obstruction|gochar vedha)\??$/i.test(q) ||
+    (q.includes("vedha") && (q.includes("transit") || q.includes("gochara") || q.includes("status") || q.includes("blocked")))
+  ) {
+    const gochar = calculateGochar(natalEphem, transitEphem);
+    const blockedList = gochar.planetTransits.filter((p) => p.isVedhaActive);
+    const shieldedList = gochar.planetTransits.filter((p) => p.isVipareetaVedhaActive);
+
+    const blockedText = blockedList.length > 0
+      ? blockedList.map((p) => `- ⚠️ **${p.planet}** in H${p.transitHouse}: Blocked by **${p.obstructingPlanet}** in H${p.obstructingHouse}`).join("\n")
+      : "- ✅ None — Benefic transits are flowing freely without Vedha locks.";
+
+    const shieldedText = shieldedList.length > 0
+      ? shieldedList.map((p) => `- 🛡️ **${p.planet}** in H${p.transitHouse}: Inauspicious transit neutralized/shielded by **${p.obstructingPlanet}** in H${p.obstructingHouse}`).join("\n")
+      : "- No active Vipareeta shields operating currently.";
+
+    return `### ⚡ **Your Real-Time Gochara Vedha (गोचर वेध) Transit Telemetry:**
+- **Classical Reference:** *Phaladeepika* Ch. 26 & *Brihat Samhita* Ch. 104
+- **Father-Son Immunity:** Active (*Sun ↮ Saturn and Moon ↮ Mercury do NOT obstruct each other*)
+
+#### ⚠️ **Auspicious Transits Blocked by Vedha:**
+${blockedText}
+
+#### 🛡️ **Inauspicious Transits Shielded (Vipareeta Vedha):**
+${shieldedText}
+
+#### 💡 **Summary Verdict:**
+${gochar.summary}
+
+*⚡ Instant Classical Computation (0ms)*`;
+  }
+
+  // 13C. Personal Ishta Devata & Karakamsha Liberation Archetype
+  if (
+    /^(who is my ishta devata|what is my ishta devata|my ishta devata|ishta devata|ishta devta|dharma devata)\??$/i.test(q) ||
+    (q.includes("ishta") && (q.includes("devata") || q.includes("devta") || q.includes("god") || q.includes("deity")))
+  ) {
+    const karakamsha = analyzeKarakamsha(natalEphem);
+    return `### 🕉️ **Your Soul's Guardian Deity (Ishta Devata — इष्ट देवता):**
+- **Classical Authority:** Maharshi Jaimini (*Upadesha Sutras* Ch. 1, Pada 2) & Maharshi Parashara (*BPHS* Ch. 33)
+- **Karakamsha Lagna (KL):** **${karakamsha.karakamshaRashi.englishName}** (Navamsha sign of Atmakaraka ${karakamsha.atmakaraka.planetName})
+- **12th House from Karakamsha (Moksha Sthana):** **${karakamsha.twelfthFromKarakamsha.rashi.englishName}**
+- **Deity Archetype:** **${karakamsha.ishtaDevata.deity}** (Governed by planet **${karakamsha.ishtaDevata.graha}**)
+- **Spiritual Signification:** ${karakamsha.twelfthFromKarakamsha.spiritualSignification}
+- **Deity Energy:** ${karakamsha.ishtaDevata.description}
+- **Dharma Devata:** **${karakamsha.dharmaDevata.deity}** (Governed by 9th from Karakamsha: ${karakamsha.dharmaDevata.graha})
 
 *⚡ Instant Classical Computation (0ms)*`;
   }

@@ -5287,3 +5287,47 @@ test("Phase 16: Classical Progeny, Children & Saptamsha (D-7) Master Suite Verif
   assert.ok(sysInst.includes("Santana Gopala"), "Rule 0T cites Santana Gopala");
 });
 
+test("Phase 17: Chatbot Full-Spectrum Intent Slicing & Parity Verification", async () => {
+  const { detectConsultationIntent, buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 1. Progeny & Children Intent Detection
+  assert.strictEqual(detectConsultationIntent("When will I have a child?"), "progeny_children");
+  assert.strictEqual(detectConsultationIntent("What is my Beeja Sphuta and fertility status?"), "progeny_children");
+  assert.strictEqual(detectConsultationIntent("Are there any complications in pregnancy according to Saptamsha D7?"), "progeny_children");
+  assert.strictEqual(detectConsultationIntent("Examining my 5th house", "education"), "progeny_children");
+  assert.strictEqual(detectConsultationIntent("Will we have a son or daughter?"), "progeny_children");
+
+  // 2. Setup ephemeris
+  const loc = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natal = calculateVedicEphemeris(new Date("1995-10-15T06:30:00.000Z"), loc, "Lahiri", "WholeSign", "Mean");
+  const transit = calculateVedicEphemeris(new Date(), loc, "Lahiri", "WholeSign", "Mean");
+
+  // 3. Verify Progeny Sliced Dossier Content
+  const progenyDossier = buildAstroDossier(natal, transit, new Date(), "male", undefined, "progeny_children");
+  assert.ok(progenyDossier.includes("78. PROGENY, CHILDREN & SAPTAMSHA (D-7) SANTANA NIRNAYA DOSSIER:"), "Progeny slice includes Section 78");
+  assert.ok(progenyDossier.includes("74. BPHS KARMIC CURSES (CH. 83) & ARISHTA JANMA SHĀNTIS"), "Progeny slice includes Section 74");
+  assert.ok(progenyDossier.includes("20. K.N. RAO & NAVAL SINGH PLANETS & EDUCATION DOSSIER:"), "Progeny slice includes Section 20");
+  assert.ok(progenyDossier.includes("66. ADHANA KUNDALI (CONCEPTION CHART)"), "Progeny slice includes Section 66");
+  assert.ok(progenyDossier.includes("17. K.N. RAO DOUBLE TRANSIT (DTP)"), "Progeny slice includes Section 17");
+
+  // 4. Verify Career Sliced Dossier Enrichment (Phase 15 & 16 Parity)
+  const careerDossier = buildAstroDossier(natal, transit, new Date(), "male", undefined, "career");
+  assert.ok(careerDossier.includes("75. CLASSICAL GOCHARA VEDHA"), "Career slice includes Section 75 Gochara Vedha");
+  assert.ok(careerDossier.includes("76. ACHARYA VISHNUKRIPA RAHU & KETU CONJUNCTIONS MASTER DOSSIER:"), "Career slice includes Section 76 Rahu Conjunctions");
+  assert.ok(careerDossier.includes("77. KUNDLI LIFE REPORT COMPLETE SYNTHESIS"), "Career slice includes Section 77 Life Report Blueprint");
+
+  // 5. Verify Marriage Sliced Dossier Enrichment (Phase 15 & 16 Parity)
+  const marriageDossier = buildAstroDossier(natal, transit, new Date(), "female", undefined, "marriage");
+  assert.ok(marriageDossier.includes("74. BPHS KARMIC CURSES"), "Marriage slice includes Section 74 Curses");
+  assert.ok(marriageDossier.includes("75. CLASSICAL GOCHARA VEDHA"), "Marriage slice includes Section 75 Vedha");
+  assert.ok(marriageDossier.includes("76. ACHARYA VISHNUKRIPA RAHU & KETU CONJUNCTIONS MASTER DOSSIER:"), "Marriage slice includes Section 76 Rahu Conjunctions");
+
+  // 6. Verify Remedies & Health Sliced Dossier Enrichment
+  const remediesDossier = buildAstroDossier(natal, transit, new Date(), "male", undefined, "remedies_health");
+  assert.ok(remediesDossier.includes("74. BPHS KARMIC CURSES (CH. 83) & ARISHTA JANMA SHĀNTIS"), "Remedies slice includes Section 74 Shantis");
+  assert.ok(remediesDossier.includes("75. CLASSICAL GOCHARA VEDHA"), "Remedies slice includes Section 75 Vedha Shields");
+  assert.ok(remediesDossier.includes("76. ACHARYA VISHNUKRIPA RAHU & KETU CONJUNCTIONS MASTER DOSSIER:"), "Remedies slice includes Section 76 Rahu Remedies");
+});
+
+

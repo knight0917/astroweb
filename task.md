@@ -128,3 +128,20 @@
 - [x] Verification & Release:
   - [x] Add unit test suite in `tests/engine.test.mjs` verifying Beeja/Kshetra Sphuta, D-7 Manduka Gati progression, gender classification, and chatbot parity.
   - [x] Run full test suite (`npm test`), verify types (`npx tsc --noEmit`), and push to Git.
+
+## Phase 17: Chatbot Full-Spectrum Intent Synchronization & Instant Interceptor Expansion
+- [x] Upgrade `src/engine/chatContext.ts`:
+  - [x] Extend `AstroConsultationIntent` with `"progeny_children"`.
+  - [x] Enhance `detectConsultationIntent` with progeny, child, fertility, and Santana keywords.
+  - [x] Implement `"progeny_children"` slice bundling Sections 78, 74, 20, 66, 17, 71.
+  - [x] Enrich `"career"` slice with Section 75 (Vedha) and Section 76 (Rahu Conjunctions).
+  - [x] Enrich `"marriage"` slice with Section 74 (Curses), Section 75 (Vedha), Section 76 (Rahu Conjunctions).
+  - [x] Enrich `"remedies_health"` slice with Section 74 (Shantis), Section 75 (Vedha Shields), Section 76 (Rahu Remedies).
+- [x] Expand `src/components/AstroChatbot.tsx`:
+  - [x] Add Beeja / Kshetra Sphuta instant calculation to `tryInstantEngineAnswer` (0ms, 0 tokens).
+  - [x] Add Gochara Vedha status instant calculation to `tryInstantEngineAnswer` (0ms, 0 tokens).
+  - [x] Add Ishta Devata & Karakamsha instant calculation to `tryInstantEngineAnswer` (0ms, 0 tokens).
+  - [x] Add quick prompts for Beeja/Kshetra and Gochara Vedha in category decks.
+- [x] Verification & Release:
+  - [x] Add unit test suite in `tests/engine.test.mjs` verifying intent detection and slice contents.
+  - [x] Run full test suite (`npm test`), verify types (`npx tsc --noEmit`), and commit & push to Git.

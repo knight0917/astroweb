@@ -98,6 +98,7 @@ export type AstroConsultationIntent =
   | "all"
   | "career"
   | "marriage"
+  | "progeny_children"
   | "name_phonetics"
   | "btr_verification"
   | "panchang_muhurta"
@@ -106,6 +107,12 @@ export type AstroConsultationIntent =
 export function detectConsultationIntent(query: string, activeCategory?: string): AstroConsultationIntent {
   const q = query.toLowerCase();
 
+  if (
+    activeCategory === "education" ||
+    /\b(progeny|child|children|kid|kids|son|daughter|baby|babies|pregnancy|pregnant|conceive|conception|fertility|fecundity|santana|saptamsha|d7|d-7|beeja|kshetra|miscarriage|garbha|putra|kanya|adoption)\b/.test(q)
+  ) {
+    return "progeny_children";
+  }
   if (activeCategory === "career" || /\b(career|job|business|profession|promotion|salary|wealth|money|finance|work|income|success|interview|company|startup|boss|d10|dasamsa)\b/.test(q)) {
     return "career";
   }
@@ -2042,7 +2049,16 @@ export function buildAstroDossier(
       rtnSummary,
       "",
       "#### 🌟 71. 27 NAKSHATRA ACTIVATION YEARS & COSMIC AWAKENING DOSSIER:",
-      nakshatraActivationSummary
+      nakshatraActivationSummary,
+      "",
+      "#### ⚡ 75. CLASSICAL GOCHARA VEDHA (TRANSIT OBSTRUCTION & VIPAREETA SHIELDS) DOSSIER:",
+      gocharaVedhaSummary,
+      "",
+      "#### 🌪️ 76. ACHARYA VISHNUKRIPA RAHU & KETU CONJUNCTIONS MASTER DOSSIER:",
+      rahuConjunctionsSummary,
+      "",
+      "#### 📜 77. KUNDLI LIFE REPORT COMPLETE SYNTHESIS & EXECUTIVE BLUEPRINT DOSSIER:",
+      lifeReportSummary
     );
   } else if (intent === "marriage") {
     lines.push(
@@ -2063,7 +2079,37 @@ export function buildAstroDossier(
       rtnSummary,
       "",
       "#### 🌺 38. STRI JATAKA (FEMALE HOROSCOPY & TRIMSAMSHA) DOSSIER:",
-      striJatakaSummary
+      striJatakaSummary,
+      "",
+      "#### 🔱 74. BPHS KARMIC CURSES (CH. 83) & ARISHTA JANMA SHĀNTIS (CH. 85–96) DOSSIER:",
+      bphsKarmicSummary,
+      "",
+      "#### ⚡ 75. CLASSICAL GOCHARA VEDHA (TRANSIT OBSTRUCTION & VIPAREETA SHIELDS) DOSSIER:",
+      gocharaVedhaSummary,
+      "",
+      "#### 🌪️ 76. ACHARYA VISHNUKRIPA RAHU & KETU CONJUNCTIONS MASTER DOSSIER:",
+      rahuConjunctionsSummary
+    );
+  } else if (intent === "progeny_children") {
+    lines.push(
+      "",
+      "#### 👶 78. PROGENY, CHILDREN & SAPTAMSHA (D-7) SANTANA NIRNAYA DOSSIER:",
+      progenyMasterSummary,
+      "",
+      "#### 🔱 74. BPHS KARMIC CURSES (CH. 83) & ARISHTA JANMA SHĀNTIS (CH. 85–96) DOSSIER:",
+      bphsKarmicSummary,
+      "",
+      "#### 🎓 20. K.N. RAO & NAVAL SINGH PLANETS & EDUCATION DOSSIER:",
+      educationSummary,
+      "",
+      "#### 🤰 66. ADHANA KUNDALI (CONCEPTION CHART) & 10-MONTH FOETAL GESTATION DOSSIER:",
+      adhanaSummary,
+      "",
+      "#### ⚡ 17. K.N. RAO DOUBLE TRANSIT (DTP) & PAC-DARES REAL-TIME TIMING:",
+      dtpSummary,
+      "",
+      "#### 🌟 71. 27 NAKSHATRA ACTIVATION YEARS & COSMIC AWAKENING DOSSIER:",
+      nakshatraActivationSummary
     );
   } else if (intent === "name_phonetics") {
     lines.push(
@@ -2120,7 +2166,16 @@ export function buildAstroDossier(
       raman300Summary,
       "",
       "#### 💎 54. D-60 SHASHTIAMSHA (60 DEITIES & SANCHITA KARMA) & BCP AGE WHEEL DOSSIER:",
-      shashtiamshaBcpSummary
+      shashtiamshaBcpSummary,
+      "",
+      "#### 🔱 74. BPHS KARMIC CURSES (CH. 83) & ARISHTA JANMA SHĀNTIS (CH. 85–96) DOSSIER:",
+      bphsKarmicSummary,
+      "",
+      "#### ⚡ 75. CLASSICAL GOCHARA VEDHA (TRANSIT OBSTRUCTION & VIPAREETA SHIELDS) DOSSIER:",
+      gocharaVedhaSummary,
+      "",
+      "#### 🌪️ 76. ACHARYA VISHNUKRIPA RAHU & KETU CONJUNCTIONS MASTER DOSSIER:",
+      rahuConjunctionsSummary
     );
   } else {
     // INTENT === "all": FULL 70 SECTIONS ENCYCLOPEDIC DOSSIER
