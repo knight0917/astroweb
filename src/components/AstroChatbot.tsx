@@ -35,6 +35,39 @@ interface Message {
   category?: string;
 }
 
+export interface ParsedMessageData {
+  cleanedContent: string;
+  probabilityScore: { favorable: number; friction: number } | null;
+  chips: { id: string; label: string; prompt: string }[];
+}
+
+export function parseMessageContent(content: string): ParsedMessageData {
+  if (!content) return { cleanedContent: "", probabilityScore: null, chips: [] };
+
+  // 1. Extract Chips block if present
+  let cleaned = content;
+  let chips: { id: string; label: string; prompt: string }[] = [];
+  const chipsMatch = content.match(/```chips\s*([\s\S]*?)\s*```/);
+  if (chipsMatch) {
+    try {
+      chips = JSON.parse(chipsMatch[1].trim());
+      cleaned = cleaned.replace(/```chips[\s\S]*?```/g, "").trim();
+    } catch (_) {}
+  }
+
+  // 2. Extract Probability Score if present
+  let probabilityScore: { favorable: number; friction: number } | null = null;
+  const scoreMatch = cleaned.match(/(\d{1,2})%\s*Favorable\s*(?:•|\/|vs)?\s*(\d{1,2})%\s*Friction/i);
+  if (scoreMatch) {
+    probabilityScore = {
+      favorable: parseInt(scoreMatch[1], 10),
+      friction: parseInt(scoreMatch[2], 10),
+    };
+  }
+
+  return { cleanedContent: cleaned, probabilityScore, chips };
+}
+
 const FALLBACK_B64 = "QVEuQWI4Uk42TGRLTkVsX1l6SFU0LUtuT2thazNROTlWcHlMR0xhN21tTDgwbWJ4S244VUE=";
 const DEFAULT_GEMINI_KEY =
   process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
@@ -2762,7 +2795,9 @@ export default function AstroChatbot() {
 
           {/* Chat Messages List */}
           <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 custom-scrollbar bg-slate-950/60">
-            {messages.map((msg) => (
+            {messages.map((msg) => {
+              const parsed = parseMessageContent(msg.content);
+              return (
               <div
                 key={msg.id}
                 className={`flex flex-col ${
@@ -2776,8 +2811,16 @@ export default function AstroChatbot() {
                       : "bg-slate-900/90 border border-slate-800 text-slate-200 rounded-tl-none prose prose-invert prose-xs"
                   }`}
                 >
+                  {msg.role === "assistant" && parsed.probabilityScore && (
+                    <div className="inline-flex items-center gap-2 px-3 py-1 mb-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-transparent border border-amber-500/30 text-[11px]">
+                      <span className="text-amber-400 font-black">✨ {parsed.probabilityScore.favorable}% Favorable</span>
+                      <span className="text-slate-500">•</span>
+                      <span className="text-slate-400 font-semibold">{parsed.probabilityScore.friction}% Friction</span>
+                    </div>
+                  )}
+
                   <div className="whitespace-pre-wrap space-y-1.5">
-                    {msg.content}
+                    {parsed.cleanedContent}
                   </div>
 
                   {/* 1. Initial 6-Point Questionnaire (Only on Step 1 Initial Prompt) */}
@@ -2870,19 +2913,21 @@ export default function AstroChatbot() {
                       </div>
 
                       {/* 1-Tap Quick Action Follow-Up Chips */}
-                      <div className="flex flex-wrap items-center gap-1 pt-0.5">
-                        {[
-                          { icon: "⏳", label: "When will this activate?", prompt: "When will this timing activate based on my current Dasha and transits?" },
-                          { icon: "📿", label: "Simple Mantra Remedy", prompt: "What is the most effective daily mantra or simple remedy for this?" },
-                          { icon: "💼", label: "Career & Wealth impact", prompt: "How does this specifically impact my career and financial growth?" },
-                        ].map((chip) => (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                        {(parsed.chips && parsed.chips.length > 0
+                          ? parsed.chips
+                          : [
+                              { id: "c1", label: "⏳ When will this activate?", prompt: "When will this timing activate based on my current Dasha and transits?" },
+                              { id: "c2", label: "📿 Simple Mantra Remedy", prompt: "What is the most effective daily mantra or simple remedy for this?" },
+                              { id: "c3", label: "💼 Career & Wealth impact", prompt: "How does this specifically impact my career and financial growth?" },
+                            ]
+                        ).map((chip) => (
                           <button
-                            key={chip.label}
+                            key={chip.id || chip.label}
                             onClick={() => handleSendMessage(chip.prompt)}
                             disabled={isLoading}
-                            className="px-2 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700/70 hover:border-amber-500/50 text-[10px] text-slate-300 hover:text-amber-300 font-medium transition-all cursor-pointer flex items-center gap-1"
+                            className="px-2.5 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-400/60 text-[10.5px] text-slate-300 hover:text-amber-300 font-medium transition-all cursor-pointer flex items-center gap-1 shadow-sm"
                           >
-                            <span>{chip.icon}</span>
                             <span>{chip.label}</span>
                           </button>
                         ))}
@@ -2898,7 +2943,8 @@ export default function AstroChatbot() {
                   })}
                 </span>
               </div>
-            ))}
+            );
+            })}
 
             {isLoading && (
               <div className="flex items-center gap-2.5 p-3.5 bg-slate-900/90 border border-amber-500/40 rounded-2xl w-fit text-xs text-amber-300 shadow-lg">

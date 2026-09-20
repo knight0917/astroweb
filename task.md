@@ -1,18 +1,30 @@
-# Task: Interactive Chart House Rotation (Bhavat Bhavam / Derived Point of View)
+# Phase 18: Omniscient 360° Multi-Aspect Astrological Intelligence Engine
 
-## Phase 1: Planning & Design <!-- id: 0 -->
-- [x] Analyze house coordinate and planet placement algorithms in Kundli charts <!-- id: 1 -->
-- [x] Design mathematical rotation mapping formula for North and South Indian charts <!-- id: 2 -->
-- [x] Create implementation plan artifact for user review <!-- id: 3 -->
+## Status: Complete
+- **Trigger Keywords**: `omni-aspect`, `360-degree`, `conversational-storytelling`, `weighted-probability`, `follow-up-chips`, `combustion-nuance`, `neecha-vakri`
+- **Single Source of Truth**: Tracking phases and milestones for Phase 18.
 
-## Phase 2: Implementation <!-- id: 4 -->
-- [x] Add `rotatedHouse` state (1–12) to `KundliChart.tsx` <!-- id: 5 -->
-- [x] Implement mathematical re-indexing of Rashi numbers, planet occupants, and aspect rays <!-- id: 6 -->
-- [x] Make all 12 North Indian diamond/triangle SVG sections interactively clickable with visual hover highlights <!-- id: 7 -->
-- [x] Make South Indian box cells interactively clickable with dynamic Lagna badge & relative house re-indexing <!-- id: 8 -->
-- [x] Add 1–12 Quick House Selector pill bar and Derived Perspective Banner with 1-click Reset button <!-- id: 9 -->
+---
 
-## Phase 3: Verification & Polish <!-- id: 10 -->
-- [x] Run full automated test suite (`npm test`) <!-- id: 11 -->
-- [x] Build production application (`npm run build`) <!-- id: 12 -->
-- [x] Create walkthrough artifact documenting house rotation capability <!-- id: 13 -->
+## Phases & Milestones
+
+- [x] **Phase 18.1: Core Calculation Engine (`omniAspectEngine.ts`)**
+  - [x] Implement `calculateOmniAspectMatrix` integrating D-1, D-9, D-10, Dasha/PD micro-timing, Neecha-Vakri inversions (Uttara Kalamrita 2.6), multi-tier combustion nuance (cazimi, deep, exaltation shield, D-9 decoupling), Jaimini Argalas, Gochara double transits, and Ashtakavarga density.
+  - [x] Implement deterministic Weighted Probability Scoring across 5 life vectors (Career, Wealth, Relationships, Health, Spirituality).
+  - [x] Create comprehensive unit tests in `omniAspectEngine.test.ts`.
+
+- [x] **Phase 18.2: Chatbot Context & System Prompt Parity**
+  - [x] Inject Section 0Z into `chatContext.ts` ensuring all intent slices retain the 360° multi-aspect matrix.
+  - [x] Update `chatPrompt.ts` with Rule 0U (Conversational Storytelling, Probability Statement, and 3 Dynamic Follow-Up Chips schema).
+
+- [x] **Phase 18.3: Chatbot UI Interaction Upgrades (`AstroChatbot.tsx`)**
+  - [x] Parse and render interactive, clickable 3-Pillared Follow-Up Chips below messages.
+  - [x] Render the visual Probability Score Badge (`✨ XX% Favorable • YY% Friction`).
+
+- [x] **Phase 18.4: Comprehensive Report & PDF Sync (`ComprehensiveReportView.tsx`)**
+  - [x] Add Chapter 17: "360° Life Vector Radar & Multi-Aspect Matrix" displaying the unified probability scores and planetary nuance cards.
+  - [x] Verify print and PDF export styling fidelity.
+
+- [x] **Phase 18.5: Full Verification & Test Baseline**
+  - [x] Run complete automated test suite (`npm test`) ensuring 115+ passing test suites.
+  - [x] Verify end-to-end user query flows in the chat interface.

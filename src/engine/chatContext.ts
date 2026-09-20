@@ -86,6 +86,7 @@ import { generateBtrMasterSummary } from "./btrEngine";
 import { detectRahuConjunctions } from "./rahuConjunctionsMaster";
 import { calculateLaypersonReport } from "./laypersonReportEngine";
 import { evaluateProgenyMaster } from "./progenyMaster";
+import { calculateOmniAspectMatrix } from "./omniAspectEngine";
 import { GeoLocation } from "./types";
 import { RASHI_NAMES } from "./constants";
 
@@ -177,6 +178,7 @@ export function buildAstroDossier(
 
   // 2. Gochar & Sade Sati
   const gochar = calculateGochar(natalEphemeris, transitEphemeris);
+  const omniMatrix = calculateOmniAspectMatrix(natalEphemeris, transitEphemeris, evaluationDate);
 
   // 3. D9 Navamsha & D10 Dashamsha Varga Charts
   const d9Chart = calculateShodashavargaChart(natalEphemeris, "D9");
@@ -1942,6 +1944,28 @@ export function buildAstroDossier(
     "  - 5th House Lord: " + decisionGates.educationGate.fifthLord + " in House " + decisionGates.educationGate.fifthLordHouse + " (" + decisionGates.educationGate.fifthLordDignity + ") | D24 5th Lord: " + decisionGates.educationGate.d24FifthLord,
     "  - Mercury Dignity: " + decisionGates.educationGate.mercuryDignity + " | Jupiter Dignity: " + decisionGates.educationGate.jupiterDignity,
     "  - Recommended Fields: **" + decisionGates.educationGate.recommendedStreams.join(", ") + "** | Exam Potential: **" + decisionGates.educationGate.competitiveExamPotential + "**",
+    "",
+    "#### 🌐 0Z. 360° OMNI-ASPECT MATRIX & WEIGHTED PROBABILITY VECTORS (FULL-SPECTRUM SYNTHESIS):",
+    "- **Deterministic Weighted Probability Scores across 5 Life Vectors:**",
+    "  - 💼 **Career & Status:** **" + omniMatrix.lifeVectorScores.career.favorablePct + "% Favorable** vs **" + omniMatrix.lifeVectorScores.career.frictionPct + "% Friction** • Status: *" + omniMatrix.lifeVectorScores.career.statusTitle + "* | Window: **" + omniMatrix.lifeVectorScores.career.timingWindow + "**",
+    "    - *Key Drivers:* " + omniMatrix.lifeVectorScores.career.primaryDrivers.join(" | "),
+    "    - *Practical Action:* " + omniMatrix.lifeVectorScores.career.practicalAction,
+    "  - 💰 **Wealth & Inflow:** **" + omniMatrix.lifeVectorScores.wealth.favorablePct + "% Favorable** vs **" + omniMatrix.lifeVectorScores.wealth.frictionPct + "% Friction** • Status: *" + omniMatrix.lifeVectorScores.wealth.statusTitle + "* | Window: **" + omniMatrix.lifeVectorScores.wealth.timingWindow + "**",
+    "    - *Key Drivers:* " + omniMatrix.lifeVectorScores.wealth.primaryDrivers.join(" | "),
+    "  - 💍 **Marriage & Relationships:** **" + omniMatrix.lifeVectorScores.relationships.favorablePct + "% Favorable** vs **" + omniMatrix.lifeVectorScores.relationships.frictionPct + "% Friction** • Status: *" + omniMatrix.lifeVectorScores.relationships.statusTitle + "*",
+    "  - 🌿 **Vitality & Health:** **" + omniMatrix.lifeVectorScores.health.favorablePct + "% Favorable** vs **" + omniMatrix.lifeVectorScores.health.frictionPct + "% Friction** • Status: *" + omniMatrix.lifeVectorScores.health.statusTitle + "*",
+    "  - 🧘 **Spiritual Mission:** **" + omniMatrix.lifeVectorScores.spirituality.favorablePct + "% Favorable** vs **" + omniMatrix.lifeVectorScores.spirituality.frictionPct + "% Friction** • Status: *" + omniMatrix.lifeVectorScores.spirituality.statusTitle + "*",
+    "- **Planetary Nuance & Neecha-Vakri Inversions (Uttara Kalamrita 2.6):**",
+    (omniMatrix.neechaVakriPlanets.filter((p) => p.isNeechaVakri || p.isUcchaVakri).map((p) => "  - 🔄 **" + p.name + " in " + p.signName + " (House " + p.house + "):** " + p.classicalVerdict + " -> *" + p.actionGuidance + "*").join("\n") || "  - All planets operating in normal direct/dignity parameters."),
+    "- **Multi-Tier Combustion Nuance & Shastric Immunity Shields:**",
+    (omniMatrix.combustionNuances.filter((c) => c.isCombust).map((c) => "  - 🔥 **" + c.name + " in " + c.signName + " (House " + c.house + "):** " + c.separationDeg + "° from Sun (" + c.combustionTier + ") • Exaltation Shield: " + (c.hasExaltationShield ? "YES (Active Immunity)" : "No") + " • D-9 Decoupled: " + (c.isD9Decoupled ? "YES (" + c.d9PlanetSign + " vs Sun in " + c.d9SunSign + ")" : "No") + " • Immunity Score: **" + c.immunityScore + "%** -> *" + c.effectiveVerdict + "*").join("\n") || "  - No major planetary combustions."),
+    "- **Jaimini Argala & Virodhargala Synthesis (5th/9th Dispositor Resonance):**",
+    "  - Status: " + (omniMatrix.argalaSynthesis.is5thObstructedBy9th ? "5th House Argala filtered by 9th House Virodha" : "Unobstructed Argala"),
+    "  - Karmic Firewall Insight: " + omniMatrix.argalaSynthesis.karmicFirewallExplanation,
+    "- **Double Transit Activation Gates (Jupiter & Saturn):**",
+    "  - " + omniMatrix.doubleTransitGates.doubleTransitSummary,
+    "- **Suggested Context-Aware Inquiries (Dynamic Prompt Chips):**",
+    omniMatrix.suggestedFollowUpChips.map((c) => "  - Chip [" + c.category + "]: \"" + c.label + "\" -> Prompt: \"" + c.prompt + "\"").join("\n"),
     "",
     "#### 🌟 1. CORE LAGNA & FUNCTIONAL ROLES:",
     "- **Native Gender (लिंग):** " + (gender === "female" ? "Female (स्त्री) ♀" : "Male (पुरुष) ♂"),

@@ -5330,4 +5330,61 @@ test("Phase 17: Chatbot Full-Spectrum Intent Slicing & Parity Verification", asy
   assert.ok(remediesDossier.includes("76. ACHARYA VISHNUKRIPA RAHU & KETU CONJUNCTIONS MASTER DOSSIER:"), "Remedies slice includes Section 76 Rahu Remedies");
 });
 
+test("Phase 18: Omniscient 360° Multi-Aspect Astrological Intelligence Engine Verification", async () => {
+  const { calculateOmniAspectMatrix, evaluateNeechaVakriPlanets, evaluateCombustionNuances } = await import("../src/engine/omniAspectEngine.ts");
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { buildChatSystemInstruction } = await import("../src/engine/chatPrompt.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const { parseMessageContent } = await import("../src/components/AstroChatbot.tsx");
+
+  // 17 Sept 1999, 18:32 IST, Allahabad
+  const dt = new Date("1999-09-17T13:02:00.000Z");
+  const loc = { cityName: "Allahabad", country: "India", latitude: 25.4358, longitude: 81.8463, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(dt, loc, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date("2026-09-20T12:00:00.000Z"), loc, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Matrix & Life Vectors
+  const matrix = calculateOmniAspectMatrix(natalEphem, transitEphem, new Date("2026-09-20T12:00:00.000Z"));
+  assert.strictEqual(matrix.ascendantSignName, "Pisces");
+  assert.ok(matrix.lifeVectorScores.career.favorablePct >= 70, "Career score favorable in Mercury AD");
+  assert.strictEqual(matrix.lifeVectorScores.career.favorablePct + matrix.lifeVectorScores.career.frictionPct, 100);
+  assert.strictEqual(matrix.lifeVectorScores.wealth.favorablePct + matrix.lifeVectorScores.wealth.frictionPct, 100);
+
+  // 2. Neecha-Vakri Saturn
+  const neecha = evaluateNeechaVakriPlanets(natalEphem);
+  const saturn = neecha.find(p => p.name === "Saturn");
+  assert.strictEqual(saturn.isNeechaVakri, true);
+  assert.strictEqual(saturn.chestabalaStatus, "Peak (Chestabala 60/60)");
+
+  // 3. Mercury Combustion Exaltation Shield & D9 Decoupling
+  const nuances = evaluateCombustionNuances(natalEphem);
+  const mercury = nuances.find(p => p.name === "Mercury");
+  assert.strictEqual(mercury.hasExaltationShield, true);
+  assert.strictEqual(mercury.isD9Decoupled, true);
+  assert.ok(mercury.immunityScore >= 70);
+
+  // 4. Dossier Section 0Z Parity across all intents
+  const careerDossier = buildAstroDossier(natalEphem, transitEphem, new Date(), "male", undefined, "career");
+  assert.ok(careerDossier.includes("0Z. 360° OMNI-ASPECT MATRIX"), "Career dossier includes Section 0Z");
+  assert.ok(careerDossier.includes("Career & Status"), "Career dossier includes vector score");
+  assert.ok(careerDossier.includes("Neecha-Vakri Inversions"), "Career dossier includes Neecha-Vakri status");
+
+  const marriageDossier = buildAstroDossier(natalEphem, transitEphem, new Date(), "female", undefined, "marriage");
+  assert.ok(marriageDossier.includes("0Z. 360° OMNI-ASPECT MATRIX"), "Marriage dossier includes Section 0Z");
+
+  // 5. System Prompt Rule 0U Parity
+  const prompt = buildChatSystemInstruction(careerDossier);
+  assert.ok(prompt.includes("0U. **CONVERSATIONAL STORYTELLING, WEIGHTED PROBABILITY SCORING"), "System prompt includes Rule 0U");
+
+  // 6. UI Dynamic Chips Parsing
+  const rawMsg = "Your career transition is unfolding now.\n\nLooking at your complete planetary picture, this carries a 78% Favorable • 22% Friction balance.\n\n```chips\n[{\"id\":\"c1\",\"label\":\"🗓️ Exact Dates\",\"prompt\":\"When will money arrive?\"}]\n```";
+  const parsed = parseMessageContent(rawMsg);
+  assert.strictEqual(parsed.probabilityScore?.favorable, 78);
+  assert.strictEqual(parsed.probabilityScore?.friction, 22);
+  assert.strictEqual(parsed.chips.length, 1);
+  assert.strictEqual(parsed.chips[0].label, "🗓️ Exact Dates");
+  assert.ok(!parsed.cleanedContent.includes("```chips"));
+});
+
+
 

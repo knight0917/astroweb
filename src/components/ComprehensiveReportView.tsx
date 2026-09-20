@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useAstroStore } from "../store/useAstroStore";
 import { calculateLaypersonReport } from "../engine/laypersonReportEngine";
+import { calculateOmniAspectMatrix } from "../engine/omniAspectEngine";
 import BirthDetailsModal from "./BirthDetailsModal";
 import { RASHI_NAMES } from "../engine/constants";
 
@@ -30,6 +31,10 @@ export default function ComprehensiveReportView() {
       gender,
     });
   }, [ephemeris, currentDate, location, gender, activeProfileName]);
+
+  const omniMatrix = useMemo(() => {
+    return calculateOmniAspectMatrix(ephemeris, undefined, currentDate);
+  }, [ephemeris, currentDate]);
 
   const handlePrint = () => {
     if (typeof window !== "undefined") {
@@ -1959,6 +1964,105 @@ export default function ComprehensiveReportView() {
             <p className="text-slate-400 print:text-slate-600">
               {report.remediesAndPowerTools.karmicBalancingAdvice}
             </p>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            CHAPTER 17: 360° LIFE VECTOR RADAR & MULTI-ASPECT MATRIX (PHASE 18)
+           ========================================================================= */}
+        <section className="print:page-break-after-always print:pt-4 border-b border-slate-800 print:border-slate-300 pb-10 print:pb-6 space-y-6">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-base sm:text-lg">🌐</span>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-100 print:text-slate-900 tracking-tight">
+                360° Life Vector Radar & Multi-Aspect Matrix
+              </h2>
+            </div>
+            <p className="text-xs text-slate-400 print:text-slate-600 font-medium">
+              Deterministic, multi-dimensional synthesis across D-1 Rashi, D-9 Navamsha, D-10 Dashamsha, micro-dasha timing, and planetary nuances.
+            </p>
+          </div>
+
+          {/* 5 Life Vectors Progress Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {Object.values(omniMatrix.lifeVectorScores).map((v) => (
+              <div
+                key={v.vectorId}
+                className="p-4 rounded-2xl bg-slate-900/60 print:bg-slate-50 border border-slate-800 print:border-slate-300 flex flex-col justify-between space-y-3"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="text-xs font-bold text-slate-200 print:text-slate-900 flex items-center gap-1.5">
+                      <span>{v.icon}</span>
+                      <span>{v.title}</span>
+                    </span>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 print:bg-amber-100 print:text-amber-900 border border-amber-500/30">
+                      {v.favorablePct}% Favorable
+                    </span>
+                  </div>
+
+                  {/* Visual Bar */}
+                  <div className="w-full h-2 rounded-full bg-slate-800 print:bg-slate-200 overflow-hidden mb-2.5">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-500 to-emerald-400"
+                      style={{ width: `${v.favorablePct}%` }}
+                    />
+                  </div>
+
+                  <span className="text-[11px] font-bold text-amber-400 print:text-amber-800 block mb-1">
+                    {v.statusTitle}
+                  </span>
+
+                  <p className="text-[10.5px] text-slate-300 print:text-slate-700 leading-relaxed line-clamp-2">
+                    {v.primaryDrivers[0] || "Harmonic planetary alignment."}
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-slate-800/60 print:border-slate-200 text-[10px] space-y-1 text-slate-400 print:text-slate-600">
+                  <div><strong className="text-slate-300 print:text-slate-800">Timing Window:</strong> {v.timingWindow}</div>
+                  <div><strong className="text-slate-300 print:text-slate-800">Action:</strong> {v.practicalAction}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Planetary Nuance Dual-Card: Neecha-Vakri & Combustion Shields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+            {/* Neecha-Vakri Card */}
+            <div className="p-4 rounded-2xl bg-slate-900/40 print:bg-slate-50 border border-slate-800 print:border-slate-300 space-y-2">
+              <h4 className="font-bold text-amber-400 print:text-amber-800 flex items-center gap-1.5">
+                <span>🔄</span>
+                <span>Neecha-Vakri Inversions (Uttara Kalamrita 2.6)</span>
+              </h4>
+              {omniMatrix.neechaVakriPlanets.filter((p) => p.isNeechaVakri || p.isUcchaVakri).length > 0 ? (
+                omniMatrix.neechaVakriPlanets.filter((p) => p.isNeechaVakri || p.isUcchaVakri).map((p) => (
+                  <div key={p.name} className="space-y-1 text-[11px] text-slate-300 print:text-slate-800">
+                    <p><strong>{p.name} in {p.signName} (House {p.house}):</strong> {p.classicalVerdict}</p>
+                    <p className="text-slate-400 print:text-slate-600 font-mono text-[10px]">Guidance: {p.actionGuidance}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-slate-400 print:text-slate-600 text-[11px]">All natal planets operating under standard direct and dignity laws.</p>
+              )}
+            </div>
+
+            {/* Combustion Shields Card */}
+            <div className="p-4 rounded-2xl bg-slate-900/40 print:bg-slate-50 border border-slate-800 print:border-slate-300 space-y-2">
+              <h4 className="font-bold text-amber-400 print:text-amber-800 flex items-center gap-1.5">
+                <span>🔥</span>
+                <span>Solar Combustion & Shastric Immunity Shields</span>
+              </h4>
+              {omniMatrix.combustionNuances.filter((c) => c.isCombust).length > 0 ? (
+                omniMatrix.combustionNuances.filter((c) => c.isCombust).map((c) => (
+                  <div key={c.name} className="space-y-1 text-[11px] text-slate-300 print:text-slate-800">
+                    <p><strong>{c.name} in {c.signName} ({c.separationDeg}° from Sun):</strong> {c.combustionTier} • Immunity: <strong>{c.immunityScore}%</strong></p>
+                    <p className="text-slate-400 print:text-slate-600 font-mono text-[10px]">{c.effectiveVerdict}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-slate-400 print:text-slate-600 text-[11px]">No planets within solar combustion limits.</p>
+              )}
+            </div>
           </div>
         </section>
 
