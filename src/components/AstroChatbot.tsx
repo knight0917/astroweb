@@ -776,17 +776,17 @@ ${nakAct.masterRemedyRecommendation}
     /^(what is my beeja sphuta|what is my kshetra sphuta|my beeja sphuta|my kshetra sphuta|beeja sphuta|kshetra sphuta|fecundity point|fertility point|fertility score|progeny score)\??$/i.test(q) ||
     (q.includes("sphuta") && (q.includes("beeja") || q.includes("kshetra") || q.includes("progeny") || q.includes("fertility")))
   ) {
-    const prog = evaluateProgenyMaster(natalEphem.planets, natalEphem.ascendant, gender);
-    const sphuta = prog.fecundity;
+    const prog = evaluateProgenyMaster(natalEphem, gender);
+    const sphuta = prog.primarySphuta;
     return `### 👶 **Your Classical Progeny Fecundity & Sphuta Blueprint (संतान निर्णय):**
 - **Native Evaluated As:** **${gender.toUpperCase()}** (${gender === "male" ? "Beeja Sphuta — बीज स्फुट" : "Kshetra Sphuta — क्षेत्र स्फुट"})
-- **Sphuta Longitude:** **${sphuta.sphutaLongitude.toFixed(2)}°** in **${sphuta.rashiName}** (${sphuta.isOddRashi ? "Odd Sign / अयुग्म" : "Even Sign / युग्म"})
-- **Navamsha Sign:** **${sphuta.navamshaRashiName}** (${sphuta.isOddNavamsha ? "Odd Navamsha / अयुग्म" : "Even Navamsha / युग्म"})
-- **Fecundity Status:** **${sphuta.verdict}** (${sphuta.fecundityScore}% Score)
-- **Classical Rule (BPHS Ch. 12):** ${sphuta.classicalRule}
-${sphuta.afflictions.length > 0 ? `- **Malefic Orbs (≤8°):** ⚠️ ${sphuta.afflictions.join(", ")}` : "- **Malefic Afflictions:** None (Pure Sprouting Potential)"}
-- **Saptamsha (D-7) Lagna:** **${prog.saptamshaLagna.rashiName}** (${prog.saptamshaLagna.isOdd ? "Odd Lagna — Manduka Gati Direct 5th, 7th, 9th, 11th" : "Even Lagna — Manduka Gati Reverse 9th, 7th, 5th, 3rd"})
-- **Recommended Remedy:** **${prog.remedies[0]?.mantra || "Om Devakisuta Govinda Vasudeva Jagatpate"}** (${prog.remedies[0]?.title || "Santana Gopala"})
+- **Sphuta Longitude:** **${sphuta.longitude.toFixed(2)}°** in **${sphuta.signName}** (${sphuta.isSignOdd ? "Odd Sign / अयुग्म" : "Even Sign / युग्म"})
+- **Navamsha Sign:** **${sphuta.navamshaSignName}** (${sphuta.isNavamshaOdd ? "Odd Navamsha / अयुग्म" : "Even Navamsha / युग्म"})
+- **Fecundity Status:** **${sphuta.fecundityStatus}** (${sphuta.fecundityScore}% Score)
+- **Classical Rule (BPHS Ch. 12):** ${sphuta.classicalVerdict}
+${sphuta.afflictingMalefics.length > 0 ? `- **Malefic Orbs (≤6°):** ⚠️ ${sphuta.afflictingMalefics.join(", ")}` : "- **Malefic Afflictions:** None (Pure Sprouting Potential)"}
+- **Saptamsha (D-7) Lagna:** **${prog.saptamshaLagna.signName}** (${prog.saptamshaLagna.isOddSign ? "Odd Lagna — Manduka Gati Direct 5th, 7th, 9th, 11th" : "Even Lagna — Manduka Gati Reverse 9th, 7th, 5th, 3rd"})
+- **Recommended Remedy:** **${prog.remedies.primaryMantra?.sanskritMantra || "Om Devakisuta Govinda Vasudeva Jagatpate"}** (${prog.remedies.primaryMantra?.name || "Santana Gopala Mantra"})
 
 *⚡ Instant Classical Computation (0ms)*`;
   }
@@ -797,15 +797,15 @@ ${sphuta.afflictions.length > 0 ? `- **Malefic Orbs (≤8°):** ⚠️ ${sphuta.
     (q.includes("vedha") && (q.includes("transit") || q.includes("gochara") || q.includes("status") || q.includes("blocked")))
   ) {
     const gochar = calculateGochar(natalEphem, transitEphem);
-    const blockedList = gochar.planetTransits.filter((p) => p.isVedhaActive);
-    const shieldedList = gochar.planetTransits.filter((p) => p.isVipareetaVedhaActive);
+    const blockedList = gochar.transits.filter((p) => p.isObstructed);
+    const shieldedList = gochar.transits.filter((p) => p.isVipareetaVedha);
 
     const blockedText = blockedList.length > 0
-      ? blockedList.map((p) => `- ⚠️ **${p.planet}** in H${p.transitHouse}: Blocked by **${p.obstructingPlanet}** in H${p.obstructingHouse}`).join("\n")
+      ? blockedList.map((p) => `- ⚠️ **${p.name}** in H${p.transitHouseFromMoon} from Moon: Blocked by **${p.obstructingPlanets.join(", ")}** in H${p.vedhaHouse}`).join("\n")
       : "- ✅ None — Benefic transits are flowing freely without Vedha locks.";
 
     const shieldedText = shieldedList.length > 0
-      ? shieldedList.map((p) => `- 🛡️ **${p.planet}** in H${p.transitHouse}: Inauspicious transit neutralized/shielded by **${p.obstructingPlanet}** in H${p.obstructingHouse}`).join("\n")
+      ? shieldedList.map((p) => `- 🛡️ **${p.name}** in H${p.transitHouseFromMoon} from Moon: Inauspicious transit neutralized/shielded by **${p.shieldingPlanets.join(", ")}**`).join("\n")
       : "- No active Vipareeta shields operating currently.";
 
     return `### ⚡ **Your Real-Time Gochara Vedha (गोचर वेध) Transit Telemetry:**
@@ -819,7 +819,7 @@ ${blockedText}
 ${shieldedText}
 
 #### 💡 **Summary Verdict:**
-${gochar.summary}
+${gochar.obstructedCount} transit(s) obstructed by Vedha, ${gochar.shieldedCount} transit(s) shielded by Vipareeta Vedha. Shani status: **${gochar.sadeSati.statusTitle}**.
 
 *⚡ Instant Classical Computation (0ms)*`;
   }

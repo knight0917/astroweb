@@ -30,6 +30,7 @@ function KundliChart() {
   const [aspectMode, setAspectMode] = useState<"all" | "graha" | "rashi" | "off">("all");
   const [hoveredEntity, setHoveredEntity] = useState<ActiveHoverEntity | null>(null);
   const [showKarakaTable, setShowKarakaTable] = useState(true);
+  const [rotatedHouse, setRotatedHouse] = useState<number>(1); // 1 = Natal Lagna, 2..12 = Derived Houses
 
   const {
     ephemeris,
@@ -46,6 +47,22 @@ function KundliChart() {
 
   const ascLon = ephemeris.ascendant.siderealLongitude;
   const ascRashiIndex = Math.floor(ascLon / 30); // 0 = Mesha, ..., 11 = Meena
+  const effectiveAscRashiIndex = (ascRashiIndex + (rotatedHouse - 1)) % 12;
+
+  // Helper: map display slot (1..12 in North chart) to the original natal house whose planets it holds
+  const getOriginalHouseForSlot = (slotNum: number) => {
+    return ((rotatedHouse - 1 + (slotNum - 1)) % 12) + 1;
+  };
+
+  // Helper: get Rashi number (1 to 12) for a given display Slot in North Indian chart
+  const getNorthRashiNum = (slotNum: number) => {
+    return ((effectiveAscRashiIndex + (slotNum - 1)) % 12) + 1;
+  };
+
+  // Helper: map original natal house to its current visual slot in North Indian chart
+  const slotForOrigHouse = (origHouse: number) => {
+    return ((origHouse - rotatedHouse + 12) % 12) + 1;
+  };
 
   // Compute active aspect rays strictly when actively hovered
   const activeAspectRays: AspectRay[] = useMemo(() => {
@@ -167,11 +184,6 @@ function KundliChart() {
     return map;
   }, [ephemeris, showModernPlanets, showUpagrahas, jaimini, induLagna, bhagyaBindu]);
 
-  // Helper to get Rashi number (1 to 12) for a given House in North Indian chart
-  const getNorthRashiNum = (houseNum: number) => {
-    return ((ascRashiIndex + (houseNum - 1)) % 12) + 1;
-  };
-
   // Helper to render planet badges inside house with hover beam triggers
   const renderPlanetList = (houseNum: number) => {
     const list = houseOccupants[houseNum] || [];
@@ -211,7 +223,10 @@ function KundliChart() {
                 })
               }
               onMouseLeave={() => setHoveredEntity(null)}
-              onClick={() => setSelectedEntityId(p.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedEntityId(p.id);
+              }}
               className={`${badgeStyle} rounded-md font-extrabold flex items-center gap-1 transition-all hover:scale-110 shadow-sm cursor-pointer ${
                 isHovered
                   ? "bg-amber-400 text-slate-950 ring-2 ring-white scale-105 shadow-lg shadow-amber-500/50"
@@ -254,18 +269,40 @@ function KundliChart() {
     );
   };
 
+  const HOUSE_SIGNIFICANCES: { h: number; title: string; desc: string }[] = [
+    { h: 1, title: "Lagna / Tanu", desc: "Self, Physical Body & Life Path" },
+    { h: 2, title: "Dhana / Family", desc: "Wealth, Accumulated Assets & Speech" },
+    { h: 3, title: "Sahaja / Courage", desc: "Siblings, Initiative & Skills" },
+    { h: 4, title: "Sukha / Mother", desc: "Home, Mind, Peace & Vehicles" },
+    { h: 5, title: "Putra / Buddhi", desc: "Children, Intellect & Creativity" },
+    { h: 6, title: "Satru / Health", desc: "Debts, Litigation, Enemies & Service" },
+    { h: 7, title: "Kalatra / Spouse", desc: "Marriage, Business & Partners" },
+    { h: 8, title: "Randhra / Longevity", desc: "Transformation & Hidden Assets" },
+    { h: 9, title: "Bhagya / Dharma", desc: "Fortune, Guru, Father & Wisdom" },
+    { h: 10, title: "Karma / Career", desc: "Profession, Authority & Status" },
+    { h: 11, title: "Labha / Gains", desc: "Income, Desires, Cash Flow & Network" },
+    { h: 12, title: "Vyaya / Moksha", desc: "Expenses, Foreign Lands & Liberation" },
+  ];
+
   return (
     <div className="glass-panel p-3.5 sm:p-5 rounded-2xl border border-slate-800 shadow-2xl flex flex-col items-center max-w-full">
       {/* Header controls */}
-      <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3 text-xs">
+      <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-2.5 text-xs">
         <div className="flex items-center gap-2">
           <span className="text-base text-amber-400 animate-spin-slow">☸</span>
           <div>
-            <span className="font-extrabold text-slate-200 text-sm block leading-none">
-              Interactive Kundli Chart
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-slate-200 text-sm block leading-none">
+                Interactive Kundli Chart
+              </span>
+              {rotatedHouse !== 1 && (
+                <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9.5px] font-black tracking-wider uppercase animate-pulse">
+                  Rotated (H{rotatedHouse})
+                </span>
+              )}
+            </div>
             <span className="text-[10px] text-slate-400 font-semibold">
-              Hover over any Planet to see Aspect Rays (Drishti Beams)
+              Click any house to rotate chart view (Bhavat Bhavam) • Hover planet for Drishti beams
             </span>
           </div>
         </div>
@@ -345,17 +382,89 @@ function KundliChart() {
         </div>
       </div>
 
+      {/* 1–12 Quick House Rotation Selector Pill Bar */}
+      <div className="w-full max-w-[840px] mb-2 p-1.5 bg-slate-950/90 rounded-xl border border-slate-800 flex items-center justify-between gap-1 overflow-x-auto custom-scrollbar">
+        <div className="flex items-center gap-1 min-w-max">
+          <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider px-1.5 flex items-center gap-1">
+            <span>🔄</span>
+            <span>View As H1:</span>
+          </span>
+          {HOUSE_SIGNIFICANCES.map((item) => {
+            const isSelected = rotatedHouse === item.h;
+            const rIdx = (ascRashiIndex + (item.h - 1)) % 12;
+            const rName = RASHIS[rIdx].englishName.substring(0, 3);
+            return (
+              <button
+                key={item.h}
+                onClick={() => setRotatedHouse(item.h)}
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap ${
+                  isSelected
+                    ? "bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/30 ring-1 ring-amber-300"
+                    : "bg-slate-900/90 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-800"
+                }`}
+                title={`${item.title}: ${item.desc} (${RASHIS[rIdx].englishName})`}
+              >
+                <span>H{item.h}</span>
+                <span className={`text-[8.5px] font-mono ${isSelected ? "text-slate-950/80 font-black" : "text-amber-400/80"}`}>
+                  {rName}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {rotatedHouse !== 1 && (
+          <button
+            onClick={() => setRotatedHouse(1)}
+            className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-[10px] transition-all shadow-sm flex items-center gap-1 shrink-0 cursor-pointer ml-1"
+            title="Reset chart back to Natal 1st House (Lagna)"
+          >
+            <span>↺</span>
+            <span>Reset</span>
+          </button>
+        )}
+      </div>
+
+      {/* Derived View Active Alert Banner */}
+      {rotatedHouse !== 1 && (
+        <div className="w-full max-w-[840px] mb-2.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-transparent border border-amber-500/40 flex items-center justify-between gap-2 text-xs animate-in fade-in duration-150">
+          <div className="flex items-center gap-2 truncate">
+            <span className="text-amber-400 text-sm">💡</span>
+            <span className="font-semibold text-slate-200 truncate">
+              Derived Bhavat Bhavam: Viewing chart perspective from{" "}
+              <strong className="text-amber-300 font-extrabold">
+                House {rotatedHouse} ({RASHIS[effectiveAscRashiIndex].englishName})
+              </strong>{" "}
+              as 1st House.
+            </span>
+          </div>
+          <button
+            onClick={() => setRotatedHouse(1)}
+            className="text-[11px] font-bold text-amber-300 hover:text-amber-200 underline underline-offset-2 shrink-0 cursor-pointer"
+          >
+            Reset to Natal Lagna
+          </button>
+        </div>
+      )}
+
       {/* Lagna & Special Points Banner */}
       <div className="w-full max-w-[840px] mb-3 flex flex-col gap-1.5 px-3 py-2 bg-slate-900/80 rounded-xl border border-slate-800 text-xs shadow-inner">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <span className="text-amber-400 font-bold">Lagna:</span>
+            <span className="text-amber-400 font-bold">
+              {rotatedHouse === 1 ? "Lagna:" : `Derived Lagna (H${rotatedHouse}):`}
+            </span>
             <span className="font-extrabold text-slate-100">
-              {ephemeris.ascendant.rashi.englishName} ({ephemeris.ascendant.rashi.sanskritName})
+              {RASHIS[effectiveAscRashiIndex].englishName} ({RASHIS[effectiveAscRashiIndex].sanskritName})
             </span>
             <span className="font-mono text-amber-300 text-[11px]">
               {(ephemeris.ascendant.siderealLongitude % 30).toFixed(2)}°
             </span>
+            {rotatedHouse !== 1 && (
+              <span className="text-[10px] text-slate-400">
+                (Natal Lagna: {ephemeris.ascendant.rashi.englishName})
+              </span>
+            )}
           </div>
           <div className="text-[11px] text-slate-400 font-mono">
             Nakshatra:{" "}
@@ -410,18 +519,100 @@ function KundliChart() {
                 <polygon points="200,5 395,200 200,395 5,200" fill="none" stroke="#d97706" strokeWidth="2" />
 
                 {/* Central Diamond Inner Accent (Lagna / 1st House & 7th House) */}
-                <polygon points="200,5 297.5,102.5 200,200 102.5,102.5" fill="#022c22" fillOpacity="0.3" />
+                <polygon points="200,5 297.5,102.5 200,200 102.5,102.5" fill={rotatedHouse === 1 ? "#022c22" : "#451a03"} fillOpacity={rotatedHouse === 1 ? "0.35" : "0.5"} />
                 <polygon points="200,395 297.5,297.5 200,200 102.5,297.5" fill="#1e1b4b" fillOpacity="0.2" />
+
+                {/* --- Interactive House Polygons (Click to Rotate) --- */}
+                {/* Slot 1: Top Center Diamond */}
+                <polygon
+                  points="200,5 297.5,102.5 200,200 102.5,102.5"
+                  onClick={() => setRotatedHouse(getOriginalHouseForSlot(1))}
+                  className="cursor-pointer transition-colors fill-transparent hover:fill-amber-500/20"
+                />
+                {/* Slot 2: Top Left Upper Triangle */}
+                <polygon
+                  points="5,5 200,5 102.5,102.5"
+                  onClick={() => setRotatedHouse(getOriginalHouseForSlot(2))}
+                  className="cursor-pointer transition-colors fill-transparent hover:fill-amber-500/20"
+                />
+                {/* Slot 3: Left Top Outer Triangle */}
+                <polygon
+                  points="5,5 102.5,102.5 5,200"
+                  onClick={() => setRotatedHouse(getOriginalHouseForSlot(3))}
+                  className="cursor-pointer transition-colors fill-transparent hover:fill-amber-500/20"
+                />
+                {/* Slot 4: Left Center Diamond */}
+                <polygon
+                  points="5,200 102.5,102.5 200,200 102.5,297.5"
+                  onClick={() => setRotatedHouse(getOriginalHouseForSlot(4))}
+                  className="cursor-pointer transition-colors fill-transparent hover:fill-amber-500/20"
+                />
+                {/* Slot 5: Left Bottom Outer Triangle */}
+                <polygon
+                  points="5,200 102.5,297.5 5,395"
+                  onClick={() => setRotatedHouse(getOriginalHouseForSlot(5))}
+                  className="cursor-pointer transition-colors fill-transparent hover:fill-amber-500/20"
+                />
+                {/* Slot 6: Bottom Left Lower Triangle */}
+                <polygon
+                  points="5,395 102.5,297.5 200,395"
+                  onClick={() => setRotatedHouse(getOriginalHouseForSlot(6))}
+                  className="cursor-pointer transition-colors fill-transparent hover:fill-amber-500/20"
+                />
+                {/* Slot 7: Bottom Center Diamond */}
+                <polygon
+                  points="200,200 297.5,297.5 200,395 102.5,297.5"
+                  onClick={() => setRotatedHouse(getOriginalHouseForSlot(7))}
+                  className="cursor-pointer transition-colors fill-transparent hover:fill-amber-500/20"
+                />
+                {/* Slot 8: Bottom Right Lower Triangle */}
+                <polygon
+                  points="200,395 297.5,297.5 395,395"
+                  onClick={() => setRotatedHouse(getOriginalHouseForSlot(8))}
+                  className="cursor-pointer transition-colors fill-transparent hover:fill-amber-500/20"
+                />
+                {/* Slot 9: Right Bottom Outer Triangle */}
+                <polygon
+                  points="395,395 297.5,297.5 395,200"
+                  onClick={() => setRotatedHouse(getOriginalHouseForSlot(9))}
+                  className="cursor-pointer transition-colors fill-transparent hover:fill-amber-500/20"
+                />
+                {/* Slot 10: Right Center Diamond */}
+                <polygon
+                  points="200,200 297.5,102.5 395,200 297.5,297.5"
+                  onClick={() => setRotatedHouse(getOriginalHouseForSlot(10))}
+                  className="cursor-pointer transition-colors fill-transparent hover:fill-amber-500/20"
+                />
+                {/* Slot 11: Right Top Outer Triangle */}
+                <polygon
+                  points="395,200 297.5,102.5 395,5"
+                  onClick={() => setRotatedHouse(getOriginalHouseForSlot(11))}
+                  className="cursor-pointer transition-colors fill-transparent hover:fill-amber-500/20"
+                />
+                {/* Slot 12: Top Right Upper Triangle */}
+                <polygon
+                  points="200,5 395,5 297.5,102.5"
+                  onClick={() => setRotatedHouse(getOriginalHouseForSlot(12))}
+                  className="cursor-pointer transition-colors fill-transparent hover:fill-amber-500/20"
+                />
 
                 {/* --- House 1 (Top Center Diamond - TANU / LAGNA) --- */}
                 <text x="200" y="24" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="bold" className="font-mono">
                   {getNorthRashiNum(1)}
                 </text>
-                <text x="200" y="38" textAnchor="middle" fill="#10b981" fontSize="9" fontWeight="900" letterSpacing="1">
-                  LAGNA
+                <text
+                  x="200"
+                  y="38"
+                  textAnchor="middle"
+                  fill={rotatedHouse === 1 ? "#10b981" : "#f59e0b"}
+                  fontSize={rotatedHouse === 1 ? "9" : "8"}
+                  fontWeight="900"
+                  letterSpacing="1"
+                >
+                  {rotatedHouse === 1 ? "LAGNA" : `H1 (FROM H${rotatedHouse})`}
                 </text>
                 <foreignObject x="110" y="42" width="180" height="120" className="overflow-visible pointer-events-none">
-                  <div className="h-full flex items-center justify-center">{renderPlanetList(1)}</div>
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(getOriginalHouseForSlot(1))}</div>
                 </foreignObject>
 
                 {/* House 2 (Top Left Upper Triangle) */}
@@ -429,7 +620,7 @@ function KundliChart() {
                   {getNorthRashiNum(2)}
                 </text>
                 <foreignObject x="15" y="25" width="170" height="85" className="overflow-visible pointer-events-none">
-                  <div className="h-full flex items-center justify-center">{renderPlanetList(2)}</div>
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(getOriginalHouseForSlot(2))}</div>
                 </foreignObject>
 
                 {/* House 3 (Left Top Outer Triangle) */}
@@ -437,7 +628,7 @@ function KundliChart() {
                   {getNorthRashiNum(3)}
                 </text>
                 <foreignObject x="10" y="45" width="105" height="140" className="overflow-visible pointer-events-none">
-                  <div className="h-full flex items-center justify-center">{renderPlanetList(3)}</div>
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(getOriginalHouseForSlot(3))}</div>
                 </foreignObject>
 
                 {/* House 4 (Left Center Diamond - Sukha Bhava) */}
@@ -445,7 +636,7 @@ function KundliChart() {
                   {getNorthRashiNum(4)}
                 </text>
                 <foreignObject x="25" y="130" width="150" height="140" className="overflow-visible pointer-events-none">
-                  <div className="h-full flex items-center justify-center">{renderPlanetList(4)}</div>
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(getOriginalHouseForSlot(4))}</div>
                 </foreignObject>
 
                 {/* House 5 (Left Bottom Outer Triangle) */}
@@ -453,7 +644,7 @@ function KundliChart() {
                   {getNorthRashiNum(5)}
                 </text>
                 <foreignObject x="10" y="215" width="105" height="140" className="overflow-visible pointer-events-none">
-                  <div className="h-full flex items-center justify-center">{renderPlanetList(5)}</div>
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(getOriginalHouseForSlot(5))}</div>
                 </foreignObject>
 
                 {/* House 6 (Bottom Left Lower Triangle) */}
@@ -461,7 +652,7 @@ function KundliChart() {
                   {getNorthRashiNum(6)}
                 </text>
                 <foreignObject x="15" y="290" width="170" height="85" className="overflow-visible pointer-events-none">
-                  <div className="h-full flex items-center justify-center">{renderPlanetList(6)}</div>
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(getOriginalHouseForSlot(6))}</div>
                 </foreignObject>
 
                 {/* House 7 (Bottom Center Diamond - Jaya / Kalatra Bhava) */}
@@ -469,7 +660,7 @@ function KundliChart() {
                   {getNorthRashiNum(7)}
                 </text>
                 <foreignObject x="110" y="242" width="180" height="120" className="overflow-visible pointer-events-none">
-                  <div className="h-full flex items-center justify-center">{renderPlanetList(7)}</div>
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(getOriginalHouseForSlot(7))}</div>
                 </foreignObject>
 
                 {/* House 8 (Bottom Right Lower Triangle) */}
@@ -477,7 +668,7 @@ function KundliChart() {
                   {getNorthRashiNum(8)}
                 </text>
                 <foreignObject x="215" y="290" width="170" height="85" className="overflow-visible pointer-events-none">
-                  <div className="h-full flex items-center justify-center">{renderPlanetList(8)}</div>
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(getOriginalHouseForSlot(8))}</div>
                 </foreignObject>
 
                 {/* House 9 (Right Bottom Outer Triangle) */}
@@ -485,7 +676,7 @@ function KundliChart() {
                   {getNorthRashiNum(9)}
                 </text>
                 <foreignObject x="285" y="215" width="105" height="140" className="overflow-visible pointer-events-none">
-                  <div className="h-full flex items-center justify-center">{renderPlanetList(9)}</div>
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(getOriginalHouseForSlot(9))}</div>
                 </foreignObject>
 
                 {/* House 10 (Right Center Diamond - Karma Bhava) */}
@@ -493,7 +684,7 @@ function KundliChart() {
                   {getNorthRashiNum(10)}
                 </text>
                 <foreignObject x="225" y="130" width="150" height="140" className="overflow-visible pointer-events-none">
-                  <div className="h-full flex items-center justify-center">{renderPlanetList(10)}</div>
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(getOriginalHouseForSlot(10))}</div>
                 </foreignObject>
 
                 {/* House 11 (Right Top Outer Triangle) */}
@@ -501,7 +692,7 @@ function KundliChart() {
                   {getNorthRashiNum(11)}
                 </text>
                 <foreignObject x="285" y="45" width="105" height="140" className="overflow-visible pointer-events-none">
-                  <div className="h-full flex items-center justify-center">{renderPlanetList(11)}</div>
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(getOriginalHouseForSlot(11))}</div>
                 </foreignObject>
 
                 {/* House 12 (Top Right Upper Triangle) */}
@@ -509,7 +700,7 @@ function KundliChart() {
                   {getNorthRashiNum(12)}
                 </text>
                 <foreignObject x="215" y="25" width="170" height="85" className="overflow-visible pointer-events-none">
-                  <div className="h-full flex items-center justify-center">{renderPlanetList(12)}</div>
+                  <div className="h-full flex items-center justify-center">{renderPlanetList(getOriginalHouseForSlot(12))}</div>
                 </foreignObject>
               </svg>
 
@@ -530,8 +721,10 @@ function KundliChart() {
                   </defs>
 
                   {activeAspectRays.map((ray, idx) => {
-                    const pFrom = NORTH_HOUSE_CENTERS[ray.fromHouse];
-                    const pTo = NORTH_HOUSE_CENTERS[ray.toHouse];
+                    const fromSlot = slotForOrigHouse(ray.fromHouse);
+                    const toSlot = slotForOrigHouse(ray.toHouse);
+                    const pFrom = NORTH_HOUSE_CENTERS[fromSlot];
+                    const pTo = NORTH_HOUSE_CENTERS[toSlot];
                     if (!pFrom || !pTo) return null;
 
                     const isGraha = ray.type === "graha";
@@ -587,30 +780,38 @@ function KundliChart() {
                   { rashiIdx: 5, col: "4", row: "4" },
                 ].map(({ rashiIdx, col, row }) => {
                   const rashi = RASHIS[rashiIdx];
-                  const houseNum = ((rashiIdx - ascRashiIndex + 12) % 12) + 1;
-                  const isLagna = rashiIdx === ascRashiIndex;
+                  const origHouseNum = ((rashiIdx - ascRashiIndex + 12) % 12) + 1;
+                  const relativeHouseNum = ((rashiIdx - effectiveAscRashiIndex + 12) % 12) + 1;
+                  const isLagna = rashiIdx === effectiveAscRashiIndex;
+                  const isNatalLagna = rashiIdx === ascRashiIndex;
 
                   return (
                     <div
                       key={rashiIdx}
+                      onClick={() => setRotatedHouse(origHouseNum)}
                       style={{ gridColumn: col, gridRow: row }}
-                      className={`border border-slate-700/80 p-1 flex flex-col justify-between overflow-hidden transition-colors ${
+                      className={`border border-slate-700/80 p-1 flex flex-col justify-between overflow-hidden transition-all cursor-pointer hover:border-amber-400 ${
                         isLagna
-                          ? "bg-emerald-950/30 ring-1 ring-inset ring-emerald-500/50"
-                          : "bg-slate-900/40"
+                          ? "bg-emerald-950/40 ring-2 ring-inset ring-emerald-500/70"
+                          : isNatalLagna && rotatedHouse !== 1
+                          ? "bg-amber-950/25 ring-1 ring-inset ring-amber-500/50"
+                          : "bg-slate-900/40 hover:bg-slate-900/70"
                       }`}
+                      title={`Click to view chart perspective from House ${origHouseNum} (${rashi.englishName})`}
                     >
                       <div className="flex justify-between items-center text-[10px]">
                         <span className="text-slate-400 font-semibold">{rashi.sanskritName}</span>
                         {isLagna && (
-                          <span className="text-[9px] font-extrabold px-1 bg-emerald-500 text-slate-950 rounded">
-                            LAGNA
+                          <span className="text-[8.5px] font-extrabold px-1 bg-emerald-500 text-slate-950 rounded">
+                            {rotatedHouse === 1 ? "LAGNA" : "DERIVED H1"}
                           </span>
                         )}
-                        <span className="text-slate-500">H{houseNum}</span>
+                        <span className="text-slate-400 font-mono font-bold">
+                          {rotatedHouse === 1 ? `H${origHouseNum}` : `H${relativeHouseNum}`}
+                        </span>
                       </div>
                       <div className="flex-1 flex items-center justify-center my-0.5 overflow-visible">
-                        {renderPlanetList(houseNum)}
+                        {renderPlanetList(origHouseNum)}
                       </div>
                     </div>
                   );
@@ -620,8 +821,19 @@ function KundliChart() {
                 <div className="col-start-2 col-span-2 row-start-2 row-span-2 border border-slate-800 bg-slate-950/80 flex flex-col items-center justify-center text-center p-2">
                   <span className="text-xs font-bold text-slate-200">Rashi Kundli</span>
                   <span className="text-[10px] text-slate-400 font-mono mt-0.5">
-                    {ephemeris.ayanamshaType} Ayanamsha
+                    {rotatedHouse === 1 ? "Natal Lagna View" : `Derived from H${rotatedHouse} (${RASHIS[effectiveAscRashiIndex].englishName})`}
                   </span>
+                  {rotatedHouse !== 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRotatedHouse(1);
+                      }}
+                      className="mt-1.5 px-2 py-0.5 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 text-[9.5px] font-black cursor-pointer shadow"
+                    >
+                      ↺ Reset Lagna
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -680,6 +892,7 @@ function KundliChart() {
             </div>
           )}
         </div>
+
 
         {/* Right Side: Aspect Rays Inspector & Drishti Cockpit Panel */}
         <div className="w-full lg:w-[320px] max-w-[460px] lg:max-w-none flex flex-col justify-between bg-slate-900/90 rounded-2xl border border-slate-800 p-3.5 shadow-2xl space-y-3">
