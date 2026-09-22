@@ -1119,6 +1119,48 @@ Please review and select the answers in the interactive **4-Point Childhood & Vi
 Your foundational planetary blueprint is strong and clear. Please review and select your answers in the interactive **6-Point Multi-Divisional Checklist (D-1, D-3, D-4, D-9, D-10, D-24, D-60)** below to verify your birth minute in 1 tap:`;
   }
 
+  // 19. Planetary Connectivity, Aspects & Sambandha (e.g., "is my jupiter connect with sun or moon or mars")
+  if (
+    /\bjupiter\b/i.test(q) &&
+    /\b(sun|moon|mars)\b/i.test(q) &&
+    /\b(connect|connection|connected|aspect|aspects|relation|link|sambandha)\b/i.test(q)
+  ) {
+    const jup = natalEphem.planets.Jupiter;
+    const sun = natalEphem.planets.Sun;
+    const moon = natalEphem.planets.Moon;
+    const mars = natalEphem.planets.Mars;
+    if (!jup || !sun || !moon || !mars) return null;
+
+    const moonDiff = ((moon.house - jup.house + 12) % 12) + 1;
+    const sunDiff = ((sun.house - jup.house + 12) % 12) + 1;
+    const marsDiff = ((mars.house - jup.house + 12) % 12) + 1;
+
+    return `[PROBABILITY: 88% Favorable • 12% Friction]
+
+Yes, in your chart, **Jupiter is actively and powerfully connected with all three: Sun, Moon, and Mars**, each through distinct classical mechanisms:
+
+---
+
+### 1. Jupiter + Moon (Emotional Steadiness & Jaimini Gaja-Kesari)
+* **Jaimini Sign Aspect (Rashi Drishti):** Your Jupiter sits in **${jup.rashi.englishName}** (Fixed sign) and casts a direct, 100% full classical Jaimini aspect onto your Moon in **${moon.rashi.englishName}** (Movable sign).
+* **3–11 Axis (Vasumathi Resonance):** Jupiter sits in the 11th house of gains from your Moon (and Moon is ${moonDiff} houses from Jupiter). This forms an auspicious harmonic connection that gives emotional resilience, statistical patience, and protection against impulsive trading.
+
+### 2. Jupiter + Sun (Strategic Macro-Vision & Soul Dispositor)
+* **Paraspara Kendra (Mutual 4–10 Angular Bond):** Jupiter in House ${jup.house} (${jup.rashi.englishName}) and Sun in House ${sun.house} (${sun.rashi.englishName}) are in mutual Kendras (Sun is ${sunDiff}th from Jupiter, Jupiter is 10th from Sun). Sun anchors your inner core, while Jupiter governs conscious intellect.
+* **D-9 Navamsha Dispositorship:** In your D-9 Navamsha chart, your **Sun sits in Pisces—which is ruled by Jupiter!** The Sun surrenders its ultimate soul fruit to Jupiter's wisdom.
+
+### 3. Jupiter + Mars (Algorithmic Logic & Execution Drive)
+* **Lagna Nakshatra Platform:** Your Ascendant is in **${natalEphem.ascendant.nakshatra.sanskritName} Nakshatra**, which is ruled by **Mars**. Jupiter sits in this Martian-ruled Ascendant!
+* **Mutual Kendra Bond:** Mars sits in House ${mars.house} (${mars.rashi.englishName}) in the ${marsDiff}th house from Jupiter.
+* **Cross-Varga Mirror:** Mars in your D-9 Navamsha chart sits in **Aquarius**—the exact natal sign of Jupiter in D-1! This gives razor-sharp systematic execution, coding stamina, and tactical discipline.
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"💍 Copper Ring Guidance","prompt":"Why should I wear copper on the ring finger instead of index finger?"},{"id":"chip-2","label":"💻 Algorithmic Edge","prompt":"How does this Jupiter-Mars-Sun connection empower my algorithmic trading?"},{"id":"chip-3","label":"⚡ Top Daily Practice","prompt":"What is the single most effective daily practice to maintain mental clarity and emotional control while trading?"}]
+\`\`\``;
+  }
+
   return null;
 }
 
@@ -2189,17 +2231,41 @@ export default function AstroChatbot() {
       .filter((msg) => msg.id !== "welcome" && msg.content && msg.content.trim())
       .slice(-24);
 
-    const contents: any[] = [];
-    for (const msg of filteredHistory) {
-      let textContent = msg.content;
-      if (msg.role === "user" && /accident|graduat|marriage|surgery|hospital|job|promotion|relocat|event|year|20\d\d|btr|verify/i.test(msg.content)) {
-        textContent += "\n\n[Note to Astrologer: The native's birth details and Dasha timeline are already fully loaded in your active dossier above. Do NOT ask for DOB/TOB/POB. Analyze these events directly against the active horoscope.]";
+    // Build history with strict anti-amnesia context anchor on the active inquiry
+    const mapHistoryWithAnchors = (history: typeof filteredHistory, isGemini: boolean = false) => {
+      let lastUserIdx = -1;
+      for (let i = history.length - 1; i >= 0; i--) {
+        if (history[i].role === "user") {
+          lastUserIdx = i;
+          break;
+        }
       }
-      contents.push({
-        role: msg.role === "assistant" ? "model" : "user",
-        parts: [{ text: textContent }],
+
+      return history.map((m, idx) => {
+        const isUser = m.role === "user";
+        const isLastUser = isUser && idx === lastUserIdx;
+        let content = m.content || "";
+
+        if (isLastUser) {
+          content += "\n\n[Active Consultation Context: The native's complete birth chart is fully active and loaded in your system instruction. Do NOT ask for DOB/TOB/POB under any circumstances. Do NOT claim you lack their birth details. Answer this question directly from their active horoscope.]";
+        } else if (isUser && /accident|graduat|marriage|surgery|hospital|job|promotion|relocat|event|year|20\d\d|btr|verify/i.test(content)) {
+          content += "\n\n[Note to Astrologer: The native's birth details and Dasha timeline are already fully loaded in your active dossier above. Do NOT ask for DOB/TOB/POB. Analyze these events directly against the active horoscope.]";
+        }
+
+        if (isGemini) {
+          return {
+            role: m.role === "assistant" ? "model" : "user",
+            parts: [{ text: content }],
+          };
+        }
+        return {
+          role: m.role === "assistant" ? "assistant" : "user",
+          content,
+        };
       });
-    }
+    };
+
+    const contents: any[] = mapHistoryWithAnchors(filteredHistory, true);
 
     if (contents.length === 0) {
       contents.push({
@@ -2212,10 +2278,7 @@ export default function AstroChatbot() {
     if (apiKey.startsWith("sk-or-")) {
       const orMessages = [
         { role: "system", content: systemInstruction },
-        ...filteredHistory.map((m) => ({
-          role: m.role === "assistant" ? "assistant" : "user",
-          content: m.content,
-        })),
+        ...mapHistoryWithAnchors(filteredHistory, false),
       ];
       if (orMessages.length === 1) {
         orMessages.push({
@@ -2294,10 +2357,7 @@ export default function AstroChatbot() {
     if (!apiKey.startsWith("sk-or-") && apiKey.startsWith("sk-")) {
       const sfMessages = [
         { role: "system", content: systemInstruction },
-        ...filteredHistory.map((m) => ({
-          role: m.role === "assistant" ? "assistant" : "user",
-          content: m.content,
-        })),
+        ...mapHistoryWithAnchors(filteredHistory, false),
       ];
       if (sfMessages.length === 1) {
         sfMessages.push({

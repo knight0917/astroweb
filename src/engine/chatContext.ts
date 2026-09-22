@@ -108,6 +108,7 @@ export type AstroConsultationIntent =
 export function detectConsultationIntent(query: string, activeCategory?: string): AstroConsultationIntent {
   const q = query.toLowerCase();
 
+
   if (
     activeCategory === "education" ||
     /\b(progeny|child|children|kid|kids|son|daughter|baby|babies|pregnancy|pregnant|conceive|conception|fertility|fecundity|santana|saptamsha|d7|d-7|beeja|kshetra|miscarriage|garbha|putra|kanya|adoption)\b/.test(q)

@@ -134,6 +134,16 @@ ${userConfirmedFacts.map((f) => `- ${f}`).join("\n")}
 
 CURRENT REAL-WORLD CONSULTATION DATE: ${todayStr} (Year: ${currentYear})
 
+================================================================================
+🚨 PRIME DIRECTIVE: THE CLIENT'S COMPLETE NATAL HOROSCOPE IS ALREADY LOADED BELOW.
+UNDER NO CIRCUMSTANCES SHALL YOU EVER:
+1. State or imply that you do not have their birth details (Date of Birth, Time of Birth, Place of Birth).
+2. Ask the client to provide their birth date, time, or location.
+3. Claim you cannot see their chart or need details to answer planetary connections, yogas, or predictions.
+4. Give generic textbook definitions claiming you need their chart to answer.
+EVERY SINGLE QUESTION must be answered immediately by analyzing their active horoscope provided in the ASTROLOGICAL DOSSIER below. If the user asks about Jupiter, Sun, Moon, Mars, wealth, trading, marriage, or any life theme, look at their chart below and answer directly from their active Kundli.
+================================================================================
+
 NATIVE'S ASTROLOGICAL DOSSIER:
 ${dossier || "No specific chart provided."}
 ${factsBlock}

@@ -40,6 +40,41 @@ export async function POST(req: NextRequest) {
       .filter((msg: any) => msg.id !== "welcome" && msg.content && msg.content.trim())
       .slice(-24);
 
+    // Build history with strict anti-amnesia context anchor on the active inquiry
+    const mapHistoryWithAnchors = (history: any[], isGemini: boolean = false) => {
+      let lastUserIdx = -1;
+      for (let i = history.length - 1; i >= 0; i--) {
+        const role = history[i].role || history[i].sender;
+        if (role === "user") {
+          lastUserIdx = i;
+          break;
+        }
+      }
+
+      return history.map((m: any, idx: number) => {
+        const isUser = m.role === "user" || m.sender === "user";
+        const isLastUser = isUser && idx === lastUserIdx;
+        let content = m.content || "";
+
+        if (isLastUser) {
+          content += "\n\n[Active Consultation Context: The native's complete birth chart is fully active and loaded in your system instruction. Do NOT ask for DOB/TOB/POB under any circumstances. Do NOT claim you lack their birth details. Answer this question directly from their active horoscope.]";
+        } else if (isUser && /accident|graduat|marriage|surgery|hospital|job|promotion|relocat|event|year|20\d\d|btr|verify/i.test(content)) {
+          content += "\n\n[Note to Astrologer: The native's birth details and Dasha timeline are already fully loaded in your active dossier above. Do NOT ask for DOB/TOB/POB. Analyze these events directly against the active horoscope.]";
+        }
+
+        if (isGemini) {
+          return {
+            role: m.role === "assistant" || m.role === "model" || m.sender === "bot" ? "model" : "user",
+            parts: [{ text: content }],
+          };
+        }
+        return {
+          role: m.role === "assistant" || m.role === "model" || m.sender === "bot" ? "assistant" : "user",
+          content,
+        };
+      });
+    };
+
     const isOpenRouter = apiKey.startsWith("sk-or-");
     const isSiliconFlow =
       !isOpenRouter &&
@@ -50,13 +85,7 @@ export async function POST(req: NextRequest) {
     if (isOpenRouter) {
       const orMessages = [
         { role: "system", content: systemInstruction },
-        ...filteredHistory.map((m: any) => ({
-          role:
-            m.sender === "bot" || m.role === "assistant" || m.role === "model"
-              ? "assistant"
-              : "user",
-          content: m.content || "",
-        })),
+        ...mapHistoryWithAnchors(filteredHistory, false),
       ];
 
       if (orMessages.length === 1) {
@@ -124,13 +153,7 @@ export async function POST(req: NextRequest) {
 
       const sfMessages = [
         { role: "system", content: systemInstruction },
-        ...filteredHistory.map((m: any) => ({
-          role:
-            m.sender === "bot" || m.role === "assistant" || m.role === "model"
-              ? "assistant"
-              : "user",
-          content: m.content || "",
-        })),
+        ...mapHistoryWithAnchors(filteredHistory, false),
       ];
 
       if (sfMessages.length === 1) {
@@ -197,17 +220,7 @@ export async function POST(req: NextRequest) {
         Buffer.from(FALLBACK_B64, "base64").toString("utf8")
       : apiKey;
 
-    const contents: any[] = [];
-    for (const msg of filteredHistory) {
-      let textContent = msg.content;
-      if (msg.role === "user" && /accident|graduat|marriage|surgery|hospital|job|promotion|relocat|event|year|20\d\d|btr|verify/i.test(msg.content)) {
-        textContent += "\n\n[Note to Astrologer: The native's birth details and Dasha timeline are already fully loaded in your active dossier above. Do NOT ask for DOB/TOB/POB. Analyze these events directly against the active horoscope.]";
-      }
-      contents.push({
-        role: msg.role === "assistant" ? "model" : "user",
-        parts: [{ text: textContent }],
-      });
-    }
+    const contents: any[] = mapHistoryWithAnchors(filteredHistory, true);
 
     if (contents.length === 0) {
       contents.push({
