@@ -9,6 +9,7 @@ import { EphemerisResult } from "./types";
 import { calculateVimshottariDasha, VimshottariDashaResult, ActiveDashaPeriod } from "./dasha";
 import { calculateShodashavargaChart } from "./shodashavarga";
 import { RASHI_NAMES } from "./constants";
+import { calculateAdhanaKundali } from "./adhanaKundali";
 
 export interface KundaShodhanaResult {
   kundaLongitude: number;
@@ -59,6 +60,52 @@ export interface VargaSensitivityNode {
   elapsedMinutesInCurrentSign: number;
   windowStartLocalTime: string;
   windowEndLocalTime: string;
+  timeSpanSecondsTotal?: number;
+  elapsedSecondsInCurrentSign?: number;
+  remainingSecondsInCurrentSign?: number;
+  boundaryCountdownFormatted?: string;
+  boundaryVulnerabilityIndex?: "CRITICAL_SENSITIVE" | "MODERATE_SENSITIVE" | "SECURE";
+}
+
+export interface TriEpochBirthMomentResult {
+  recordedBirthLocalTime: string;
+  recordedBirthDateStr: string;
+  adhanaEpoch: {
+    conceptionDateStr: string;
+    gestationDays: number;
+    adhanaLagnaSign: string;
+    adhanaLagnaLord: string;
+    adhanaLagnaDegrees: number;
+    adhanaMoonSign: string;
+    adhanaMoonNakshatra: string;
+    significance: string;
+  };
+  shirodarshanaEpoch: {
+    estimatedTimeRange: string;
+    estimatedMinutesBeforeDelivery: number;
+    estimatedLagnaSign: string;
+    isLagnaSignSameAsBhupatana: boolean;
+    significance: string;
+  };
+  bhupatanaEpoch: {
+    civilBirthTime: string;
+    civilLagnaSign: string;
+    civilLagnaDegrees: number;
+    umbilicalSeveranceEvent: string;
+    firstBreathPranaEvent: string;
+    isUniversalBaseline: boolean;
+    significance: string;
+  };
+  d60VulnerabilityStatus: {
+    d60Sign: string;
+    elapsedSeconds: number;
+    remainingSeconds: number;
+    totalSpanSeconds: number;
+    bufferDescription: string;
+    vulnerabilityLevel: "CRITICAL_SENSITIVE" | "MODERATE_SENSITIVE" | "SECURE";
+    recommendation: string;
+  };
+  shastricSynthesis: string;
 }
 
 export interface ChronologicalDashaWindow {
@@ -316,6 +363,31 @@ export function calculateVargaSensitivities(natalEphemeris: EphemerisResult): Va
     const elapsedMinutesInCurrentSign = elapsedInVargaDeg * 4;
     const remainingMinutesInCurrentSign = remainingInVargaDeg * 4;
 
+    const timeSpanSecondsTotal = Math.round(v.spanDeg * 4 * 60);
+    const elapsedSecondsInCurrentSign = Math.round(elapsedInVargaDeg * 4 * 60);
+    const remainingSecondsInCurrentSign = Math.max(0, timeSpanSecondsTotal - elapsedSecondsInCurrentSign);
+
+    const elapsedMin = Math.floor(elapsedSecondsInCurrentSign / 60);
+    const elapsedSec = elapsedSecondsInCurrentSign % 60;
+    const remMin = Math.floor(remainingSecondsInCurrentSign / 60);
+    const remSec = remainingSecondsInCurrentSign % 60;
+    const boundaryCountdownFormatted = `${elapsedMin}m ${elapsedSec}s elapsed, ${remMin}m ${remSec}s remaining`;
+
+    let boundaryVulnerabilityIndex: "CRITICAL_SENSITIVE" | "MODERATE_SENSITIVE" | "SECURE" = "SECURE";
+    if (v.id === "D60") {
+      if (elapsedSecondsInCurrentSign <= 30 || remainingSecondsInCurrentSign <= 30) {
+        boundaryVulnerabilityIndex = "CRITICAL_SENSITIVE";
+      } else if (elapsedSecondsInCurrentSign <= 45 || remainingSecondsInCurrentSign <= 45) {
+        boundaryVulnerabilityIndex = "MODERATE_SENSITIVE";
+      }
+    } else if (v.id === "D9" || v.id === "D10" || v.id === "D24") {
+      if (elapsedSecondsInCurrentSign <= 90 || remainingSecondsInCurrentSign <= 90) {
+        boundaryVulnerabilityIndex = "CRITICAL_SENSITIVE";
+      } else if (elapsedSecondsInCurrentSign <= 180 || remainingSecondsInCurrentSign <= 180) {
+        boundaryVulnerabilityIndex = "MODERATE_SENSITIVE";
+      }
+    }
+
     const winStartDate = new Date(localDate.getTime() - elapsedMinutesInCurrentSign * 60 * 1000);
     const winEndDate = new Date(localDate.getTime() + remainingMinutesInCurrentSign * 60 * 1000);
 
@@ -334,10 +406,116 @@ export function calculateVargaSensitivities(natalEphemeris: EphemerisResult): Va
       remainingMinutesInCurrentSign: Math.round(remainingMinutesInCurrentSign * 10) / 10,
       windowStartLocalTime: formatTimeStr(winStartDate),
       windowEndLocalTime: formatTimeStr(winEndDate),
+      timeSpanSecondsTotal,
+      elapsedSecondsInCurrentSign,
+      remainingSecondsInCurrentSign,
+      boundaryCountdownFormatted,
+      boundaryVulnerabilityIndex,
     });
   }
 
   return results;
+}
+
+/**
+ * 4B. Tri-Epoch Birth Moment Evaluation (Adhana vs Shirodarshana vs Bhupatana)
+ * Grounded in Maharshi Parashara (BPHS), Acharya Varahamihira (Brihat Jataka Ch. 4),
+ * and modern Astro-Scientist consensus (Navneet Chitkara).
+ */
+export function evaluateTriEpochBirthMoment(natalEphemeris: EphemerisResult): TriEpochBirthMomentResult {
+  const birthDate = new Date(natalEphemeris.utcDate);
+  const location = natalEphemeris.location;
+  const tzOffset = location?.timezoneOffsetHours || 5.5;
+  const localDate = new Date(birthDate.getTime() + tzOffset * 3600 * 1000);
+
+  const formatTimeStr = (d: Date) => {
+    const hh = String(d.getUTCHours()).padStart(2, "0");
+    const mm = String(d.getUTCMinutes()).padStart(2, "0");
+    const ss = String(d.getUTCSeconds()).padStart(2, "0");
+    return `${hh}:${mm}:${ss}`;
+  };
+
+  const recordedBirthLocalTime = formatTimeStr(localDate);
+  const recordedBirthDateStr = localDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+  // 1. Adhana Lagna (Conception Epoch)
+  const adhanaResult = calculateAdhanaKundali(natalEphemeris, birthDate, location);
+  const adhanaAscDegree = adhanaResult.adhanaEphemeris.ascendant.siderealLongitude % 30;
+
+  // 2. Shirodarshana Lagna (Crown Emergence ~15-25 mins prior to civil delivery)
+  const crownOffsetMinutes = 20;
+  const crownLocalDate = new Date(localDate.getTime() - crownOffsetMinutes * 60 * 1000);
+  const crownTimeRange = `${formatTimeStr(crownLocalDate)} – ${formatTimeStr(new Date(localDate.getTime() - 10 * 60 * 1000))} (~10–20 mins prior to delivery)`;
+
+  const natalAscLon = natalEphemeris.ascendant.siderealLongitude;
+  const crownAscLon = (natalAscLon - (crownOffsetMinutes / 4) + 360) % 360;
+  const crownRashiIdx = Math.floor(crownAscLon / 30);
+  const crownRashiName = RASHI_NAMES[crownRashiIdx].englishName;
+  const civilRashiIdx = Math.floor(natalAscLon / 30);
+  const civilRashiName = RASHI_NAMES[civilRashiIdx].englishName;
+  const isLagnaSignSameAsBhupatana = crownRashiIdx === civilRashiIdx;
+
+  // 3. Bhupatana Lagna (Civil Delivery / Umbilical Cord Severance)
+  const civilAscDegree = natalAscLon % 30;
+
+  // 4. D-60 Vulnerability Telemetry
+  const sensitivities = calculateVargaSensitivities(natalEphemeris);
+  const d60Node = sensitivities.find((s) => s.vargaId === "D60");
+  const d60ElapsedSec = d60Node?.elapsedSecondsInCurrentSign ?? 60;
+  const d60RemSec = d60Node?.remainingSecondsInCurrentSign ?? 60;
+  const d60TotalSpan = d60Node?.timeSpanSecondsTotal ?? 120;
+  const d60Level = d60Node?.boundaryVulnerabilityIndex ?? "SECURE";
+
+  const bufferDescription = `${Math.floor(d60ElapsedSec / 60)}m ${d60ElapsedSec % 60}s elapsed, ${Math.floor(d60RemSec / 60)}m ${d60RemSec % 60}s remaining in D-60 sign`;
+  let d60Rec = "Birth moment is well-centered in the current D-60 Shashtiamsha window with ample second-level buffer.";
+  if (d60Level === "CRITICAL_SENSITIVE") {
+    d60Rec = `CRITICAL WARNING: Native's recorded birth time is within ${Math.min(d60ElapsedSec, d60RemSec)} seconds of a D-60 boundary shift! An error of less than 1 minute changes the Shashtiamsha chart and past karmic root causes. Multi-varga BTR verification is highly recommended.`;
+  } else if (d60Level === "MODERATE_SENSITIVE") {
+    d60Rec = `MODERATE CAUTION: Native sits ${Math.min(d60ElapsedSec, d60RemSec)} seconds from a D-60 boundary shift. Check past life turning points to lock precision.`;
+  }
+
+  const shastricSynthesis = `In classical Vedic Jyotish, three moments mark the incarnation of a soul: (1) Adhana Lagna (conception epoch when the genetic & karmic seed forms), (2) Shirodarshana Lagna (the emergence of the crown during labor), and (3) Bhupatana Lagna (the severance of the umbilical cord and first independent breath/cry). As taught by Maharshi Parashara, Acharya Varahamihira, and modern master Astro-Scientist Navneet Chitkara, Bhupatana Lagna is the universal, legally recorded civil standard for casting the natal horoscope because independent pulmonary circulation (Prana) begins only upon separation from the mother. However, because hospital clocks often possess an error margin of 2–15 minutes, Birth Time Rectification (BTR) across D-60 (2-minute window) and D-9 (13.3-minute window) is required to certify that the recorded birth time matches real-life destiny events.`;
+
+  return {
+    recordedBirthLocalTime,
+    recordedBirthDateStr,
+    adhanaEpoch: {
+      conceptionDateStr: adhanaResult.estimatedConceptionDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+      gestationDays: adhanaResult.gestationDurationDays,
+      adhanaLagnaSign: adhanaResult.adhanaLagnaSign,
+      adhanaLagnaLord: adhanaResult.adhanaLagnaLord,
+      adhanaLagnaDegrees: Math.round(adhanaAscDegree * 100) / 100,
+      adhanaMoonSign: adhanaResult.adhanaMoonSign,
+      adhanaMoonNakshatra: adhanaResult.adhanaMoonNakshatra,
+      significance: "The moment the soul enters the maternal womb; the cosmic seed packet is sealed (Brihat Jataka Ch. 4).",
+    },
+    shirodarshanaEpoch: {
+      estimatedTimeRange: crownTimeRange,
+      estimatedMinutesBeforeDelivery: crownOffsetMinutes,
+      estimatedLagnaSign: crownRashiName,
+      isLagnaSignSameAsBhupatana,
+      significance: "The physical crown emerges into the terrestrial atmosphere, but the infant is still nourished by maternal respiration through the pulsing umbilical cord.",
+    },
+    bhupatanaEpoch: {
+      civilBirthTime: recordedBirthLocalTime,
+      civilLagnaSign: civilRashiName,
+      civilLagnaDegrees: Math.round(civilAscDegree * 100) / 100,
+      umbilicalSeveranceEvent: "Umbilical cord clamped and severed (Naala-Chhedana).",
+      firstBreathPranaEvent: "First independent breath and cry (Prathama Shwasa / Rodana), establishing the earthly prana-kundali.",
+      isUniversalBaseline: true,
+      significance: "The universal shastric & legal baseline for casting horoscopes (Maharshi Parashara & Astro Scientist Navneet Chitkara).",
+    },
+    d60VulnerabilityStatus: {
+      d60Sign: d60Node?.currentAscendantSign ?? civilRashiName,
+      elapsedSeconds: d60ElapsedSec,
+      remainingSeconds: d60RemSec,
+      totalSpanSeconds: d60TotalSpan,
+      bufferDescription,
+      vulnerabilityLevel: d60Level,
+      recommendation: d60Rec,
+    },
+    shastricSynthesis,
+  };
 }
 
 /**
@@ -463,6 +641,7 @@ export function generateBtrMasterSummary(
   const tattva = calculateTattvaShodhana(natalEphemeris, gender);
   const sensitivities = calculateVargaSensitivities(natalEphemeris);
   const timeline = buildFullChronologicalDashaTimeline(natalEphemeris);
+  const triEpoch = evaluateTriEpochBirthMoment(natalEphemeris);
 
   const hh = String(localDate.getUTCHours()).padStart(2, "0");
   const mm = String(localDate.getUTCMinutes()).padStart(2, "0");
@@ -471,7 +650,7 @@ export function generateBtrMasterSummary(
   const sensitivityTable = sensitivities
     .map(
       (s) =>
-        `- **${s.vargaName}:** Ascendant in **${s.currentAscendantSign}** (${s.currentAscendantDegrees.toFixed(2)}°) • Total Span: **${s.timeSpanMinutesTotal} mins** • Current Window: **${s.windowStartLocalTime} to ${s.windowEndLocalTime}** (Elapsed: ${s.elapsedMinutesInCurrentSign}m, Remaining: ${s.remainingMinutesInCurrentSign}m)`
+        `- **${s.vargaName}:** Ascendant in **${s.currentAscendantSign}** (${s.currentAscendantDegrees.toFixed(2)}°) • Window: **${s.windowStartLocalTime} to ${s.windowEndLocalTime}** (Span: ${s.timeSpanMinutesTotal}m) • Buffer: *${s.boundaryCountdownFormatted || `${s.elapsedMinutesInCurrentSign}m elapsed, ${s.remainingMinutesInCurrentSign}m remaining`}* [${s.boundaryVulnerabilityIndex || "SECURE"}]`
     )
     .join("\n");
 
@@ -503,6 +682,14 @@ export function generateBtrMasterSummary(
 - 📍 **Recorded Birth Moment:** **${dateFormatted} at ${hh}:${mm}** in **${location?.cityName || "Patna"}, ${location?.country || "India"}**
 - 👶 **Native Life Stage & Age:** **${lifeStageTitle}** (Running Age: ~${(Math.round(nativeAgeYears * 10) / 10).toFixed(1)} yrs)
   * *Guidance:* ${lifeStageGuidance}
+- 🧬 **The 3 Classical Birth Epochs (Adhana, Shirodarshana, Bhupatana - Navneet Chitkara & BPHS):**
+  * 1️⃣ **Adhana Lagna (Conception Epoch):** Conception on **${triEpoch.adhanaEpoch.conceptionDateStr}** (Gestation: **${triEpoch.adhanaEpoch.gestationDays} days**) • Adhana Lagna in **${triEpoch.adhanaEpoch.adhanaLagnaSign}** (Lord: ${triEpoch.adhanaEpoch.adhanaLagnaLord}) • Moon in ${triEpoch.adhanaEpoch.adhanaMoonSign} (${triEpoch.adhanaEpoch.adhanaMoonNakshatra})
+  * 2️⃣ **Shirodarshana Lagna (Crown Emergence):** Approx **${triEpoch.shirodarshanaEpoch.estimatedTimeRange}** • Ascendant in **${triEpoch.shirodarshanaEpoch.estimatedLagnaSign}** (${triEpoch.shirodarshanaEpoch.isLagnaSignSameAsBhupatana ? "Same sign as delivery" : "Sign transitioned before delivery"})
+  * 3️⃣ **Bhupatana Lagna (Umbilical Severance & First Breath):** **${triEpoch.recordedBirthLocalTime}** (Civil Birth Time) • Ascendant in **${triEpoch.bhupatanaEpoch.civilLagnaSign} (${triEpoch.bhupatanaEpoch.civilLagnaDegrees.toFixed(2)}°)**. Severance of umbilical cord (*Naala-Chhedana*) & independent pulmonary respiration (*Prathama Shwasa*). This is the universal shastric & legal baseline for casting horoscopes.
+- 🚨 **Real-Time D-60 (Shashtiamsha) Boundary Vulnerability Telemetry:**
+  * Current D-60 Sign: **${triEpoch.d60VulnerabilityStatus.d60Sign}** • Total Span: 120 seconds (2.0 minutes)
+  * Real-Time Buffer: **${triEpoch.d60VulnerabilityStatus.bufferDescription}**
+  * Vulnerability Level: **[${triEpoch.d60VulnerabilityStatus.vulnerabilityLevel}]** -> ${triEpoch.d60VulnerabilityStatus.recommendation}
 - 📐 **Kunda Shodhana (कुण्ड शोधन - BPHS):**
   * Kunda Point: **${kunda.kundaRashi} (${kunda.kundaDegrees.toFixed(2)}°)** in Nakshatra **${kunda.kundaNakshatra}**
   * Harmony with Moon (${kunda.janmaNakshatraName}) & Lagna (${kunda.lagnaNakshatraName}): **${kunda.harmonyScorePercent}% Match** (${kunda.classicalVerdict})

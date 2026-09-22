@@ -124,7 +124,7 @@ export function detectConsultationIntent(query: string, activeCategory?: string)
   if (/\b(name|letter|first letter|initial|calling name|svara|syllable|akshara|nakshatra nama|spelling)\b/.test(q)) {
     return "name_phonetics";
   }
-  if (/\b(birth time|verify|rectification|btr|accurate|doubt|past life|milestone|exact minute|conception|adhana)\b/.test(q)) {
+  if (/\b(birth time|exact moment|moment of birth|first breath|first cry|cord cut|umbilical|bhupatana|shirodarshana|rectification|btr|accurate|accuracy|doubt|past life|milestone|exact minute|conception|adhana)\b/.test(q)) {
     return "btr_verification";
   }
   if (activeCategory === "panchang" || /\b(panchang|tithi|muhurta|rahu kalam|abhijit|sunrise|sunset|nakshatra today|hora|choghadiya|festival)\b/.test(q)) {

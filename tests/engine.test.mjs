@@ -5386,5 +5386,63 @@ test("Phase 18: Omniscient 360° Multi-Aspect Astrological Intelligence Engine V
   assert.ok(!parsed.cleanedContent.includes("```chips"));
 });
 
+test("Phase 19: Tri-Epoch Birth Moment (Adhana, Shirodarshana, Bhupatana) & Real-Time D-60 Boundary Verification", async () => {
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const {
+    evaluateTriEpochBirthMoment,
+    calculateVargaSensitivities,
+    generateBtrMasterSummary
+  } = await import("../src/engine/btrEngine.ts");
+  const { detectConsultationIntent, buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { buildChatSystemInstruction } = await import("../src/engine/chatPrompt.ts");
 
+  const testLocation = {
+    latitude: 25.5941,
+    longitude: 85.1376,
+    timezoneOffsetHours: 5.5,
+    cityName: "Patna",
+    country: "India",
+  };
+  const testDate = new Date("1998-05-25T08:05:00.000Z"); // 13:35 local
+  const natalEphem = calculateVedicEphemeris(testDate, testLocation, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date(), testLocation, "Lahiri", "WholeSign", "Mean");
 
+  // 1. Verify evaluateTriEpochBirthMoment
+  const triEpoch = evaluateTriEpochBirthMoment(natalEphem);
+  assert.ok(triEpoch.recordedBirthLocalTime);
+  assert.ok(triEpoch.recordedBirthDateStr);
+  assert.strictEqual(triEpoch.bhupatanaEpoch.isUniversalBaseline, true);
+  assert.strictEqual(triEpoch.bhupatanaEpoch.civilLagnaSign, natalEphem.ascendant.rashi.englishName);
+  assert.ok(triEpoch.adhanaEpoch.gestationDays > 200, "Gestation should be standard term");
+  assert.ok(triEpoch.adhanaEpoch.adhanaLagnaSign, "Adhana lagna sign exists");
+  assert.ok(triEpoch.shirodarshanaEpoch.estimatedLagnaSign, "Shirodarshana lagna sign exists");
+  assert.strictEqual(triEpoch.d60VulnerabilityStatus.totalSpanSeconds, 120, "D-60 span is 120 seconds");
+  assert.ok(["CRITICAL_SENSITIVE", "MODERATE_SENSITIVE", "SECURE"].includes(triEpoch.d60VulnerabilityStatus.vulnerabilityLevel));
+  assert.ok(triEpoch.shastricSynthesis.includes("Navneet Chitkara"), "Shastric synthesis cites Navneet Chitkara & Parashara");
+
+  // 2. Verify calculateVargaSensitivities second-level precision
+  const sensitivities = calculateVargaSensitivities(natalEphem);
+  const d60 = sensitivities.find(s => s.vargaId === "D60");
+  assert.ok(d60);
+  assert.strictEqual(d60.timeSpanSecondsTotal, 120);
+  assert.strictEqual(d60.elapsedSecondsInCurrentSign + d60.remainingSecondsInCurrentSign, 120);
+  assert.ok(d60.boundaryCountdownFormatted.includes("elapsed"));
+  assert.ok(d60.boundaryCountdownFormatted.includes("remaining"));
+
+  // 3. Verify intent routing
+  assert.strictEqual(detectConsultationIntent("When is the exact moment of birth in Jyotish?"), "btr_verification");
+  assert.strictEqual(detectConsultationIntent("Is birth time based on cord cut or first breath?"), "btr_verification");
+  assert.strictEqual(detectConsultationIntent("Is my birth time accurate?"), "btr_verification");
+  assert.strictEqual(detectConsultationIntent("bhupatana lagna vs shirodarshana"), "btr_verification");
+
+  // 4. Verify Dossier Section 73 includes Tri-Epoch and D-60 telemetry
+  const btrDossier = buildAstroDossier(natalEphem, transitEphem, new Date(), "male", undefined, "btr_verification");
+  assert.ok(btrDossier.includes("The 3 Classical Birth Epochs (Adhana, Shirodarshana, Bhupatana"));
+  assert.ok(btrDossier.includes("Real-Time D-60 (Shashtiamsha) Boundary Vulnerability Telemetry"));
+  assert.ok(btrDossier.includes("Adhana Lagna (Conception Epoch)"));
+  assert.ok(btrDossier.includes("Bhupatana Lagna (Umbilical Severance & First Breath)"));
+
+  // 5. Verify Chat Prompt Rule 0V exists
+  const systemPrompt = buildChatSystemInstruction(btrDossier);
+  assert.ok(systemPrompt.includes("0V. **THE 3 CLASSICAL BIRTH EPOCHS & REAL-TIME D-60 BOUNDARY PROTOCOL"));
+});

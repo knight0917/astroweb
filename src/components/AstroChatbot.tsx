@@ -20,6 +20,7 @@ import {
   calculatePranapada,
   calculateTattvaShodhana,
   calculateVargaSensitivities,
+  evaluateTriEpochBirthMoment,
   buildFullChronologicalDashaTimeline,
 } from "../engine/btrEngine";
 import { evaluateRashiTulyaNavamsha } from "../engine/rashiTulyaNavamsha";
@@ -1158,6 +1159,69 @@ Yes, in your chart, **Jupiter is actively and powerfully connected with all thre
 
 \`\`\`chips
 [{"id":"chip-1","label":"💍 Copper Ring Guidance","prompt":"Why should I wear copper on the ring finger instead of index finger?"},{"id":"chip-2","label":"💻 Algorithmic Edge","prompt":"How does this Jupiter-Mars-Sun connection empower my algorithmic trading?"},{"id":"chip-3","label":"⚡ Top Daily Practice","prompt":"What is the single most effective daily practice to maintain mental clarity and emotional control while trading?"}]
+\`\`\``;
+  }
+
+  // 20. Exact Moment of Birth & Real-Time D-60 Boundary Interceptor (Navneet Chitkara & BPHS)
+  if (
+    /\b(exact moment of birth|moment of birth|when is birth moment|cord cut|umbilical|first breath|first cry|bhupatana|shirodarshana|adhana lagna|is my birth time accurate|is my birth time correct|check my birth time accuracy)\b/i.test(q)
+  ) {
+    const { timeStr, dateStr } = getLocalCivilDateTime(natalEphem);
+    const triEpoch = evaluateTriEpochBirthMoment(natalEphem);
+    const d60 = triEpoch.d60VulnerabilityStatus;
+    const sensitivities = calculateVargaSensitivities(natalEphem);
+    const d9Node = sensitivities.find((s) => s.vargaId === "D9");
+
+    const vulnBadge =
+      d60.vulnerabilityLevel === "CRITICAL_SENSITIVE"
+        ? "🔴 **[CRITICAL BOUNDARY SENSITIVITY]**"
+        : d60.vulnerabilityLevel === "MODERATE_SENSITIVE"
+        ? "🟡 **[MODERATE BOUNDARY SENSITIVITY]**"
+        : "🟢 **[SECURE D-60 WINDOW]**";
+
+    return `[PROBABILITY: 92% Favorable • 8% Friction]
+
+In classical Vedic Jyotish, determining the **exact moment of birth (*Janma Samaya*)** is governed by three foundational biological epochs (*Brihat Jataka* Ch. 4, *BPHS*, & Astro Scientist Navneet Chitkara):
+
+---
+
+### 🧬 The 3 Classical Birth Epochs in Your Horoscope
+
+1. **Adhana Lagna (आधान लग्न — Conception Inception):**
+   * **Calculated Conception Date:** **${triEpoch.adhanaEpoch.conceptionDateStr}** (Gestation Period: **${triEpoch.adhanaEpoch.gestationDays} days**)
+   * **Conception Ascendant:** **${triEpoch.adhanaEpoch.adhanaLagnaSign}** (Lord: ${triEpoch.adhanaEpoch.adhanaLagnaLord}) • Moon in **${triEpoch.adhanaEpoch.adhanaMoonSign} (${triEpoch.adhanaEpoch.adhanaMoonNakshatra})**
+   * *Significance:* The exact instant the karmic and biological seed packet was sealed in the maternal womb.
+
+2. **Shirodarshana Lagna (शिरोदर्शन लग्न — Crown Emergence):**
+   * **Estimated Window:** **${triEpoch.shirodarshanaEpoch.estimatedTimeRange}**
+   * **Ascendant during Crowning:** **${triEpoch.shirodarshanaEpoch.estimatedLagnaSign}** (${triEpoch.shirodarshanaEpoch.isLagnaSignSameAsBhupatana ? "Same sign as delivery" : "Sign transitioned before delivery"})
+   * *Significance:* The moment the crown first perceives the atmosphere during active labor. However, maternal blood and oxygen are still supplying the fetus through the pulsing umbilical cord.
+
+3. **Bhupatana Lagna (भूपतन लग्न — Umbilical Severance & First Breath):**
+   * **Civil Recorded Time:** **${timeStr}** on **${dateStr}** in **${natalEphem.location?.cityName || "Patna"}, ${natalEphem.location?.country || "India"}**
+   * **Civil Natal Ascendant:** **${triEpoch.bhupatanaEpoch.civilLagnaSign} (${triEpoch.bhupatanaEpoch.civilLagnaDegrees}°)**
+   * *Significance:* **Universal Operational Benchmark.** The clamping and cutting of the umbilical cord (*Naala-Chhedana*) forces pulmonary inflation, triggering the first independent breath and cry (*Prathama Shwasa / Rodana*). This freezes the individual natal planetary coordinates and initiates the biological Dasha clock.
+
+---
+
+### 🚨 Real-Time D-60 (Shashtiamsha) Boundary Radar for Your Chart
+
+Because hospital clocks carry a 2–15 minute margin of error, sub-chart boundary analysis reveals your exact time sensitivity:
+
+* ${vulnBadge}
+* **Active D-60 Sign:** **${d60.d60Sign}** (Span: 120 seconds / 2.0 mins)
+* **Real-Time Buffer:** **${d60.bufferDescription}**
+* **D-9 Navamsha Window:** **${d9Node ? `${d9Node.windowStartLocalTime} to ${d9Node.windowEndLocalTime} (${d9Node.currentAscendantSign})` : "Active"}**
+* **Diagnostic Verdict:** ${d60.recommendation}
+
+---
+
+💡 **Next Step:** If your birth time was recorded casually or you want to calibrate it down to the exact second, use the **Interactive BTR Checklist** below to verify your birth minute in 1 tap!
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"⏱️ Verify My Birth Clock","prompt":"Verify my birth time with multi-divisional milestones [btr_adult_verified]"},{"id":"chip-2","label":"👶 Conception Details","prompt":"Tell me more about my Adhana Kundali and foetal gestation period"},{"id":"chip-3","label":"⏳ D-60 Past Life Karma","prompt":"What does my D-60 Shashtiamsha reveal about my past life karmic root causes?"}]
 \`\`\``;
   }
 
