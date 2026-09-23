@@ -2210,9 +2210,15 @@ export default function AstroChatbot() {
     if (savedKey) setUserApiKey(savedKey);
   }, []);
 
-  // Listen for global open-astro-chat event from QuickHighlightsBar
+  // Listen for global open-astro-chat event from QuickHighlightsBar and 3D Sky Dome HUD
   useEffect(() => {
-    const handleOpenChat = () => setIsOpen(true);
+    const handleOpenChat = (e?: Event) => {
+      setIsOpen(true);
+      const customEvt = e as CustomEvent<{ prompt?: string }>;
+      if (customEvt?.detail?.prompt) {
+        setInputPrompt(customEvt.detail.prompt);
+      }
+    };
     window.addEventListener("open-astro-chat", handleOpenChat);
     return () => window.removeEventListener("open-astro-chat", handleOpenChat);
   }, []);

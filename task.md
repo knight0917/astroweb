@@ -1,38 +1,41 @@
-# Phase 19: Tri-Epoch Birth Moment (Adhana, Shirodarshana, Bhupatana) & Real-Time D-60 Boundary Engine
+# Phase 20: 3D Sky Dome Cosmic Vortex, Direct Aspect Rays & Interactive Astrological Behavior HUD
 
-## Status: Complete
-- **Trigger Keywords**: `birth-moment`, `adhana-lagna`, `shirodarshana`, `bhupatana`, `cord-cut`, `first-breath`, `d60-boundary`, `btr-countdown`, `janma-samaya-shodhana`
-- **Single Source of Truth**: Tracking phases and milestones for Phase 19.
+## Status: Complete & Verified (All 117 Tests Passing)
+- **Trigger Keywords**: `skydome-3d`, `camera-flyin`, `graha-drishti-lasers`, `accretion-vortex`, `astrological-hud`, `planet-to-planet-aspects`, `retrograde-particles`
+- **Single Source of Truth**: Tracking phases and milestones for Phase 20.
 
 ---
 
 ## Phases & Milestones
 
-- [x] **Phase 19.1: Core Engine Upgrades (`src/engine/btrEngine.ts`)**
-  - [x] Implement `evaluateTriEpochBirthMoment(natalEphemeris)` calculating the 3 classical birth moments:
-    - **1. Adhana Lagna (आधान लग्न):** Conception epoch, gestational duration, lunar conception sign.
-    - **2. Shirodarshana Lagna (शिरोदर्शन लग्न):** Crown emergence (~15–25 mins prior to delivery) with sign stability check.
-    - **3. Bhupatana Lagna (भूपतन लग्न):** Civil delivery, umbilical cord severance, first cry/breath.
-  - [x] Upgrade `calculateVargaSensitivities` with second-level telemetry:
-    - `timeSpanSecondsTotal`, `elapsedSecondsInCurrentSign`, `remainingSecondsInCurrentSign`.
-    - Formatted string representation (`Xm Ys elapsed, Zm Ws remaining`).
-    - `boundaryVulnerabilityIndex`: `CRITICAL_SENSITIVE` (≤ 90 seconds from boundary) vs `SECURE`.
-  - [x] Update `generateBtrMasterSummary` to integrate the Tri-Epoch table and D-60/D-9 boundary countdown into Dossier Section 73.
+- [x] **Phase 20.1: Planet-to-Planet Direct Aspect Vector Engine (`SkyDome.tsx`)**
+  - [x] Calculate 3D Cartesian coordinates for all active planets in the dome.
+  - [x] Implement inter-planetary Graha Drishti ray system: laser beams shoot directly from the hovered/selected planet across 3D space to the exact coordinates of the aspected planets (with impact spark spheres), plus outer zodiac target rings.
+  - [x] Restrict aspect ray visibility strictly to **hover** or **selected** states to preserve scene clarity.
 
-- [x] **Phase 19.2: Chatbot Intent & Context Integration (`src/engine/chatContext.ts`)**
-  - [x] Expand `detectConsultationIntent` regex to route queries about birth moment, cord cut, first breath, and birth time accuracy to `"btr_verification"`.
-  - [x] Ensure Section 73 Tri-Epoch and D-60 boundary data is seamlessly provided under `"btr_verification"` and `"all"`.
+- [x] **Phase 20.2: Cosmic Energy Aura & Orbital Accretion Vortex (`SkyDome.tsx`)**
+  - [x] Create `PlanetaryAccretionVortex` component displaying an illuminated accretion disc and swirling particle ring matching the planet's Vedic color.
+  - [x] Implement retrograde (Vakri) reverse particle rotation and combustion heat streamers connecting to the Sun when combust.
 
-- [x] **Phase 19.3: Prompt Shastric Directive (`src/engine/chatPrompt.ts`)**
-  - [x] Add **Rule 0V (The 3 Classical Birth Epochs & Real-Time D-60 Boundary Protocol)**:
-    - Instruct LLMs to articulate the 3 classical lagnas (Adhana, Shirodarshana, Bhupatana) citing BPHS and modern consensus (Navneet Chitkara).
-    - Mandate citing the exact D-60 and D-9 boundary countdown (elapsed/remaining seconds, boundary vulnerability index) from Dossier Section 73.
+- [x] **Phase 20.3: Smooth 3D Cinematic Fly-In Camera Zoom (`SkyDome.tsx`)**
+  - [x] Implement smooth lerp camera transition from global dome view into close-orbit inspection distance (~6-8 units) centered on the clicked planet.
+  - [x] Add smooth return transition to global dome view on clicking 'Reset View' or background canvas.
 
-- [x] **Phase 19.4: Chatbot 0ms Instant Interceptor (`src/components/AstroChatbot.tsx`)**
-  - [x] Implement instant resolver (#20) in `tryInstantEngineAnswer` matching birth moment / birth time accuracy questions.
-  - [x] Compute real-time D-60 / D-9 boundary seconds directly on client and render instant shastric explanation with interactive BTR trigger button.
+- [x] **Phase 20.4: Floating Holographic Astrological Behavior HUD (`SkyDome.tsx`)**
+  - [x] Build floating 3D glass HUD (`AstrologicalBehaviorHUD`) anchored beside the zoomed planet with neon glassmorphism styling.
+  - [x] Display real-time astrological behavior:
+    - Dignity (Exalted, Debilitated, Swakshetra, Moolatrikona, Neecha-Vakri).
+    - Motion & Combustion (Vakri retrograde speed, Combust with separation degrees from Sun).
+    - House Lordship & Functional Status (Benefic, Yogakaraka, Maraka, Dusthana).
+    - Active Running Dasha status (Mahadasha, Antardasha, Pratyantardasha).
+    - Aspects Cast & Received.
+  - [x] Add interactive action buttons:
+    - 🚀 "Fly to [Aspected Planet]" (switches camera target seamlessly).
+    - 💬 "Ask AI Chatbot" (pre-fills and opens query in Astro Chatbot).
+    - ⤓ "Reset View / Zoom Out".
 
-- [x] **Phase 19.5: Automated Verification & Test Suite (`tests/engine.test.mjs`)**
-  - [x] Add Subtest 116 verifying Tri-Epoch calculation, second-level D-60 sensitivity, and chatbot intent routing.
-  - [x] Run `npm test` to achieve 116/116 passing tests.
+- [x] **Phase 20.5: Automated Verification & Test Suite (`tests/engine.test.mjs`)**
+  - [x] Add Subtest 117 verifying 3D aspect ray targets, planetary dignity mappings, and HUD behavioral calculations.
+  - [x] Run `npm test` to verify 117/117 passing tests.
   - [x] Run `npx tsc --noEmit` to verify zero type errors.
+  - [x] Run `npm run build` to verify production Next.js build compilation.

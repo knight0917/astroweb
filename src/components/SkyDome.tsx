@@ -10,6 +10,15 @@ import { RASHIS, NAKSHATRAS } from "../engine/constants";
 import { formatDMS } from "../engine/rashiNakshatra";
 import VerticalTimeTravel from "./VerticalTimeTravel";
 import PlanetIndexDeck from "./PlanetIndexDeck";
+import {
+  evaluateNeechaVakriPlanets,
+  evaluateCombustionNuances,
+  NeechaVakriPlanetInfo,
+  CombustionNuanceInfo,
+} from "../engine/omniAspectEngine";
+import { evaluateJatakaChandrika } from "../engine/jatakaChandrika";
+import { calculateVimshottariDasha } from "../engine/dasha";
+import { JatakaChandrikaGrahaRole } from "../engine/types";
 
 // Rashi Sector Vibrant Theme Colors
 const RASHI_COLORS = [
@@ -545,7 +554,527 @@ function LowerVedicHousesBelt3D({
   );
 }
 
-// 3D Planet Marker with Planetary Aspect Rays (Graha Drishti) & Hover Degree Tooltip
+export interface Planet3DNode {
+  id: string;
+  name: string;
+  sanskritName: string;
+  symbol: string;
+  color: string;
+  longitude: number;
+  signIndex: number;
+  house: number;
+  position: [number, number, number];
+  isRetrograde?: boolean;
+  speed?: number;
+  isUpagraha?: boolean;
+  isLagna?: boolean;
+}
+
+export interface DirectAspectTarget {
+  id: string;
+  name: string;
+  symbol: string;
+  color: string;
+  position: [number, number, number];
+  signName: string;
+  house: number;
+}
+
+export interface AspectRayData {
+  label: string;
+  houseOffset: number;
+  degOffset: number;
+  targetSignIndex: number;
+  targetSignName: string;
+  targetHouse: number;
+  targetLon: number;
+  outerPos: [number, number, number];
+  outerPoints: Float32Array;
+  directTargets: DirectAspectTarget[];
+}
+
+// Cosmic Energy Aura & Orbital Accretion Vortex with Retrograde Reverse Spin
+function PlanetaryAccretionVortex({
+  color,
+  radius,
+  isRetrograde,
+  isCombust,
+  sunPos,
+  isSelected,
+  planetPos,
+}: {
+  color: string;
+  radius: number;
+  isRetrograde?: boolean;
+  isCombust?: boolean;
+  sunPos?: [number, number, number];
+  isSelected: boolean;
+  planetPos: [number, number, number];
+}) {
+  const vortexRef = useRef<THREE.Group>(null);
+  const particleGroupRef = useRef<THREE.Group>(null);
+  const coronaRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state, delta) => {
+    // Reverse particle rotation for Retrograde (Vakri) grahas
+    const rotSpeed = isRetrograde ? -1.8 : 1.8;
+    if (vortexRef.current) {
+      vortexRef.current.rotation.z += delta * rotSpeed;
+    }
+    if (particleGroupRef.current) {
+      particleGroupRef.current.rotation.z += delta * rotSpeed * 1.4;
+    }
+    if (coronaRef.current) {
+      const pulse = 1 + Math.sin(state.clock.elapsedTime * 3) * 0.12;
+      coronaRef.current.scale.setScalar(pulse);
+    }
+  });
+
+  // 8 orbital energy spark nodes around the accretion disc
+  const particles = useMemo(() => {
+    const pts: [number, number, number][] = [];
+    const count = 8;
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      const r = radius * 2.2 + (i % 2 === 0 ? 0.3 : -0.2);
+      pts.push([Math.cos(angle) * r, Math.sin(angle) * r, Math.sin(angle * 2) * 0.2]);
+    }
+    return pts;
+  }, [radius]);
+
+  // Solar filament line if combust
+  const solarFilament = useMemo(() => {
+    if (!isCombust || !sunPos) return null;
+    return new Float32Array([
+      0, 0, 0,
+      sunPos[0] - planetPos[0],
+      sunPos[1] - planetPos[1],
+      sunPos[2] - planetPos[2],
+    ]);
+  }, [isCombust, sunPos, planetPos]);
+
+  return (
+    <group>
+      {/* Combust Solar Filament connecting directly to Sun's Core */}
+      {solarFilament && (
+        <line>
+          <bufferGeometry>
+            <bufferAttribute attach="attributes-position" args={[solarFilament, 3]} />
+          </bufferGeometry>
+          <lineBasicMaterial color="#f59e0b" transparent opacity={0.75} linewidth={2} />
+        </line>
+      )}
+
+      {/* Pulsing Energy Corona Sphere */}
+      <mesh ref={coronaRef}>
+        <sphereGeometry args={[radius * 1.4, 24, 24]} />
+        <meshBasicMaterial color={color} transparent opacity={isSelected ? 0.28 : 0.16} />
+      </mesh>
+
+      {/* Tilted Accretion Vortex Group */}
+      <group ref={vortexRef} rotation={[Math.PI / 2.8, Math.PI / 6, 0]}>
+        {/* Core Luminous Inner Ring */}
+        <mesh>
+          <ringGeometry args={[radius * 1.35, radius * 1.75, 48]} />
+          <meshStandardMaterial
+            color={color}
+            emissive={color}
+            emissiveIntensity={isSelected ? 3.2 : 1.8}
+            side={THREE.DoubleSide}
+            transparent
+            opacity={isSelected ? 0.85 : 0.55}
+          />
+        </mesh>
+
+        {/* Outer Cosmic Dust Disc */}
+        <mesh>
+          <ringGeometry args={[radius * 1.85, radius * 2.55, 48]} />
+          <meshBasicMaterial
+            color={color}
+            side={THREE.DoubleSide}
+            transparent
+            opacity={isSelected ? 0.45 : 0.25}
+          />
+        </mesh>
+      </group>
+
+      {/* Swirling Particle Vortex (Reverse flow for Retrograde) */}
+      <group ref={particleGroupRef} rotation={[Math.PI / 2.8, Math.PI / 6, 0]}>
+        {particles.map((pt, i) => (
+          <mesh key={i} position={pt}>
+            <sphereGeometry args={[isSelected ? 0.12 : 0.08, 8, 8]} />
+            <meshStandardMaterial
+              color="#ffffff"
+              emissive={color}
+              emissiveIntensity={3.0}
+            />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+}
+
+// Floating Holographic Astrological Behavior HUD (3D Neon Glass Card)
+function AstrologicalBehaviorHUD({
+  name,
+  sanskritName,
+  symbol,
+  color,
+  longitude,
+  degreesInSign,
+  rashi,
+  nakshatra,
+  isRetrograde,
+  speed,
+  house,
+  isLagna,
+  isUpagraha,
+  neechaVakriInfo,
+  combustionInfo,
+  lordshipInfo,
+  dashaInfo,
+  aspectRays,
+  onFlyTo,
+  onAskAi,
+  onResetView,
+  onClose,
+}: {
+  name: string;
+  sanskritName: string;
+  symbol: string;
+  color: string;
+  longitude: number;
+  degreesInSign: number;
+  rashi: { sanskritName: string; symbol: string; englishName: string; index: number };
+  nakshatra: { sanskritName: string; pada: number; lord?: string; deity?: string; animal?: string; animalSymbol?: string };
+  isRetrograde?: boolean;
+  speed?: number;
+  house?: number;
+  isLagna?: boolean;
+  isUpagraha?: boolean;
+  neechaVakriInfo?: NeechaVakriPlanetInfo;
+  combustionInfo?: CombustionNuanceInfo;
+  lordshipInfo?: JatakaChandrikaGrahaRole;
+  dashaInfo: {
+    isMahadashaLord: boolean;
+    isAntardashaLord: boolean;
+    isPratyantardashaLord: boolean;
+    activeRoleText: string;
+  };
+  aspectRays: AspectRayData[];
+  onFlyTo: (targetPlanetId: string) => void;
+  onAskAi: () => void;
+  onResetView: () => void;
+  onClose: () => void;
+}) {
+  // Determine Dignity Badge & Rationale
+  let dignityBadge = {
+    title: "Neutral Dignity",
+    badgeClass: "bg-slate-800/80 text-slate-300 border-slate-600",
+    desc: "Standard planetary operational dignity.",
+  };
+
+  if (neechaVakriInfo?.isNeechaVakri) {
+    dignityBadge = {
+      title: "🌟 Neecha-Vakri (Uttara Kalamrita 2.6)",
+      badgeClass: "bg-amber-500/20 text-amber-300 border-amber-500/80 shadow-[0_0_12px_rgba(245,158,11,0.4)]",
+      desc: "Functions with spring-loaded Exalted power (Ucchavat Phala). Severe initial delay yields monumental late-life fruition.",
+    };
+  } else if (neechaVakriInfo?.isUcchaVakri) {
+    dignityBadge = {
+      title: "⚡ Uccha-Vakri (Exalted Retrograde)",
+      badgeClass: "bg-purple-500/20 text-purple-300 border-purple-500/80",
+      desc: "Exalted dignity operating with high retrograde intensity and internal re-evaluation.",
+    };
+  } else if (neechaVakriInfo?.isExalted) {
+    dignityBadge = {
+      title: "👑 Exalted (Uccha)",
+      badgeClass: "bg-emerald-500/20 text-emerald-300 border-emerald-500/80 shadow-[0_0_12px_rgba(16,185,129,0.4)]",
+      desc: "Maximum dignity and pure positive flow in its domain.",
+    };
+  } else if (neechaVakriInfo?.isDebilitated) {
+    dignityBadge = {
+      title: "⚠️ Debilitated (Neecha)",
+      badgeClass: "bg-rose-500/20 text-rose-300 border-rose-500/80",
+      desc: "Direct debilitation; planet operates in friction without retrograde inversion resistance.",
+    };
+  } else if (["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"].includes(name)) {
+    const OWN_SIGNS: Record<string, number[]> = {
+      Sun: [4],
+      Moon: [3],
+      Mars: [0, 7],
+      Mercury: [2, 5],
+      Jupiter: [8, 11],
+      Venus: [1, 6],
+      Saturn: [9, 10],
+    };
+    if (OWN_SIGNS[name]?.includes(rashi.index)) {
+      dignityBadge = {
+        title: "🏰 Swakshetra (Own Sign)",
+        badgeClass: "bg-blue-500/20 text-blue-300 border-blue-500/80",
+        desc: "High autonomous strength and stability in self-ruled sign.",
+      };
+    }
+  }
+
+  // Motion Badge
+  const motionBadge = isRetrograde
+    ? {
+        title: "🔄 Retrograde (Vakri) • Peak Chestabala (60/60)",
+        badgeClass: "bg-rose-950/80 text-rose-300 border-rose-500/70",
+        desc: speed !== undefined ? `Reverse speed: ${speed.toFixed(3)}°/day • Reverse Accretion Flow` : "Retrograde motion",
+      }
+    : {
+        title: "➡️ Direct Motion",
+        badgeClass: "bg-slate-900 text-slate-300 border-slate-700",
+        desc: speed !== undefined ? `Forward speed: +${speed.toFixed(3)}°/day` : "Direct motion",
+      };
+
+  // Combustion Badge
+  const combustionBadge = combustionInfo?.isCombust
+    ? {
+        title: `🔥 Combust (${combustionInfo.combustionTier.split(" ")[0]})`,
+        badgeClass: "bg-orange-500/20 text-orange-300 border-orange-500/80",
+        desc: `${combustionInfo.separationDeg.toFixed(1)}° from Sun • Shield Score: ${combustionInfo.immunityScore}%${combustionInfo.hasExaltationShield ? " • Exaltation Shield Active" : ""}`,
+      }
+    : {
+        title: "✨ Free Solar Ray (Uncombust)",
+        badgeClass: "bg-cyan-500/10 text-cyan-300 border-cyan-500/50",
+        desc: "Clear illumination without solar obscuration.",
+      };
+
+  // Lordship Badge
+  const lordshipBadge = lordshipInfo
+    ? {
+        role: lordshipInfo.functionalNature,
+        houses: lordshipInfo.housesOwned.length > 0 ? `Lord of Houses ${lordshipInfo.housesOwned.join(" & ")}` : `House ${house}`,
+        badgeClass: lordshipInfo.functionalNature.includes("Yogakaraka")
+          ? "bg-amber-500/20 text-amber-300 border-amber-500/80"
+          : lordshipInfo.functionalNature.includes("Benefic")
+          ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/80"
+          : lordshipInfo.functionalNature.includes("Malefic")
+          ? "bg-red-500/20 text-red-300 border-red-500/80"
+          : "bg-slate-800 text-slate-300 border-slate-700",
+        reason: lordshipInfo.classicalReasoning,
+      }
+    : isLagna
+    ? {
+        role: name === "Lagna" ? "👑 Ascendant (Supreme Kendra & Trikona Foundation)" : "🌟 Midheaven (Karma Zenith MC)",
+        houses: name === "Lagna" ? "House 1 (Tanu Bhava)" : "House 10 (Karma Bhava)",
+        badgeClass: "bg-emerald-500/20 text-emerald-300 border-emerald-500/80",
+        reason: "Core orientational cardinal axis of the horoscope.",
+      }
+    : null;
+
+  return (
+    <Html distanceFactor={22} position={[2.6, 0.2, 0]} zIndexRange={[60, 100]}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-80 sm:w-96 max-h-[75vh] overflow-y-auto custom-scrollbar p-3.5 sm:p-4 rounded-2xl bg-slate-950/95 border border-cyan-500/60 shadow-[0_0_35px_rgba(6,182,212,0.4)] backdrop-blur-2xl text-left select-none pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between border-b border-slate-800 pb-2.5 mb-2.5">
+          <div className="flex items-center gap-2">
+            <span
+              style={{ backgroundColor: `${color}25`, borderColor: color, color }}
+              className="w-8 h-8 rounded-xl border flex items-center justify-center text-base font-extrabold shadow-md"
+            >
+              {symbol}
+            </span>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-extrabold text-sm text-slate-100">{name}</h3>
+                <span className="text-xs text-amber-300 font-medium">({sanskritName})</span>
+              </div>
+              <p className="text-[10px] text-slate-400 font-mono">
+                {rashi.symbol} {rashi.sanskritName} • {formatDMS(degreesInSign)}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {house !== undefined && (
+              <span className="px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold font-mono">
+                H{house}
+              </span>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              title="Close HUD"
+              className="w-6 h-6 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs font-bold transition-all cursor-pointer pointer-events-auto"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Position & Nakshatra Meta */}
+        <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-800 text-[11px] space-y-1 mb-2.5">
+          <div className="flex justify-between">
+            <span className="text-slate-400">Nakshatra:</span>
+            <span className="font-bold text-purple-300">
+              {nakshatra.sanskritName} (Pada {nakshatra.pada}) {nakshatra.animalSymbol ? `• ${nakshatra.animalSymbol} ${nakshatra.animal}` : ""}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-400">Sidereal Lon:</span>
+            <span className="font-mono font-bold text-amber-300">{formatDMS(longitude)}</span>
+          </div>
+          {nakshatra.lord && (
+            <div className="flex justify-between">
+              <span className="text-slate-400">Nakshatra Lord:</span>
+              <span className="font-semibold text-slate-200">{nakshatra.lord}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Astrological Behavior Multi-Card Matrix */}
+        <div className="space-y-2 text-[11px]">
+          {/* 1. Dignity */}
+          {!isUpagraha && !isLagna && (
+            <div className={`p-2 rounded-xl border ${dignityBadge.badgeClass}`}>
+              <div className="font-extrabold text-[11px] mb-0.5">{dignityBadge.title}</div>
+              <div className="text-[10px] opacity-90 leading-tight">{dignityBadge.desc}</div>
+            </div>
+          )}
+
+          {/* 2. Motion & Chestabala */}
+          {!isUpagraha && !isLagna && (
+            <div className={`p-2 rounded-xl border ${motionBadge.badgeClass}`}>
+              <div className="font-extrabold text-[11px] mb-0.5">{motionBadge.title}</div>
+              <div className="text-[10px] opacity-90 leading-tight">{motionBadge.desc}</div>
+            </div>
+          )}
+
+          {/* 3. Combustion & Solar Shields */}
+          {!isUpagraha && !isLagna && name !== "Sun" && combustionBadge && (
+            <div className={`p-2 rounded-xl border ${combustionBadge.badgeClass}`}>
+              <div className="font-extrabold text-[11px] mb-0.5">{combustionBadge.title}</div>
+              <div className="text-[10px] opacity-90 leading-tight">{combustionBadge.desc}</div>
+            </div>
+          )}
+
+          {/* 4. House Lordship & Role */}
+          {lordshipBadge && (
+            <div className={`p-2 rounded-xl border ${lordshipBadge.badgeClass}`}>
+              <div className="flex items-center justify-between font-extrabold text-[11px] mb-0.5">
+                <span>{lordshipBadge.role}</span>
+                <span className="text-[10px] opacity-80">{lordshipBadge.houses}</span>
+              </div>
+              <div className="text-[10px] opacity-90 leading-tight">{lordshipBadge.reason}</div>
+            </div>
+          )}
+
+          {/* 5. Active Dasha Role */}
+          {!isUpagraha && !isLagna && (
+            <div className="p-2 rounded-xl border border-indigo-500/60 bg-indigo-950/30 text-indigo-200">
+              <div className="flex items-center justify-between font-extrabold text-[11px] mb-0.5">
+                <span>Vimshottari Dasha Telemetry</span>
+                <span className="text-[9px] uppercase tracking-wider text-indigo-400 font-mono">Live Clock</span>
+              </div>
+              <div className="text-[10.5px] font-semibold text-amber-300">{dashaInfo.activeRoleText}</div>
+            </div>
+          )}
+        </div>
+
+        {/* 6. Aspects Cast (Graha Drishti) & Direct Target Flight Buttons */}
+        {aspectRays.length > 0 && (
+          <div className="mt-3 pt-2.5 border-t border-slate-800">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] uppercase tracking-wider font-extrabold text-amber-400">
+                Graha Drishti (Aspects Cast)
+              </span>
+              <span className="text-[9px] text-slate-400 font-mono">
+                {aspectRays.length} Vectors
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              {aspectRays.map((asp, idx) => {
+                return (
+                  <div
+                    key={idx}
+                    className="p-2 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px]"
+                  >
+                    <div className="flex items-center justify-between font-bold text-slate-200">
+                      <span style={{ color }} className="flex items-center gap-1">
+                        <span>✦</span>
+                        <span>{asp.label}</span>
+                      </span>
+                      <span className="text-[10px] text-amber-300 font-mono">
+                        H{asp.targetHouse} ({asp.targetSignName})
+                      </span>
+                    </div>
+
+                    {asp.directTargets.length > 0 ? (
+                      <div className="mt-1.5 space-y-1">
+                        <div className="text-[9.5px] text-cyan-300 font-medium">
+                          Directly Illuminating ({asp.directTargets.length} Grahas):
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 pt-0.5">
+                          {asp.directTargets.map((t) => (
+                            <button
+                              key={t.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onFlyTo(t.id);
+                              }}
+                              title={`Fly camera directly to ${t.name}`}
+                              className="px-2 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/60 text-cyan-200 font-bold text-[10px] flex items-center gap-1 shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer pointer-events-auto"
+                            >
+                              <span>{t.symbol}</span>
+                              <span>{t.name}</span>
+                              <span className="text-amber-300 font-bold ml-0.5">🚀 Fly</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-1 text-[9.5px] text-slate-400 italic">
+                        No planets in target house • Ray anchors to Zodiac cusp ({formatDMS(asp.targetLon)})
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Bottom Interactive Actions Bar */}
+        <div className="mt-3.5 pt-3 border-t border-slate-800 flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAskAi();
+            }}
+            className="flex-1 py-1.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs shadow-lg flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer pointer-events-auto"
+          >
+            <span>💬</span>
+            <span>Ask AI Chatbot</span>
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onResetView();
+            }}
+            className="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-bold text-xs shadow-md flex items-center gap-1 transition-all active:scale-95 cursor-pointer pointer-events-auto"
+            title="Return camera to Geocentric Bhu-Mandala view"
+          >
+            <span>⤓</span>
+            <span>Reset View</span>
+          </button>
+        </div>
+      </div>
+    </Html>
+  );
+}
+
+// 3D Planet Marker with Direct Planet-to-Planet Aspect Rays, Accretion Vortex & Holographic HUD
 function PlanetMesh({
   id,
   name,
@@ -564,7 +1093,15 @@ function PlanetMesh({
   isLagna,
   showAspectRays,
   isSelected,
+  planetPositionsMap,
+  neechaVakriInfo,
+  combustionInfo,
+  lordshipInfo,
+  dashaInfo,
+  sunPos,
   onSelect,
+  onFlyTo,
+  onResetView,
 }: {
   id: string;
   name: string;
@@ -574,7 +1111,7 @@ function PlanetMesh({
   longitude: number;
   degreesInSign: number;
   orbitRadius: number;
-  rashi: { sanskritName: string; symbol: string; degreesInSign: number };
+  rashi: { sanskritName: string; symbol: string; englishName: string; index: number };
   nakshatra: { sanskritName: string; pada: number; lord?: string; deity?: string; animal?: string; animalSymbol?: string };
   isRetrograde?: boolean;
   speed?: number;
@@ -583,7 +1120,20 @@ function PlanetMesh({
   isLagna?: boolean;
   showAspectRays: boolean;
   isSelected: boolean;
+  planetPositionsMap: Record<string, Planet3DNode>;
+  neechaVakriInfo?: NeechaVakriPlanetInfo;
+  combustionInfo?: CombustionNuanceInfo;
+  lordshipInfo?: JatakaChandrikaGrahaRole;
+  dashaInfo: {
+    isMahadashaLord: boolean;
+    isAntardashaLord: boolean;
+    isPratyantardashaLord: boolean;
+    activeRoleText: string;
+  };
+  sunPos?: [number, number, number];
   onSelect: () => void;
+  onFlyTo: (targetPlanetId: string) => void;
+  onResetView: () => void;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
@@ -603,83 +1153,180 @@ function PlanetMesh({
     }
   });
 
-  // Calculate authentic Vedic Aspect Rays (Graha Drishti)
-  const aspectRays = useMemo(() => {
+  // Calculate direct planet-to-planet Graha Drishti rays and outer cusp alignment
+  const aspectRays: AspectRayData[] = useMemo(() => {
     if (isUpagraha) return []; // Upagrahas do not cast independent Drishti
 
     const aspects = getVedicAspects(name);
     return aspects.map((asp) => {
+      const targetSignIndex = (rashi.index + asp.houseOffset - 1) % 12;
+      const targetHouse = house !== undefined ? ((house - 1 + asp.houseOffset - 1) % 12) + 1 : ((targetSignIndex + 1));
+      const targetSignName = RASHIS[targetSignIndex]?.sanskritName || "";
       const targetLon = (longitude + asp.degOffset) % 360;
-      const targetPos = eclipticToCartesian(targetLon, 0, 40);
-      const points = new Float32Array([
+      const outerPos = eclipticToCartesian(targetLon, 0, 40);
+      const outerPoints = new Float32Array([
         position[0],
         position[1],
         position[2],
-        targetPos[0],
-        targetPos[1],
-        targetPos[2],
+        outerPos[0],
+        outerPos[1],
+        outerPos[2],
       ]);
+
+      // Detect direct target planets occupying the aspected sign or house
+      const directTargets: DirectAspectTarget[] = [];
+      if (planetPositionsMap) {
+        Object.values(planetPositionsMap).forEach((t) => {
+          if (!t.isUpagraha && t.id !== id && (t.signIndex === targetSignIndex || t.house === targetHouse)) {
+            directTargets.push({
+              id: t.id,
+              name: t.name,
+              symbol: t.symbol,
+              color: t.color,
+              position: t.position,
+              signName: targetSignName,
+              house: targetHouse,
+            });
+          }
+        });
+      }
+
       return {
-        ...asp,
+        label: asp.label,
+        houseOffset: asp.houseOffset,
+        degOffset: asp.degOffset,
+        targetSignIndex,
+        targetSignName,
+        targetHouse,
         targetLon,
-        targetPos,
-        points,
+        outerPos,
+        outerPoints,
+        directTargets,
       };
     });
-  }, [name, longitude, position, isUpagraha]);
+  }, [name, longitude, position, isUpagraha, rashi.index, house, id, planetPositionsMap]);
+
+  // Gate aspect ray rendering strictly to hover or selected state
+  const shouldRenderAspects = showAspectRays && (hovered || isSelected);
+
+  const handleAskAi = () => {
+    let prompt = "";
+    if (isLagna) {
+      prompt = `Analyzing my ${name} in ${rashi.sanskritName} (${rashi.englishName}) at ${formatDMS(degreesInSign)} in ${nakshatra.sanskritName} Pada ${nakshatra.pada}, what is its core soul foundation, ascendant disposition, and major life destiny trajectory?`;
+    } else {
+      prompt = `Analyzing my ${name} (${sanskritName}) in House ${house} (${rashi.sanskritName} ${formatDMS(degreesInSign)}): its dignity (${neechaVakriInfo?.isNeechaVakri ? "Neecha-Vakri with Uttara Kalamrita 2.6 Exalted Inversion" : neechaVakriInfo?.isExalted ? "Exalted" : neechaVakriInfo?.isDebilitated ? "Debilitated" : "Neutral"}), ${isRetrograde ? "Retrograde (Vakri) with Peak Chestabala" : "Direct motion"}, combustion status (${combustionInfo?.isCombust ? combustionInfo.combustionTier : "Uncombust"}), house lordship as ${lordshipInfo?.functionalNature || "Lord"}, and current dasha influence (${dashaInfo.activeRoleText}), what is its deep astrological behavior and real-world fruition?`;
+    }
+    window.dispatchEvent(new CustomEvent("open-astro-chat", { detail: { prompt } }));
+  };
 
   return (
     <group>
-      {/* 3D Planetary Aspect Rays (Graha Drishti) with authentic planet color */}
-      {showAspectRays &&
+      {/* 1. Direct Planet-to-Planet & Zodiac Aspect Beams (Visible ONLY on Hover or Select) */}
+      {shouldRenderAspects &&
         aspectRays.map((asp, idx) => {
-          const isHighlit = hovered || isSelected;
           return (
             <group key={idx}>
-              {/* Colored Luminous Ray Beam */}
+              {/* Direct Inter-Planetary Laser Beams to Targets */}
+              {asp.directTargets.map((target) => {
+                const directBeamPoints = new Float32Array([
+                  position[0],
+                  position[1],
+                  position[2],
+                  target.position[0],
+                  target.position[1],
+                  target.position[2],
+                ]);
+                return (
+                  <group key={target.id}>
+                    {/* Laser Beam connecting source planet to target planet */}
+                    <line>
+                      <bufferGeometry>
+                        <bufferAttribute attach="attributes-position" args={[directBeamPoints, 3]} />
+                      </bufferGeometry>
+                      <lineBasicMaterial color={color} transparent opacity={0.95} linewidth={3} />
+                    </line>
+
+                    {/* Impact Spark Sphere on Target Planet */}
+                    <mesh position={target.position}>
+                      <sphereGeometry args={[0.55, 16, 16]} />
+                      <meshStandardMaterial
+                        color={color}
+                        emissive={color}
+                        emissiveIntensity={3.2}
+                      />
+                    </mesh>
+
+                    {/* Impact Label Badge on Target Planet */}
+                    <group position={target.position}>
+                      <Html distanceFactor={34} center zIndexRange={[10, 30]}>
+                        <div
+                          style={{ borderColor: color }}
+                          className="px-2 py-0.5 rounded-md bg-slate-950/95 border text-[9px] font-bold text-slate-100 shadow-xl whitespace-nowrap pointer-events-none select-none"
+                        >
+                          <span style={{ color }}>✦ Received {asp.label} from {name}</span>
+                        </div>
+                      </Html>
+                    </group>
+                  </group>
+                );
+              })}
+
+              {/* Outer Zodiac Belt Cusp Alignment Beam */}
               <line>
                 <bufferGeometry>
-                  <bufferAttribute attach="attributes-position" args={[asp.points, 3]} />
+                  <bufferAttribute attach="attributes-position" args={[asp.outerPoints, 3]} />
                 </bufferGeometry>
                 <lineBasicMaterial
                   color={color}
                   transparent
-                  opacity={isHighlit ? 0.95 : 0.35}
+                  opacity={asp.directTargets.length > 0 ? 0.35 : 0.85}
+                  linewidth={1}
                 />
               </line>
 
-              {/* Target Impact Node on Zodiac Belt */}
-              <mesh position={asp.targetPos}>
-                <sphereGeometry args={[isHighlit ? 0.6 : 0.3, 16, 16]} />
+              {/* Target Impact Node on Zodiac Belt Cusp */}
+              <mesh position={asp.outerPos}>
+                <sphereGeometry args={[asp.directTargets.length > 0 ? 0.3 : 0.55, 16, 16]} />
                 <meshStandardMaterial
                   color={color}
                   emissive={color}
-                  emissiveIntensity={isHighlit ? 2.5 : 1.0}
+                  emissiveIntensity={2.2}
                 />
               </mesh>
 
-              {/* Aspect Label on Hover */}
-              {isHighlit && (
-                <group position={asp.targetPos}>
-                  <Html distanceFactor={36} center zIndexRange={[0, 10]}>
-                    <div
-                      style={{ borderColor: color }}
-                      className="px-2 py-0.5 rounded-md bg-slate-950/90 border text-[9px] font-bold text-slate-100 shadow-xl whitespace-nowrap pointer-events-none select-none"
-                    >
-                      <span style={{ color: color }}>✦ {asp.label}</span>
-                      <span className="text-slate-400 font-mono ml-1">
-                        ({formatDMS(asp.targetLon)})
-                      </span>
-                    </div>
-                  </Html>
-                </group>
-              )}
+              {/* Outer Cusp Aspect Label */}
+              <group position={asp.outerPos}>
+                <Html distanceFactor={36} center zIndexRange={[0, 10]}>
+                  <div
+                    style={{ borderColor: color }}
+                    className="px-2 py-0.5 rounded-md bg-slate-950/90 border text-[9px] font-bold text-slate-100 shadow-xl whitespace-nowrap pointer-events-none select-none"
+                  >
+                    <span style={{ color }}>✦ {asp.label}</span>
+                    <span className="text-slate-400 font-mono ml-1">
+                      ({formatDMS(asp.targetLon)})
+                    </span>
+                  </div>
+                </Html>
+              </group>
             </group>
           );
         })}
 
-      {/* Planet Orb Group */}
+      {/* 2. Planet Orb & Surrounding Accretion Vortex */}
       <group position={position}>
+        {/* Cosmic Accretion Vortex (Rendered on Hover or Select) */}
+        {(hovered || isSelected) && (
+          <PlanetaryAccretionVortex
+            color={color}
+            radius={radius}
+            isRetrograde={isRetrograde}
+            isCombust={combustionInfo?.isCombust}
+            sunPos={sunPos}
+            isSelected={isSelected}
+            planetPos={position}
+          />
+        )}
+
         {/* Planet Sphere */}
         <mesh
           ref={meshRef}
@@ -697,7 +1344,7 @@ function PlanetMesh({
           <meshStandardMaterial
             color={color}
             emissive={color}
-            emissiveIntensity={isSelected ? 2.0 : hovered ? 1.4 : 0.8}
+            emissiveIntensity={isSelected ? 2.2 : hovered ? 1.5 : 0.8}
             roughness={0.2}
             metalness={0.8}
           />
@@ -745,8 +1392,36 @@ function PlanetMesh({
           </div>
         </Html>
 
-        {/* Comprehensive Hover Degree Tooltip Card */}
-        {hovered && (
+        {/* 3. Floating Holographic Astrological Behavior HUD when selected */}
+        {isSelected && (
+          <AstrologicalBehaviorHUD
+            name={name}
+            sanskritName={sanskritName}
+            symbol={symbol}
+            color={color}
+            longitude={longitude}
+            degreesInSign={degreesInSign}
+            rashi={rashi}
+            nakshatra={nakshatra}
+            isRetrograde={isRetrograde}
+            speed={speed}
+            house={house}
+            isLagna={isLagna}
+            isUpagraha={isUpagraha}
+            neechaVakriInfo={neechaVakriInfo}
+            combustionInfo={combustionInfo}
+            lordshipInfo={lordshipInfo}
+            dashaInfo={dashaInfo}
+            aspectRays={aspectRays}
+            onFlyTo={onFlyTo}
+            onAskAi={handleAskAi}
+            onResetView={onResetView}
+            onClose={onResetView}
+          />
+        )}
+
+        {/* 4. Compact Hover Tooltip when hovered (and not selected) */}
+        {hovered && !isSelected && (
           <Html distanceFactor={28} center position={[0, -radius - 1.8, 0]} zIndexRange={[0, 20]}>
             <div className="glass-panel p-2.5 rounded-xl border border-amber-500/80 bg-slate-950/95 shadow-2xl text-xs text-left min-w-[220px] pointer-events-none select-none z-50 animate-in fade-in zoom-in-95 duration-150">
               <div className="flex items-center justify-between border-b border-slate-800 pb-1 mb-1.5">
@@ -763,7 +1438,7 @@ function PlanetMesh({
 
               <div className="space-y-1 text-[11px]">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Rashi (Zodiac):</span>
+                  <span className="text-slate-400">Rashi:</span>
                   <span className="font-bold text-slate-200">
                     {rashi.symbol} {rashi.sanskritName} ({formatDMS(degreesInSign)})
                   </span>
@@ -790,7 +1465,6 @@ function PlanetMesh({
                   <span className="text-amber-200 font-bold">{formatDMS(longitude)}</span>
                 </div>
 
-                {/* Aspect Summary in Tooltip */}
                 {aspectRays.length > 0 && (
                   <div className="text-[10px] pt-1 border-t border-slate-800 text-slate-300">
                     <span className="text-amber-400 font-semibold">Aspects: </span>
@@ -806,7 +1480,7 @@ function PlanetMesh({
   );
 }
 
-// Main Inside-the-Dome Celestial Scene
+// Main Inside-the-Dome Celestial Scene with Cinematic Smooth Fly-In Camera
 function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolean }) {
   const {
     ephemeris,
@@ -815,36 +1489,169 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
     showModernPlanets,
     selectedEntityId,
     setSelectedEntityId,
+    currentDate,
   } = useAstroStore();
 
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
   const targetCamPos = useRef<THREE.Vector3 | null>(null);
+  const targetLookAt = useRef<THREE.Vector3 | null>(null);
 
-  // Smooth camera orientation to turn and face selected planet
+  // Precompute 3D coordinates for all active bodies in the dome
+  const planetPositionsMap = useMemo(() => {
+    if (!ephemeris) return {};
+    const map: Record<string, Planet3DNode> = {};
+
+    // Ascendant & Midheaven
+    map["Ascendant"] = {
+      id: "Ascendant",
+      name: "Lagna",
+      sanskritName: "Lagna (Rising)",
+      symbol: "ASC",
+      color: "#10b981",
+      longitude: ephemeris.ascendant.siderealLongitude,
+      signIndex: ephemeris.ascendant.rashi.index,
+      house: 1,
+      position: eclipticToCartesian(ephemeris.ascendant.siderealLongitude, 0, 40),
+      isLagna: true,
+    };
+
+    map["Midheaven"] = {
+      id: "Midheaven",
+      name: "MC",
+      sanskritName: "Madhya Lagna",
+      symbol: "MC",
+      color: "#f59e0b",
+      longitude: ephemeris.midheaven.siderealLongitude,
+      signIndex: ephemeris.midheaven.rashi.index,
+      house: 10,
+      position: eclipticToCartesian(ephemeris.midheaven.siderealLongitude, 0, 40),
+      isLagna: true,
+    };
+
+    // Navagrahas & Modern Planets
+    Object.values(ephemeris.planets).forEach((p) => {
+      map[p.id] = {
+        id: p.id,
+        name: p.name,
+        sanskritName: p.sanskritName,
+        symbol: p.symbol,
+        color: p.color,
+        longitude: p.siderealLongitude,
+        signIndex: p.rashi.index,
+        house: p.house,
+        position: eclipticToCartesian(p.siderealLongitude, 0, 40),
+        isRetrograde: p.isRetrograde,
+        speed: p.speed,
+      };
+    });
+
+    // Upagrahas
+    if (showUpagrahas) {
+      Object.values(ephemeris.upagrahas).forEach((u) => {
+        map[u.id] = {
+          id: u.id,
+          name: u.name,
+          sanskritName: u.sanskritName,
+          symbol: "✦",
+          color: "#c084fc",
+          longitude: u.siderealLongitude,
+          signIndex: u.rashi.index,
+          house: u.house,
+          position: eclipticToCartesian(u.siderealLongitude, 0, 40),
+          isUpagraha: true,
+        };
+      });
+    }
+
+    return map;
+  }, [ephemeris, showUpagrahas]);
+
+  const sunPos = planetPositionsMap["Sun"]?.position;
+
+  // Classical Astrological Intelligence Syntheses
+  const neechaVakriList = useMemo(() => {
+    if (!ephemeris) return [];
+    return evaluateNeechaVakriPlanets(ephemeris);
+  }, [ephemeris]);
+
+  const combustionList = useMemo(() => {
+    if (!ephemeris) return [];
+    return evaluateCombustionNuances(ephemeris);
+  }, [ephemeris]);
+
+  const jatakaChandrikaAnalysis = useMemo(() => {
+    if (!ephemeris) return null;
+    return evaluateJatakaChandrika(ephemeris);
+  }, [ephemeris]);
+
+  const dashaResult = useMemo(() => {
+    if (!ephemeris?.planets?.Moon) return null;
+    return calculateVimshottariDasha(
+      currentDate,
+      ephemeris.planets.Moon.siderealLongitude,
+      new Date()
+    );
+  }, [ephemeris, currentDate]);
+
+  const getDashaInfoForPlanet = (planetName: string) => {
+    if (!dashaResult?.activeDasha) {
+      return {
+        isMahadashaLord: false,
+        isAntardashaLord: false,
+        isPratyantardashaLord: false,
+        activeRoleText: "⏳ Dasha Period Inactive",
+      };
+    }
+    const mdLord = dashaResult.activeDasha.mahadasha.name;
+    const adLord = dashaResult.activeDasha.antardasha.name;
+    const pdLord = dashaResult.activeDasha.pratyantardasha.name;
+
+    const isMD = mdLord === planetName;
+    const isAD = adLord === planetName;
+    const isPD = pdLord === planetName;
+
+    let activeRoleText = "⏳ Dasha Period Inactive";
+    if (isMD && isAD) {
+      activeRoleText = `👑 Active Mahadasha & Antardasha Ruler`;
+    } else if (isMD) {
+      activeRoleText = `👑 Active Mahadasha Lord (through ${dashaResult.activeDasha.mdEnd.toLocaleDateString()})`;
+    } else if (isAD) {
+      activeRoleText = `⚡ Active Antardasha (Bhukti) Lord (through ${dashaResult.activeDasha.adEnd.toLocaleDateString()})`;
+    } else if (isPD) {
+      activeRoleText = `✨ Active Pratyantardasha Lord`;
+    }
+
+    return {
+      isMahadashaLord: isMD,
+      isAntardashaLord: isAD,
+      isPratyantardashaLord: isPD,
+      activeRoleText,
+    };
+  };
+
+  // Cinematic Fly-In Camera Glide into Close Orbit (~6.8 units) around selected planet
   useEffect(() => {
-    if (!selectedEntityId || !ephemeris) return;
+    if (!ephemeris) return;
 
-    let lon: number | null = null;
-    if (selectedEntityId === "Ascendant") {
-      lon = ephemeris.ascendant.siderealLongitude;
-    } else if (selectedEntityId === "Midheaven") {
-      lon = ephemeris.midheaven.siderealLongitude;
-    } else if (ephemeris.planets[selectedEntityId]) {
-      lon = ephemeris.planets[selectedEntityId].siderealLongitude;
-    } else if (ephemeris.upagrahas[selectedEntityId]) {
-      lon = ephemeris.upagrahas[selectedEntityId].siderealLongitude;
+    if (!selectedEntityId) {
+      // Smoothly glide camera back up to geocentric Bhu-Mandala overview
+      targetCamPos.current = new THREE.Vector3(0, 25, 45);
+      targetLookAt.current = new THREE.Vector3(0, 0, 0);
+      return;
     }
 
-    if (lon !== null) {
-      const pos = eclipticToCartesian(lon, 0, 40);
+    const node = planetPositionsMap[selectedEntityId];
+    if (node) {
+      const pos = node.position;
       const dir = new THREE.Vector3(pos[0], 0, pos[2]).normalize();
-      // Orbit camera outside the planet facing inward so planet is centered directly in view
-      targetCamPos.current = new THREE.Vector3(dir.x * 55, 8, dir.z * 55);
+      // Orbit camera at close inspection distance (~6.8 units) facing directly at the planet
+      targetCamPos.current = new THREE.Vector3(pos[0] + dir.x * 6.5, 2.2, pos[2] + dir.z * 6.5);
+      targetLookAt.current = new THREE.Vector3(pos[0], 0, pos[2]);
     }
-  }, [selectedEntityId, ephemeris]);
+  }, [selectedEntityId, ephemeris, planetPositionsMap]);
 
-  // Handle FOV & Camera Turning interpolation
+  // Smooth interpolation loop for camera position & controls target
   useFrame(() => {
     if (camera instanceof THREE.PerspectiveCamera) {
       if (Math.abs(camera.fov - fov) > 0.05) {
@@ -854,13 +1661,17 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
     }
 
     if (targetCamPos.current) {
-      camera.position.lerp(targetCamPos.current, 0.08);
-      if (controlsRef.current) {
-        controlsRef.current.target.lerp(new THREE.Vector3(0, 0, 0), 0.08);
-        controlsRef.current.update();
-      }
-      if (camera.position.distanceTo(targetCamPos.current) < 0.2) {
+      camera.position.lerp(targetCamPos.current, 0.07);
+      if (camera.position.distanceTo(targetCamPos.current) < 0.08) {
         targetCamPos.current = null;
+      }
+    }
+
+    if (targetLookAt.current && controlsRef.current) {
+      controlsRef.current.target.lerp(targetLookAt.current, 0.07);
+      controlsRef.current.update();
+      if (controlsRef.current.target.distanceTo(targetLookAt.current) < 0.08) {
+        targetLookAt.current = null;
       }
     }
   });
@@ -879,22 +1690,6 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
   }, [ephemeris, showUpagrahas]);
 
   if (!ephemeris) return null;
-
-  // Distinct radial distances for planetary shells between Earth (r=5) and Nakshatras (r=37)
-  const PLANET_RADII: Record<string, number> = {
-    Sun: 24,
-    Moon: 14,
-    Mercury: 17,
-    Venus: 20,
-    Mars: 27,
-    Jupiter: 30,
-    Saturn: 33,
-    Rahu: 22,
-    Ketu: 22,
-    Uranus: 34,
-    Neptune: 35,
-    Pluto: 36,
-  };
 
   return (
     <>
@@ -945,7 +1740,12 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
         isLagna={true}
         showAspectRays={showAspectRays}
         isSelected={selectedEntityId === "Ascendant"}
+        planetPositionsMap={planetPositionsMap}
+        dashaInfo={getDashaInfoForPlanet("Ascendant")}
+        sunPos={sunPos}
         onSelect={() => setSelectedEntityId("Ascendant")}
+        onFlyTo={(tId) => setSelectedEntityId(tId)}
+        onResetView={() => setSelectedEntityId(null)}
       />
 
       {/* Midheaven (MC) Marker (Middle Belt) */}
@@ -964,11 +1764,21 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
         isLagna={true}
         showAspectRays={showAspectRays}
         isSelected={selectedEntityId === "Midheaven"}
+        planetPositionsMap={planetPositionsMap}
+        dashaInfo={getDashaInfoForPlanet("Midheaven")}
+        sunPos={sunPos}
         onSelect={() => setSelectedEntityId("Midheaven")}
+        onFlyTo={(tId) => setSelectedEntityId(tId)}
+        onResetView={() => setSelectedEntityId(null)}
       />
 
       {/* 5. Navagrahas & Modern Planets placed between Zodiac & Nakshatra (Middle Belt) */}
       {planetList.map((p) => {
+        const nvInfo = neechaVakriList.find((n) => n.name === p.name);
+        const combInfo = combustionList.find((c) => c.name === p.name);
+        const lordInfo = jatakaChandrikaAnalysis?.grahaRoles.find((r) => r.grahaName === p.name);
+        const dInfo = getDashaInfoForPlanet(p.name);
+
         return (
           <PlanetMesh
             key={p.id}
@@ -987,7 +1797,15 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
             house={p.house}
             showAspectRays={showAspectRays}
             isSelected={selectedEntityId === p.id}
+            planetPositionsMap={planetPositionsMap}
+            neechaVakriInfo={nvInfo}
+            combustionInfo={combInfo}
+            lordshipInfo={lordInfo}
+            dashaInfo={dInfo}
+            sunPos={sunPos}
             onSelect={() => setSelectedEntityId(p.id)}
+            onFlyTo={(tId) => setSelectedEntityId(tId)}
+            onResetView={() => setSelectedEntityId(null)}
           />
         );
       })}
@@ -1011,7 +1829,12 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
             isUpagraha={true}
             showAspectRays={false}
             isSelected={selectedEntityId === u.id}
+            planetPositionsMap={planetPositionsMap}
+            dashaInfo={getDashaInfoForPlanet(u.name)}
+            sunPos={sunPos}
             onSelect={() => setSelectedEntityId(u.id)}
+            onFlyTo={(tId) => setSelectedEntityId(tId)}
+            onResetView={() => setSelectedEntityId(null)}
           />
         ))}
 
@@ -1019,7 +1842,7 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
       <OrbitControls
         ref={controlsRef}
         enableZoom={false}
-        minDistance={8}
+        minDistance={3}
         maxDistance={100}
         rotateSpeed={0.5}
         enablePan={true}
@@ -1099,7 +1922,7 @@ export default function SkyDome() {
     setFov((prev) => Math.min(95, Math.max(5, prev + zoomDelta)));
   };
 
-  const { isPlaying } = useAstroStore();
+  const { isPlaying, setSelectedEntityId } = useAstroStore();
   const zoomFactor = (65 / fov).toFixed(1);
 
   return (
@@ -1118,6 +1941,7 @@ export default function SkyDome() {
         dpr={[1, 1.25]}
         frameloop={isPlaying ? "always" : "demand"}
         performance={{ min: 0.5 }}
+        onPointerMissed={() => setSelectedEntityId(null)}
         gl={{
           antialias: false,
           alpha: false,

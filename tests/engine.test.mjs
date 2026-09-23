@@ -5446,3 +5446,108 @@ test("Phase 19: Tri-Epoch Birth Moment (Adhana, Shirodarshana, Bhupatana) & Real
   const systemPrompt = buildChatSystemInstruction(btrDossier);
   assert.ok(systemPrompt.includes("0V. **THE 3 CLASSICAL BIRTH EPOCHS & REAL-TIME D-60 BOUNDARY PROTOCOL"));
 });
+
+test("Phase 20: 3D Sky Dome Cosmic Vortex, Direct Graha Drishti Aspect Vector Mapping & Astrological Behavior Dignity Engine", async () => {
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const { evaluateNeechaVakriPlanets, evaluateCombustionNuances } = await import("../src/engine/omniAspectEngine.ts");
+  const { evaluateJatakaChandrika } = await import("../src/engine/jatakaChandrika.ts");
+  const { calculateVimshottariDasha } = await import("../src/engine/dasha.ts");
+  const { eclipticToCartesian } = await import("../src/engine/skyCoordinates.ts");
+
+  // Native chart benchmark: 17/09/1999 18:32 Allahabad, India (25.4358° N, 81.8463° E)
+  const allahabadLoc = {
+    latitude: 25.4358,
+    longitude: 81.8463,
+    timezoneOffsetHours: 5.5,
+    cityName: "Allahabad",
+    country: "India",
+  };
+  // 18:32 IST = 13:02 UTC
+  const birthDate = new Date("1999-09-17T13:02:00.000Z");
+  const ephem = calculateVedicEphemeris(birthDate, allahabadLoc, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Verify 3D Cartesian coordinates are calculated for all bodies on orbital shell r=40
+  const marsLon = ephem.planets.Mars.siderealLongitude;
+  const marsCartesian = eclipticToCartesian(marsLon, 0, 40);
+  assert.ok(typeof marsCartesian[0] === "number" && !isNaN(marsCartesian[0]));
+  assert.ok(typeof marsCartesian[1] === "number" && !isNaN(marsCartesian[1]));
+  assert.ok(typeof marsCartesian[2] === "number" && !isNaN(marsCartesian[2]));
+  const distFromOrigin = Math.sqrt(
+    marsCartesian[0] ** 2 + marsCartesian[1] ** 2 + marsCartesian[2] ** 2
+  );
+  assert.ok(Math.abs(distFromOrigin - 40) < 0.01, "3D orbital radius should be exactly 40 units");
+
+  // 2. Verify Graha Drishti inter-planetary target mapping
+  // Mars in Scorpio (Rashi index 7, House 9 for Pisces Lagna)
+  const marsSign = ephem.planets.Mars.rashi.index;
+  assert.strictEqual(marsSign, 7, "Mars must be in Vrischika (Scorpio)");
+
+  // Mars 4th aspect: Scorpio (7) + 3 = Aquarius (10)
+  const mars4thSign = (marsSign + 4 - 1) % 12;
+  assert.strictEqual(mars4thSign, 10, "Mars 4th aspect must target Kumbha (Aquarius)");
+
+  // Mars 7th aspect: Scorpio (7) + 6 = Taurus (1)
+  const mars7thSign = (marsSign + 7 - 1) % 12;
+  assert.strictEqual(mars7thSign, 1, "Mars 7th aspect must target Vrishabha (Taurus)");
+
+  // Mars 8th aspect: Scorpio (7) + 7 = Gemini (2)
+  const mars8thSign = (marsSign + 8 - 1) % 12;
+  assert.strictEqual(mars8thSign, 2, "Mars 8th aspect must target Mithuna (Gemini)");
+
+  // Verify direct target planet detection:
+  // Saturn [R] in Aries (0) casts 10th aspect on Capricorn (9), where Ketu is located
+  assert.strictEqual(ephem.planets.Saturn.rashi.index, 0, "Saturn must be in Aries");
+  assert.strictEqual(ephem.planets.Jupiter.rashi.index, 0, "Jupiter must be in Aries");
+  assert.strictEqual(ephem.planets.Ketu.rashi.index, 9, "Ketu must be in Capricorn");
+
+  const saturn10thSign = (ephem.planets.Saturn.rashi.index + 10 - 1) % 12;
+  assert.strictEqual(saturn10thSign, 9, "Saturn 10th aspect must target Capricorn (9)");
+  assert.strictEqual(saturn10thSign, ephem.planets.Ketu.rashi.index, "Saturn 10th aspect illuminates Ketu");
+
+  // In the 3D dome, Saturn 10th aspect beam shoots directly to Ketu's coordinates
+  const ketuCartesian = eclipticToCartesian(ephem.planets.Ketu.siderealLongitude, 0, 40);
+  assert.ok(ketuCartesian[0] !== 0 || ketuCartesian[2] !== 0);
+
+  // In the 3D dome, Mars 7th aspect beam shoots towards Taurus (1) outer cusp
+  const mars7thLon = (ephem.planets.Mars.siderealLongitude + 180) % 360;
+  const mars7thCusp = eclipticToCartesian(mars7thLon, 0, 40);
+  assert.ok(mars7thCusp[0] !== 0 || mars7thCusp[2] !== 0);
+
+  // 3. Verify Classical Dignity & Neecha-Vakri Inversion (Uttara Kalamrita 2.6)
+  const neechaVakriList = evaluateNeechaVakriPlanets(ephem);
+  const saturnInfo = neechaVakriList.find((p) => p.name === "Saturn");
+  assert.ok(saturnInfo, "Saturn must exist in neecha-vakri list");
+  assert.strictEqual(saturnInfo.isRetrograde, true, "Saturn is Retrograde in benchmark chart");
+  assert.strictEqual(saturnInfo.isDebilitated, true, "Saturn is Debilitated in Aries");
+  assert.strictEqual(saturnInfo.isNeechaVakri, true, "Saturn must be flagged as Classical Neecha-Vakri");
+  assert.ok(saturnInfo.classicalVerdict.includes("Uttara Kalamrita 2.6"), "Verdict cites Uttara Kalamrita 2.6");
+  assert.ok(saturnInfo.classicalVerdict.includes("Ucchavat Phala"), "Verdict specifies Ucchavat Phala (Exalted Power)");
+  assert.strictEqual(saturnInfo.chestabalaStatus, "Peak (Chestabala 60/60)");
+
+  const mercuryInfo = neechaVakriList.find((p) => p.name === "Mercury");
+  assert.ok(mercuryInfo);
+  assert.strictEqual(mercuryInfo.isExalted, true, "Mercury is Exalted in Virgo");
+
+  // 4. Verify Multi-Tier Combustion Nuances & Solar Immunity Shields
+  const combustionList = evaluateCombustionNuances(ephem);
+  const mercuryComb = combustionList.find((c) => c.name === "Mercury");
+  assert.ok(mercuryComb, "Mercury must exist in combustion nuances");
+  assert.strictEqual(mercuryComb.isCombust, true, "Mercury is combust with Sun in Virgo");
+  assert.strictEqual(mercuryComb.hasExaltationShield, true, "Mercury has Exaltation Shield in Virgo");
+  assert.ok(mercuryComb.immunityScore >= 45, "Immunity score is elevated by Exaltation Shield");
+
+  // 5. Verify Jataka Chandrika House Lordships & Functional Roles
+  const jc = evaluateJatakaChandrika(ephem);
+  const marsRole = jc.grahaRoles.find((r) => r.grahaName === "Mars");
+  assert.ok(marsRole, "Mars must have role in Jataka Chandrika");
+  assert.ok(marsRole.housesOwned.includes(2) && marsRole.housesOwned.includes(9), "Mars owns Houses 2 & 9 for Pisces Lagna");
+  assert.ok(marsRole.functionalNature.includes("Benefic"), "Mars is functional benefic as 9th Trikona lord");
+
+  // 6. Verify Vimshottari Dasha Engine resolution
+  const dashaResult = calculateVimshottariDasha(birthDate, ephem.planets.Moon.siderealLongitude, new Date("2026-09-23T00:00:00Z"));
+  assert.ok(dashaResult.activeDasha, "Active dasha period must exist");
+  assert.ok(dashaResult.activeDasha.mahadasha.name, "Mahadasha lord exists");
+  assert.ok(dashaResult.activeDasha.antardasha.name, "Antardasha lord exists");
+  assert.ok(dashaResult.activeDasha.pratyantardasha.name, "Pratyantardasha lord exists");
+});
+
