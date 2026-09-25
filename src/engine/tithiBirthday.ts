@@ -114,23 +114,66 @@ export function getTithiForDate(
   };
 }
 
+import * as Astronomy from "astronomy-engine";
+import { getAyanamsha, toSiderealLongitude } from "./ayanamsha";
+
+const VEDIC_MASAS = [
+  { name: "Chaitra", sanskritName: "चैत्र मास" },
+  { name: "Vaishakha", sanskritName: "वैशाख मास" },
+  { name: "Jyeshtha", sanskritName: "ज्येष्ठ मास" },
+  { name: "Ashadha", sanskritName: "आषाढ़ मास" },
+  { name: "Shravana", sanskritName: "श्रावण मास" },
+  { name: "Bhadrapada", sanskritName: "भाद्रपद मास" },
+  { name: "Ashwina", sanskritName: "आश्विन मास" },
+  { name: "Kartika", sanskritName: "कार्तिक मास" },
+  { name: "Margashirsha", sanskritName: "मार्गशीर्ष मास" },
+  { name: "Pausha", sanskritName: "पौष मास" },
+  { name: "Magha", sanskritName: "माघ मास" },
+  { name: "Phalguna", sanskritName: "फाल्गुन मास" },
+];
+
+export function getFastTithiAndMasa(date: Date, ayanamshaType: AyanamshaType = "Lahiri") {
+  const astroTime = Astronomy.MakeTime(date);
+  const jd = astroTime.tt;
+  const ayanamsha = getAyanamsha(jd, ayanamshaType);
+
+  const sunVec = Astronomy.GeoVector(Astronomy.Body.Sun, astroTime, true);
+  const sunEcl = Astronomy.Ecliptic(sunVec);
+  const sunLon = toSiderealLongitude(sunEcl.elon, ayanamsha);
+
+  const moonVec = Astronomy.GeoVector(Astronomy.Body.Moon, astroTime, true);
+  const moonEcl = Astronomy.Ecliptic(moonVec);
+  const moonLon = toSiderealLongitude(moonEcl.elon, ayanamsha);
+
+  const moonSunDiff = (moonLon - sunLon + 360) % 360;
+  const tithiIndex = Math.floor(moonSunDiff / 12);
+  const paksha: "Shukla" | "Krishna" = tithiIndex < 15 ? "Shukla" : "Krishna";
+  const tithiName = TITHI_NAMES[tithiIndex % 15] || "Pratipada";
+
+  const sunAtAmavasya = (sunLon - (moonSunDiff / 12.368) + 360) % 360;
+  const amavasyaSunSign = Math.floor(sunAtAmavasya / 30);
+  const masaIndex = (amavasyaSunSign + 1) % 12;
+  const masa = VEDIC_MASAS[masaIndex];
+
+  return { moonSunDiff, tithiIndex, masa, paksha, tithiName, sunLon, moonLon };
+}
+
 function findExactAngleTimestamp(
   startDate: Date,
   endDate: Date,
   targetAngle: number,
-  location: GeoLocation,
-  ayanamsha: AyanamshaType
+  ayanamsha: AyanamshaType = "Lahiri"
 ): Date {
   let low = startDate.getTime();
   let high = endDate.getTime();
 
-  for (let iter = 0; iter < 12; iter++) {
+  for (let iter = 0; iter < 14; iter++) {
     const mid = (low + high) / 2;
-    const info = getTithiForDate(new Date(mid), location, ayanamsha);
+    const info = getFastTithiAndMasa(new Date(mid), ayanamsha);
     let diff = (info.moonSunDiff - targetAngle + 360) % 360;
     if (diff > 180) diff -= 360;
 
-    if (Math.abs(diff) < 0.01) {
+    if (Math.abs(diff) < 0.005) {
       return new Date(mid);
     }
     if (diff < 0) {
@@ -144,7 +187,8 @@ function findExactAngleTimestamp(
 }
 
 /**
- * Finds the exact Tithi Pravesha birthday occurrence for any specific target year (Past or Future)
+ * Finds the exact Tithi Pravesha birthday occurrence for any specific target year (Past or Future).
+ * Uses high-performance 8-hour sampling resolution to ensure no short/kshaya tithi is ever missed.
  */
 export function findTithiOccurrenceInYear(
   birthDate: Date,
@@ -153,7 +197,7 @@ export function findTithiOccurrenceInYear(
   ayanamsha: AyanamshaType = "Lahiri",
   refDate: Date = new Date()
 ): NextTithiOccurrence | null {
-  const birthInfo = getTithiForDate(birthDate, location, ayanamsha);
+  const birthInfo = getFastTithiAndMasa(birthDate, ayanamsha);
   const birthTithiIdx = birthInfo.tithiIndex;
   const birthMasaName = birthInfo.masa.name;
   const birthAngle = birthInfo.moonSunDiff;
@@ -162,12 +206,15 @@ export function findTithiOccurrenceInYear(
   const birthMonth = birthDate.getUTCMonth(); // 0..11
   const windowCenter = new Date(Date.UTC(targetYear, birthMonth, 15, 0, 0, 0));
 
-  // Scan a 70-day window (-35 to +35 days) around the solar anniversary
-  for (let dayOffset = -35; dayOffset <= 35; dayOffset++) {
-    const scanDate = new Date(windowCenter.getTime() + dayOffset * 24 * 3600 * 1000);
-    const dayInfo = getTithiForDate(scanDate, location, ayanamsha);
+  // 8-hour step resolution (guarantees >= 2 samples inside every Tithi, preventing missed short/kshaya tithis)
+  const STEP_MS = 8 * 3600 * 1000;
+  const STEPS_COUNT = 105; // -105 to +105 steps = -35 to +35 days
 
-    // Match exact Lunar Masa and Tithi Index (e.g. Shravana Shukla Navami)
+  for (let step = -STEPS_COUNT; step <= STEPS_COUNT; step++) {
+    const scanDate = new Date(windowCenter.getTime() + step * STEP_MS);
+    const dayInfo = getFastTithiAndMasa(scanDate, ayanamsha);
+
+    // Match exact Lunar Masa and Tithi Index (e.g. Vaishakha Krishna Chaturdashi)
     if (dayInfo.masa.name === birthMasaName && dayInfo.tithiIndex === birthTithiIdx) {
       const ONE_DAY_MS = 24 * 3600 * 1000;
       const scanStart = new Date(scanDate.getTime() - ONE_DAY_MS);
@@ -176,9 +223,9 @@ export function findTithiOccurrenceInYear(
       const targetStartAngle = birthTithiIdx * 12;
       const targetEndAngle = ((birthTithiIdx + 1) * 12) % 360;
 
-      const tithiStart = findExactAngleTimestamp(scanStart, scanDate, targetStartAngle, location, ayanamsha);
-      const tithiEnd = findExactAngleTimestamp(scanDate, scanEnd, targetEndAngle, location, ayanamsha);
-      const exactMoment = findExactAngleTimestamp(tithiStart, tithiEnd, birthAngle, location, ayanamsha);
+      const tithiStart = findExactAngleTimestamp(scanStart, scanDate, targetStartAngle, ayanamsha);
+      const tithiEnd = findExactAngleTimestamp(scanDate, scanEnd, targetEndAngle, ayanamsha);
+      const exactMoment = findExactAngleTimestamp(tithiStart, tithiEnd, birthAngle, ayanamsha);
 
       const isPast = exactMoment.getTime() < refDate.getTime();
       const msDiff = Math.abs(exactMoment.getTime() - refDate.getTime());

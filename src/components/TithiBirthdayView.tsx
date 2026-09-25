@@ -20,9 +20,11 @@ export default function TithiBirthdayView() {
   }, []);
 
   // Calculate Vedic Tithi Birthday directly from the global active Birth Details
+  // Note: currentDate, location, ayanamsha are the stable astrological inputs.
+  // We do NOT include 'now' in dependencies so this computation runs once per birth profile, NOT every second.
   const result: TithiBirthdayResult = useMemo(() => {
-    return calculateTithiBirthday(currentDate, location, ayanamsha, now);
-  }, [currentDate, location, ayanamsha, now]);
+    return calculateTithiBirthday(currentDate, location, ayanamsha);
+  }, [currentDate, location, ayanamsha]);
 
   // Selected year for viewing (defaults to next upcoming birthday year)
   const [selectedYear, setSelectedYear] = useState<number>(result.nextBirthday.year);
@@ -35,9 +37,9 @@ export default function TithiBirthdayView() {
 
   // Calculate the specific occurrence for the selected year
   const activeOccurrence: NextTithiOccurrence = useMemo(() => {
-    const occ = findTithiOccurrenceInYear(currentDate, selectedYear, location, ayanamsha, now);
+    const occ = findTithiOccurrenceInYear(currentDate, selectedYear, location, ayanamsha);
     return occ || result.nextBirthday;
-  }, [currentDate, selectedYear, location, ayanamsha, now, result.nextBirthday]);
+  }, [currentDate, selectedYear, location, ayanamsha, result.nextBirthday]);
 
   // Formatted local date & time for the active birth profile
   const tzMs = location.timezoneOffsetHours * 3600 * 1000;
@@ -67,13 +69,14 @@ export default function TithiBirthdayView() {
   const countdownSeconds = Math.floor((msDiff % (1000 * 60)) / 1000);
 
   const birthYear = localBirthDate.getUTCFullYear();
+  const currentFullYear = new Date().getFullYear();
   const availableYears = useMemo(() => {
     const years: number[] = [];
-    for (let y = Math.max(1900, birthYear); y <= now.getFullYear() + 15; y++) {
+    for (let y = Math.max(1900, birthYear); y <= currentFullYear + 15; y++) {
       years.push(y);
     }
     return years;
-  }, [birthYear, now]);
+  }, [birthYear, currentFullYear]);
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-200">

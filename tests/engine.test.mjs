@@ -198,6 +198,33 @@ test("Vedic Tithi Birthday & Tithi Pravesha Verification", async () => {
   // Assert 5-year upcoming birthdays list
   assert.equal(result.upcomingBirthdays.length, 5, "Must compute 5 upcoming birthdays");
   assert.ok(result.vedicRituals.lifestyleRules.length > 0, "Ritual rules must be populated");
+
+  // Specific Regression Test: 25 May 1998, 00:14:00 Mau, India (Vaishakha Krishna Chaturdashi)
+  // Local civil time 00:14:00 in Mau (UTC+5.5) -> 18:44:00 UTC on May 24, 1998
+  const mauLocation = {
+    cityName: "Mau",
+    country: "India",
+    latitude: 25.94,
+    longitude: 83.56,
+    elevation: 70,
+    timezoneOffsetHours: 5.5,
+  };
+  const mauBirthDate = new Date(Date.UTC(1998, 4, 24, 18, 44, 0));
+  const sept2026RefDate = new Date("2026-09-25T08:14:00Z");
+
+  const mauResult = calculateTithiBirthday(mauBirthDate, mauLocation, "Lahiri", sept2026RefDate);
+  assert.equal(mauResult.birthDetails.masaName, "Vaishakha", "Must be Vaishakha masa");
+  assert.equal(mauResult.birthDetails.tithiName, "Chaturdashi", "Must be Chaturdashi");
+  assert.equal(mauResult.birthDetails.paksha, "Krishna", "Must be Krishna paksha");
+
+  // In September 2026, May 2026 has already elapsed (Last Birthday = 2026), and upcoming is 2027
+  assert.equal(mauResult.lastBirthday.year, 2026, "Last Birthday must be 2026");
+  assert.ok(mauResult.lastBirthday.formattedDate.includes("2026"), "Last Birthday formatted date must include 2026");
+  assert.equal(mauResult.lastBirthday.isPast, true, "Last Birthday must be in the past");
+
+  assert.equal(mauResult.nextBirthday.year, 2027, "Next Upcoming Birthday must be 2027");
+  assert.ok(mauResult.nextBirthday.formattedDate.includes("2027"), "Next Birthday formatted date must include 2027");
+  assert.equal(mauResult.nextBirthday.isPast, false, "Next Birthday must be in the future");
 });
 
 test("Classical Parashari Shodashavarga (16 Divisional Charts) Verification", async () => {
