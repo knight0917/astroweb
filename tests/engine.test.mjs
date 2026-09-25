@@ -5551,3 +5551,80 @@ test("Phase 20: 3D Sky Dome Cosmic Vortex, Direct Graha Drishti Aspect Vector Ma
   assert.ok(dashaResult.activeDasha.pratyantardasha.name, "Pratyantardasha lord exists");
 });
 
+test("Phase 21: Navneet Chitkara 3-Point BTR Engine, Jaimini Rashi Drishti & Umbilical Severance Rectification Scanner Verification", async () => {
+  const {
+    getJaiminiRashiDrishtiSigns,
+    evaluateChitkaraBtrTriad,
+    scanChitkaraRectificationCandidate,
+    evaluateTriEpochBirthMoment,
+    generateBtrMasterSummary,
+  } = await import("../src/engine/btrEngine.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 1. Verify Jaimini Rashi Drishti (Sign Aspect) Rules
+  // Chara (Movable: Aries 0) -> Sthira (Fixed: Leo 4, Scorpio 7, Aquarius 10) EXCEPT adjacent (Taurus 1)
+  const ariesAspects = getJaiminiRashiDrishtiSigns(0);
+  assert.deepStrictEqual(ariesAspects, [4, 7, 10], "Aries (Movable) aspects Leo, Scorpio, Aquarius");
+
+  // Sthira (Fixed: Taurus 1) -> Chara (Movable: Cancer 3, Libra 6, Capricorn 9) EXCEPT adjacent (Aries 0)
+  const taurusAspects = getJaiminiRashiDrishtiSigns(1);
+  assert.deepStrictEqual(taurusAspects, [3, 6, 9], "Taurus (Fixed) aspects Cancer, Libra, Capricorn");
+
+  // Dvisvabhava (Dual: Gemini 2) -> other Dual signs (Virgo 5, Sagittarius 8, Pisces 11)
+  const geminiAspects = getJaiminiRashiDrishtiSigns(2);
+  assert.deepStrictEqual(geminiAspects, [5, 8, 11], "Gemini (Dual) aspects Virgo, Sagittarius, Pisces");
+
+  // 2. Benchmark Native Chart: 17/09/1999, 18:32:00, Allahabad, India (UTC 13:02:00)
+  const location = { cityName: "Allahabad", country: "India", latitude: 25.4358, longitude: 81.8463, timezoneOffsetHours: 5.5 };
+  const utcDate = new Date("1999-09-17T13:02:00Z");
+  const natalEphem = calculateVedicEphemeris(utcDate, location, "Lahiri", "WholeSign", "Mean");
+
+  // 3. Evaluate Chitkara BTR Triad at Raw Hospital Recorded Time (18:32)
+  const triad = evaluateChitkaraBtrTriad(natalEphem, true);
+
+  // Condition 1: D-9 Moon in Pisces (House 7 from D-9 Pranapada in Virgo) -> PASS
+  assert.strictEqual(triad.condition1D9MoonPP.passed, true, "Condition 1 (D-9 Moon vs Pranapada) must pass (1/7 opposition axis)");
+  assert.strictEqual(triad.condition1D9MoonPP.houseDistance, 7);
+
+  // Condition 2: D-60 Pranapada in Scorpio vs D-60 Venus in Libra (House 2) -> FAIL at raw 18:32
+  assert.strictEqual(triad.condition2D60VenusPP.passed, false, "Condition 2 fails at nominal 18:32 clock time");
+
+  // Condition 3: D-60 Ketu Dispositor Venus -> does not aspect Sagittarius Lagna -> FAIL at raw 18:32
+  assert.strictEqual(triad.condition3D60KetuDispositorLagna.passed, false, "Condition 3 fails at nominal 18:32 clock time");
+
+  assert.strictEqual(triad.passedCount, 1, "Raw 18:32 has 1/3 conditions met");
+  assert.strictEqual(triad.verdict, "RECTIFICATION_REQUIRED");
+  assert.ok(triad.rahuMetaphysicsNote.includes("Rahu"));
+  assert.ok(triad.rahuMetaphysicsNote.includes("Naala-Chhedana"));
+
+  // 4. Automated Timeline Scanner: Rectified Umbilical Severance Moment
+  const candidate = triad.rectificationCandidate;
+  assert.ok(candidate, "Rectification candidate must be generated");
+  assert.strictEqual(candidate.score, 3, "Candidate must achieve 3/3 harmonic convergence");
+  assert.strictEqual(candidate.c1Passed, true);
+  assert.strictEqual(candidate.c2Passed, true);
+  assert.strictEqual(candidate.c3Passed, true);
+  assert.strictEqual(candidate.d60LagnaSign, "Libra", "Rectified D-60 Lagna locks into Libra");
+
+  // Delta must reflect the classic ~2 to 3 minute hospital recording delay (-180 to -150 seconds)
+  assert.ok(candidate.deltaSeconds < 0, "Rectification delta is negative (prior to hospital clock)");
+  assert.ok(candidate.deltaSeconds <= -135 && candidate.deltaSeconds >= -210, "Delta is within -2m 15s to -3m 30s");
+  assert.ok(candidate.rectifiedLocalTime.startsWith("18:29:"), "Rectified time is ~18:29");
+  assert.ok(candidate.clinicalNote.includes("Umbilical cord severance"));
+
+  // 5. Verify TriEpochBirthMomentResult Integration
+  const triEpoch = evaluateTriEpochBirthMoment(natalEphem);
+  assert.ok(triEpoch.chitkaraBtrTriad, "TriEpoch contains chitkaraBtrTriad");
+  assert.strictEqual(triEpoch.chitkaraBtrTriad.passedCount, 1);
+
+  // 6. Verify generateBtrMasterSummary Output
+  const summary = generateBtrMasterSummary(natalEphem);
+  assert.ok(summary.includes("Navneet Chitkara 3-Point BTR Verification"), "Summary contains Chitkara section");
+  assert.ok(summary.includes("Condition 1 (D-9 Moon vs D-9 Pranapada)"), "Summary contains Condition 1");
+  assert.ok(summary.includes("Condition 2 (D-60 Pranapada vs D-60 Venus)"), "Summary contains Condition 2");
+  assert.ok(summary.includes("Condition 3 (D-60 Ketu Dispositor Jaimini Rashi Drishti on D-60 Lagna)"), "Summary contains Condition 3");
+  assert.ok(summary.includes("Rectified Birth Moment Candidate"), "Summary contains Rectified Candidate");
+  assert.ok(summary.includes("18:29:"), "Summary references the 18:29 rectified timestamp");
+});
+
+

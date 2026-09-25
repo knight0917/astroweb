@@ -7,9 +7,48 @@
 
 import { EphemerisResult } from "./types";
 import { calculateVimshottariDasha, VimshottariDashaResult, ActiveDashaPeriod } from "./dasha";
-import { calculateShodashavargaChart } from "./shodashavarga";
+import { calculateShodashavargaChart, calculateVargaSign } from "./shodashavarga";
+import { calculateVedicEphemeris } from "./ephemeris";
 import { RASHI_NAMES } from "./constants";
 import { calculateAdhanaKundali } from "./adhanaKundali";
+
+export interface ChitkaraConditionDetail {
+  passed: boolean;
+  name: string;
+  harmonicChart: "D9" | "D60";
+  primaryBody: string;
+  primarySign: string;
+  secondaryBody: string;
+  secondarySign: string;
+  houseDistance: number;
+  aspectDetails?: string;
+  explanation: string;
+}
+
+export interface ChitkaraRectificationCandidate {
+  rectifiedLocalTime: string;
+  deltaSeconds: number;
+  deltaFormatted: string;
+  score: number;
+  d60LagnaSign: string;
+  c1Passed: boolean;
+  c2Passed: boolean;
+  c3Passed: boolean;
+  clinicalNote: string;
+}
+
+export interface ChitkaraBtrTriadResult {
+  condition1D9MoonPP: ChitkaraConditionDetail;
+  condition2D60VenusPP: ChitkaraConditionDetail;
+  condition3D60KetuDispositorLagna: ChitkaraConditionDetail;
+  passedCount: number;
+  scorePercent: number;
+  verdict: "PERFECT_ACCURACY" | "HIGH_PROXIMITY" | "RECTIFICATION_REQUIRED";
+  verdictTitle: string;
+  verdictDescription: string;
+  rahuMetaphysicsNote: string;
+  rectificationCandidate?: ChitkaraRectificationCandidate;
+}
 
 export interface KundaShodhanaResult {
   kundaLongitude: number;
@@ -105,6 +144,7 @@ export interface TriEpochBirthMomentResult {
     vulnerabilityLevel: "CRITICAL_SENSITIVE" | "MODERATE_SENSITIVE" | "SECURE";
     recommendation: string;
   };
+  chitkaraBtrTriad?: ChitkaraBtrTriadResult;
   shastricSynthesis: string;
 }
 
@@ -128,6 +168,7 @@ export interface BtrMasterReport {
   kundaShodhana: KundaShodhanaResult;
   pranapada: PranapadaResult;
   tattvaShodhana: TattvaShodhanaResult;
+  chitkaraBtrTriad: ChitkaraBtrTriadResult;
   vargaSensitivities: VargaSensitivityNode[];
   fullLifeDashaTimeline: ChronologicalDashaWindow[];
   dashaToClockSensitivityRule: string;
@@ -418,6 +459,274 @@ export function calculateVargaSensitivities(natalEphemeris: EphemerisResult): Va
 }
 
 /**
+ * Jaimini Rashi Drishti (Sign Aspect) Matrix
+ * Chara (Movable: 0, 3, 6, 9) aspects Sthira (Fixed: 1, 4, 7, 10) EXCEPT adjacent (rashiIdx + 1)
+ * Sthira (Fixed: 1, 4, 7, 10) aspects Chara (Movable: 0, 3, 6, 9) EXCEPT adjacent (rashiIdx - 1)
+ * Dvisvabhava (Dual: 2, 5, 8, 11) aspects all other Dual signs
+ */
+export function getJaiminiRashiDrishtiSigns(rashiIdx: number): number[] {
+  const modality = rashiIdx % 3; // 0: Chara, 1: Sthira, 2: Dvisvabhava
+  const aspects: number[] = [];
+
+  if (modality === 0) {
+    // Chara -> Sthira except adjacent (rashiIdx + 1)
+    const fixed = [1, 4, 7, 10];
+    const adjacent = (rashiIdx + 1) % 12;
+    for (const f of fixed) {
+      if (f !== adjacent) aspects.push(f);
+    }
+  } else if (modality === 1) {
+    // Sthira -> Chara except adjacent (rashiIdx - 1)
+    const movable = [0, 3, 6, 9];
+    const adjacent = (rashiIdx - 1 + 12) % 12;
+    for (const m of movable) {
+      if (m !== adjacent) aspects.push(m);
+    }
+  } else {
+    // Dual -> other Dual signs
+    const dual = [2, 5, 8, 11];
+    for (const d of dual) {
+      if (d !== rashiIdx) aspects.push(d);
+    }
+  }
+  return aspects;
+}
+
+export const CHITKARA_RASHI_LORDS: Record<number, string> = {
+  0: "Mars",    // Mesha (Aries)
+  1: "Venus",   // Vrishabha (Taurus)
+  2: "Mercury", // Mithuna (Gemini)
+  3: "Moon",    // Karka (Cancer)
+  4: "Sun",     // Simha (Leo)
+  5: "Mercury", // Kanya (Virgo)
+  6: "Venus",   // Tula (Libra)
+  7: "Mars",    // Vrishchika (Scorpio)
+  8: "Jupiter", // Dhanu (Sagittarius)
+  9: "Saturn",  // Makara (Capricorn)
+  10: "Saturn", // Kumbha (Aquarius)
+  11: "Jupiter",// Meena (Pisces)
+};
+
+/**
+ * Automated Timeline Scanner for Chitkara BTR Rectification
+ * Sweeps +-scanWindowMinutes in stepSeconds increments to locate optimal 3/3 convergence.
+ */
+export function scanChitkaraRectificationCandidate(
+  natalEphemeris: EphemerisResult,
+  scanWindowMinutes: number = 10,
+  stepSeconds: number = 15
+): ChitkaraRectificationCandidate {
+  const baseUtcDate = new Date(natalEphemeris.utcDate);
+  const location = natalEphemeris.location || {
+    latitude: 25.4358,
+    longitude: 81.8463,
+    timezoneOffsetHours: 5.5,
+    cityName: "Patna",
+    country: "India",
+  };
+  const tzOffset = location.timezoneOffsetHours || 5.5;
+
+  let bestCandidate: {
+    offsetSec: number;
+    score: number;
+    d60LagnaSign: string;
+    c1: boolean;
+    c2: boolean;
+    c3: boolean;
+  } | null = null;
+
+  const maxOffset = scanWindowMinutes * 60;
+
+  for (let offsetSec = -maxOffset; offsetSec <= maxOffset; offsetSec += stepSeconds) {
+    const testDate = new Date(baseUtcDate.getTime() + offsetSec * 1000);
+    const testEph = calculateVedicEphemeris(testDate, location);
+    const triad = evaluateChitkaraBtrTriad(testEph, false);
+
+    if (triad.passedCount === 3) {
+      if (!bestCandidate || bestCandidate.score < 3 || Math.abs(offsetSec) < Math.abs(bestCandidate.offsetSec)) {
+        bestCandidate = {
+          offsetSec,
+          score: triad.passedCount,
+          d60LagnaSign: triad.condition3D60KetuDispositorLagna.secondarySign,
+          c1: triad.condition1D9MoonPP.passed,
+          c2: triad.condition2D60VenusPP.passed,
+          c3: triad.condition3D60KetuDispositorLagna.passed,
+        };
+      }
+    } else if (triad.passedCount === 2 && (!bestCandidate || bestCandidate.score < 2)) {
+      bestCandidate = {
+        offsetSec,
+        score: triad.passedCount,
+        d60LagnaSign: triad.condition3D60KetuDispositorLagna.secondarySign,
+        c1: triad.condition1D9MoonPP.passed,
+        c2: triad.condition2D60VenusPP.passed,
+        c3: triad.condition3D60KetuDispositorLagna.passed,
+      };
+    }
+  }
+
+  const offsetSec = bestCandidate ? bestCandidate.offsetSec : 0;
+  const recLocalDate = new Date(baseUtcDate.getTime() + offsetSec * 1000 + tzOffset * 3600 * 1000);
+  const hh = String(recLocalDate.getUTCHours()).padStart(2, "0");
+  const mm = String(recLocalDate.getUTCMinutes()).padStart(2, "0");
+  const ss = String(recLocalDate.getUTCSeconds()).padStart(2, "0");
+  const rectifiedLocalTime = `${hh}:${mm}:${ss}`;
+
+  const absSec = Math.abs(offsetSec);
+  const mins = Math.floor(absSec / 60);
+  const remSec = absSec % 60;
+  const sign = offsetSec > 0 ? "+" : offsetSec < 0 ? "-" : "";
+  const deltaFormatted = offsetSec === 0 ? "0s (Exact)" : `${sign}${mins}m ${remSec}s (${sign}${absSec}s)`;
+
+  let clinicalNote =
+    "Hospital delivery staff typically record the birth time 2 to 4 minutes after umbilical cord severance during neonatal clearing and Apgar scoring, causing a clock-recording delay.";
+  if (offsetSec === 0) {
+    clinicalNote = "Recorded birth time aligns directly with the umbilical severance moment.";
+  } else if (offsetSec < 0) {
+    clinicalNote = `Umbilical cord severance (Naala-Chhedana) occurred ${mins}m ${remSec}s prior to the hospital clock record.`;
+  } else {
+    clinicalNote = `Umbilical cord severance occurred ${mins}m ${remSec}s after the nominal rounded hospital record.`;
+  }
+
+  return {
+    rectifiedLocalTime,
+    deltaSeconds: offsetSec,
+    deltaFormatted,
+    score: bestCandidate ? bestCandidate.score : 0,
+    d60LagnaSign: bestCandidate ? bestCandidate.d60LagnaSign : "Unknown",
+    c1Passed: bestCandidate ? bestCandidate.c1 : false,
+    c2Passed: bestCandidate ? bestCandidate.c2 : false,
+    c3Passed: bestCandidate ? bestCandidate.c3 : false,
+    clinicalNote,
+  };
+}
+
+/**
+ * Navneet Chitkara 3-Point BTR Verification Triad
+ * 1. D-9 Moon in trine (1, 5, 9) or 1/7 axis from D-9 Pranapada
+ * 2. D-60 Pranapada in trine (1, 5, 9) or 1/7 axis from D-60 Venus
+ * 3. D-60 Ketu's Dispositor casts Jaimini Rashi Drishti (or conjunction) on D-60 Lagna
+ */
+export function evaluateChitkaraBtrTriad(
+  natalEphemeris: EphemerisResult,
+  includeScanner: boolean = true
+): ChitkaraBtrTriadResult {
+  const pp = calculatePranapada(natalEphemeris);
+
+  // 1. Condition 1: D-9 Moon vs D-9 Pranapada
+  const moonLon = natalEphemeris.planets.Moon?.siderealLongitude || 0;
+  const d9Moon = calculateVargaSign(moonLon, "D9");
+  const d9PP = calculateVargaSign(pp.pranapadaLongitude, "D9");
+  const c1House = ((d9Moon - d9PP + 12) % 12) + 1;
+  const c1Passed = [1, 5, 7, 9].includes(c1House);
+
+  const c1Detail: ChitkaraConditionDetail = {
+    passed: c1Passed,
+    name: "Navamsha (D-9) Moon & Pranapada Synchronicity",
+    harmonicChart: "D9",
+    primaryBody: "Pranapada Lagna",
+    primarySign: RASHI_NAMES[d9PP]?.englishName || "Unknown",
+    secondaryBody: "Moon",
+    secondarySign: RASHI_NAMES[d9Moon]?.englishName || "Unknown",
+    houseDistance: c1House,
+    explanation: c1Passed
+      ? `Navamsha Moon in ${RASHI_NAMES[d9Moon]?.englishName} occupies House ${c1House} (${c1House === 1 ? "conjunction" : c1House === 7 ? "1/7 opposition axis" : "trine/Trikona"}) from D-9 Pranapada in ${RASHI_NAMES[d9PP]?.englishName}, verifying emotional and respiratory synchronicity.`
+      : `Navamsha Moon in ${RASHI_NAMES[d9Moon]?.englishName} occupies House ${c1House} from D-9 Pranapada (${RASHI_NAMES[d9PP]?.englishName}), outside the auspicious 1, 5, 7, 9 harmonic axis.`,
+  };
+
+  // 2. Condition 2: D-60 Pranapada vs D-60 Venus
+  const venusLon = natalEphemeris.planets.Venus?.siderealLongitude || 0;
+  const d60Venus = calculateVargaSign(venusLon, "D60");
+  const d60PP = calculateVargaSign(pp.pranapadaLongitude, "D60");
+  const c2House = ((d60PP - d60Venus + 12) % 12) + 1;
+  const c2Passed = [1, 5, 7, 9].includes(c2House);
+
+  const c2Detail: ChitkaraConditionDetail = {
+    passed: c2Passed,
+    name: "Shashtiamsha (D-60) Pranapada & Venus Alignment",
+    harmonicChart: "D60",
+    primaryBody: "Venus",
+    primarySign: RASHI_NAMES[d60Venus]?.englishName || "Unknown",
+    secondaryBody: "Pranapada Lagna",
+    secondarySign: RASHI_NAMES[d60PP]?.englishName || "Unknown",
+    houseDistance: c2House,
+    explanation: c2Passed
+      ? `Shashtiamsha Pranapada in ${RASHI_NAMES[d60PP]?.englishName} occupies House ${c2House} (${c2House === 1 ? "conjunction" : c2House === 7 ? "1/7 opposition axis" : "trine/Trikona"}) from D-60 Venus in ${RASHI_NAMES[d60Venus]?.englishName}, anchoring physical seminal vitality in the karmic harmonic.`
+      : `Shashtiamsha Pranapada in ${RASHI_NAMES[d60PP]?.englishName} occupies House ${c2House} from D-60 Venus (${RASHI_NAMES[d60Venus]?.englishName}), requiring second-level rectification.`,
+  };
+
+  // 3. Condition 3: D-60 Ketu Dispositor Jaimini Rashi Drishti on D-60 Lagna
+  const lagnaLon = natalEphemeris.ascendant.siderealLongitude;
+  const d60Lagna = calculateVargaSign(lagnaLon, "D60");
+  const ketuLon = natalEphemeris.planets.Ketu?.siderealLongitude || 0;
+  const d60Ketu = calculateVargaSign(ketuLon, "D60");
+  const ketuLord = CHITKARA_RASHI_LORDS[d60Ketu] || "Mars";
+  const dispositorLon = natalEphemeris.planets[ketuLord as keyof typeof natalEphemeris.planets]?.siderealLongitude || 0;
+  const d60DispositorSign = calculateVargaSign(dispositorLon, "D60");
+  const aspects = getJaiminiRashiDrishtiSigns(d60DispositorSign);
+  const hasRashiDrishti = aspects.includes(d60Lagna);
+  const isConjunct = d60DispositorSign === d60Lagna;
+  const c3Passed = hasRashiDrishti || isConjunct;
+
+  const aspectNames = aspects.map((a) => RASHI_NAMES[a]?.englishName || String(a)).join(", ");
+  const c3Detail: ChitkaraConditionDetail = {
+    passed: c3Passed,
+    name: "Shashtiamsha (D-60) Ketu Dispositor Aspect on Lagna",
+    harmonicChart: "D60",
+    primaryBody: `Ketu's Dispositor (${ketuLord})`,
+    primarySign: RASHI_NAMES[d60DispositorSign]?.englishName || "Unknown",
+    secondaryBody: "D-60 Lagna",
+    secondarySign: RASHI_NAMES[d60Lagna]?.englishName || "Unknown",
+    houseDistance: ((d60Lagna - d60DispositorSign + 12) % 12) + 1,
+    aspectDetails: isConjunct ? "Direct Conjunction (1st House)" : `Jaimini Rashi Drishti aspects ${aspectNames}`,
+    explanation: c3Passed
+      ? `D-60 Ketu in ${RASHI_NAMES[d60Ketu]?.englishName} is ruled by ${ketuLord} (in D-60 ${RASHI_NAMES[d60DispositorSign]?.englishName}), which ${isConjunct ? "is conjunct with" : "casts Jaimini Rashi Drishti onto"} D-60 Lagna (${RASHI_NAMES[d60Lagna]?.englishName}). Past-life karma is legitimately sealed to the rising physical body.`
+      : `D-60 Ketu in ${RASHI_NAMES[d60Ketu]?.englishName} is ruled by ${ketuLord} in D-60 ${RASHI_NAMES[d60DispositorSign]?.englishName}, whose sign aspects (${aspectNames}) do not reach D-60 Lagna in ${RASHI_NAMES[d60Lagna]?.englishName}.`,
+  };
+
+  const passedCount = (c1Passed ? 1 : 0) + (c2Passed ? 1 : 0) + (c3Passed ? 1 : 0);
+  const scorePercent = Math.round((passedCount / 3) * 100);
+
+  let verdict: ChitkaraBtrTriadResult["verdict"] = "RECTIFICATION_REQUIRED";
+  let verdictTitle = "🛑 Birth Time Rectification Required (<= 1/3 Conditions Met)";
+  let verdictDescription =
+    "Hospital recorded time deviates from the true umbilical cord severance epoch. Automated BTR scan identifies the exact cord-cutting moment.";
+
+  if (passedCount === 3) {
+    verdict = "PERFECT_ACCURACY";
+    verdictTitle = "🌟 Perfect Birth Moment Accuracy (3/3 Conditions Met)";
+    verdictDescription =
+      "All 3 harmonic tests across Navamsha (D-9) and Shashtiamsha (D-60) pass at 100%. The recorded birth time matches the exact umbilical cord severance (Bhūpatana Lagna) with supreme shastric precision.";
+  } else if (passedCount === 2) {
+    verdict = "HIGH_PROXIMITY";
+    verdictTitle = "⚠️ High Proximity (2/3 Conditions Met)";
+    verdictDescription =
+      "Two conditions match; minor sub-minute or 1–2 minute adjustment locks all 3 harmonic coordinates.";
+  }
+
+  const rahuMetaphysicsNote =
+    "Humans reincarnate driven by Rahu (unfulfilled material desires). The umbilical cord attached to the navel resembles Rahu's serpent tethering the child to the maternal bloodstream. Birth occurs when the cord is severed (Naala-Chhedana), initiating independent Prana.";
+
+  let rectificationCandidate: ChitkaraRectificationCandidate | undefined = undefined;
+  if (includeScanner && passedCount < 3) {
+    rectificationCandidate = scanChitkaraRectificationCandidate(natalEphemeris, 10, 15);
+  }
+
+  return {
+    condition1D9MoonPP: c1Detail,
+    condition2D60VenusPP: c2Detail,
+    condition3D60KetuDispositorLagna: c3Detail,
+    passedCount,
+    scorePercent,
+    verdict,
+    verdictTitle,
+    verdictDescription,
+    rahuMetaphysicsNote,
+    rectificationCandidate,
+  };
+}
+
+/**
  * 4B. Tri-Epoch Birth Moment Evaluation (Adhana vs Shirodarshana vs Bhupatana)
  * Grounded in Maharshi Parashara (BPHS), Acharya Varahamihira (Brihat Jataka Ch. 4),
  * and modern Astro-Scientist consensus (Navneet Chitkara).
@@ -476,6 +785,8 @@ export function evaluateTriEpochBirthMoment(natalEphemeris: EphemerisResult): Tr
 
   const shastricSynthesis = `In classical Vedic Jyotish, three moments mark the incarnation of a soul: (1) Adhana Lagna (conception epoch when the genetic & karmic seed forms), (2) Shirodarshana Lagna (the emergence of the crown during labor), and (3) Bhupatana Lagna (the severance of the umbilical cord and first independent breath/cry). As taught by Maharshi Parashara, Acharya Varahamihira, and modern master Astro-Scientist Navneet Chitkara, Bhupatana Lagna is the universal, legally recorded civil standard for casting the natal horoscope because independent pulmonary circulation (Prana) begins only upon separation from the mother. However, because hospital clocks often possess an error margin of 2–15 minutes, Birth Time Rectification (BTR) across D-60 (2-minute window) and D-9 (13.3-minute window) is required to certify that the recorded birth time matches real-life destiny events.`;
 
+  const chitkaraBtrTriad = evaluateChitkaraBtrTriad(natalEphemeris);
+
   return {
     recordedBirthLocalTime,
     recordedBirthDateStr,
@@ -514,6 +825,7 @@ export function evaluateTriEpochBirthMoment(natalEphemeris: EphemerisResult): Tr
       vulnerabilityLevel: d60Level,
       recommendation: d60Rec,
     },
+    chitkaraBtrTriad,
     shastricSynthesis,
   };
 }
@@ -642,6 +954,7 @@ export function generateBtrMasterSummary(
   const sensitivities = calculateVargaSensitivities(natalEphemeris);
   const timeline = buildFullChronologicalDashaTimeline(natalEphemeris);
   const triEpoch = evaluateTriEpochBirthMoment(natalEphemeris);
+  const chitkara = triEpoch.chitkaraBtrTriad || evaluateChitkaraBtrTriad(natalEphemeris);
 
   const hh = String(localDate.getUTCHours()).padStart(2, "0");
   const mm = String(localDate.getUTCMinutes()).padStart(2, "0");
@@ -677,6 +990,10 @@ export function generateBtrMasterSummary(
     lifeStageGuidance = "Native is a young adult. Focus on 10th/12th board exams, college qualification, and first career foundation.";
   }
 
+  const chitkaraCandidateStr = chitkara.rectificationCandidate
+    ? `**${chitkara.rectificationCandidate.rectifiedLocalTime}** (Delta: **${chitkara.rectificationCandidate.deltaFormatted}** • D-60 Lagna: **${chitkara.rectificationCandidate.d60LagnaSign}** • Score: **${chitkara.rectificationCandidate.score}/3**) -> *${chitkara.rectificationCandidate.clinicalNote}*`
+    : "Current recorded birth time is 100% verified (3/3).";
+
   return `
 #### ⏱️ 73. CLASSICAL BIRTH TIME RECTIFICATION (BTR), PRANAPADA, KUNDA, TATTVA & FULL EVENT DASHA TIMELINE:
 - 📍 **Recorded Birth Moment:** **${dateFormatted} at ${hh}:${mm}** in **${location?.cityName || "Patna"}, ${location?.country || "India"}**
@@ -686,6 +1003,13 @@ export function generateBtrMasterSummary(
   * 1️⃣ **Adhana Lagna (Conception Epoch):** Conception on **${triEpoch.adhanaEpoch.conceptionDateStr}** (Gestation: **${triEpoch.adhanaEpoch.gestationDays} days**) • Adhana Lagna in **${triEpoch.adhanaEpoch.adhanaLagnaSign}** (Lord: ${triEpoch.adhanaEpoch.adhanaLagnaLord}) • Moon in ${triEpoch.adhanaEpoch.adhanaMoonSign} (${triEpoch.adhanaEpoch.adhanaMoonNakshatra})
   * 2️⃣ **Shirodarshana Lagna (Crown Emergence):** Approx **${triEpoch.shirodarshanaEpoch.estimatedTimeRange}** • Ascendant in **${triEpoch.shirodarshanaEpoch.estimatedLagnaSign}** (${triEpoch.shirodarshanaEpoch.isLagnaSignSameAsBhupatana ? "Same sign as delivery" : "Sign transitioned before delivery"})
   * 3️⃣ **Bhupatana Lagna (Umbilical Severance & First Breath):** **${triEpoch.recordedBirthLocalTime}** (Civil Birth Time) • Ascendant in **${triEpoch.bhupatanaEpoch.civilLagnaSign} (${triEpoch.bhupatanaEpoch.civilLagnaDegrees.toFixed(2)}°)**. Severance of umbilical cord (*Naala-Chhedana*) & independent pulmonary respiration (*Prathama Shwasa*). This is the universal shastric & legal baseline for casting horoscopes.
+- 🔬 **Navneet Chitkara 3-Point BTR Verification & Umbilical Severance Telemetry:**
+  * 🐍 *Metaphysical Law:* Humans reincarnate through Rahu; the umbilical cord coiled at the navel is Rahu's serpent. Independent incarnation locks at cord severance (*Naala-Chhedana*).
+  * 1️⃣ **Condition 1 (D-9 Moon vs D-9 Pranapada):** ${chitkara.condition1D9MoonPP.passed ? "✅ PASS" : "❌ FAIL"} -> ${chitkara.condition1D9MoonPP.explanation}
+  * 2️⃣ **Condition 2 (D-60 Pranapada vs D-60 Venus):** ${chitkara.condition2D60VenusPP.passed ? "✅ PASS" : "❌ FAIL"} -> ${chitkara.condition2D60VenusPP.explanation}
+  * 3️⃣ **Condition 3 (D-60 Ketu Dispositor Jaimini Rashi Drishti on D-60 Lagna):** ${chitkara.condition3D60KetuDispositorLagna.passed ? "✅ PASS" : "❌ FAIL"} -> ${chitkara.condition3D60KetuDispositorLagna.explanation}
+  * 🎯 **Master BTR Verification Score:** **${chitkara.passedCount} / 3 (${chitkara.scorePercent}%)** • **[${chitkara.verdictTitle}]**
+  * ⏱️ **Rectified Birth Moment Candidate:** ${chitkaraCandidateStr}
 - 🚨 **Real-Time D-60 (Shashtiamsha) Boundary Vulnerability Telemetry:**
   * Current D-60 Sign: **${triEpoch.d60VulnerabilityStatus.d60Sign}** • Total Span: 120 seconds (2.0 minutes)
   * Real-Time Buffer: **${triEpoch.d60VulnerabilityStatus.bufferDescription}**
