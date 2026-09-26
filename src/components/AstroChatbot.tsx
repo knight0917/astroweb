@@ -27,6 +27,8 @@ import {
 import { evaluateRashiTulyaNavamsha } from "../engine/rashiTulyaNavamsha";
 import { calculateSamirTripathiPanchang } from "../engine/samirTripathiPanchang";
 import { evaluateNakshatraActivation } from "../engine/nakshatraActivation";
+import { analyzeNameVibrationalEnergy, evaluateChartNameCongruence } from "../engine/lunarAstroNameEnergy";
+import { calculatePlanetaryMaturationTimeline } from "../engine/planetaryAgeActivation";
 import { EphemerisResult } from "../engine/types";
 
 interface Message {
@@ -1229,6 +1231,62 @@ ${d60RadarSection}
 
 \`\`\`chips
 [{"id":"chip-1","label":"🧬 Chitkara 3-Point BTR","prompt":"Explain Navneet Chitkara's 3-point Navamsha, D-60 and Ketu dispositor BTR algorithm for my chart"},{"id":"chip-2","label":"⏱️ Verify My Birth Clock","prompt":"Verify my birth time with multi-divisional milestones [btr_adult_verified]"},{"id":"chip-3","label":"⏳ D-60 Past Life Karma","prompt":"What does my D-60 Shashtiamsha reveal about my past life karmic root causes?"}]
+\`\`\``;
+  }
+
+  // 16. Lunar Astro Name Vibrational Energy & Age 36 Maturation (Deepanshu Giri)
+  if (
+    /\b(name energy|energy of name|name vibration|astro-phonetics|lunar astro name|aniket|priyanka|sonal|alok|sachin|what does my name mean)\b/i.test(q) ||
+    (/\b(age 36|saturn at 36|retrograde saturn at 36|planetary age|maturation age)\b/i.test(q))
+  ) {
+    const birthDateObj = new Date(natalEphem.utcDate);
+    const ageReport = calculatePlanetaryMaturationTimeline(natalEphem, birthDateObj, evaluationDate);
+
+    // Extract query name if user asked about a specific name, e.g. "tell me about name Priyanka"
+    let targetName = "Seeker";
+    const nameMatch = q.match(/\b(?:name|called|named|energy of)\s+([a-zA-Z]{3,20})\b/i);
+    if (nameMatch && nameMatch[1] && !["energy", "vibration", "about", "mean", "saturn", "retrograde"].includes(nameMatch[1].toLowerCase())) {
+      targetName = nameMatch[1];
+    }
+
+    const nameProfile = analyzeNameVibrationalEnergy(targetName);
+    const nameCongruence = evaluateChartNameCongruence(targetName, natalEphem);
+
+    const saturnWarning = ageReport.isRetrogradeSaturnActive
+      ? `\n> ⚠️ **CRITICAL RETROGRADE SATURN AGE 36 INVERSION:** You have natal Retrograde Saturn active in the Age 36–42 window. Per Deepanshu Giri, this forces an unavoidable karmic course correction, dismantling conventional structures and resetting your life direction.\n`
+      : "";
+
+    return `### 🪷 **Lunar Astro Name Vibrational Energy & Planetary Maturation Analysis**
+
+#### 🔤 **1. Acoustic Astro-Phonetics for "${targetName}":**
+- **Dominant Planetary Frequency:** **${nameProfile.primaryPlanets.join(" + ")}** • Secondary: **${nameProfile.secondaryPlanets.join(" + ")}**
+- **Acoustic Archetype:** **${nameProfile.archetypeName}**
+- **Ancestral Protection Armor:** ${nameProfile.ancestralShieldStatus ? "🛡️ **Active (Lineage Grace Shielded)**" : "Standard Individual Karma"}
+- **Psychological Blueprint:** ${nameProfile.psychologicalBlueprint}
+- **Relationship Dynamics:** ${nameProfile.relationshipTendency}
+- **Career & Calling Vector:** ${nameProfile.careerAndServiceVector}
+- **Predicted Birth Chart Placements:**
+${nameProfile.predictedChartPlacements.map((p) => `  - 🌟 ${p}`).join("\n")}
+
+#### 🏛️ **2. Chart-to-Name Congruence Index:**
+- **Congruence Score:** **${nameCongruence.congruenceScore}% [${nameCongruence.harmonyStatus}]**
+- **Lagna Resonance:** ${nameCongruence.resonanceWithLagnaLord}
+- **Moon Resonance:** ${nameCongruence.resonanceWithMoon}
+- **Summary:** ${nameCongruence.overallAudit}
+
+#### ⏳ **3. Parashara Planetary Maturation Timeline (Current Age: ${ageReport.currentAge} Yrs):**
+- **Active Maturation Milestone:** **${ageReport.activeMilestone.planet} (Age ${ageReport.activeMilestone.startAge}–${ageReport.activeMilestone.endAge})** • *${ageReport.activeMilestone.classicalSignification}*
+- **Manifestation Theme:** ${ageReport.activeMilestone.isRetrograde ? ageReport.activeMilestone.retrogradeInversionManifestation : ageReport.activeMilestone.standardManifestation}${saturnWarning}
+- **Upcoming Milestone:** **${ageReport.upcomingMilestone.planet} (Age ${ageReport.upcomingMilestone.startAge}–${ageReport.upcomingMilestone.endAge})**
+
+#### 🌿 **4. Vak Siddhi & Botanical Living Remedy:**
+- **Vak Siddhi Protocol:** ${ageReport.vakSiddhiIntuitionSummary}
+- **Living Botanical Parihara:** ${ageReport.activeMilestone.shastricRemedy}
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"🌿 Kadali Vriksha Remedy","prompt":"How do I plant and nurture a Banana tree for Jupiter and 5th house blessings?"},{"id":"chip-2","label":"🪐 Saturn Age 36 Inversion","prompt":"Explain how retrograde Saturn causes life upheaval and career resets at age 36"},{"id":"chip-3","label":"🔤 Test Another Name","prompt":"What is the vibrational energy and predicted chart placement for the name Aniket?"}]
 \`\`\``;
   }
 

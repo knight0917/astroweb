@@ -106,7 +106,10 @@ export function evaluateRashiTulyaNavamsha(
     12: "Spiritual liberation (Moksha), foreign ventures, dream clairvoyance and philanthropic investment.",
   };
 
+  const CLASSICAL_9_PLANETS = new Set(["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"]);
+
   for (const [pName, pData] of Object.entries(natalEphem.planets)) {
+    if (!CLASSICAL_9_PLANETS.has(pName)) continue;
     if (!pData || pData.isUpagraha || pData.isModernPlanet) continue;
     const pLon = pData.siderealLongitude;
     const d1RIdx = Math.floor(pLon / 30);

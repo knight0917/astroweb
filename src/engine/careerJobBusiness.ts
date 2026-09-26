@@ -23,6 +23,18 @@ export interface D1LagnaLordInD10Analysis {
   };
   conjunctionsInD10: string[];
   keyVocationalSignature: string;
+  d1TenthHouseSurroundings: {
+    tenthHouseSign: string;
+    tenthHouseLord: string;
+    occupants: string[];
+    workplaceEnvironmentDescription: string;
+    likelyPhysicalSurroundings: string[];
+  };
+  historicalBenchmark?: {
+    matchedLeader: string;
+    astrologicalParallel: string;
+    historicalSignificance: string;
+  };
 }
 
 export interface CareerJobBusinessAnalysis {
@@ -262,72 +274,72 @@ export function analyzeCareerJobBusiness(ephem: EphemerisResult): CareerJobBusin
   }
 
   if (isDebilitatedInD10) {
-    debilitationSynthesis = `D-1 Lagna Lord ${d1LagnaLord} is Debilitated (Neecha) in D-10 ${d1LagnaLordInD10SignName}: Indicates intense initial toil, delayed societal recognition, and periods of professional dissatisfaction ('I contribute far more than the rewards I receive'). Direct vulnerability where workplace pressure impacts vitality and health; demands deliberate pacing. However, if Venus or Jupiter, it simultaneously sharpens analytical, accounting (CA), or advisory competence despite the struggle.`;
+    debilitationSynthesis = `D-1 Lagna Lord ${d1LagnaLord} is Debilitated (Neecha) in D-10 ${d1LagnaLordInD10SignName}: Indicates exceptional ground-level hard work, but accompanied by chronic professional dissatisfaction ('I contribute far more than the rewards or credit I receive'). Signals vulnerability to physical fatigue, exhaustion, and health drain brought on by excessive workload. Societal recognition and proportional financial credit are delayed, requiring conscious pacing, boundary setting, and avoiding self-sabotaging burnout. However, if Venus or Jupiter, it simultaneously sharpens analytical, accounting (CA), or advisory competence through this crucible.`;
   }
 
-  // Modality of D-1 Lagna Lord in D-10
+  // Modality of D-1 Lagna Lord in D-10 (Deepanshu Giri Rule: Sign Modality in D10)
   let modality: "Chara (Movable)" | "Sthira (Fixed)" | "Dvisvabhava (Dual)" = "Chara (Movable)";
   let modalityCareerBehavior = "";
   if ([0, 3, 6, 9].includes(d1LagnaLordInD10SignIdx)) {
     modality = "Chara (Movable)";
-    modalityCareerBehavior = "Movable (Chara) Karma: Highly dynamic, mobile, and evolving professional life. Prone to geographic movements, travel, changing environments, or launching new initiatives; struggles in static, monotonous desk routines.";
+    modalityCareerBehavior = "Movable (Chara) Karma: Characterized by constant movement, field travel, frequent transitions, and adaptability. Inclined to initiate new ventures, pioneer projects, and thrive in evolving environments; struggles in static, monotonous desk routines.";
   } else if ([1, 4, 7, 10].includes(d1LagnaLordInD10SignIdx)) {
     modality = "Sthira (Fixed)";
-    modalityCareerBehavior = "Fixed (Sthira) Karma: Seeks deep roots, institutional stability, and long-term organizational tenure. Reluctant to jump roles frequently; thrives in established hierarchies, government or corporate anchors with enduring permanence.";
+    modalityCareerBehavior = "Fixed (Sthira) Karma: Strong desire for long-term job security, stability, remaining in one position or desk job for extended years, or government careers. Reluctant to jump roles frequently; flourishes with enduring institutional permanence and steady consolidation.";
   } else {
     modality = "Dvisvabhava (Dual)";
-    modalityCareerBehavior = "Dual (Dvisvabhava) Karma: Inherent duality in professional expression. Thrives with multiple simultaneous projects, dual streams (consulting alongside job, or employment transitioning into independent business), multitasking, and versatile intellectual adaptability.";
+    modalityCareerBehavior = "Dual (Dvisvabhava) Karma: Brings duality to work; strong inclination towards multitasking, running two parallel projects/jobs, or alternating between corporate service and independent business. Thrives with versatile intellectual adaptability.";
   }
 
-  // 12 Sign Archetypes (Classical Dasamsa Shastra)
+  // 12 Sign Archetypes (Deepanshu Giri Lunar Astro Dasamsa Shastra)
   const SIGN_ARCHETYPES: Record<number, { title: string; desc: string }> = {
-    0: { // Aries
-      title: "Pioneering Execution & Martial Leadership",
-      desc: "Entering the field of Karma as an assertive pioneer. Driven to initiate, lead from the front, and execute independent decisions. Thrives in technical execution, engineering, defense, emergency response, law, sports/fitness, or construction. Resents bureaucratic micromanagement and demands autonomous responsibility.",
+    0: { // Aries (Mesha)
+      title: "Pioneering Execution, High-Risk Action & Field Leadership",
+      desc: "Pioneering, initiating, and independent decision-making. Requires high energy, risk-taking, or handling emergencies. Suited for physical/field tasks: civil engineering, construction, defense, uniform services, law enforcement, and sports/fitness. Prone to workplace ego clashes and challenging upper authority when micromanaged.",
     },
-    1: { // Taurus
-      title: "Value Creation, Banking & Asset Management",
-      desc: "Entering Karma focused on tangible value, monetization, and stability. Natural affinity for banking, wealth management, finance, food/hospitality, luxury goods, and asset building. Driven by practical returns; early impulse to monetize skills and build enduring material security.",
+    1: { // Taurus (Vrishabha)
+      title: "Value Creation, Monetization & Financial Asset Building",
+      desc: "Driven by value creation, monetization, asset building, and stability. Linked to banking, finance, agriculture, food/hospitality, voice/speech, and luxury goods. Often creates a strong desire to start earning and accumulating wealth early in life; operates with practical, ground-level fiscal prudence.",
     },
-    2: { // Gemini
-      title: "Information, Media & Multi-Stream Commerce",
-      desc: "Entering Karma through intellectual communication, marketing, IT systems, media, writing, and networking. Highly skilled in translating complex information into actionable commerce. Flourishes with multiple parallel revenue streams and diverse intellectual projects.",
+    2: { // Gemini (Mithuna)
+      title: "Information Systems, Media & Multi-Stream Commerce",
+      desc: "Growth occurs through communication, information systems, writing, marketing, media, publishing, IT, and specialized translation/troubleshooting skills. Strongly favors multi-tasking, content creation, and running multiple income streams simultaneously. Adaptable intellect thriving in fast-moving business networks.",
     },
-    3: { // Cancer
-      title: "Public Welfare, Caregiving & Emotional Intuition",
-      desc: "Entering Karma with deep emotional resonance with the masses. Thrives in public relations, human resources, healthcare/nursing, hospitality, food/liquids, real estate, and coastal/water commerce. High emotional investment in work and colleagues; requires shielding against office politics or emotional exploitation.",
+    3: { // Cancer (Karka)
+      title: "Public Masses, Mass Resonance & Emotional Intuition",
+      desc: "Careers connected to the public masses, human psychology, caregiving, food/nourishment, hotels, home environments, or water-adjacent regions (e.g., coastal hubs like Mumbai, Singapore, Dubai). Highly emotional connection to coworkers; Lunar Astro warning against being overly accommodating to avoid workplace blame, manipulation, or burnout.",
     },
-    4: { // Leo
-      title: "Executive Authority, Governance & Visible Status",
-      desc: "Entering Karma with royal bearing, commanding presence, and executive stature. Oriented toward civil administration, government leadership, policy formulation, and high corporate governance. Demands visible recognition and autonomy; excels when holding supreme decision-making authority.",
+    4: { // Leo (Simha)
+      title: "Executive Visibility, Apex Governance & Sovereign Status",
+      desc: "Driven by a deep need for visibility, authority, prestige, and executive recognition over mere financial reward. Common in administrative positions, government roles, policymaking, and working alongside VIPs. Can face friction with senior bosses due to an innate dislike of taking orders; commands rather than complies.",
     },
-    5: { // Virgo
-      title: "Critical Problem-Solving, Audit & Trouble-Shooting",
-      desc: "Entering Karma as a precision trouble-shooter and analytical auditor. Natural aptitude for Chartered Accountancy, financial analysis, software debugging, medical/healthcare diagnostics, and process optimization. Possesses keen commercial discernment ('Baniya buddhi') to fix flaws that others overlook.",
+    5: { // Virgo (Kanya)
+      title: "Analytical Precision, Audit & System Trouble-Shooting",
+      desc: "Mastery of analytical thinking, troubleshooting, auditing, precision accounting, and commerce. Highly prominent among Chartered Accountants (CAs), bankers, legal advisors, and health sector experts. Career value surges exponentially when acting as 'fixers' who systematically eliminate errors, fraud, and system bugs.",
     },
-    6: { // Libra
-      title: "Marketplace Diplomacy, Partnerships & Client Commerce",
-      desc: "Entering Karma through relational intelligence, B2B negotiation, contracts, legal arbitration, and commercial design. Professional breakthroughs frequently accelerate post-marriage or through key female partners/allies. Master of diplomacy, consensus building, and marketplace exchange.",
+    6: { // Libra (Tula)
+      title: "Marketplace Diplomacy, Partnerships & Aesthetic Law",
+      desc: "Career growth occurs through external interactions, networking, client relationships, partnerships, and public negotiations. Strong potential in law, commerce, aesthetics, and cinema. Significant career breakthroughs often coincide with marriage or entering profitable partnerships with women.",
     },
-    7: { // Scorpio
-      title: "Deep Investigation, Occult & Crisis Transformation",
-      desc: "Entering Karma through transformative depth, secret strategies, and crisis management. Thrives in confidential operations, investigative research, taxation, forensic audit, occult/astrology, mining, and high-stakes engineering. Keeps professional strategies protected; undergoes profound career metamorphosis.",
+    7: { // Scorpio (Vrischika)
+      title: "Deep Transformational Research, Occult & Confidential Strategy",
+      desc: "Involves deep transformational problem solving, hidden tasks, taxation, research, mining, insurance, and occult/astrology. Greatly benefits from keeping strategies and financial status discreet. Often experiences dramatic career pivots where they achieve fame in an entirely unpredicted domain.",
     },
-    8: { // Sagittarius
-      title: "Institutional Advisory, Mentorship & Strategic Vision",
-      desc: "Entering Karma as a knowledge carrier, ethical guide, and high-level counselor. Natural advisor to executives, CEOs, and state institutions. Oriented toward jurisprudence, economics, higher academia, philosophical systems, and expansive strategic policy.",
+    8: { // Sagittarius (Dhanu)
+      title: "Ethical Vision, Institutional Advisory & Knowledge Dissemination",
+      desc: "Guided by high vision, ethics, advisory roles, and knowledge dissemination. Prominent among professors, mentors, judges, economic advisors, and specialized enforcement roles (e.g., Income Tax, Central Excise, intelligence). Operates as the moral and strategic compass of an institution.",
     },
-    9: { // Capricorn
-      title: "High Responsibility, Organizational Infrastructure & Labor Governance",
-      desc: "Entering Karma through rigorous perseverance, institutional building from the ground up, and heavy administrative duty. Essential signature for mass governance, labor relations, public administration, and large corporate machinery. Demands humility and relentless stamina.",
+    9: { // Capricorn (Makara)
+      title: "Heavy Obligations, Mass Labor Governance & Structural Building",
+      desc: "Heavy obligations, hard labor, building structures from the ground up, and serving the grassroots/working class without ego. Crucial configuration for successful, long-serving politicians, statesmen, and enterprise architects who must bow to and manage public sentiment with tireless stamina.",
     },
-    10: { // Aquarius
-      title: "Systemic Networks, Technology & Unconventional Enterprise",
-      desc: "Entering Karma through complex networked systems, scientific innovation, disruptive technology, and mass connectivity. Often maintains a discreet or unconventional professional identity. Thrives in futuristic research, large platforms, and unconventional solutions.",
+    10: { // Aquarius (Kumbha)
+      title: "Systemic Networks, Technology Innovation & Research",
+      desc: "Involved in technological innovation, large community platforms, scientific research, metaphysics, and esoteric subjects. Often operates behind closed doors; requires conscious vigilance regarding office politics, hidden rivalries, or bureaucratic traps.",
     },
-    11: { // Pisces
-      title: "Intuitive Mastery, Subconscious Creation & Global Reach",
-      desc: "Entering Karma through elevated intuition, creative arts, music, foreign commerce, healthcare, and metaphysical healing. Excels in solitary deep work, night productivity, and higher abstract logic (especially if Mercury). Requires grounding to avoid unrealistic ideals.",
+    11: { // Pisces (Meena)
+      title: "Intuitive Mastery, Night Productivity & Global Transcendent Work",
+      desc: "Intuitive, creative, and transcendent professions—working during quiet/night hours, healing, music, NGOs/charity, remote setups, or foreign lands. If afflicted or ungrounded, may cause impractical daydreaming or detached work habits; requires structured grounding.",
     },
   };
 
@@ -382,6 +394,114 @@ export function analyzeCareerJobBusiness(ephem: EphemerisResult): CareerJobBusin
     }
   });
 
+  // D1 10th House Physical Surroundings (Deepanshu Giri Rule: D1 10th House vs D10 Lagnadhipati)
+  const d1TenthSignIdx = (ascSignIdx + 9) % 12;
+  const d1TenthSignName = RASHI_NAMES[d1TenthSignIdx].englishName;
+  const d1TenthLord = RASHI_NAMES[d1TenthSignIdx].lord;
+
+  // Occupants in D1 10th house
+  const d1TenthOccupants: string[] = [];
+  Object.values(ephem.planets).forEach((p) => {
+    if (p && p.house === 10 && !p.isUpagraha && !p.isModernPlanet) {
+      d1TenthOccupants.push(p.name);
+    }
+  });
+
+  const SURROUNDING_PRESETS: Record<string, { desc: string; landmarks: string[] }> = {
+    Mars: {
+      desc: "Martian Physical Landscape: High physical energy, movement, or technical power. Located near active operations.",
+      landmarks: ["Gymnasiums & athletic/sports complexes", "Police stations, security posts & military facilities", "Electrical transformers & power distribution stations", "Fire stations or metal/mechanic workshops", "Construction or civil engineering sites"],
+    },
+    Sun: {
+      desc: "Solar Physical Landscape: Central authority, governance, and public prominence. Located in high-stature administrative zones.",
+      landmarks: ["Government secretariats & administrative headquarters", "Prominent municipal buildings & town halls", "Central city plazas & wide avenues", "Public monuments & national landmarks", "Gold, treasury & luxury governance centers"],
+    },
+    Moon: {
+      desc: "Lunar Physical Landscape: Public welfare, flow, liquids, and emotional nourishment. Located near fluids, water, or mass transit.",
+      landmarks: ["Rivers, lakes, canals, or coastal water bodies", "Hospitals, nursing homes, and maternal health clinics", "Hotels, restaurants, and food courts", "Public transit terminals & passenger ports", "Dairy / beverage markets & public supply depots"],
+    },
+    Mercury: {
+      desc: "Mercurial Physical Landscape: Fast-paced commercial networking, information flow, and intellectual transactions.",
+      landmarks: ["Commercial plazas & bustling business markets", "IT / technology parks & software centers", "Telecom / mobile towers & data exchanges", "Schools, colleges, libraries, or bookstores", "Courier, logistics, and postal sorting hubs"],
+    },
+    Jupiter: {
+      desc: "Jupiterian Physical Landscape: Institutional dignity, higher learning, jurisprudence, and ethical advisory.",
+      landmarks: ["Judicial courts & law chambers", "Universities, research academies, and colleges", "Temples, shrines, or philosophical centers", "Corporate headquarters & advisory suites", "Large banking institutes & wealth depositories"],
+    },
+    Venus: {
+      desc: "Venusian Physical Landscape: Aesthetic elegance, hospitality, luxury trade, design, and commerce.",
+      landmarks: ["Luxury boutiques & premium fashion markets", "Salons, spas, and wellness studios", "Art galleries, design agencies, or media studios", "Cinema halls, entertainment complexes, or auditoriums", "Automotive showrooms & fine-dining boulevards"],
+    },
+    Saturn: {
+      desc: "Saturnian Physical Landscape: Heavy industry, institutional endurance, labor governance, and historical permanence.",
+      landmarks: ["Industrial zones, manufacturing plants & factories", "Heavy machinery depots & transport yards", "Labor colonies, workers' unions, and trade offices", "Heritage structures, old stone buildings, or quarries", "Recycling, waste processing, or iron/steel yards"],
+    },
+    Rahu: {
+      desc: "Rahu Physical Landscape: Futuristic technology, unconventional scale, international connectivity, and subterranean transit.",
+      landmarks: ["Multinational tech parks & cyber hubs", "Airports, aviation complexes & runways", "Underground metro lines & subterranean tunnels", "Foreign embassy zones & international chambers", "Pharmaceutical, chemical, and biotechnology complexes"],
+    },
+    Ketu: {
+      desc: "Ketu Physical Landscape: Quiet introspective zones, medical diagnostics, spiritual seclusion, and clinical research.",
+      landmarks: ["Pathology laboratories & diagnostic centers", "Spiritual retreats, ashrams, and quiet sanctuaries", "Dead-end streets (cul-de-sacs) & quiet lanes", "Substance research or precision micro-laboratories", "Charitable clinics & rehabilitation centers"],
+    },
+  };
+
+  const dominant10thPlanet = d1TenthOccupants.length > 0 ? d1TenthOccupants[0] : d1TenthLord;
+  const surroundingData = SURROUNDING_PRESETS[dominant10thPlanet] || SURROUNDING_PRESETS[d1TenthLord] || SURROUNDING_PRESETS["Mercury"];
+
+  const d1TenthHouseSurroundings = {
+    tenthHouseSign: d1TenthSignName,
+    tenthHouseLord: d1TenthLord,
+    occupants: d1TenthOccupants,
+    workplaceEnvironmentDescription: `${surroundingData.desc} (Influenced by ${dominant10thPlanet} in D-1 House 10 in ${d1TenthSignName})`,
+    likelyPhysicalSurroundings: surroundingData.landmarks,
+  };
+
+  // Historical Benchmark Matching (Deepanshu Giri Lecture Case Studies)
+  let historicalBenchmark: {
+    matchedLeader: string;
+    astrologicalParallel: string;
+    historicalSignificance: string;
+  } | undefined = undefined;
+
+  if (
+    (d1LagnaLord === "Venus" && d1LagnaLordInD10SignName === "Capricorn" && hasSaturnConnection) ||
+    (saturnConnectionType === "Parivartana with Saturn")
+  ) {
+    historicalBenchmark = {
+      matchedLeader: "Narendra Modi (Prime Minister of India)",
+      astrologicalParallel: "Libra Lagna in D-1; D-1 Lagna Lord Venus placed in Capricorn in D-10 in mutual connection/exchange with Saturn.",
+      historicalSignificance: "Demonstrates immense endurance, grass-roots governance, administrative discipline, and longevity in public office through deep alignment with working-class masses.",
+    };
+  } else if (
+    d1LagnaLordInD10SignIdx === satD10SignIdx ||
+    (d1LagnaLord === "Moon" && d10Conjunctions.includes("Saturn"))
+  ) {
+    historicalBenchmark = {
+      matchedLeader: "Indira Gandhi (Prime Minister of India)",
+      astrologicalParallel: "Cancer Lagna in D-1; D-1 Lagna Lord Moon sits directly conjunct Saturn in D-10.",
+      historicalSignificance: "Demonstrates mass emotional mobilization, heavy state responsibilities, resolute decision-making under crisis, and long-standing executive power.",
+    };
+  } else if (
+    d1LagnaLordInD10SignName === "Scorpio" &&
+    (d10Conjunctions.includes("Jupiter") || d10Conjunctions.includes("Mercury") || d1LagnaLord === "Venus")
+  ) {
+    historicalBenchmark = {
+      matchedLeader: "K.N. Rao (Master Astrologer & Former IAAS Officer)",
+      astrologicalParallel: "Libra Lagna in D-1; Lagna Lord Venus sits in Scorpio in D-10 with Jupiter & Mercury.",
+      historicalSignificance: "Synthesizes precise commercial auditing and accounts with deep occult, predictive astrology, research investigation, and mathematical systems.",
+    };
+  } else if (
+    d10Chart.entities.some((e) => e.name === "Mercury" && e.vargaRashi.englishName === "Sagittarius") &&
+    d10Chart.entities.some((e) => (e.name === "Mars" || e.name === "Ketu") && e.vargaRashi.englishName === "Sagittarius")
+  ) {
+    historicalBenchmark = {
+      matchedLeader: "Amit Shah (Home Minister of India)",
+      astrologicalParallel: "Mercury conjunct Mars/Ketu in Sagittarius in D-10.",
+      historicalSignificance: "Command over internal security, state defense, strategic enforcement, and sharp, authoritative speech within institutional governance.",
+    };
+  }
+
   const d1LagnaLordInD10: D1LagnaLordInD10Analysis = {
     d1LagnaLord,
     d10SignIndex: d1LagnaLordInD10SignIdx,
@@ -401,6 +521,8 @@ export function analyzeCareerJobBusiness(ephem: EphemerisResult): CareerJobBusin
     },
     conjunctionsInD10: d10Conjunctions,
     keyVocationalSignature: `${d1LagnaLord} in ${d1LagnaLordInD10SignName} (H${d1LagnaLordD10House} in D-10) • ${modality} • ${SIGN_ARCHETYPES[d1LagnaLordInD10SignIdx]?.title || ""}`,
+    d1TenthHouseSurroundings,
+    historicalBenchmark,
   };
 
   // Sun upachaya check

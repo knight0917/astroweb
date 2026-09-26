@@ -14,6 +14,18 @@ import { analyzeCareerJobBusiness } from "../engine/careerJobBusiness";
 
 export type VargaViewId = VargaId | "RTN";
 
+const CLASSICAL_9_PLANETS = new Set([
+  "Sun",
+  "Moon",
+  "Mars",
+  "Mercury",
+  "Jupiter",
+  "Venus",
+  "Saturn",
+  "Rahu",
+  "Ketu",
+]);
+
 export default function ShodashavargaView() {
   const {
     ephemeris,
@@ -99,7 +111,9 @@ export default function ShodashavargaView() {
     const map: Record<number, typeof rtnResult.planets[string][]> = {};
     for (let i = 1; i <= 12; i++) map[i] = [];
     Object.values(rtnResult.planets).forEach((p) => {
-      map[p.rtnHouseFromD1Lagna].push(p);
+      if (CLASSICAL_9_PLANETS.has(p.planetName)) {
+        map[p.rtnHouseFromD1Lagna].push(p);
+      }
     });
     return map;
   }, [isRtnMode, rtnResult]);
@@ -116,8 +130,10 @@ export default function ShodashavargaView() {
     }[] = [];
 
     for (let h = 1; h <= 12; h++) {
-      const d1List = (d1Chart.houseOccupants[h] || []).filter((p) => !p.isUpagraha);
-      const d9List = rtnHouseOccupants[h] || [];
+      const d1List = (d1Chart.houseOccupants[h] || []).filter(
+        (p) => CLASSICAL_9_PLANETS.has(p.name) && !p.isUpagraha
+      );
+      const d9List = (rtnHouseOccupants[h] || []).filter((p) => CLASSICAL_9_PLANETS.has(p.planetName));
       if (d1List.length > 0 && d9List.length > 0) {
         const rashiIdx = (ascRashiIndex + h - 1) % 12;
         const d1Names = d1List.map((p) => p.name);
@@ -137,8 +153,16 @@ export default function ShodashavargaView() {
 
   const renderPlanetList = (houseNum: number) => {
     if (isRtnMode) {
-      const d1List = rtnLayerFilter === "d9" ? [] : (d1Chart.houseOccupants[houseNum] || []);
-      const d9List = rtnLayerFilter === "d1" ? [] : (rtnHouseOccupants[houseNum] || []);
+      const d1List =
+        rtnLayerFilter === "d9"
+          ? []
+          : (d1Chart.houseOccupants[houseNum] || []).filter(
+              (p) => CLASSICAL_9_PLANETS.has(p.name) && !p.isUpagraha
+            );
+      const d9List =
+        rtnLayerFilter === "d1"
+          ? []
+          : (rtnHouseOccupants[houseNum] || []).filter((p) => CLASSICAL_9_PLANETS.has(p.planetName));
 
       if (d1List.length === 0 && d9List.length === 0) return null;
 
@@ -788,7 +812,9 @@ export default function ShodashavargaView() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/60">
-                      {Object.values(rtnResult.planets).map((p) => {
+                      {Object.values(rtnResult.planets)
+                        .filter((p) => CLASSICAL_9_PLANETS.has(p.planetName))
+                        .map((p) => {
                         const isSelected = selectedEntityId === p.planetId;
                         return (
                           <tr
@@ -1033,6 +1059,50 @@ export default function ShodashavargaView() {
                           </span>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {/* D-1 10th House Physical Workplace Surroundings Card (Deepanshu Giri Rule) */}
+                  <div className="bg-slate-900/70 border border-indigo-500/30 p-3 rounded-xl space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-indigo-300 font-bold flex items-center gap-1">
+                        <span>🏢</span>
+                        <span>D-1 10th House Physical Surroundings:</span>
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-500/40 font-mono">
+                        {d10CareerAnalysis.d1LagnaLordInD10.d1TenthHouseSurroundings.tenthHouseSign} (Lord: {d10CareerAnalysis.d1LagnaLordInD10.d1TenthHouseSurroundings.tenthHouseLord})
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 leading-relaxed font-normal">
+                      {d10CareerAnalysis.d1LagnaLordInD10.d1TenthHouseSurroundings.workplaceEnvironmentDescription}
+                    </p>
+                    <div className="pt-1 flex flex-wrap gap-1">
+                      {d10CareerAnalysis.d1LagnaLordInD10.d1TenthHouseSurroundings.likelyPhysicalSurroundings.slice(0, 3).map((l, i) => (
+                        <span key={i} className="text-[9.5px] px-2 py-0.5 rounded-md bg-slate-950 text-indigo-200 border border-indigo-500/20 font-medium">
+                          📍 {l}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Historical Benchmark Card (Deepanshu Giri Lecture Case Studies) */}
+                  {d10CareerAnalysis.d1LagnaLordInD10.historicalBenchmark && (
+                    <div className="bg-gradient-to-r from-amber-950/40 to-yellow-950/30 border border-amber-500/40 p-3 rounded-xl space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[10px] font-black text-amber-300 uppercase tracking-wider flex items-center gap-1">
+                          <span>🏆</span>
+                          <span>Classical Benchmark: {d10CareerAnalysis.d1LagnaLordInD10.historicalBenchmark.matchedLeader}</span>
+                        </span>
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-900/60 text-amber-200 border border-amber-500/40 font-bold">
+                          Lunar Astro Alignment
+                        </span>
+                      </div>
+                      <p className="text-[10.5px] text-amber-200/90 font-medium">
+                        {d10CareerAnalysis.d1LagnaLordInD10.historicalBenchmark.astrologicalParallel}
+                      </p>
+                      <p className="text-[10.5px] text-slate-300 leading-relaxed font-normal">
+                        {d10CareerAnalysis.d1LagnaLordInD10.historicalBenchmark.historicalSignificance}
+                      </p>
                     </div>
                   )}
 

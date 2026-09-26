@@ -72,6 +72,8 @@ import { evaluateRelationshipAffairs } from "./relationshipAffairsMaster";
 import { evaluateBhriguNadiMarriageTiming } from "./bhriguNadiMarriageTiming";
 import { calculateAdhanaKundali } from "./adhanaKundali";
 import { evaluateVedicNameMatrix } from "./nameAnalysis";
+import { analyzeNameVibrationalEnergy, evaluateChartNameCongruence } from "./lunarAstroNameEnergy";
+import { calculatePlanetaryMaturationTimeline } from "./planetaryAgeActivation";
 import { calculateMatchmaking } from "./matchmaking";
 import { calculateLappingCompatibility } from "./lappingCompatibility";
 import { generateDrSamirTripathiSummary } from "./samirTripathiSuite";
@@ -121,7 +123,7 @@ export function detectConsultationIntent(query: string, activeCategory?: string)
   if (activeCategory === "marriage" || /\b(marriage|spouse|wife|husband|wedding|love|relationship|divorce|separation|partner|compatibility|matchmaking|vivah|milan|d9|navamsha)\b/.test(q)) {
     return "marriage";
   }
-  if (/\b(name|letter|first letter|initial|calling name|svara|syllable|akshara|nakshatra nama|spelling)\b/.test(q)) {
+  if (/\b(name|letter|first letter|initial|calling name|svara|syllable|akshara|nakshatra nama|spelling|vibration|phonetic|phonetics|aniket|priyanka|sonal|alok|sachin|age 36|maturation)\b/.test(q)) {
     return "name_phonetics";
   }
   if (/\b(birth time|exact moment|moment of birth|first breath|first cry|cord cut|umbilical|bhupatana|shirodarshana|rectification|btr|accurate|accuracy|doubt|past life|milestone|exact minute|conception|adhana)\b/.test(q)) {
@@ -1564,10 +1566,12 @@ export function buildAstroDossier(
       `  - Saturn Vector: ${careerAnalysis.bnnSaturnKarmaVector}`,
       `  - Archetype: **${careerAnalysis.bnnCareerArchetype}**`,
       `- **Recommended Professional Streams (K.N. Rao & B.V. Raman):** **${careerAnalysis.recommendedVocationStreams.join(", ")}**`,
-      `- **D-10 Dasamsa In-Depth Diagnostics (Classical Parashari Shastra):**`,
+      `- **D-10 Dasamsa In-Depth Diagnostics (Classical Parashari Shastra & Lunar Astro):**`,
       `  - **D-1 Lagna Lord in D-10 (Soul's Field of Karma & Personal Style):** **${careerAnalysis.d1LagnaLordInD10.d1LagnaLord}** in **${careerAnalysis.d1LagnaLordInD10.d10SignName}** (House ${careerAnalysis.d1LagnaLordInD10.d10House} in D-10, Dignity: ${careerAnalysis.d1LagnaLordInD10.dignityInD10})`,
       `  - *Career Modality:* **${careerAnalysis.d1LagnaLordInD10.modality}** — ${careerAnalysis.d1LagnaLordInD10.modalityCareerBehavior}`,
       `  - *Sign Archetype:* **${careerAnalysis.d1LagnaLordInD10.signArchetypeTitle}** — ${careerAnalysis.d1LagnaLordInD10.signArchetypeDescription}`,
+      `  - *D-1 10th House Workplace Physical Environment:* ${careerAnalysis.d1LagnaLordInD10.d1TenthHouseSurroundings.workplaceEnvironmentDescription} (Likely surroundings: ${careerAnalysis.d1LagnaLordInD10.d1TenthHouseSurroundings.likelyPhysicalSurroundings.slice(0, 3).join(", ")})`,
+      ...(careerAnalysis.d1LagnaLordInD10.historicalBenchmark ? [`  - *Historical Benchmark:* **${careerAnalysis.d1LagnaLordInD10.historicalBenchmark.matchedLeader}** (${careerAnalysis.d1LagnaLordInD10.historicalBenchmark.astrologicalParallel} -> ${careerAnalysis.d1LagnaLordInD10.historicalBenchmark.historicalSignificance})`] : []),
       `  - *D-10 Conjunctions:* ${careerAnalysis.d1LagnaLordInD10.conjunctionsInD10.length > 0 ? careerAnalysis.d1LagnaLordInD10.conjunctionsInD10.join(", ") : "None (Solitary execution)"}`,
       `  - *Saturnian Leadership Signature:* ${careerAnalysis.d1LagnaLordInD10.saturnConnection.leadershipVerdict}`,
       ...(careerAnalysis.d1LagnaLordInD10.debilitationSynthesis ? [`  - *Debilitation Caveat:* ${careerAnalysis.d1LagnaLordInD10.debilitationSynthesis}`] : []),
@@ -1906,6 +1910,40 @@ export function buildAstroDossier(
     ].filter(Boolean).join("\n");
   } catch (_) {}
 
+  // 79. Lunar Astro Name Vibrational Energy & Parashara Planetary Maturation Ages (Deepanshu Giri)
+  let lunarAstroNameSummary = "";
+  try {
+    const ageReport = calculatePlanetaryMaturationTimeline(natalEphemeris, birthDate, evaluationDate);
+    const activeName = "Seeker";
+    const nameProfile = analyzeNameVibrationalEnergy(activeName);
+    const nameCongruence = evaluateChartNameCongruence(activeName, natalEphemeris);
+
+    const saturnAlert = ageReport.retrogradeAgeAlertDossier
+      ? `  - **⚠️ SATURN MATURATION STATUS:** ${ageReport.retrogradeAgeAlertDossier}`
+      : `  - **Active Milestone Theme:** ${ageReport.activeMilestone.planet} (${ageReport.activeMilestone.startAge}–${ageReport.activeMilestone.endAge} Yrs) • ${ageReport.activeMilestone.isRetrograde ? "VAKRI (RETROGRADE)" : "Direct"} • ${ageReport.activeMilestone.standardManifestation}`;
+
+    lunarAstroNameSummary = [
+      `- **Native Current Age:** **${ageReport.currentAge} Years Old**`,
+      `- **Active Parashari Maturation Window (BPHS Ch. 45):** **${ageReport.activeMilestone.planet}** (Age ${ageReport.activeMilestone.startAge} to ${ageReport.activeMilestone.endAge}) • Theme: *${ageReport.activeMilestone.classicalSignification}*`,
+      saturnAlert,
+      `- **Upcoming Maturation Milestone:** **${ageReport.upcomingMilestone.planet}** (Age ${ageReport.upcomingMilestone.startAge} to ${ageReport.upcomingMilestone.endAge})`,
+      `- **Lunar Astro Calling Name Vibration ("${activeName}"):**`,
+      `  - **Primary Resonant Planets:** **${nameProfile.primaryPlanets.join(" + ")}** • Secondary: ${nameProfile.secondaryPlanets.join(" + ")}`,
+      `  - **Acoustic Archetype:** **${nameProfile.archetypeName}**`,
+      `  - **Ancestral Protection Shield:** ${nameProfile.ancestralShieldStatus ? "Active (Lineage Grace Shielded)" : "Standard Individual Karma"}`,
+      `  - **Psychological Blueprint:** ${nameProfile.psychologicalBlueprint}`,
+      `  - **Relationship Dynamics:** ${nameProfile.relationshipTendency}`,
+      `  - **Career & Service Vector:** ${nameProfile.careerAndServiceVector}`,
+      `  - **Predicted Chart Signatures:** ${nameProfile.predictedChartPlacements.join(" | ")}`,
+      `- **Chart-to-Name Congruence Index:** **${nameCongruence.congruenceScore}% (${nameCongruence.harmonyStatus})**`,
+      `  - *Lagna Resonance:* ${nameCongruence.resonanceWithLagnaLord}`,
+      `  - *Moon Resonance:* ${nameCongruence.resonanceWithMoon}`,
+      `  - *Overall Audit:* ${nameCongruence.overallAudit}`,
+      `- **Vak Siddhi & Astrological Intuition Guideline (Deepanshu Giri):** ${ageReport.vakSiddhiIntuitionSummary}`,
+      `- **Shastric Botanical / Living Upaya:** ${ageReport.activeMilestone.shastricRemedy}`,
+    ].join("\n");
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -2140,7 +2178,10 @@ export function buildAstroDossier(
     lines.push(
       "",
       "#### 🔤 67. VEDIC NAME DECODING, SVARA JYOTISH & CALLING NAME PHONETICS DOSSIER:",
-      nameSummary
+      nameSummary,
+      "",
+      "#### 🪷 79. LUNAR ASTRO NAME VIBRATIONAL ENERGY & PARASHARA PLANETARY MATURATION AGES (DEEPANSHU GIRI) DOSSIER:",
+      lunarAstroNameSummary
     );
   } else if (intent === "btr_verification") {
     lines.push(
@@ -2397,7 +2438,10 @@ export function buildAstroDossier(
       lifeReportSummary,
       "",
       "#### 👶 78. PROGENY, CHILDREN & SAPTAMSHA (D-7) SANTANA NIRNAYA DOSSIER:",
-      progenyMasterSummary
+      progenyMasterSummary,
+      "",
+      "#### 🪷 79. LUNAR ASTRO NAME VIBRATIONAL ENERGY & PARASHARA PLANETARY MATURATION AGES (DEEPANSHU GIRI) DOSSIER:",
+      lunarAstroNameSummary
     );
   }
 

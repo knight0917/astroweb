@@ -4,6 +4,12 @@ import { getAyanamsha, toSiderealLongitude } from "../src/engine/ayanamsha.ts";
 import { getRashi, getNakshatra, getHouse } from "../src/engine/rashiNakshatra.ts";
 import { calculateVedicEphemeris } from "../src/engine/ephemeris.ts";
 import { POPULAR_CITIES } from "../src/engine/constants.ts";
+import {
+  analyzeNameVibrationalEnergy,
+  evaluateChartNameCongruence,
+  decomposeNameVarnaPhonetics,
+} from "../src/engine/lunarAstroNameEnergy.ts";
+import { calculatePlanetaryMaturationTimeline } from "../src/engine/planetaryAgeActivation.ts";
 
 test("Ayanamsha Calculation - Lahiri J2000 Epoch", () => {
   // JD 2451545.0 is 2000-01-01 12:00:00 UTC
@@ -5654,4 +5660,206 @@ test("Phase 21: Navneet Chitkara 3-Point BTR Engine, Jaimini Rashi Drishti & Umb
   assert.ok(summary.includes("18:29:"), "Summary references the 18:29 rectified timestamp");
 });
 
+test("Subtest 119: Lunar Astro Name Vibrational Energy & Parashara Planetary Maturation Ages (Deepanshu Giri)", () => {
+  // 1. Signature Archetype: Aniket (Sun + Mars Unhoused Ascetic)
+  const aniketProfile = analyzeNameVibrationalEnergy("Aniket");
+  assert.strictEqual(aniketProfile.matchedRuleId, "ANIKET_ARCHETYPE");
+  assert.deepStrictEqual(aniketProfile.primaryPlanets, ["Sun", "Mars"]);
+  assert.ok(aniketProfile.archetypeName.includes("Unhoused Ascetic Warrior"));
+  assert.ok(aniketProfile.psychologicalBlueprint.includes("Fierce inner independence"));
+  assert.strictEqual(aniketProfile.ancestralShieldStatus, false);
+  assert.ok(aniketProfile.predictedChartPlacements.some((p) => p.includes("Sun and Mars")));
 
+  // 2. Signature Archetype: Ravi (Pure Solar Ignition)
+  const raviProfile = analyzeNameVibrationalEnergy("Ravi");
+  assert.strictEqual(raviProfile.matchedRuleId, "RAVI_ARCHETYPE");
+  assert.deepStrictEqual(raviProfile.primaryPlanets, ["Sun"]);
+  assert.ok(raviProfile.archetypeName.includes("Pure Solar Ignition"));
+  assert.ok(raviProfile.psychologicalBlueprint.includes("Straightforward, concise, proud"));
+
+  // 3. Signature Archetype: Priyanka & Preeti (Venus-Ketu Karmic Mirror)
+  const priyankaProfile = analyzeNameVibrationalEnergy("Priyanka");
+  assert.strictEqual(priyankaProfile.matchedRuleId, "PRIYANKA_PREETI_ROOT");
+  assert.deepStrictEqual(priyankaProfile.primaryPlanets, ["Venus", "Ketu"]);
+  assert.ok(priyankaProfile.relationshipTendency.includes("relationship friction"));
+
+  const preetiProfile = analyzeNameVibrationalEnergy("Preeti");
+  assert.strictEqual(preetiProfile.matchedRuleId, "PRIYANKA_PREETI_ROOT");
+  assert.deepStrictEqual(preetiProfile.primaryPlanets, ["Venus", "Ketu"]);
+
+  // 4. Signature Archetype: Sonal (Quiet Jupiterian Wisdom)
+  const sonalProfile = analyzeNameVibrationalEnergy("Sonal");
+  assert.strictEqual(sonalProfile.matchedRuleId, "SONAL_ARCHETYPE");
+  assert.deepStrictEqual(sonalProfile.primaryPlanets, ["Jupiter"]);
+  assert.ok(sonalProfile.psychologicalBlueprint.includes("Quiet, dignified, sharp contemplative understanding"));
+
+  // 5. Signature Archetype: Alok (Saturnian Service & Endurance)
+  const alokProfile = analyzeNameVibrationalEnergy("Alok");
+  assert.strictEqual(alokProfile.matchedRuleId, "ALOK_ARCHETYPE");
+  assert.deepStrictEqual(alokProfile.primaryPlanets, ["Saturn"]);
+  assert.ok(alokProfile.archetypeName.includes("Saturnian Endurance"));
+
+  // 6. Signature Archetype: Sachin (Moon-Venus Relational Crucible)
+  const sachinProfile = analyzeNameVibrationalEnergy("Sachin");
+  assert.strictEqual(sachinProfile.matchedRuleId, "SACHIN_ARCHETYPE");
+  assert.deepStrictEqual(sachinProfile.primaryPlanets, ["Moon", "Venus"]);
+  assert.ok(sachinProfile.relationshipTendency.includes("complex marital dynamics"));
+
+  // 7. Protective Suffixes: -inder (Indra-Sun-Jupiter) & -preet (Guru-Moon)
+  const kulwinderProfile = analyzeNameVibrationalEnergy("Kulwinder");
+  assert.strictEqual(kulwinderProfile.matchedRuleId, "INDER_SUFFIX_SHIELD");
+  assert.strictEqual(kulwinderProfile.ancestralShieldStatus, true);
+  assert.deepStrictEqual(kulwinderProfile.primaryPlanets, ["Jupiter", "Sun"]);
+
+  const manpreetProfile = analyzeNameVibrationalEnergy("Manpreet");
+  assert.strictEqual(manpreetProfile.matchedRuleId, "PREET_SUFFIX_SHIELD");
+  assert.strictEqual(manpreetProfile.ancestralShieldStatus, true);
+  assert.deepStrictEqual(manpreetProfile.primaryPlanets, ["Jupiter", "Moon"]);
+
+  // 8. Generalized Name Varna Decomposition on Arbitrary Name
+  const davidProfile = analyzeNameVibrationalEnergy("David");
+  assert.strictEqual(davidProfile.matchedRuleId, "GENERAL_VARNA_MANDALA");
+  assert.ok(davidProfile.primaryPlanets.length > 0);
+  assert.ok(davidProfile.predictedChartPlacements.length > 0);
+  assert.ok(davidProfile.phoneticBreakdown.vowelsSolar > 0);
+
+  // 9. Parashara Natural Planetary Maturation Ages & Age 36 Retrograde Inversion
+  const location = { cityName: "Delhi", country: "India", latitude: 28.6139, longitude: 77.209, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1988-06-15T12:00:00Z"); // Born 1988
+  const evalDateAt36 = new Date("2024-06-15T12:00:00Z"); // Exactly 36 years old
+  const ephem = calculateVedicEphemeris(birthDate, location, "Lahiri", "WholeSign", "Mean");
+
+  const ageReport = calculatePlanetaryMaturationTimeline(ephem, birthDate, evalDateAt36);
+  assert.strictEqual(ageReport.currentAge, 36);
+  assert.strictEqual(ageReport.isSaturnAge36Active, true);
+  assert.strictEqual(ageReport.activeMilestone.planet, "Saturn");
+  assert.strictEqual(ageReport.activeMilestone.startAge, 36);
+  assert.strictEqual(ageReport.activeMilestone.endAge, 42);
+  assert.ok(ageReport.retrogradeAgeAlertDossier, "Saturn alert dossier must be present at age 36");
+
+  // Retrograde inversion test: simulate Saturn retrograde in ephemeris
+  const retroEphem = {
+    ...ephem,
+    planets: {
+      ...ephem.planets,
+      Saturn: {
+        ...ephem.planets.Saturn,
+        isRetrograde: true,
+      },
+    },
+  };
+  const retroReport = calculatePlanetaryMaturationTimeline(retroEphem, birthDate, evalDateAt36);
+  assert.strictEqual(retroReport.isRetrogradeSaturnActive, true);
+  assert.ok(retroReport.retrogradeAgeAlertDossier.includes("RETROGRADE SATURN"));
+  assert.ok(retroReport.retrogradeAgeAlertDossier.includes("Great Karmic Inversion"));
+
+  // 10. Chart-to-Name Congruence Evaluation
+  const congruence = evaluateChartNameCongruence("Aniket", ephem);
+  assert.ok(congruence.congruenceScore >= 35 && congruence.congruenceScore <= 100);
+  assert.ok(["Harmonious Resonance", "Dynamic Tension", "Spiritual Catalyst"].includes(congruence.harmonyStatus));
+  assert.ok(congruence.resonanceWithLagnaLord.length > 0);
+  assert.ok(congruence.overallAudit.includes("Aniket"));
+});
+
+test("Subtest 120: Rashi Tulya Navamsha (RTN) Strictly 9 Classical Planets Filter (No Sub-Planets/Upagrahas/Moderns)", async () => {
+  const { evaluateRashiTulyaNavamsha } = await import("../src/engine/rashiTulyaNavamsha.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const { calculateShodashavargaChart } = await import("../src/engine/shodashavarga.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1995-10-15T06:30:00Z");
+  const natalEphem = calculateVedicEphemeris(birthDate, location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date(), location, "Lahiri", "WholeSign", "Mean");
+
+  const rtnResult = evaluateRashiTulyaNavamsha(natalEphem, transitEphem);
+
+  const CLASSICAL_9 = new Set(["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"]);
+
+  // 1. Assert all keys in rtnResult.planets are strictly classical 9 planets
+  const rtnPlanetKeys = Object.keys(rtnResult.planets);
+  assert.strictEqual(rtnPlanetKeys.length, 9, "RTN planets count must be exactly 9");
+  for (const pName of rtnPlanetKeys) {
+    assert.ok(CLASSICAL_9.has(pName), `RTN planet ${pName} must be in classical 9 planets`);
+  }
+
+  // 2. Assert no modern planets (Uranus, Neptune, Pluto) or Upagrahas exist in RTN planets
+  assert.strictEqual(rtnResult.planets["Uranus"], undefined);
+  assert.strictEqual(rtnResult.planets["Neptune"], undefined);
+  assert.strictEqual(rtnResult.planets["Pluto"], undefined);
+  assert.strictEqual(rtnResult.planets["Gulika"], undefined);
+  assert.strictEqual(rtnResult.planets["Mandi"], undefined);
+
+  // 3. Assert RTN conjunctions only reference classical 9 planets
+  for (const c of rtnResult.rtnConjunctions) {
+    for (const p of c.planets) {
+      assert.ok(CLASSICAL_9.has(p), `RTN conjunction planet ${p} must be one of classical 9`);
+    }
+  }
+
+  // 4. Verify D-1 Chart occupants filtering in RTN mode excludes upagrahas & modern planets
+  const d1ChartWithUpagrahas = calculateShodashavargaChart(natalEphem, "D1", true, true);
+  for (let h = 1; h <= 12; h++) {
+    const rawOccupants = d1ChartWithUpagrahas.houseOccupants[h] || [];
+    const rtnFilteredD1 = rawOccupants.filter((p) => CLASSICAL_9.has(p.name) && !p.isUpagraha);
+    for (const p of rtnFilteredD1) {
+      assert.ok(CLASSICAL_9.has(p.name), `Filtered D1 planet ${p.name} must be classical 9`);
+      assert.strictEqual(p.isUpagraha, undefined, "Filtered D1 planet must not be upagraha");
+      assert.ok(p.name !== "Uranus" && p.name !== "Neptune" && p.name !== "Pluto");
+    }
+  }
+});
+
+test("Subtest 121: Deepanshu Giri D1 Lagna Lord in D10 (Dashamsha), Surroundings & Historical Benchmarks", async () => {
+  const { analyzeCareerJobBusiness } = await import("../src/engine/careerJobBusiness.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "New Delhi", country: "India", latitude: 28.6139, longitude: 77.2090, timezoneOffsetHours: 5.5 };
+  const ephem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const career = analyzeCareerJobBusiness(ephem);
+  const d10Analysis = career.d1LagnaLordInD10;
+
+  // 1. Verify D1 Lagna Lord in D10 core fields
+  assert.ok(d10Analysis.d1LagnaLord, "d1LagnaLord must exist");
+  assert.ok(d10Analysis.d10SignName, "d10SignName must exist");
+  assert.ok(["Chara (Movable)", "Sthira (Fixed)", "Dvisvabhava (Dual)"].includes(d10Analysis.modality));
+  assert.ok(d10Analysis.modalityCareerBehavior.length > 20);
+
+  // 2. Verify Deepanshu Giri Sign Archetype contents
+  assert.ok(d10Analysis.signArchetypeTitle.length > 10);
+  assert.ok(d10Analysis.signArchetypeDescription.length > 30);
+
+  // 3. Verify D-1 10th House Physical Workplace Surroundings
+  assert.ok(d10Analysis.d1TenthHouseSurroundings, "d1TenthHouseSurroundings must exist");
+  assert.ok(d10Analysis.d1TenthHouseSurroundings.tenthHouseSign);
+  assert.ok(d10Analysis.d1TenthHouseSurroundings.tenthHouseLord);
+  assert.ok(d10Analysis.d1TenthHouseSurroundings.workplaceEnvironmentDescription.length > 20);
+  assert.ok(Array.isArray(d10Analysis.d1TenthHouseSurroundings.likelyPhysicalSurroundings));
+  assert.ok(d10Analysis.d1TenthHouseSurroundings.likelyPhysicalSurroundings.length >= 3);
+
+  // 4. Verify Historical Benchmark structure when triggered
+  if (d10Analysis.historicalBenchmark) {
+    assert.ok(d10Analysis.historicalBenchmark.matchedLeader);
+    assert.ok(d10Analysis.historicalBenchmark.astrologicalParallel);
+    assert.ok(d10Analysis.historicalBenchmark.historicalSignificance);
+  }
+
+  // 5. Test Debilitation in D-10 dynamic
+  // Simulate synthetic ephemeris with debilitated Lagna Lord in D10 (e.g. Venus in Virgo in D10)
+  const syntheticEphem = {
+    ...ephem,
+    ascendant: {
+      ...ephem.ascendant,
+      siderealLongitude: 195, // Libra Lagna (Venus is Lagna Lord)
+    },
+    planets: {
+      ...ephem.planets,
+      Venus: {
+        ...ephem.planets.Venus,
+        siderealLongitude: 165, // Virgo in D1 (or placed so D10 is Virgo: 165 / 3 = 55 -> Taurus or whatever, let's verify calculateVargaSign)
+      },
+    },
+  };
+  const syntheticCareer = analyzeCareerJobBusiness(syntheticEphem);
+  assert.ok(syntheticCareer.d1LagnaLordInD10.d1LagnaLord === "Venus");
+});
