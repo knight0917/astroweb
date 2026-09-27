@@ -20,11 +20,11 @@ export default function KnRaoTechniquesDeck() {
           <div className="flex items-center gap-2">
             <span className="text-2xl">🌟</span>
             <h2 className="text-lg font-bold text-slate-100">
-              K.N. Rao: Advanced Predictive Techniques Suite
+              Classical Advanced Predictive Techniques Suite
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            From <em>Learn Successful Predictive Techniques of Hindu Astrology</em> — Saturn-Venus Paradox, Beeja/Kshetra Sphutas & Cross-Vargas.
+            Classical Predictive Research — Saturn-Venus Paradox, Beeja/Kshetra Sphutas & Cross-Vargas.
           </p>
         </div>
 
@@ -118,7 +118,7 @@ export default function KnRaoTechniquesDeck() {
               </div>
 
               <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 text-xs text-slate-300">
-                <strong className="text-amber-300">K.N. Rao Research Verdict:</strong>
+                <strong className="text-amber-300">Classical Research Verdict:</strong>
                 <p className="mt-1 text-slate-300 leading-relaxed">{report.saturnVenusParadox.classicalVerdict}</p>
               </div>
             </div>

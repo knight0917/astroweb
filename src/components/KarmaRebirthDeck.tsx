@@ -20,11 +20,11 @@ export default function KarmaRebirthDeck() {
           <div className="flex items-center gap-2">
             <span className="text-2xl">☸️</span>
             <h2 className="text-lg font-bold text-slate-100">
-              K.N. Rao: Karma, Rebirth & Purva Punya Intelligence
+              Classical Karma, Rebirth & Purva Punya Intelligence
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Grounded in K.N. Rao\'s \'Karma & Rebirth in Hindu Astrology\' — Loka of Origin, 22nd Dreshkona, Purva Punya & Karmic Highway.
+            Classical Shastric Karma & Rebirth Doctrines — Loka of Origin, 22nd Dreshkona, Purva Punya & Karmic Highway.
           </p>
         </div>
 
@@ -146,7 +146,7 @@ export default function KarmaRebirthDeck() {
                   <p className="mt-1 text-slate-300 leading-relaxed">{report.kharesh.vulnerabilityTheme}</p>
                 </div>
                 <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
-                  <strong className="text-emerald-300">Remedial Guidance (K.N. Rao):</strong>
+                  <strong className="text-emerald-300">Classical Remedial Guidance:</strong>
                   <p className="mt-1 text-slate-300 leading-relaxed">{report.kharesh.remedialAdvice}</p>
                 </div>
               </div>

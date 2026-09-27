@@ -29,6 +29,23 @@ import { calculateSamirTripathiPanchang } from "../engine/samirTripathiPanchang"
 import { evaluateNakshatraActivation } from "../engine/nakshatraActivation";
 import { analyzeNameVibrationalEnergy, evaluateChartNameCongruence } from "../engine/lunarAstroNameEnergy";
 import { calculatePlanetaryMaturationTimeline } from "../engine/planetaryAgeActivation";
+import { generateAnnualActivationMasterSummary } from "../engine/annualHouseProgression";
+import { generateMedhajGocharaMasterReport } from "../engine/medhajGochara";
+import { generateMedhajActivationMasterReport } from "../engine/medhajActivation";
+import { generateMedhajArudhaMasterReport } from "../engine/medhajArudha";
+import { generateMedhajBaadhakMasterReport } from "../engine/medhajBaadhak";
+import { generateMedhajInduLagnaMasterReport } from "../engine/medhajInduLagna";
+import { generateMedhajMksPastLifeMasterReport } from "../engine/medhajMksPastLife";
+import { generateMedhajRahuKetuTransitMasterReport } from "../engine/medhajRahuKetuTransit";
+import { generateAgniTransitLineageReport } from "../engine/agniTransitLineage";
+import { generateBhagyaBinduSecretCodeReport } from "../engine/bhagyaBinduSecretCode";
+import { generateLifestyleRemediesReport } from "../engine/lifestyleRemediesWayOfLife";
+import { evaluateNatalPanchangaDeep } from "../engine/natalPanchangaDeep";
+import { generateMakaraKurmaMasterReport } from "../engine/makaraKurmaSaturn";
+import { generateKumbhaAquariusMasterReport } from "../engine/kumbhaAquariusRahu";
+import { generateMeenaKalapurushaDrishtiMasterReport } from "../engine/meenaKalapurushaDrishti";
+import { generateUchhaNeechaAwarenessMasterReport } from "../engine/uchhaNeechaAwareness";
+import { generateRishiDrekkanaMasterReport } from "../engine/rishiDrekkanaAwareness";
 import { EphemerisResult } from "../engine/types";
 
 interface Message {
@@ -39,23 +56,46 @@ interface Message {
   category?: string;
 }
 
+export interface DeepLinkItem {
+  tabId: string;
+  label: string;
+}
+
 export interface ParsedMessageData {
   cleanedContent: string;
   probabilityScore: { favorable: number; friction: number } | null;
   chips: { id: string; label: string; prompt: string }[];
+  deeplinks: DeepLinkItem[];
+}
+
+export function switchDashboardTab(tabId: string) {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("astro-switch-tab", { detail: { tabId } }));
+  }
 }
 
 export function parseMessageContent(content: string): ParsedMessageData {
-  if (!content) return { cleanedContent: "", probabilityScore: null, chips: [] };
+  if (!content) return { cleanedContent: "", probabilityScore: null, chips: [], deeplinks: [] };
+
+  let cleaned = content;
 
   // 1. Extract Chips block if present
-  let cleaned = content;
   let chips: { id: string; label: string; prompt: string }[] = [];
   const chipsMatch = content.match(/```chips\s*([\s\S]*?)\s*```/);
   if (chipsMatch) {
     try {
       chips = JSON.parse(chipsMatch[1].trim());
       cleaned = cleaned.replace(/```chips[\s\S]*?```/g, "").trim();
+    } catch (_) {}
+  }
+
+  // 1b. Extract Deep Links block if present
+  let deeplinks: DeepLinkItem[] = [];
+  const deepLinksMatch = cleaned.match(/```deeplinks\s*([\s\S]*?)\s*```/);
+  if (deepLinksMatch) {
+    try {
+      deeplinks = JSON.parse(deepLinksMatch[1].trim());
+      cleaned = cleaned.replace(/```deeplinks[\s\S]*?```/g, "").trim();
     } catch (_) {}
   }
 
@@ -69,7 +109,54 @@ export function parseMessageContent(content: string): ParsedMessageData {
     };
   }
 
-  return { cleanedContent: cleaned, probabilityScore, chips };
+  return { cleanedContent: cleaned, probabilityScore, chips, deeplinks };
+}
+
+export function buildPersonalizedWelcomeMessage(natalEphem?: EphemerisResult): string {
+  if (!natalEphem) {
+    return (
+      "**Pranam!** 🙏 I am **Acharya Jyotish AI Pro**.\n\n" +
+      "Before we begin your consultation, **are you here for the first time with this birth chart?**\n\n" +
+      "* ✨ **Option 1 (Recommended):** *If yes, we will first perform a quick Birth Time Verification (BTR) by examining key past life turning points to ensure your chart clock is 100% accurate down to the minute!*\n" +
+      "* 🔮 **Option 2:** *If no (or already verified), we will proceed directly with your questions regarding Career, Marriage, Wealth, Dasha timing, or Remedies.*"
+    );
+  }
+
+  try {
+    const now = new Date();
+    const rd = generateRishiDrekkanaMasterReport(natalEphem, now);
+    const rishiAlloc = rd.drekkanaRishiAllocations;
+    const kula = rd.sacredLineageDeities.kulaDevata;
+    const wave = rd.lifeAxisEntryExit.thirdHouseChangeWave;
+    const lagnaDiag = rd.nativeSignLordDiagnostics.lagnaSignDiagnostic;
+
+    const ascSign = natalEphem.ascendant?.rashi?.englishName ?? "Ascendant";
+    const moonSign = natalEphem.planets.Moon?.rashi?.englishName ?? "Moon Sign";
+
+    return (
+      `**Pranam!** 🙏 Welcome to your **Personalized Classical Jyotish Consultation**.\n\n` +
+      `Your birth chart has been synthesized across **43 Classical Multi-Varga Engines** (Lagna: **${ascSign}** • Chandra: **${moonSign}**):\n\n` +
+      `* ⏳ **Active 12-Year Change Wave:** Native age **${wave.nativeCurrentAge.toFixed(1)} yrs** (${wave.waveStatusDescription}). Formula milestone threshold at Age **${wave.closestMilestoneAge}**.\n` +
+      `* 🧘 **Presiding Sage Archetype:** Dominant Sage is **${rishiAlloc.dominantRishi}** (${rishiAlloc.naradaCount} Narada / ${rishiAlloc.agastyaCount} Agastya / ${rishiAlloc.durvasaCount} Durvasa) setting your mental, steadfast, or tapasic operating temperament.\n` +
+      `* 🪷 **4th House Kula Devata:** Placed in **${kula.signName} (${kula.element})**. Daily lineage ritual: *${kula.elementalPropitiationProtocol}*.\n` +
+      `* ⚖️ **Lagna Superpower vs. Blind Spot:** Innate brilliance in **H${lagnaDiag.lordExaltationHouseRelative} (${lagnaDiag.lordExaltationSign})**, with inherent blind spot in **H${lagnaDiag.lordDebilitationHouseRelative} (${lagnaDiag.lordDebilitationSign})** requiring conscious mindfulness.\n\n` +
+      `Select a guided consultation journey below or ask any direct question:` +
+      `\n\n\`\`\`chips\n` +
+      JSON.stringify([
+        { id: "j1", label: "💼 Career & Wealth Master Audit", prompt: "Conduct a comprehensive Career & Wealth Master Audit across my D10, Indu Lagna, and 10th Lord Drekkana Sage." },
+        { id: "j2", label: "⏳ Life Pivots & 12-Year Change Wave", prompt: "Explain my 3rd House 12-Year Change Wave (Age = 3 + 12k), upcoming milestone threshold, and Dasha timing." },
+        { id: "j3", label: "🪷 Sacred Lineage & Elemental Remedies", prompt: "What are my Sacred Lineage Deities (4th Kula, 9th Dharma, 12th Ishta) and my daily elemental propitiation ritual?" },
+        { id: "j4", label: "⚖️ Superpowers & Subconscious Blind Spots", prompt: "What are my chart's high conscious awareness superpowers versus subconscious blind spots according to sign lord dignities?" },
+        { id: "j5", label: "🛡️ Lagnesha Sovereign Shield", prompt: "How does my Lagnesha actively protect my chart even if functionally challenged or debilitated?" }
+      ]) +
+      `\n\`\`\``
+    );
+  } catch (_) {
+    return (
+      "**Pranam!** 🙏 I am **Acharya Jyotish AI Pro**.\n\n" +
+      "Your chart is loaded with all classical dimensions. You can explore your **Career & Wealth**, **12-Year Change Waves**, **Sacred Lineage Deities**, **Planetary Dignities**, and **Lifestyle Remedies** below."
+    );
+  }
 }
 
 const FALLBACK_B64 = "QVEuQWI4Uk42TGRLTkVsX1l6SFU0LUtuT2thazNROTlWcHlMR0xhN21tTDgwbWJ4S244VUE=";
@@ -501,7 +588,7 @@ function formatHumanReadableError(err: any): string {
  * 0ms Instant Client-Side Classical Calculation Interceptor
  * Answers exact deterministic queries instantaneously without AI round-trip latency.
  */
-function tryInstantEngineAnswer(
+export function tryInstantEngineAnswer(
   query: string,
   natalEphem?: EphemerisResult | null,
   transitEphem?: EphemerisResult | null,
@@ -511,6 +598,295 @@ function tryInstantEngineAnswer(
 ): string | null {
   if (!natalEphem || !transitEphem) return null;
   const q = query.toLowerCase().trim();
+
+  // Interceptor 36: Guided Master Consultation Journeys (Synthesizing Multi-Engine Classical Wisdom)
+  // 1. Career & Wealth Master Audit
+  // 2. 12-Year Change Wave & Milestone Pivots
+  // 3. Sacred Lineage & Elemental Remedies
+  // 4. Superpowers & Subconscious Blind Spots
+  // 5. Lagnesha Sovereign Shield
+  if (
+    q.includes("career & wealth master audit") ||
+    q.includes("career and wealth master audit") ||
+    q.includes("career & wealth") ||
+    q.includes("career and wealth") ||
+    q.includes("wealth master audit") ||
+    q.includes("career master audit") ||
+    q.includes("wealth potential") ||
+    q.includes("financial growth") ||
+    q.includes("indu lagna and 10th house") ||
+    q.includes("indu lagna, 10th house") ||
+    (q.includes("career") && q.includes("wealth") && (q.includes("audit") || q.includes("master") || q.includes("comprehensive") || q.includes("d10") || q.includes("indu")))
+  ) {
+    const induReport = generateMedhajInduLagnaMasterReport(natalEphem, transitEphem, birthDate, evaluationDate);
+    const rishiReport = generateRishiDrekkanaMasterReport(natalEphem);
+    const c = induReport.core;
+    const dy = induReport.dhanaYogas;
+    const dominantRishi = rishiReport.drekkanaRishiAllocations.dominantRishi;
+
+    const ascLon = natalEphem.ascendant?.siderealLongitude || 0;
+    const ascSignIndex = Math.floor((((ascLon % 360) + 360) % 360) / 30);
+    const sign10Index = (ascSignIndex + 9) % 12;
+    const sign10Name = [
+      "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+      "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
+    ][sign10Index];
+    const signLords = ["Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter"];
+    const lord10Name = signLords[sign10Index];
+    const lord10Rishi = rishiReport.drekkanaRishiAllocations.planets.find((p) => p.planet === lord10Name);
+    const house10 = rishiReport.drekkanaRishiAllocations.planets.find((p) => p.houseNumber === 10);
+
+    const dhanaHighlights = (dy.trineBenefics.length > 0 || dy.kendraBenefics.length > 0)
+      ? [
+          ...dy.trineBenefics.map((b) => `- **Trine Benefic:** ${b.planet} in House ${b.houseFromIndu} (${b.signName})`),
+          ...dy.kendraBenefics.map((b) => `- **Kendra Benefic:** ${b.planet} in House ${b.houseFromIndu} (${b.signName})`),
+        ].slice(0, 3).join("\n")
+      : `- **Status:** ${dy.dhanaYogaGrade} — ${dy.dhanaYogaVerdict}`;
+
+    return `### 💼 **Master Consultation Journey: Career & Wealth Master Audit:**
+
+#### 💰 **1. Indu Lagna Wealth Engine (Moon-Ray Prosperity Ascendant):**
+- **Indu Lagna Sign:** **${c.induLagnaSignName}** (${c.induLagnaLongitude.toFixed(2)}°) in **House ${c.induLagnaHouseFromD1}** from Lagna
+- **9th House Roots:** Lagna 9th Lord ${c.lagnaNinthLord} (${c.lagnaNinthKala} Kalas) + Moon 9th Lord ${c.moonNinthLord} (${c.moonNinthKala} Kalas) = ${c.totalKalas} Kalas (Remainder: ${c.remainderKala})
+- **Indu Lagna Dhana Quotient:** **${dy.dhanaYogaGrade}** (${c.environmentalDignity})
+- **Active Dhana Yogas & Dynamics:**
+${dhanaHighlights}
+
+#### 🏛️ **2. 10th House Career Destiny & Vocation Drekkana Rishi:**
+- **10th House of Karma/Profession:** **${sign10Name}** (Ruled by **${lord10Name}**)
+- **10th Lord Drekkana Sage Allocation:** ${lord10Rishi ? `**${lord10Rishi.governingRishi}** (${lord10Rishi.modality} Modality)` : `**${dominantRishi}** Archetype`}
+- **Vocational Archetype Influence:**
+  * ${lord10Rishi?.governingRishi === "Devarshi Narada" ? "✨ **Narada Archetype:** Governs intellectual agility, advisory roles, travel, communications, media, trading, and non-attached enterprise." : lord10Rishi?.governingRishi === "Brahmarshi Agastya" ? "🏛️ **Agastya Archetype:** Governs steadfast execution, institutional building, governance, engineering, real estate, and permanent foundations." : "🔥 **Durvasa Archetype:** Governs transformative high-stakes problem solving, intense research, crisis management, surgery, and cutting-edge disruption."}
+${house10 ? `- **10th House Occupant:** ${house10.planet} operating under **${house10.governingRishi}**` : "- **10th House:** Unoccupied; direct karmic execution flows cleanly through the 10th Lord."}
+
+#### 🎯 **3. The 2-4-8 Wealth Sustenance Matrix:**
+- **2nd House (Accumulated Dhana):** Flow of personal assets and speech.
+- **4th House (Fixed Assets & Vehicles):** Happiness and maternal ancestral sustenance.
+- **8th House (Unearned & Hidden Wealth):** Inheritance, partner assets, and transformative windfalls.
+- **Strategic Directive:** ${c.environmentalDignityExplanation}
+
+---
+*⚡ Instant Classical Multi-Engine Synthesis (0ms)*
+
+\`\`\`deeplinks
+[{"tabId":"medhaj_indu","label":"Indu Lagna Wealth Deck"},{"tabId":"rishi_drekkana","label":"Rishi Drekkana Vocation Deck"}]
+\`\`\`
+
+\`\`\`chips
+[{"id":"c-indu-detail","label":"💰 Indu Lagna Deep Dive","prompt":"Detail the 2-4-8-11 house wealth matrix and Dhana Yogas from Indu Lagna in my chart."},{"id":"c-career-timing","label":"⏳ Career Activation Timing","prompt":"When will my career and wealth timing activate based on my current Dasha and transits?"},{"id":"c-rishi-all","label":"🧘 10th Lord Drekkana Sage","prompt":"How does my 10th lord's Drekkana Rishi (Narada/Agastya/Durvasa) shape my career destiny?"}]
+\`\`\`
+`;
+  }
+
+  // 2. 12-Year Change Wave & Milestone Pivots
+  if (
+    q.includes("12-year change wave & pivots") ||
+    q.includes("12-year change wave and pivots") ||
+    q.includes("12 year change wave and pivots") ||
+    q.includes("12-year change wave") ||
+    q.includes("12 year change wave") ||
+    q.includes("upcoming milestone pivots") ||
+    q.includes("milestone pivots") ||
+    q.includes("when will my life change") ||
+    q.includes("major life transition") ||
+    q.includes("turning points in life") ||
+    q.includes("life pivot") ||
+    (q.includes("change wave") && (q.includes("pivot") || q.includes("12") || q.includes("3rd house") || q.includes("milestone")))
+  ) {
+    const rd = generateRishiDrekkanaMasterReport(natalEphem);
+    const lifeAxis = rd.lifeAxisEntryExit;
+    const wave = lifeAxis.thirdHouseChangeWave;
+    const entryExit = lifeAxis.entryExitPhysicalReality;
+
+    const birthDateObj = new Date(natalEphem.utcDate);
+    const moonLon = natalEphem.planets.Moon?.siderealLongitude || 0;
+    const dasha = calculateVimshottariDasha(birthDateObj, moonLon, evaluationDate);
+    const activeDasha = dasha.activeDasha;
+
+    return `### ⏳ **Master Consultation Journey: 12-Year Change Waves & Milestone Pivots:**
+
+#### 🌊 **1. The 3rd House Cyclical Wave (Age Formula: 3 + 12k):**
+- **3rd House Entry Axis:** House 3 in **${wave.signName}** &bull; Ruled by **${wave.signLord}**
+- **Current Native Age:** **${wave.nativeCurrentAge.toFixed(1)} years**
+- **Active Wave Phase:** **${wave.waveStatusDescription}**
+- **Classical Milestone Pivot Ages:** **${wave.milestoneAges.join(", ")} years** (Ages 3, 15, 27, 39, 51, 63, 75, 87...)
+- **Mechanism of Change:** The 3rd house represents *Vikrama* (courage, conscious effort, and personal departure). Every 12 years (Jupiter's orbital cycle), the 3rd house completes a full revolution, triggering decisive pivots in environment, status, and life direction.
+
+#### 🔄 **2. Physical Reality Axis: 4th House (Entrance) vs. 8th House (Release):**
+- **4th House (Birth Entrance):** ${entryExit.fourthHouseBirthCondition}
+- **8th House (Transition & Transformation):** ${entryExit.eighthHouseExitRelease}
+- **3rd-to-9th House Evolution Vector:** ${entryExit.spiritualEvolutionAxis}
+
+#### ⌛ **3. Active Vimshottari Dasha Synergy:**
+${activeDasha ? `- **Current Running Period:** **${activeDasha.mahadasha.name} Mahadasha** &bull; **${activeDasha.antardasha.name} Antardasha** (Active until ${new Date(activeDasha.adEnd).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })})\n- **Dasha-Wave Alignment:** Navigating transitions during the ${activeDasha.mahadasha.name}-${activeDasha.antardasha.name} period requires honoring the courage of the 3rd house while aligning with the higher guidance of the 9th house.` : "- Dasha timing synchronizes with the active 12-year developmental wave."}
+
+---
+*⚡ Instant Classical Multi-Engine Synthesis (0ms)*
+
+\`\`\`deeplinks
+[{"tabId":"rishi_drekkana","label":"12-Year Change Wave Deck"},{"tabId":"vimshottari","label":"Vimshottari Dasha Timeline"}]
+\`\`\`
+
+\`\`\`chips
+[{"id":"c-3rd-axis","label":"⏳ 3rd House Entry & Courage Axis","prompt":"Explain the 3rd House entry and courage axis in my chart and how it drives transitions."},{"id":"c-4-8-axis","label":"🔄 4th vs 8th House Entry-Exit Reality","prompt":"How do the 4th house birth conditions and 8th house release dynamics operate in my chart?"},{"id":"c-dasha-sync","label":"🎯 Current Dasha Synergy","prompt":"When will my timing activate based on my current Dasha and transits?"}]
+\`\`\`
+`;
+  }
+
+  // 3. Sacred Lineage & Elemental Remedies
+  if (
+    q.includes("sacred lineage & elemental remedies") ||
+    q.includes("sacred lineage and elemental remedies") ||
+    q.includes("sacred lineage") ||
+    q.includes("elemental remedies") ||
+    q.includes("family deity") ||
+    q.includes("kula devata elemental propitiation") ||
+    q.includes("kula devata elemental") ||
+    q.includes("40-day remedy") ||
+    q.includes("40 day remedy") ||
+    q.includes("40-day rule") ||
+    q.includes("40 day rule") ||
+    (q.includes("kula devata") && (q.includes("remed") || q.includes("element") || q.includes("worship") || q.includes("propitiat"))) ||
+    (q.includes("ishta devata") && (q.includes("remed") || q.includes("mantra") || q.includes("sadhana")))
+  ) {
+    const rd = generateRishiDrekkanaMasterReport(natalEphem);
+    const lineage = rd.sacredLineageDeities;
+    const kula = lineage.kulaDevata;
+    const lifestyle = generateLifestyleRemediesReport(natalEphem);
+    const fdr = lifestyle.corePhilosophy;
+
+    return `### 🪷 **Master Consultation Journey: Sacred Lineage & Elemental Remedies:**
+
+#### 🏠 **1. 4th House Kula Devata (Ancestral Lineage Deity & Elemental Ritual):**
+- **Placement:** House 4 in **${kula.signName}** (${kula.element}) &bull; Lord: **${kula.signLord}**
+- **Ancestral Karmic Role:** ${kula.ancestralGuidance}
+- **Elemental Propitiation Protocol:**
+  * **Element (${kula.element}):** ${kula.elementalPropitiationProtocol}
+  * **Sacred Offering Alignment:** ${kula.element === "Water (Jala)" ? "Offering pure water, raw milk, white flowers, or jal-tarpan to invoke ancestral grace." : kula.element === "Fire (Agni)" ? "Lighting a pure ghee diya daily at sunrise/sandhya; performing silent agni meditation." : kula.element === "Earth (Prithvi)" ? "Offering sandalwood paste, fresh grains, grounding barefoot on soil, and honoring Bhumi Devi." : "Burning pure guggulu, dhoop, champa incense, and chanting resonant beeja mantras into the open sky."}
+
+#### ⚖️ **2. 9th & 12th House Divine Guidance Triad:**
+- **9th House Dharma Devata (Righteous Guide):** House 9 in **${lineage.dharmaDevata.signName}** (Lord: ${lineage.dharmaDevata.signLord}) &bull; *${lineage.dharmaDevata.philosophicalGuidance}*
+- **12th House Ishta Devata (Moksha & Spiritual Ideal):** House 12 in **${lineage.ishtaDevata.signName}** (Lord: ${lineage.ishtaDevata.signLord}) &bull; *${lineage.ishtaDevata.mokshaGuidance}*
+
+#### ⏳ **3. The 40-Day Rule of Habit Integration (Way of Life):**
+- **Shastric Principle:** Remedies are not transactional one-time fixes; they are **neural and karmic rewiring as a Way of Life**.
+- **The 40-Day Rule:** ${fdr.the40DayRule}
+- **Habit Integration Analogy:** ${fdr.habitAnalogy}
+- **Golden Rule:** ${fdr.description}
+
+---
+*⚡ Instant Classical Multi-Engine Synthesis (0ms)*
+
+\`\`\`deeplinks
+[{"tabId":"rishi_drekkana","label":"Sacred Lineage Deities Deck"},{"tabId":"lifestyle_remedies","label":"40-Day Way of Life Deck"}]
+\`\`\`
+
+\`\`\`chips
+[{"id":"c-kula-ritual","label":"🪷 Kula Devata Daily Ritual","prompt":"What specific elemental offerings and daily prayers strengthen my 4th House Kula Devata?"},{"id":"c-ishta-sadhana","label":"🕊️ 12th House Ishta Devata Sadhana","prompt":"What is the ideal meditation or mantra sadhana for my 12th house Ishta Devata?"},{"id":"c-40-protocol","label":"⏳ 40-Day Protocol Guidance","prompt":"Explain the 40-Day Rule of habit integration and how to apply it to my astrological remedies."}]
+\`\`\`
+`;
+  }
+
+  // 4. Superpowers & Subconscious Blind Spots
+  if (
+    q.includes("superpowers & subconscious blind spots") ||
+    q.includes("superpowers and subconscious blind spots") ||
+    q.includes("innate awareness vs subconscious blind spot") ||
+    q.includes("innate awareness vs blind spot") ||
+    q.includes("blind spots & gifts") ||
+    q.includes("blind spots and gifts") ||
+    q.includes("biggest weakness") ||
+    q.includes("biggest strength") ||
+    q.includes("innate gifts") ||
+    (q.includes("superpower") && q.includes("blind spot")) ||
+    (q.includes("blind spot") && (q.includes("lagna") || q.includes("moon") || q.includes("sign lord")))
+  ) {
+    const rd = generateRishiDrekkanaMasterReport(natalEphem);
+    const un = generateUchhaNeechaAwarenessMasterReport(natalEphem);
+    const blindSpots = rd.nativeSignLordDiagnostics;
+    const lagnaDiag = blindSpots.lagnaSignDiagnostic;
+    const moonDiag = blindSpots.moonSignDiagnostic;
+
+    const deepDignities = rd.deepDignityDegrees
+      .filter((d) => d.isDeeplyExalted || d.isDeeplyDebilitated || d.distanceFromParamochhaDeg <= 12 || d.distanceFromParamaneechaDeg <= 12)
+      .map((d) => `- **${d.planet}:** ${d.currentSign} (${d.currentDegree.toFixed(1)}°) → ${d.dignityPotencyNote}`)
+      .join("\n") || "- Standard planetary dignity orbs across natal houses.";
+
+    return `### ⚖️ **Master Consultation Journey: Superpowers & Subconscious Blind Spots:**
+
+#### 🌟 **1. Ascendant Lord Innate Awareness vs. Subconscious Blind Spot:**
+- **Ascendant Sign:** **${lagnaDiag.signName}** &bull; Ruling Lord: **${lagnaDiag.rulingLord}**
+- **✨ Innate Awareness (Superpower):** House ${lagnaDiag.lordExaltationHouseRelative} in **${lagnaDiag.lordExaltationSign}**
+  * *Competence:* ${lagnaDiag.innateAwarenessCompetence}
+- **⚠️ Subconscious Blind Spot (Karmic Inexperience):** House ${lagnaDiag.lordDebilitationHouseRelative} in **${lagnaDiag.lordDebilitationSign}**
+  * *Pitfall:* ${lagnaDiag.subconsciousBlindSpot}
+  * *Remedy:* Practice humble, ego-less awareness in House ${lagnaDiag.lordDebilitationHouseRelative} matters; do not demand perfection here.
+
+#### 🌙 **2. Moon Sign Lord Emotional Intelligence & Vulnerability:**
+- **Moon Sign (Janma Rashi):** **${moonDiag.signName}** &bull; Ruling Lord: **${moonDiag.rulingLord}**
+- **✨ Emotional Resonance:** House ${moonDiag.lordExaltationHouseRelative} in **${moonDiag.lordExaltationSign}** &bull; *${moonDiag.innateAwarenessCompetence}*
+- **⚠️ Emotional Blind Spot:** House ${moonDiag.lordDebilitationHouseRelative} in **${moonDiag.lordDebilitationSign}** &bull; *${moonDiag.subconsciousBlindSpot}*
+
+#### 🎯 **3. Deep Exaltation (Paramochha) & Debilitation (Paramaneecha) Sensitivities:**
+${deepDignities}
+
+---
+*⚡ Instant Classical Multi-Engine Synthesis (0ms)*
+
+\`\`\`deeplinks
+[{"tabId":"rishi_drekkana","label":"Sign Lord Blind Spot Matrix"},{"tabId":"uchha_neecha","label":"Exaltation & Debilitation Decks"}]
+\`\`\`
+
+\`\`\`chips
+[{"id":"c-lagna-mastery","label":"🛡️ Lagna Lord Blind Spot Mastery","prompt":"How can I consciously master the subconscious blind spot created by my Lagna lord's debilitation sign?"},{"id":"c-moon-vector","label":"🌙 Moon Lord Emotional Awareness","prompt":"How does my Moon sign lord's awareness vector govern my emotional intelligence and relationships?"},{"id":"c-exalt-pitfall","label":"🌟 Exaltation Superpowers vs Ego","prompt":"What are my chart's high conscious awareness superpowers and associated ego pitfalls?"}]
+\`\`\`
+`;
+  }
+
+  // 5. Lagnesha Sovereign Shield
+  if (
+    q.includes("lagnesha sovereign shield") ||
+    q.includes("lagna lord status, protection shield") ||
+    q.includes("lagna lord protection") ||
+    q.includes("lagnesha shield") ||
+    q.includes("sovereign shield") ||
+    (q.includes("lagnesha") && (q.includes("protect") || q.includes("shield") || q.includes("strength") || q.includes("status") || q.includes("vital")))
+  ) {
+    const un = generateUchhaNeechaAwarenessMasterReport(natalEphem);
+    const ls = un.lagneshaShield;
+
+    return `### 🛡️ **Master Consultation Journey: Lagnesha Sovereign Shield:**
+
+#### 👑 **1. The Absolute Primacy of the Ascendant Lord (Lagnesha):**
+- **Ascendant Sign (Lagna):** **${ls.lagnaSign}** &bull; Ruling Lord: **${ls.lagnaLord}**
+- **Placement & Dignity:** Placed in **House ${ls.occupiedHouse} (${ls.occupiedSign})** &bull; Dignity: **${ls.dignity}**
+- **The Sovereign Bodyguard Law:**
+  > *"${ls.protectionShieldStatement}"*
+- **Classical Shastric Axiom:** Even if Lagnesha is placed in a Dusthana (6, 8, or 12) or in debilitation (*Neecha*), **Lagnesha can NEVER act as an enemy to the native**. Like an unconditionally protective king or bodyguard, it will sacrifice other significations to preserve the native's life, consciousness, and core vitality.
+
+#### 🏠 **2. Vitalized Life Domain:**
+- **Illuminated Sphere:** **House ${ls.occupiedHouse}**
+- **Signification:** ${ls.vitalizedHouseSignification}
+- **Shastric Counsel for Native:** ${ls.shastricCounsel}
+
+#### 📿 **3. Strengthening & Honoring Your Lagnesha:**
+- Ensure daily self-respect, proper physical vitality, and honoring the planetary day ruled by **${ls.lagnaLord}**.
+- Avoid deprecating the significations of House ${ls.occupiedHouse}; this is the anchoring pillar of your entire birth chart.
+
+---
+*⚡ Instant Classical Multi-Engine Synthesis (0ms)*
+
+\`\`\`deeplinks
+[{"tabId":"uchha_neecha","label":"Lagnesha Sovereign Shield Deck"}]
+\`\`\`
+
+\`\`\`chips
+[{"id":"c-lagna-remedy","label":"🛡️ Strengthening Lagnesha","prompt":"What daily lifestyle habits, colors, and practices strengthen my Lagna lord?"},{"id":"c-lagna-house","label":"🏠 Vitalized House Potential","prompt":"How can I maximize the potential of the house occupied by my Lagna lord?"},{"id":"c-dignity-dyn","label":"✨ Lagna Lord Dignity Dynamics","prompt":"How does my Lagnesha actively protect my chart even if functionally challenged or debilitated?"}]
+\`\`\`
+`;
+  }
+
+
 
   // 1. Lagna / Ascendant
   if (
@@ -932,7 +1308,7 @@ ${gochar.obstructedCount} transit(s) obstructed by Vedha, ${gochar.shieldedCount
       .join("\n");
 
     const chitkaraSection = chitkara
-      ? `#### 🔬 **1. Navneet Chitkara 3-Point BTR Harmonization (Navamsha & Shashtiamsha):**
+      ? `#### 🔬 **1. Classical 3-Point BTR Harmonization (Navamsha & Shashtiamsha):**
 - 🐍 *Metaphysical Law:* Humans reincarnate through Rahu's karmic umbilical cord. True astrological birth freezes at physical cord severance (*Naala-Chhedana*).
 - 1️⃣ **Condition 1 (D-9 Moon vs D-9 Pranapada):** ${chitkara.condition1D9MoonPP.passed || (candidate && candidate.c1Passed) ? "🟢 **PASS**" : "🟡 **CALIBRATED**"} — ${chitkara.condition1D9MoonPP.explanation}
 - 2️⃣ **Condition 2 (D-60 Pranapada vs D-60 Venus):** ${chitkara.condition2D60VenusPP.passed || (candidate && candidate.c2Passed) ? "🟢 **PASS**" : "🟡 **CALIBRATED**"} — ${chitkara.condition2D60VenusPP.explanation}
@@ -1054,11 +1430,11 @@ What would you like to explore for the child?
     // 6. D-60 Shashtiamsha (Karmic Pivot / Physical Resilience)
     const isQ6Yes = /6\.\s*yes|6:\s*yes|q6\s*:\s*yes|4\.\s*yes|4:\s*yes/i.test(q);
 
-    return `### 🎯 **Multi-Divisional & Navneet Chitkara Birth Time Calibration (D-1, D-3, D-4, D-9, D-10, D-24, D-60)**
+    return `### 🎯 **Multi-Divisional & Classical 3-Point Birth Time Calibration (D-1, D-3, D-4, D-9, D-10, D-24, D-60)**
 
 - 📍 **Hospital Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${cityName}, ${countryName}**
 - ⏱️ **Calibrated True Birth Moment (*Bhūpatana Lagna*):** **${candidate && candidate.deltaSeconds !== 0 ? candidate.rectifiedLocalTime : timeStr}** (Delta: **${candidate && candidate.deltaSeconds !== 0 ? candidate.deltaFormatted : "0s (Exact)"}** • D-60 Lagna: **${candidate && candidate.deltaSeconds !== 0 ? candidate.d60LagnaSign : chitkara ? chitkara.condition3D60KetuDispositorLagna.secondarySign : "Calibrated"}**)
-- 🌟 **Verification Status:** **✅ 100% Calibrated & Synchronized (Navneet Chitkara Triad & Multi-Divisional Milestones Locked)**
+- 🌟 **Verification Status:** **✅ 100% Calibrated & Synchronized (Classical 3-Point BTR Triad & Multi-Divisional Milestones Locked)**
 - 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
 - 🏥 **Clinical Delivery Latency:** *${candidate && candidate.deltaSeconds !== 0 ? candidate.clinicalNote : "Recorded birth time aligns directly with the umbilical severance moment."}*
 
@@ -1100,7 +1476,7 @@ What would you like to explore first?
 *⚡ Instant Classical Computation (0ms)*`;
   }
 
-  // 15. Unified Classical Birth Time Rectification (BTR) & Navneet Chitkara Tri-Epoch Diagnostic Interceptor
+  // 15. Unified Classical Birth Time Rectification (BTR) & 3-Point Tri-Epoch Diagnostic Interceptor
   if (
     /\b(exact moment of birth|moment of birth|when is birth moment|cord cut|umbilical|first breath|first cry|bhupatana|shirodarshana|adhana lagna|is my birth time accurate|is my birth time correct|check my birth time accuracy|chitkara|btr|birth time rectification)\b/i.test(q) ||
     q.includes("verify my birth time") ||
@@ -1156,7 +1532,7 @@ What would you like to explore first?
     const chitkaraSection = chitkara
       ? `---
 
-### 🔬 Navneet Chitkara 3-Point BTR Verification & Umbilical Severance Telemetry
+### 🔬 Classical 3-Point BTR Verification & Umbilical Severance Telemetry
 
 * **🐍 Rahu & Umbilical Cord Metaphysics:** Humans reincarnate driven by Rahu (unfulfilled karmic desire). The umbilical cord attached to the navel represents Rahu's serpent tethering the soul to maternal circulation. Individual Prana initiates only upon cord severance (*Naala-Chhedana*), which forces pulmonary inflation and the first cry (*Prathama Shwasa / Rodana*).
 * **1️⃣ Condition 1 (D-9 Moon vs D-9 Pranapada):** ${chitkara.condition1D9MoonPP.passed ? "🟢 **PASS**" : "🔴 **FAIL**"} — ${chitkara.condition1D9MoonPP.explanation}
@@ -1191,7 +1567,7 @@ Because hospital clocks carry a 2–15 minute margin of error (clerical delay or
 
     return `[PROBABILITY: 92% Favorable • 8% Friction]
 
-### 🎯 **Step 1: Classical Birth Time Rectification & Navneet Chitkara 3-Point Triad Diagnostic**
+### 🎯 **Step 1: Classical Birth Time Rectification & 3-Point Triad Diagnostic**
 - 📅 **Recorded Date of Birth:** **${dateStr}** • **Civil Time:** **${timeStr}**
 - 📍 **Place:** **${cityName}, ${countryName}**
 - 🏛️ **Primary Ascendant:** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
@@ -1200,7 +1576,7 @@ Because hospital clocks carry a 2–15 minute margin of error (clerical delay or
 ---
 
 ### 🧬 The 3 Classical Birth Epochs in Your Horoscope
-In classical Vedic Jyotish (*Brihat Jataka* Ch. 4, *BPHS*, & Astro Scientist Navneet Chitkara), determining the exact moment of birth is governed by three biological phases:
+In classical Vedic Jyotish (*Brihat Jataka* Ch. 4 & *Brihat Parashara Hora Shastra*), determining the exact moment of birth is governed by three biological phases:
 
 1. **Adhana Lagna (आधान लग्न — Conception Inception):**
    * **Calculated Conception Date:** **${triEpoch.adhanaEpoch.conceptionDateStr}** (Gestation: **${triEpoch.adhanaEpoch.gestationDays} days**)
@@ -1230,7 +1606,63 @@ ${d60RadarSection}
 *⚡ Instant Classical Computation (0ms)*
 
 \`\`\`chips
-[{"id":"chip-1","label":"🧬 Chitkara 3-Point BTR","prompt":"Explain Navneet Chitkara's 3-point Navamsha, D-60 and Ketu dispositor BTR algorithm for my chart"},{"id":"chip-2","label":"⏱️ Verify My Birth Clock","prompt":"Verify my birth time with multi-divisional milestones [btr_adult_verified]"},{"id":"chip-3","label":"⏳ D-60 Past Life Karma","prompt":"What does my D-60 Shashtiamsha reveal about my past life karmic root causes?"}]
+[{"id":"chip-1","label":"🧬 Classical 3-Point BTR","prompt":"Explain the classical 3-point Navamsha, D-60 and Ketu dispositor BTR algorithm for my chart"},{"id":"chip-2","label":"⏱️ Verify My Birth Clock","prompt":"Verify my birth time with multi-divisional milestones [btr_adult_verified]"},{"id":"chip-3","label":"⏳ D-60 Past Life Karma","prompt":"What does my D-60 Shashtiamsha reveal about my past life karmic root causes?"}]
+\`\`\``;
+  }
+
+  // 16. Astro-Phonetic Name Vibrational Energy & Age 36 Maturation (Classical Shastric Tradition)
+  if (
+    /\b(name energy|energy of name|name vibration|astro-phonetics|lunar astro name|aniket|priyanka|sonal|alok|sachin|what does my name mean)\b/i.test(q) ||
+    (/\b(age 36|saturn at 36|retrograde saturn at 36|planetary age|maturation age)\b/i.test(q))
+  ) {
+    const birthDateObj = new Date(natalEphem.utcDate);
+    const ageReport = calculatePlanetaryMaturationTimeline(natalEphem, birthDateObj, evaluationDate);
+
+    // Extract query name if user asked about a specific name, e.g. "tell me about name Priyanka"
+    let targetName = "Seeker";
+    const nameMatch = q.match(/\b(?:name|called|named|energy of)\s+([a-zA-Z]{3,20})\b/i);
+    if (nameMatch && nameMatch[1] && !["energy", "vibration", "about", "mean", "saturn", "retrograde"].includes(nameMatch[1].toLowerCase())) {
+      targetName = nameMatch[1];
+    }
+
+    const nameProfile = analyzeNameVibrationalEnergy(targetName);
+    const nameCongruence = evaluateChartNameCongruence(targetName, natalEphem);
+
+    const saturnWarning = ageReport.isRetrogradeSaturnActive
+      ? `\n> ⚠️ **CRITICAL RETROGRADE SATURN AGE 36 INVERSION:** You have natal Retrograde Saturn active in the Age 36–42 window. In classical Nadi and Parashari shastra, this forces an unavoidable karmic course correction, dismantling conventional structures and resetting your life direction.\n`
+      : "";
+
+    return `### 🪷 **Astro-Phonetic Name Vibrational Energy & Planetary Maturation Analysis**
+
+#### 🔤 **1. Acoustic Astro-Phonetics for "${targetName}":**
+- **Dominant Planetary Frequency:** **${nameProfile.primaryPlanets.join(" + ")}** • Secondary: **${nameProfile.secondaryPlanets.join(" + ")}**
+- **Acoustic Archetype:** **${nameProfile.archetypeName}**
+- **Ancestral Protection Armor:** ${nameProfile.ancestralShieldStatus ? "🛡️ **Active (Lineage Grace Shielded)**" : "Standard Individual Karma"}
+- **Psychological Blueprint:** ${nameProfile.psychologicalBlueprint}
+- **Relationship Dynamics:** ${nameProfile.relationshipTendency}
+- **Career & Calling Vector:** ${nameProfile.careerAndServiceVector}
+- **Predicted Birth Chart Placements:**
+${nameProfile.predictedChartPlacements.map((p) => `  - 🌟 ${p}`).join("\n")}
+
+#### 🏛️ **2. Chart-to-Name Congruence Index:**
+- **Congruence Score:** **${nameCongruence.congruenceScore}% [${nameCongruence.harmonyStatus}]**
+- **Lagna Resonance:** ${nameCongruence.resonanceWithLagnaLord}
+- **Moon Resonance:** ${nameCongruence.resonanceWithMoon}
+- **Summary:** ${nameCongruence.overallAudit}
+
+#### ⏳ **3. Parashara Planetary Maturation Timeline (Current Age: ${ageReport.currentAge} Yrs):**
+- **Active Maturation Milestone:** **${ageReport.activeMilestone.planet} (Age ${ageReport.activeMilestone.startAge}–${ageReport.activeMilestone.endAge})** • *${ageReport.activeMilestone.classicalSignification}*
+- **Manifestation Theme:** ${ageReport.activeMilestone.isRetrograde ? ageReport.activeMilestone.retrogradeInversionManifestation : ageReport.activeMilestone.standardManifestation}${saturnWarning}
+- **Upcoming Milestone:** **${ageReport.upcomingMilestone.planet} (Age ${ageReport.upcomingMilestone.startAge}–${ageReport.upcomingMilestone.endAge})**
+
+#### 🌿 **4. Vak Siddhi & Botanical Living Remedy:**
+- **Vak Siddhi Protocol:** ${ageReport.vakSiddhiIntuitionSummary}
+- **Living Botanical Parihara:** ${ageReport.activeMilestone.shastricRemedy}
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"🌿 Kadali Vriksha Remedy","prompt":"How do I plant and nurture a Banana tree for Jupiter and 5th house blessings?"},{"id":"chip-2","label":"🪐 Saturn Age 36 Inversion","prompt":"Explain how retrograde Saturn causes life upheaval and career resets at age 36"},{"id":"chip-3","label":"🔤 Test Another Name","prompt":"What is the vibrational energy and predicted chart placement for the name Aniket?"}]
 \`\`\``;
   }
 
@@ -1290,6 +1722,118 @@ ${nameProfile.predictedChartPlacements.map((p) => `  - 🌟 ${p}`).join("\n")}
 \`\`\``;
   }
 
+  // 17. Paka Lagna (Operating Self), Annual House Progression (Varsha Chakra), Nuclear Bomb Nodal Squares & 9th House Bhagyodaya
+  if (
+    /\b(paka lagna|operating self|operating demeanor|core identity vs operating|annual house|annual activation|varsha chakra|nuclear bomb|bhagyodaya|fortune rise|fortune awaken|luck awaken|trikona resonance|kroora vs shubha|what house is active|which house is active)\b/i.test(q)
+  ) {
+    const birthDateObj = new Date(natalEphem.utcDate);
+    const masterReport = generateAnnualActivationMasterSummary(natalEphem, birthDateObj, evaluationDate);
+    const paka = masterReport.pakaLagna;
+    const ann = masterReport.annualProgression;
+    const bomb = masterReport.nuclearBomb;
+    const tri = masterReport.trikonaResonance;
+    const bhagya = masterReport.bhagyodaya;
+
+    const bombAlertBadge = bomb.isNuclearBombYear
+      ? `\n> 🚨 **${bomb.warningTitle} (${bomb.triggerType}):** ${bomb.warningDescription}\n> *Karmic Action:* ${bomb.karmicActionAdvice}\n`
+      : "";
+
+    return `### ⚡ **Master Annual House Activation & Paka Lagna Dossier (वर्ष चक्र व पाक लग्न)**
+
+#### 👤 **1. Core Identity vs. Operating Demeanor (Paka Lagna):**
+- **Innate Core Identity (House 1):** Ascendant in **${paka.lagnaRashiName}** (Lord: **${paka.lagnesha}**). Defines constitutional vitality and soul nature.
+- **Active Execution Field (Paka Lagna):** Lagna Lord sits in **House ${paka.pakaLagnaHouse}** in **${paka.pakaLagnaRashiName}** (${paka.pakaLagnaDignity}).
+- **Kalapurusha Archetype Integration:** Blends with Kalapurusha House ${paka.kalapurushaHouseNumber} (${paka.kalapurushaSignification}).
+- **Everyday Operating Behavior:** ${paka.operatingSelfBehavior}
+- **Philosophical Dignity Rationale:** ${paka.dignityPhilosophicalRationale}
+
+#### 📅 **2. Annual House Progression (Varsha Chakra — ${ann.lifeYear}th Year of Life):**
+- **Active House:** **House ${ann.activeHouse} (${ann.rashiName})** • Cycle ${ann.cycleNumber} (Age ${ann.completedAge})
+- **House Lordship:** Ruled by **${ann.houseLord}** (${ann.lordDignity} in House ${ann.lordHouse})
+- **Delivery Mode:** **${ann.deliveryMode}**
+- **Assessment Hierarchy:**
+  - *Resident Planets:* ${ann.residentPlanets.join(", ") || "None (Operating purely through sign lord)"}
+  - *Incoming Aspects (Drishti):* ${ann.incomingAspectingPlanets.map((a) => `${a.planet} [${a.aspectType}]`).join(", ") || "None"}
+- **Guidance & Forecast:** ${ann.deliveryExplanation}
+${bombAlertBadge}
+#### 🔺 **3. Trikona Resonance & Divine Protective Shield:**
+- **Active Trine:** **${tri.trikonaCategory}** (Houses ${tri.trikonaHouses.join(", ")} energized simultaneously)
+- **Karmic Shield:** ${tri.karmicProtectionLevel}
+- **Shastric Protection:** ${tri.protectionExplanation}
+
+#### 🌟 **4. Bhagyodaya (Fortune Awakening Timing — 9th House Audit):**
+- **9th House Sign:** **${bhagya.ninthHouseSignName}** (Lord: ${bhagya.ninthHouseLord} in H${bhagya.ninthLordHouse}, ${bhagya.ninthLordDignity})
+- **Saturn Influence:** ${bhagya.isSaturnDelayingFortune ? "⚠️ Saturn occupies, rules, or aspects H9, delaying primary fortune until maturity at Age 36." : "✅ Clear acceleration without Saturnian delays."}
+- **Primary Bhagyodaya Age:** **Age ${bhagya.primaryBhagyodayaAge}** (Recurring waves at ages: **${bhagya.secondaryBhagyodayaAges.slice(1).join(", ") || "subsequent 12-yr cycles"}**)
+- **Synthesis:** ${bhagya.synthesisSummary}
+
+#### 🌊 **5. Active Graha Udaya Waves (12-Year Addition Rule):**
+${masterReport.activeGrahaUdayaWaves.length > 0
+  ? masterReport.activeGrahaUdayaWaves.map((m) => `- 🪐 **${m.planet}** (Awakening Wave: Age ${m.closestCycleAge} • *${m.signification}*)`).join("\n")
+  : "- Steady consolidation wave across all natal planetary periods."}
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"💥 Nuclear Bomb Effect","prompt":"Does my chart trigger the Nuclear Bomb effect along the Rahu-Ketu axis or squares?"},{"id":"chip-2","label":"👤 Deep Paka Lagna","prompt":"Explain my Paka Lagna operating demeanor vs core identity with Kalapurusha archetypes"},{"id":"chip-3","label":"🌟 Bhagyodaya Timing","prompt":"When does my fortune awaken according to my 9th house and planetary maturation ages?"}]
+\`\`\``;
+  }
+
+  // 18. Classical Navamsha Secrets: RTN Dusthana Suffering & D9 Age Activation
+  if (
+    /\b(rtn suffering|dusthana in rtn|rtn dusthana|d9 age activation|navamsha age activation|sun in navamsha|sun in d9|navamsha activation|navamsha secrets|d1 d9 confirmation|seed and fruit navamsha|navamsha analysis|d9 chart secrets|marriage timing in d9|d9 suffering)\b/i.test(q)
+  ) {
+    const birthDateObj = new Date(natalEphem.utcDate);
+    const nativeAge = Math.max(0, Math.floor((evaluationDate.getTime() - birthDateObj.getTime()) / (365.25 * 24 * 60 * 60 * 1000)));
+    const rtn = evaluateRashiTulyaNavamsha(natalEphem, transitEphem, nativeAge);
+    const sunAct = rtn.d9SunActivation;
+
+    const caseStudyBadge = rtn.caseStudyMatch?.isMatched
+      ? `\n> 🎯 **Benchmark Case Matched (${rtn.caseStudyMatch.matchedCaseTitle}):** ${rtn.caseStudyMatch.manifestationDescription}\n`
+      : "";
+
+    const afflictionsList = rtn.dusthanaAfflictions.length > 0
+      ? rtn.dusthanaAfflictions.map((a) => (
+          `#### ⚡ **${a.planet} in RTN House ${a.rtnHouse} (${a.rtnRashi.englishName}) • ${a.solvabilityStatus}:**\n` +
+          `- **Manifestation:** ${a.natureOfSuffering}\n` +
+          `- **D-1 Cross-Confirmation:** ${a.d1ConfirmationNotes}\n` +
+          `- **Remedial Direction:** ${a.mitigationOrKarmicAction}`
+        )).join("\n\n")
+      : "🛡️ **Protected Karmic Trajectory:** No classical Grahas occupy the 6th, 8th, or 12th houses under RTN projection.";
+
+    return `### 🌸 **Navamsha Secrets: RTN Dusthana Suffering & Age Activation (Classical Shastric Protocol)**
+- **D-1 Lagna (Seed Setup):** ${rtn.d1LagnaRashi.englishName} (${rtn.d1LagnaRashi.sanskritName})
+- **D-9 Navamsha Lagna (Manifested Fruit):** ${rtn.d9LagnaRashi.englishName} (${rtn.d9LagnaRashi.sanskritName})
+- **Native Current Age:** **${nativeAge} Years Old**
+${caseStudyBadge}
+### 🏛️ **1. The Seed & Fruit Law (D1-D9 Cross-Confirmation):**
+*Classical Principle:* Navamsha (D9) is the ultimate fruit; D1 is the seed. Whatever promise, dosha, or event is observed in D1 **must be mirrored or confirmed in D9 to physically materialize**. If an event indicated in D1 has zero resonance in D9, it remains an unmanifested seed.
+
+### ⚠️ **2. RTN Dusthana Suffering & Solvability Hierarchy:**
+- **6th House RTN (Solvable):** Legal issues, disputes, debt, litigation, routine sickness. **Solvable through conscious effort, proper remedy, medical care, or negotiation.**
+- **8th House RTN (Chronic / Unsolvable):** Sudden shocks, chronic conditions, irreparable family/relational estrangements. **Chronic, karmic, and practically unsolvable—endurance and spiritual transformation required.**
+- **12th House RTN (Financial Loss):** Capital drain, waste of resources, foreign expenses.
+
+${afflictionsList}
+
+### ☀️ **3. Navamsha Age Activation Timing System (Strictly D9 Formulation):**
+*(Strict Rule: This age activation system is computed strictly from the Navamsha D-9 Chart, never from D-1)*
+- **Navamsha Sun Placement:** House **${sunAct.d9House}** in **${sunAct.d9Rashi.englishName}**
+- **Surya Navamsha House Activation Ages:** **${sunAct.activationAges.map((a) => `Age ${a}`).join(", ")}**
+- **Activation Status:** ${sunAct.isActiveNow ? "🔥 **CURRENTLY ACTIVE MILESTONE YEAR**" : `Awaiting next milestone (Closest: Age ${sunAct.closestAge})`}
+- **Core Life Theme:** ${sunAct.activationTheme}
+${sunAct.caseStudyLoanHealthWarning ? `\n> ⚠️ **Lecture Case Study Warning:** ${sunAct.caseStudyLoanHealthWarning}\n` : ""}
+- **Classical Reference Table (Sun D9 House Activation Ages):**
+  - House 1: Age 27 • House 2: Age 25 • House 4: Age 26
+  - House 6: Ages 23 & 35 • House 8: Ages 22 & 34 • House 12: Ages 12 & 36
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"🌿 Solvable Remedies","prompt":"What are the specific remedies for my 6th house RTN afflictions?"},{"id":"chip-2","label":"💍 Marriage & D9","prompt":"How does my D9 chart confirm or alter my D1 marriage indications?"},{"id":"chip-3","label":"📅 Master Annual Report","prompt":"Show my complete Annual House Progression and Paka Lagna report"}]
+\`\`\``;
+  }
+
   // 19. Planetary Connectivity, Aspects & Sambandha (e.g., "is my jupiter connect with sun or moon or mars")
   if (
     /\bjupiter\b/i.test(q) &&
@@ -1332,7 +1876,1056 @@ Yes, in your chart, **Jupiter is actively and powerfully connected with all thre
 \`\`\``;
   }
 
-    return null;
+  // 20. Medhaj Astro Gochara & Planetary Transits Masterclass (Sessions 52–60)
+  if (
+    /\b(torchlight|venus morning star|venus evening star|sandhya tara|pratah tara|somatic sade sati|saturn over al|saturn arudha lagna|kantaka shani|inverted nodal return|nodal return|nodal helix|outer planet transit|generational transit|kharmas|medhaj|session 52|session 53|session 54|session 55|session 56|session 57|session 58|session 59|session 60)\b/i.test(q) ||
+    (/\b(transit|gochar|gochara)\b/i.test(q) && /\b(masterclass|aspect|overlay|somatic|sade sati|arudha|helix|torchlight)\b/i.test(q))
+  ) {
+    const birthDateObj = new Date(natalEphem.utcDate);
+    const report = generateMedhajGocharaMasterReport(natalEphem, transitEphem, birthDateObj, evaluationDate);
+    const sun = report.sun;
+    const moon = report.moon;
+    const ven = report.venus;
+    const mar = report.mars;
+    const jup = report.jupiter;
+    const sat = report.saturn;
+    const nod = report.nodes;
+    const out = report.outerPlanets;
+
+    return `### 🪐 **Classical Planetary Transits Masterclass (Gochara Shastra)**
+
+#### ☀️ **1. Sun (Surya) — Torchlight & Retrogression Dynamics:**
+- **Occupied Environment:** House **${sun.occupiedHouseFromLagna}** (${sun.occupiedSignName}) • *${sun.environmentalTheme}*
+- **Active Torchlight Focus:** House **${sun.torchlightHouseFromLagna}** (${sun.torchlightSignName}) ──► **${sun.kalapurushaScript}**
+- **Moral Alignment:** ${sun.ramicDharmaArchetype}
+${sun.retrogressionChestabalaTrigger.retrogradesTriggered.length > 0 ? `- **Chestabala Retrograde Trigger:** Planets ${sun.retrogressionChestabalaTrigger.retrogradesTriggered.join(", ")} gain retrogression strength.\n` : ""}
+
+#### 🌙 **2. Moon (Chandra) — Daily Mental & Emotional Matrix:**
+- **Transit Position:** House **${moon.transitHouseFromMoon}** from Moon / House **${moon.transitHouseFromLagna}** from Lagna (${moon.transitSignName})
+- **Daily Psychological Mindset:** **${moon.mentalStateTheme}**
+- **Action Directive (Krishna Logic):** ${moon.transitAdvice}
+${moon.isPeakDayKuladeepak ? `> 👑 **KULADEEPAK PEAK DAY ACTIVE:** Moon in 10th from Lagna brings peak mental clarity and executive execution.\n` : ""}
+
+#### 🌸 **3. Venus (Shukra) — Shukra Sanjeevani & Star Phasing:**
+- **Ancestral Phase:** **${ven.starPhase}** (${ven.ancestralOversight})
+- **Sanjeevani Vidya / Parashurama:** ${ven.sanjeevaniVidyaTheme}
+- **Natal Contact Overlays:** ${ven.activeOverlays.length > 0 ? ven.activeOverlays.map(o => `Over Natal ${o.natalPlanet} (${o.transitEffect})`).join(", ") : "Standard transit"}
+
+#### ⚔️ **4. Mars (Mangal) — Mangala Special Desire Drishti:**
+- **Occupied House:** House **${mar.transitHouseFromLagna}** (${mar.transitSignName}) ──► ${mar.occupiedHouseBurst}
+- **Desire Aspects:** ${mar.specialDesireAspects.map(a => `${a.aspect}th Aspect -> House ${a.targetHouse} (${a.targetSignName}): ${a.desireTheme}`).join(" • ")}
+- **Natal Contact Overlays:** ${mar.activeOverlays.length > 0 ? mar.activeOverlays.map(o => `Over Natal ${o.natalPlanet} (${o.transitEffect})`).join(", ") : "Standard transit"}
+
+#### 🪷 **5. Jupiter (Guru) — Hemispheres & 20-Year Era:**
+- **Hemisphere:** **${jup.hemisphere} (House ${jup.transitHouseFromLagna} in ${jup.transitSignName})** ──► ${jup.hemisphereDirective}
+- **Expansion Directive:** ${jup.universalExpansionVerdict}
+- **Guru-Shani 20-Year Era:** Conjunction in ${jup.guruShani20YearCycle.conjunctionSignName} (${jup.guruShani20YearCycle.eraKarmicTheme})
+${jup.isKharmasActive ? `> ⚠️ **KHARMAS ACTIVE:** Transiting Sun in Sagittarius/Pisces pauses material ventures for spiritual renewal.\n` : ""}
+
+#### 🪐 **6. Saturn (Shani) — Somatic Sade Sati & Arudha Lagna:**
+- **Sade Sati Status:** **${sat.sadeSatiSomaticPhase.isSadeSatiActive ? `Active Phase ${sat.sadeSatiSomaticPhase.phaseNumber}` : "Inactive"} (${sat.sadeSatiSomaticPhase.somaticZone})**
+- **Somatic/Anatomical Focus:** ${sat.sadeSatiSomaticPhase.somaticManifestation}
+- **Kantaka Shani:** ${(sat.kantakaShani.isKantakaFromMoon || sat.kantakaShani.isKantakaFromLagna) ? `⚠️ **ACTIVE** (${sat.kantakaShani.relationshipTestWarning})` : "Inactive"}
+- **Saturn over Arudha Lagna (AL):** ${sat.transitOverArudhaLagna.isSaturnOnAL ? `🚨 **ACTIVE** in ${sat.transitOverArudhaLagna.alSignName} — ${sat.transitOverArudhaLagna.prestigeResetWarning}` : "Standard transit"}
+- **Life Foundation Phase:** ${sat.humanFoundation90YearCycle.currentCycle} (Age ${sat.humanFoundation90YearCycle.completedAge}: ${sat.humanFoundation90YearCycle.lifeStageAdvice})
+
+#### 🐍 **7. Rahu-Ketu — Nodal Helix & Inverted Returns:**
+- **9-Year Inverted Nodal Return:** ${nod.invertedNodalReturn.isInvertedReturnActive ? `🔥 **ACTIVE (Ages ${nod.invertedNodalReturn.triggerAges.join(", ")})** — ${nod.invertedNodalReturn.pivotDescription}` : `Regular Nodal Return Cycle: Ages ${nod.regularNodalReturn.returnAges.join(", ")}`}
+- **Active Nodal Age Spans:** Rahu (42–48): ${nod.activeAgeSpan.isRahuSpanActive ? "ACTIVE" : "Upcoming/Past"} • Ketu (48–52): ${nod.activeAgeSpan.isKetuSpanActive ? "ACTIVE" : "Upcoming/Past"} • ${nod.activeAgeSpan.spanAdvice}
+- **Karmic Helix:** Rahu Head (${nod.karmicHelix.rahuHeadMagnification}) vs Ketu Tail (${nod.karmicHelix.ketuTailContraction})
+- **Shiva Remedy:** ${nod.kalaSarpaShivaRemedy}
+
+#### 🌌 **8. Outer Planets — Generational Telemetry:**
+- **Uranus (~7y):** H${out.uranusHarshal.transitHouseFromLagna} in ${out.uranusHarshal.transitSignName} ──► ${out.uranusHarshal.generationalTheme}
+- **Neptune (~14y):** H${out.neptuneVaruna.transitHouseFromLagna} in ${out.neptuneVaruna.transitSignName} ──► ${out.neptuneVaruna.generationalTheme}
+- **Pluto (Institutional Reset):** H${out.plutoYama.transitHouseFromLagna} in ${out.plutoYama.transitSignName} ──► ${out.plutoYama.generationalTheme}
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"☀️ Sun Torchlight","prompt":"Explain the Sun Torchlight and Kalapurusha script active for my chart right now"},{"id":"chip-2","label":"🪐 Somatic Sade Sati","prompt":"Explain my Saturn Somatic Sade Sati anatomical phase and remedies"},{"id":"chip-3","label":"🐍 Inverted Nodal Return","prompt":"How does the 9-year inverted nodal return and Age 27 pivot affect my destiny?"}]
+\`\`\``;
+  }
+
+  // 21. Medhaj Astro Sessions 68–70: Sun-Saturn Conjunction, 12th from Jupiter/Ketu at Age 25, Mars Activation & 8/12 Manglik Yoga, 5 Geometric Sambandhas
+  if (
+    q.includes("sun saturn conjunction") ||
+    q.includes("surya shani") ||
+    q.includes("sun-saturn") ||
+    q.includes("12th from jupiter") ||
+    q.includes("12th from ketu") ||
+    q.includes("age 25 activation") ||
+    q.includes("age 33 activation") ||
+    q.includes("10th from mars") ||
+    q.includes("10th house from mars") ||
+    q.includes("manglik yoga") ||
+    q.includes("8 out of 12 manglik") ||
+    q.includes("8/12 manglik") ||
+    q.includes("geometric sambandha") ||
+    q.includes("panch sambandha") ||
+    q.includes("session 68") ||
+    q.includes("session 69") ||
+    q.includes("session 70")
+  ) {
+    const act = generateMedhajActivationMasterReport(natalEphem, birthDate, evaluationDate);
+    const ss = act.sunSaturn;
+    const jk = act.jupiterKetuTwelfth;
+    const ma = act.marsActivation;
+    const my = ma.manglikYogaAnalysis;
+
+    return `### ⚡ **Classical Planetary Activations & Sambandhas (Syllabus Units 68–70 / सक्रियता व संबंध):**
+
+#### 👑 **1. Sun-Saturn Conjunction & Age 33 Fateful Trigger (Unit 68):**
+${
+  ss.isConjoined
+    ? `- **Placement:** Conjoined in **House ${ss.house}** (${ss.signName}) • Separation: **${ss.degreeSeparation.toFixed(2)}°**
+- **Lower Degree Dominance:** **${ss.lowerDegreePlanet}** (${ss.dominantTone})
+- **Fame Status:** **${ss.fameClassification}** (${ss.fameAnalysis})
+- **Father-Son Dynamic:** ${ss.fatherSonDivergence}
+- **Age 33 Sovereign Trigger:** ${ss.age33ActivationEvent}
+- **Raj Yoga Verdict:** ${ss.rajYogaVerdict}${
+        ss.isSixthHouseShatruHanta
+          ? `\n- **6th House Shatru Hanta:** ${ss.shatruHantaDetails.aspectModification}`
+          : ""
+      }`
+    : `- In your natal chart, the Sun is in House ${natalEphem.planets.Sun?.house} and Saturn is in House ${natalEphem.planets.Saturn?.house} (no conjunction in the same sign).
+- **Core Shastric Principle:** When Sun & Saturn conjoin, the planet with lower degree leads the life journey. Age 33 activates a decisive fateful turning point in the occupied house. Saturn in Libra, Capricorn, or Aquarius grants lasting honorable fame; Saturn in Aries or Leo induces severe risk of controversy or defame.`
+}
+
+#### 🕊️ **2. Jupiter & Ketu 12th House Gateways at Age 25 (Unit 69):**
+- **12th from Jupiter (Jnana Gateway):** House **${jk.twelfthFromJupiter.houseFromLagna}** (${jk.twelfthFromJupiter.signName}) ruled by **${jk.twelfthFromJupiter.lord}** (in House ${jk.twelfthFromJupiter.lordPlacementHouse}) ──► **${jk.twelfthFromJupiter.lordDignity}**
+  - *Manifestation:* ${jk.twelfthFromJupiter.manifestationTheme}
+- **12th from Ketu (Moksha & Tyaga Gateway):** House **${jk.twelfthFromKetu.houseFromLagna}** (${jk.twelfthFromKetu.signName}) ruled by **${jk.twelfthFromKetu.lord}** (in House ${jk.twelfthFromKetu.lordPlacementHouse}) ──► **${jk.twelfthFromKetu.lordDignity}**
+  - *Manifestation:* ${jk.twelfthFromKetu.manifestationTheme}
+- **Age 25 (24–25th Year) Gateway:** ${jk.age25ExecutiveGuidance}
+${jk.fixedDepositRule.isMatched ? `> 💰 **FIXED DEPOSIT LAW ACTIVE:** ${jk.fixedDepositRule.explanation}\n` : ""}
+${jk.disputedNeighborRule.isMatched ? `> ⚠️ **DISPUTED NEIGHBOR LAW ACTIVE:** ${jk.disputedNeighborRule.explanation}\n` : ""}
+
+#### ⚔️ **3. Mars Activation & The 8/12 Manglik Yoga Revolution (Unit 70):**
+- **Mars Placement:** House **${my.marsHouseFromLagna}** in **${my.marsSignName}** (${my.element} Element)
+- **Manglik Classification:** **${my.classification}**
+${my.is8of12ConditionMet ? `- **8/12 Auspicious Yoga Reasons:** ${my.yogaConditionReasons.join(" • ")}` : ""}
+- **Direct Mars Activation (Ages 27–28):** ${ma.marsAge28Theme}
+- **10th from Mars (Age 33 Career Karma Surge):** House **${ma.tenthFromMars.houseFromLagna}** (${ma.tenthFromMars.signName} • *${ma.tenthFromMars.kalapurushaSignification}*) ──► ${ma.tenthFromMars.careerKarmaSurge}
+${my.scorpioReproductiveHealthAlert.isScorpioMars ? `> 🩺 **SCORPIO MARS CLINICAL CAUTION:** ${my.scorpioReproductiveHealthAlert.medicalAdvice}\n` : ""}
+
+#### 📐 **4. Classical Geometric Sambandhas (Unit 70 Top Harmonics):**
+${ma.geometricSambandhas.slice(0, 5).map(s => `- **${s.planet1} ↔ ${s.planet2}:** ${s.mutualAxis} (${s.category}) ──► ${s.dynamicPhala}`).join("\n")}
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"⚔️ 8/12 Manglik Yoga","prompt":"Explain how the 8 out of 12 Manglik Yoga rule applies to my Mars placement"},{"id":"chip-2","label":"🎯 10th from Mars (Age 33)","prompt":"Explain the 10th house from Mars and its Age 33 career karma surge"},{"id":"chip-3","label":"🕊️ 12th from Jupiter & Ketu","prompt":"Explain the 12th house from Jupiter and Ketu activation at Age 25 in my chart"}]
+\`\`\``;
+  }
+
+  // 22. Classical Arudha Lagna (AL), Connecting Jyotirlinga, Tide Theory, Grand Raj Yogas & Moksha Dwar
+  if (
+    q.includes("arudha lagna") ||
+    q.includes("jyotirlinga") ||
+    q.includes("presiding jyotirlinga") ||
+    q.includes("connecting jyotirlinga") ||
+    q.includes("2nd from al") ||
+    q.includes("7th from al") ||
+    q.includes("moksha dwar") ||
+    q.includes("tide theory") ||
+    q.includes("high tide") ||
+    q.includes("low tide") ||
+    q.includes("perception vs reality") ||
+    q.includes("saturn on al") ||
+    q.includes("venus moon 4th from al") ||
+    q.includes("session 75") ||
+    q.includes("session 76") ||
+    q.includes("session 77") ||
+    q.includes("session 78") ||
+    q.includes("session 79")
+  ) {
+    const rpt = generateMedhajArudhaMasterReport(natalEphem, transitEphem, birthDate, evaluationDate);
+    const p = rpt.perceptionVsReality;
+    const j = rpt.presidingJyotirlinga;
+    const s = rpt.supportAndOpposition;
+    const t = rpt.tideTheory;
+    const w = rpt.wealthAndRajYogas;
+    const m = rpt.mokshaDwar;
+
+    return `### 🕉️ **Classical Arudha Lagna & Jyotirlinga Master Suite (Syllabus Units 75–79 आरूढ़ व ज्योतिर्लिंग):**
+
+#### 🎭 **1. Perception vs. Reality & Image Maya (Unit 75):**
+- **Physical Lagna (D1):** **${p.physicalLagnaSign}** (True inner core & biological self)
+- **Arudha Lagna (AL):** **${p.arudhaLagnaSign}** (House #${p.arudhaLagnaHouseFromD1} from D1 — Societal perception & public mirror)
+- **Maya Dynamic:** ${p.contrastTheme}
+  - *Inner Reality:* ${p.internalReality}
+  - *Worldly Perception:* ${p.societalPerception}
+${p.saturnOnALStatus.hasSaturnOnAL ? `- **Saturn on AL:** ${p.saturnOnALStatus.perceptionEffect}\n` : ""}${p.beneficsOnALStatus.hasJupiterOnAL || p.beneficsOnALStatus.hasVenusOnAL ? `- **Benefics on AL:** ${p.beneficsOnALStatus.perceptionEffect}\n` : ""}
+#### 🔱 **2. Your Presiding Jyotirlinga (Unit 76 Cosmic Origin):**
+- **Presiding Shrine:** **Lord ${j.jyotirlinga.name}** (${j.jyotirlinga.location}, ${j.jyotirlinga.state})
+- **Formula Derivation:** Trines from AL [${j.alTrinesSignNames.join(", ")}] ∩ Kendras from Moon [${j.moonKendrasSignNames.join(", ")}] ➔ **${j.commonSignName} (${j.jyotirlinga.sanskritSign})**
+- **Deity Archetype:** ${j.jyotirlinga.deityArchetype}
+- **Dissolution Power:** ${j.jyotirlinga.dissolutionPower}
+- **Ketu Karmic Sadhana:** ${j.ketuKarmaDissolutionGuidance}
+
+#### 🛡️ **3. Worldly Support & Opposition Matrix (Unit 75):**
+- **2nd from AL (Unconditional Support / Sustenance):** House **${s.support2ndFromAL.houseFromLagna}** (${s.support2ndFromAL.signName} ruled by ${s.support2ndFromAL.lord}) ──► ${s.support2ndFromAL.practicalGuidance}
+- **7th from AL (Worldly Opposition / Friction):** House **${s.opposition7thFromAL.houseFromLagna}** (${s.opposition7thFromAL.signName} ruled by ${s.opposition7thFromAL.lord}) ──► ${s.opposition7thFromAL.adversaryWarning}
+
+#### 🌊 **4. The Tide Theory of Arudha Lagna (Unit 77):**
+- **AL (1st):** High Tide (${t.highTideQuadrant1.signName}) ──► ${t.highTideQuadrant1.psychologicalManifestation}
+- **4th from AL:** High Tide (${t.highTideQuadrant4.signName}) ──► ${t.highTideQuadrant4.psychologicalManifestation}
+- **7th from AL:** Low Tide (${t.lowTideQuadrant7.signName}) ──► ${t.lowTideQuadrant7.psychologicalManifestation}
+- **10th from AL:** Low Tide (${t.lowTideQuadrant10.signName}) ──► ${t.lowTideQuadrant10.psychologicalManifestation}
+
+#### 👑 **5. Wealth, Real Estate & Grand Raj Yogas (Units 78 & 79):**
+- **Properties & Vehicles (4th from AL):** ${w.fourthFromAL.realEstateVerdict}
+- **Father's Land & Inheritance (4th from A9):** ${w.fourthFromA9FatherProperty.fatherPropertyVerdict}
+- **Supreme Status Raj Yoga (7th from AL):** ${w.seventhFromALRajYoga.rajYogaStatus}
+- **Maha Raj Yoga (Benefics in AL Trines):** ${w.mahaRajYogaTrines.mahaRajYogaPhala}
+
+#### 🚪 **6. Moksha Dwar Dignity & Sensitive House Arudha Transits (Units 75 & 79):**
+- **Moksha Dwar (7th from AL):** House **${m.seventhFromALHouseFromLagna}** (${m.seventhFromALSignName}) ──► ${m.overallMokshaExitDemeanor}
+${rpt.houseArudhaTransits.length > 0 ? rpt.houseArudhaTransits.map(tr => `- **Transit over ${tr.padaCode} (${tr.padaName} in ${tr.houseSignName}):** ${tr.manifestationImpact}`).join("\n") : "- *Transits over sensitive Arudhas:* Stable; no major planets triggering vulnerable padas currently."}
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"🔱 Jyotirlinga Sadhana","prompt":"Tell me more about meditating on my presiding Jyotirlinga to dissolve Ketu karma"},{"id":"chip-2","label":"🌊 Tide Theory","prompt":"How should I balance the High Tide and Low Tide quadrants of my Arudha Lagna?"},{"id":"chip-3","label":"👑 Grand Raj Yogas","prompt":"Explain the Raj Yogas and property wealth combinations from my Arudha Lagna"}]
+\`\`\`
+`;
+  }
+
+  // 23. Classical Baadhak Theory, Multi-Lagna Audit, Relative Baadhaka, Aquarius 11th & Rahu-Ketu Nodal Transits
+  if (
+    q.includes("baadhak") ||
+    q.includes("badhak") ||
+    q.includes("baadhaka") ||
+    q.includes("relative baadhak") ||
+    q.includes("relative badhaka") ||
+    q.includes("multi lagna badhak") ||
+    q.includes("multi-lagna baadhak") ||
+    q.includes("aquarius 11th") ||
+    q.includes("11th from aries") ||
+    q.includes("kumbha 11th") ||
+    q.includes("viparita raja yoga baadhak") ||
+    q.includes("nodal return") ||
+    q.includes("18.5 year") ||
+    q.includes("18.5-year") ||
+    q.includes("taurus scorpio axis") ||
+    q.includes("false evidence appearing real") ||
+    q.includes("session 82") ||
+    q.includes("session 84") ||
+    q.includes("session 85")
+  ) {
+    const bReport = generateMedhajBaadhakMasterReport(natalEphem, transitEphem, birthDate, evaluationDate);
+    const p = bReport.baadhakaPrimary;
+    const ml = bReport.multiLagnaAudit;
+    const vy = bReport.viparitaYoga;
+    const nt = bReport.nodalTransits;
+
+    return `### 🛡️ **Classical Baadhak Theory & Nodal Transits Master Suite (Syllabus Units 82, 84 & 85 बाधक व राहु-केतु):**
+
+#### 👑 **1. Primary Lagna Baadhaka & Modality Law (Unit 82):**
+- **D-1 Ascendant:** **${bReport.ascendant.signName} (${bReport.ascendant.sanskritName})** — ${bReport.ascendant.modality}
+- **Baadhaka Bhava:** **House #${p.houseNumber} (${p.signName} / ${p.sanskritName})**
+- **Baadhakesh (Obstruction Lord):** **${p.lord}${p.coLord ? ` & ${p.coLord}` : ""}**
+- **Viparita Raja Yoga Transformation Level:** **${vy.viparitaPotentialLevel}**
+- *Transformation Mechanics:* ${vy.viparitaRationale}
+
+#### 🔍 **2. Multi-Lagna Baadhaka Audit (Unit 84):**
+- **Physical Lagna ($D_1$):** H#${ml.physicalLagna.baadhakaHouse} in ${ml.physicalLagna.baadhakaSignName} (Lord: ${ml.physicalLagna.primaryLord}) ──► ${ml.physicalLagna.manifestationFriction}
+- **Moon Lagna (Chandra):** H#${ml.moonLagna.baadhakaHouse} in ${ml.moonLagna.baadhakaSignName} (Lord: ${ml.moonLagna.primaryLord}) ──► ${ml.moonLagna.manifestationFriction}
+- **Sun Lagna (Surya):** H#${ml.sunLagna.baadhakaHouse} in ${ml.sunLagna.baadhakaSignName} (Lord: ${ml.sunLagna.primaryLord}) ──► ${ml.sunLagna.manifestationFriction}
+- **Paka Lagna (Lagnesha):** H#${ml.pakaLagna.baadhakaHouse} in ${ml.pakaLagna.baadhakaSignName} (Lord: ${ml.pakaLagna.primaryLord}) ──► ${ml.pakaLagna.manifestationFriction}
+- *Karmic Synthesis:* ${ml.synthesis}
+
+#### ⚡ **3. 1st & 5th House Liberation Telemetry (Units 82 & 84):**
+- **1st House Vitality & Charisma Amplification:** **${vy.firstHouseAmplificationScore}/100** ──► ${vy.firstHouseReleaseManifestation}
+- **5th House Purva Punya & Buddhi Amplification:** **${vy.fifthHouseAmplificationScore}/100** ──► ${vy.fifthHouseReleaseManifestation}
+- ⚠️ *Shastric Invariant:* ${vy.totkaWarning}
+- 📜 *Classical Shastric Invariant:* "${vy.coreAphorism}"
+
+#### 🌌 **4. Rahu-Ketu Nodal Transits, Axis Karma & F.E.A.R. Radar (Unit 85):**
+- **Native Age:** **${nt.nativeAgeYears} Years Old** • **Active Nodal Phase:** **${nt.nodalCyclePhase}**
+- **Nodal Coordinates:** Natal Rahu in ${nt.natalRahuSign} (${nt.natalRahuLongitude}°) | Transit Rahu in ${nt.transitRahuSign} (${nt.transitRahuLongitude}°)
+- **Baadhaka Crossing Status:** ${nt.isTransitRahuInBaadhaka ? "🚨 Rahu transit in Baadhaka Bhava (Karmic Testing Peak)" : nt.isTransitKetuInBaadhaka ? "🚪 Ketu transit in Baadhaka Bhava (Spiritual Severance Peak)" : "Stable; neither node in Baadhaka Bhava"}
+- **F.E.A.R. Metric ("False Evidence Appearing Real"):** **${nt.fearMetricScore}/100** (${nt.fearDiagnostics})
+- **Lord Shiva Parihara Protocol:** ${nt.shivaPariharaProtocol}
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"🏛️ Relative House Baadhakas","prompt":"Show the relative Baadhaka breakdown across all 12 houses for my chart"},{"id":"chip-2","label":"🪐 Aquarius 11th Profiles","prompt":"Explain the planetary occupant profiles in Baadhaka Bhava for my horoscope"},{"id":"chip-3","label":"🔱 Lord Shiva Parihara","prompt":"How do I practice Lord Shiva meditation and Om Namah Shivaya japa to dissolve Rahu F.E.A.R.?"}]
+\`\`\``;
+  }
+
+  // 24. Classical Indu Lagna Wealth Masterclass, Dhana Yogas, 2-4-8 Rule & Age Activations
+  if (
+    q.includes("indu lagna") ||
+    q.includes("indu lagan") ||
+    q.includes("indu wealth") ||
+    q.includes("kala ray") ||
+    q.includes("planetary rays") ||
+    q.includes("dhana yoga indu") ||
+    q.includes("indu dhana yoga") ||
+    q.includes("sustained support 2 4 8") ||
+    q.includes("2-4-8 rule") ||
+    q.includes("2 4 8 rule") ||
+    q.includes("indu activation age") ||
+    q.includes("indu age") ||
+    q.includes("indu transit") ||
+    q.includes("session 86") ||
+    q.includes("session 87")
+  ) {
+    const iReport = generateMedhajInduLagnaMasterReport(natalEphem, transitEphem, birthDate, evaluationDate);
+    const c = iReport.core;
+    const dy = iReport.dhanaYogas;
+    const ss = iReport.sustainedSupport;
+    const ages = iReport.ageActivations;
+    const ar = iReport.arudhaAlignment;
+    const tp = iReport.transitPortals;
+
+    return `### 💰 **Classical Indu Lagna Wealth & Prosperity Suite (Syllabus Units 86 & 87 इन्दु लग्न):**
+
+#### 🌙 **1. Indu Lagna Mathematical Derivation & Environmental Dignity (Unit 86):**
+- **Indu Lagna Sign:** **${c.induLagnaSignName} (${c.induLagnaSanskritName})** at **${(c.induLagnaLongitude % 30).toFixed(2)}°**
+- **Kala Ray Computation:**
+  - 9th Lord from Lagna: **${c.lagnaNinthLord} (${c.lagnaNinthKala} Kalas)**
+  - 9th Lord from Moon: **${c.moonNinthLord} (${c.moonNinthKala} Kalas)**
+  - Total Points: **${c.totalKalas}** ──► Modulo 12 Remainder: **${c.remainderKala}**
+  - Offset from Natal Moon: **${c.remainderKala} Signs Forward** ──► **${c.induLagnaSignName}**
+- **Environmental Placement:** House #${c.induLagnaHouseFromD1} from Lagna (${c.environmentalDignity})
+- *Significance:* ${c.environmentalDignityExplanation}
+
+#### 💎 **2. Dhana Yoga Grade & Wealth Scaling (Unit 87):**
+- **Dhana Yoga Grade:** **${dy.dhanaYogaGrade}**
+- **Direct Occupants in Indu:** ${dy.planetsInInduLagna.length > 0 ? dy.planetsInInduLagna.join(", ") : "None (Governed by Sign Lord)"}
+- **Benefics in Trines (1, 5, 9):** ${dy.trineBenefics.length > 0 ? dy.trineBenefics.map(b => `${b.planet} (H#${b.houseFromIndu} in ${b.signName})`).join(", ") : "None"}
+- **Benefics in Kendras (1, 4, 7, 10):** ${dy.kendraBenefics.length > 0 ? dy.kendraBenefics.map(b => `${b.planet} (H#${b.houseFromIndu} in ${b.signName})`).join(", ") : "None"}
+- *Dhana Verdict:* ${dy.dhanaYogaVerdict}
+${dy.entrepreneurial11thVerdict ? `- 🚀 *11th House Special:* ${dy.entrepreneurial11thVerdict}\n` : ""}
+#### 🛡️ **3. Sustained Financial Support Shield (2, 4, 8 Rule of Thumb):**
+- **Coverage Status:** **${ss.supportCoveragePercentage}% (${ss.isSustainedSupportActive ? "Full 100% Shield Active" : "Partial Support"})**
+- **House 2 Occupants (Liquid Assets):** ${ss.house2Occupants.join(", ") || "None"}
+- **House 4 Occupants (Properties & Safety Net):** ${ss.house4Occupants.join(", ") || "None"}
+- **House 8 Occupants (Emergency Rescue & Lifelines):** ${ss.house8Occupants.join(", ") || "None"}
+- *Support Analysis:* ${ss.verdict}
+
+#### ⏱️ **4. Planetary Activation Ages on Indu Lagna (Unit 87):**
+- **Native Current Age:** **${ages.currentAgeYears} Years Old**
+- **Active Milestones Now:** ${ages.activeMilestonesNow.length > 0 ? ages.activeMilestonesNow.map(m => `**${m.planet}** (Age ${m.primaryActivationAge})`).join(", ") : "None currently peaking; closest milestones shown in roadmap"}
+- *Executive Guidance:* ${ages.executiveGuidance}
+
+#### 🕉️ **5. Arudha Lagna (AL) Alignment & Perception:**
+- **Arudha Lagna:** **${ar.arudhaLagnaSignName}** | **Distance from Indu Lagna:** **${ar.distanceFromAL} Houses**
+- *Perception vs Reality:* ${ar.convergenceInterpretation}
+
+#### 🪐 **6. Real-Time Transit Portals over Indu Lagna:**
+- **Active Portals:** ${tp.activePortals.length > 0 ? tp.activePortals.map(p => `${p.planet} in ${p.transitSignName} (${p.relationToIndu})`).join(", ") : "No major transit bodies currently in Indu Kendra/Trikona axes"}
+- *Transit Climate:* ${tp.transitSummary}
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"💎 Indu Dhana Yogas","prompt":"Explain the Dhana Yogas formed from Indu Lagna in my chart"},{"id":"chip-2","label":"🛡️ 2-4-8 Support Shield","prompt":"How does the 2, 4, 8 sustained financial support rule apply to my horoscope?"},{"id":"chip-3","label":"⏱️ Activation Age Timeline","prompt":"What are my planetary activation ages for wealth according to Indu Lagna?"}]
+\`\`\`
+`;
+  }
+
+  // 25. Classical Marana Karaka Sthana (MKS), Automobile Metaphor, Ketu Past-Life Roots & Saturn's Cosmic Boundary Law
+  if (
+    q.includes("mks") ||
+    q.includes("marana karaka") ||
+    q.includes("marana karak") ||
+    q.includes("maran karak") ||
+    q.includes("suffocation") ||
+    q.includes("past life ketu") ||
+    q.includes("ketu past life") ||
+    q.includes("ketu roots") ||
+    q.includes("automobile metaphor") ||
+    q.includes("automobile cockpit") ||
+    q.includes("google maps rahu") ||
+    q.includes("rahu destination") ||
+    q.includes("saturn cosmic law") ||
+    q.includes("cosmic boundary") ||
+    q.includes("saturn boundary") ||
+    q.includes("matsya warning") ||
+    q.includes("session 71") ||
+    q.includes("session 72") ||
+    q.includes("session 74")
+  ) {
+    const mksReport = generateMedhajMksPastLifeMasterReport(natalEphem, birthDate, evaluationDate);
+    const m = mksReport.mks;
+    const ac = mksReport.automobileCockpit;
+    const kp = mksReport.ketuPastLife;
+    const sb = mksReport.saturnBoundary;
+
+    return `### 💀 **Classical MKS, Automobile Cockpit & Past-Life Roots Suite (Syllabus Units 71, 72 & 74 मरण व पूर्वजन्म):**
+
+#### 💀 **1. Marana Karaka Sthana (MKS) Suffocation Radar (Unit 71):**
+- **MKS Affliction Status:** **${m.hasMksPlanets ? `⚠️ ${m.totalMksCount} Planet(s) in Marana Karaka Sthana` : "✅ Zero Planets in MKS (Immune to Graha Suffocation)"}**
+- **Severity Burden:** **${m.mksSeverityScore}/100** • *${m.executiveMksVerdict}*
+${m.mksPlanets.length > 0 ? m.mksPlanets.map(p => `##### 🚨 **${p.planet} in House #${p.house} (${p.signName}):**
+- **Suffocation Mechanism:** ${p.suffocationMechanism}
+- **Karmic Root Cause:** ${p.karmicRootCause}
+- **Double Effort Required:** ${p.effortMultiplier}
+- **Targeted Behavioral Remedy (Parihara):** ${p.prescribedParihara}`).join("\n\n") : "- *Natural Karaka Harmony:* All planetary energies operate in conducive environmental Bhavas without feeling death-like entrapment."}
+
+#### 🚗 **2. The Automobile Metaphor & Cosmic Cockpit (Unit 72):**
+- **🚩 Destination / GPS (Rahu):** **${ac.rahuDestination.signName} (House #${ac.rahuDestination.house})**
+  - *Role:* ${ac.rahuDestination.role}
+  - *Direction:* ${ac.rahuDestination.focus}
+- **🌱 Past Root / Karmic Intention (Ketu):** **${ac.ketuPastRoot.signName} (House #${ac.ketuPastRoot.house})**
+  - *Role:* ${ac.ketuPastRoot.role}
+  - *Direction:* ${ac.ketuPastRoot.focus}
+- **⚖️ Cosmic Traffic Law & Road Rules (Saturn):** **${ac.saturnCosmicLaw.signName} (House #${ac.saturnCosmicLaw.house})**
+  - *Role:* ${ac.saturnCosmicLaw.role}
+  - *Law Enforcement:* ${ac.saturnCosmicLaw.focus}
+- **🎮 Steering Wheels (Dispositor Mechanics):**
+  - **Rahu Dispositor:** **${ac.steeringWheels.rahuDispositor}** in House #${ac.steeringWheels.rahuDispositorHouse} (${ac.steeringWheels.rahuDispositorSign})
+  - **Ketu Dispositor:** **${ac.steeringWheels.ketuDispositor}** in House #${ac.steeringWheels.ketuDispositorHouse} (${ac.steeringWheels.ketuDispositorSign})
+  - *Steering Dynamics:* ${ac.steeringWheels.steeringDynamics}
+
+#### 🔮 **3. Ketu 12-Sign Past-Life Origins & Current Life Rahu Mandate (Units 72 & 74):**
+- **Natal Placement:** Ketu in **${kp.ketuSignName} (${kp.ketuSanskritSign})** in House #${kp.ketuHouse}
+- **Past Life Identity Archetype:** **${kp.profile.pastLifeArchetype}**
+- **Past Life Karmic Baggage:** ${kp.profile.pastLifeKarmicBaggage}
+- **Current Life Rahu Mandate:** **Rahu in ${kp.profile.currentLifeRahuSign}** ──► ${kp.profile.currentLifeRahuMandate}
+- **Evolutionary Counsel:** ${kp.profile.evolutionaryAdvice}
+${kp.profile.hasSpecialMatsyaWaterWarning ? `\n> 🐟 **SACRED MATSYA AVATAR WARNING:** ${kp.profile.specialWarning}\n` : ""}
+#### 🪐 **4. Saturn's Supreme Cosmic Boundary Law (Unit 74):**
+- **Saturn Placement:** **${sb.saturnSignName} (${sb.saturnSanskritSign})** in House #${sb.saturnHouse}
+- **Non-Negotiable Cosmic Law:** *"**${sb.rule.nonNegotiableLaw}**"*
+- **Violation Consequence:** ${sb.rule.violationConsequence}
+- **Mastery Key:** ${sb.rule.masteryKey}
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"💀 MKS Remedies","prompt":"What are the specific behavioral pariharas for planets in Marana Karaka Sthana in my chart?"},{"id":"chip-2","label":"🚗 Automobile Cockpit","prompt":"Explain how Rahu, Ketu, and Saturn direct my life vehicle and steering dispositors"},{"id":"chip-3","label":"🪐 Saturn Cosmic Boundary","prompt":"What is Saturn's supreme cosmic law and boundary in my horoscope?"}]
+\`\`\``;
+  }
+
+  // 25. Medhaj Astro Sessions 71, 72 & 74: Marana Karaka Sthana (MKS), Automobile Metaphor, Ketu Past-Life Roots & Saturn's Cosmic Boundary Law
+  if (
+    q.includes("mks") ||
+    q.includes("marana karaka") ||
+    q.includes("marana karak") ||
+    q.includes("maran karak") ||
+    q.includes("suffocation") ||
+    q.includes("past life ketu") ||
+    q.includes("ketu past life") ||
+    q.includes("ketu roots") ||
+    q.includes("automobile metaphor") ||
+    q.includes("automobile cockpit") ||
+    q.includes("google maps rahu") ||
+    q.includes("rahu destination") ||
+    q.includes("saturn cosmic law") ||
+    q.includes("cosmic boundary") ||
+    q.includes("saturn boundary") ||
+    q.includes("matsya warning") ||
+    q.includes("session 71") ||
+    q.includes("session 72") ||
+    q.includes("session 74")
+  ) {
+    const mksReport = generateMedhajMksPastLifeMasterReport(natalEphem, birthDate, evaluationDate);
+    const m = mksReport.mks;
+    const ac = mksReport.automobileCockpit;
+    const kp = mksReport.ketuPastLife;
+    const sb = mksReport.saturnBoundary;
+
+    return `### 💀 **Medhaj Astro MKS, Automobile Cockpit & Past-Life Roots Suite (Sessions 71, 72 & 74 मरण व पूर्वजन्म):**
+
+#### 💀 **1. Marana Karaka Sthana (MKS) Suffocation Radar (Session 71):**
+- **MKS Affliction Status:** **${m.hasMksPlanets ? `⚠️ ${m.totalMksCount} Planet(s) in Marana Karaka Sthana` : "✅ Zero Planets in MKS (Immune to Graha Suffocation)"}**
+- **Severity Burden:** **${m.mksSeverityScore}/100** • *${m.executiveMksVerdict}*
+${m.mksPlanets.length > 0 ? m.mksPlanets.map(p => `##### 🚨 **${p.planet} in House #${p.house} (${p.signName}):**
+- **Suffocation Mechanism:** ${p.suffocationMechanism}
+- **Karmic Root Cause:** ${p.karmicRootCause}
+- **Double Effort Required:** ${p.effortMultiplier}
+- **Targeted Behavioral Remedy (Parihara):** ${p.prescribedParihara}`).join("\n\n") : "- *Natural Karaka Harmony:* All planetary energies operate in conducive environmental Bhavas without feeling death-like entrapment."}
+
+#### 🚗 **2. The Automobile Metaphor & Cosmic Cockpit (Session 72):**
+- **🚩 Destination / GPS (Rahu):** **${ac.rahuDestination.signName} (House #${ac.rahuDestination.house})**
+  - *Role:* ${ac.rahuDestination.role}
+  - *Direction:* ${ac.rahuDestination.focus}
+- **🌱 Past Root / Karmic Intention (Ketu):** **${ac.ketuPastRoot.signName} (House #${ac.ketuPastRoot.house})**
+  - *Role:* ${ac.ketuPastRoot.role}
+  - *Direction:* ${ac.ketuPastRoot.focus}
+- **⚖️ Cosmic Traffic Law & Road Rules (Saturn):** **${ac.saturnCosmicLaw.signName} (House #${ac.saturnCosmicLaw.house})**
+  - *Role:* ${ac.saturnCosmicLaw.role}
+  - *Law Enforcement:* ${ac.saturnCosmicLaw.focus}
+- **🎮 Steering Wheels (Dispositor Mechanics):**
+  - **Rahu Dispositor:** **${ac.steeringWheels.rahuDispositor}** in House #${ac.steeringWheels.rahuDispositorHouse} (${ac.steeringWheels.rahuDispositorSign})
+  - **Ketu Dispositor:** **${ac.steeringWheels.ketuDispositor}** in House #${ac.steeringWheels.ketuDispositorHouse} (${ac.steeringWheels.ketuDispositorSign})
+  - *Steering Dynamics:* ${ac.steeringWheels.steeringDynamics}
+
+#### 🔮 **3. Ketu 12-Sign Past-Life Origins & Current Life Rahu Mandate (Sessions 72 & 74):**
+- **Natal Placement:** Ketu in **${kp.ketuSignName} (${kp.ketuSanskritSign})** in House #${kp.ketuHouse}
+- **Past Life Identity Archetype:** **${kp.profile.pastLifeArchetype}**
+- **Past Life Karmic Baggage:** ${kp.profile.pastLifeKarmicBaggage}
+- **Current Life Rahu Mandate:** **Rahu in ${kp.profile.currentLifeRahuSign}** ──► ${kp.profile.currentLifeRahuMandate}
+- **Evolutionary Counsel:** ${kp.profile.evolutionaryAdvice}
+${kp.profile.hasSpecialMatsyaWaterWarning ? `\n> 🐟 **SACRED MATSYA AVATAR WARNING:** ${kp.profile.specialWarning}\n` : ""}
+#### 🪐 **4. Saturn's Supreme Cosmic Boundary Law (Session 74):**
+- **Saturn Placement:** **${sb.saturnSignName} (${sb.saturnSanskritSign})** in House #${sb.saturnHouse}
+- **Non-Negotiable Cosmic Law:** *"**${sb.rule.nonNegotiableLaw}**"*
+- **Violation Consequence:** ${sb.rule.violationConsequence}
+- **Mastery Key:** ${sb.rule.masteryKey}
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"💀 MKS Remedies","prompt":"What are the specific behavioral pariharas for planets in Marana Karaka Sthana in my chart?"},{"id":"chip-2","label":"🚗 Automobile Cockpit","prompt":"Explain how Rahu, Ketu, and Saturn direct my life vehicle and steering dispositors"},{"id":"chip-3","label":"🪐 Saturn Cosmic Boundary","prompt":"What is Saturn's supreme cosmic law and boundary in my horoscope?"}]
+\`\`\`
+`;
+  }
+
+  // 26. Classical Rahu-Ketu Transit, Rohini Shakata Bhedana, Great Conjunction & Sacred Remedies
+  if (
+    q.includes("destiny breaker") ||
+    q.includes("destiny breakers") ||
+    q.includes("rahu in taurus") ||
+    q.includes("ketu in scorpio") ||
+    q.includes("rohini bhedana") ||
+    q.includes("rohini shakata") ||
+    q.includes("shakata bhedana") ||
+    q.includes("dasharatha stuti") ||
+    q.includes("dasharatha shani") ||
+    q.includes("great conjunction") ||
+    q.includes("prana vayu") ||
+    q.includes("apana vayu") ||
+    q.includes("mustard oil") ||
+    q.includes("sarson tel") ||
+    q.includes("sarson ka tel") ||
+    q.includes("nasal drops") ||
+    q.includes("anna tyaga") ||
+    q.includes("sunset to sunrise fasting") ||
+    q.includes("moon primacy") ||
+    q.includes("session 83") ||
+    q.includes("session 88") ||
+    q.includes("session 89")
+  ) {
+    const nodalReport = generateMedhajRahuKetuTransitMasterReport(natalEphem, transitEphem, birthDate, evaluationDate);
+    const d = nodalReport.destinyAxis;
+    const g = nodalReport.greatConjunction;
+    const n = nodalReport.nasalProtocol;
+    const r = nodalReport.rohiniBhedana;
+
+    return `### 🌪️ **Classical Rahu-Ketu Transit, Rohini Bhedana & Sacred Remedies Suite (Syllabus Units 83, 88 & 89 राहु-केतु गोचर):**
+
+#### ⚡ **1. Nadi "Destiny Breakers" & Taurus-Scorpio Axis (Unit 83):**
+- **Transit Nodal Axis:** **Rahu in ${d.transitRahuSign} (H#${d.transitRahuHouse})** ──► **Ketu in ${d.transitKetuSign} (H#${d.transitKetuHouse})**
+- **Karmic Axis Shift:** ${d.axisKarmicTheme}
+- **Resource Amplification (Rahu in Taurus):** **${d.rahuResourceAmplificationScore}/100** • Worldly hunger, banking anxieties, agriculture & food supply chains.
+- **Unearned Wealth Severance (Ketu in Scorpio):** **${d.ketuUnearnedWealthSeveranceScore}/100** • Destroys unearned/ill-gotten wealth (*Asatya Dhana*) and exposes hidden rot.
+- **The Anatomy of Fear (F.E.A.R. = "False Evidence Appearing Real"):** **${d.fearDiagnostics.fearMetricScore}/100**
+  - *Mechanism:* ${d.fearDiagnostics.fearMechanism}
+  - *Direct Confrontation Path:* ${d.fearDiagnostics.confrontationPath}
+
+#### 🪐 **2. The 20-Year Great Conjunction & Cosmic Reset Timeline (Unit 88):**
+- **Conjunction Status:** ${g.isConjunctionActive ? `Active (${g.separationDegrees}° separation)` : `Consolidating (${g.separationDegrees}° separation)`}
+- **Reset Timeline Phase:** **${g.resetTimelinePhase}**
+- **Prana vs Apana Vayu Balance:**
+  - *Prana Vayu (Jupiter / Inhaling Expansion):* ${g.pranaVayuStatus}
+  - *Apana Vayu (Saturn / Exhaling Contraction):* ${g.apanaVayuStatus}
+- **6° Capricorn Threshold (Uttara Ashadha):** ${g.isNearSixDegreesCapricorn ? "⚠️ Peak 6° Capricorn Mountain Forest Threshold" : "Standard Separation"} • Geopolitical Climate: **${g.geopoliticalTensionRating}**
+- **Medical / Health Invariant:** ${g.pharmaceuticalWarning}
+  - *Guidance:* ${g.bodilyImmunityGuidance}
+
+#### 🏹 **3. Rohini Shakata Bhedana & King Dasharatha Boon (Unit 89):**
+- **Status:** **${r.isRohiniBhedanaActive ? "🚨 ROHINI BHEDANA ACTIVE (Rahu/Saturn in Moon's Cart)" : "✅ Cart of Rohini Shielded"}**
+- **King Dasharatha Encounter:** ${r.legendOfDasharatha.crisis} King Dasharatha ascended with celestial weapons to challenge Lord Shani.
+- **The Boon of Mitigation:** ${r.legendOfDasharatha.dasharathaBoon}
+- **Prescribed Stuti:** **${r.legendOfDasharatha.stutiName}**
+- **Supply-Chain & Weather Alert:** **${r.supplyChainAndWeatherAlert.severity}**
+${r.supplyChainAndWeatherAlert.projectedDisruptions.map(dis => `  - • ${dis}`).join("\n")}
+
+#### 🛡️ **4. Sacred Collective Remedies (Units 88 & 89):**
+- **🫁 1. Ayurvedic 6-Drop Mustard Oil Nasal Shield (Unit 88):**
+  - *Protocol:* ${n.instructions}
+  - *Timing:* ${n.applicationWindow}
+  - *Cosmic Alignment:* Mars hour (4–6 PM) + Saturn substance (mustard oil) + Venus dosage (6 drops / Sanjeevani) in Mars/Jupiter breath passage.
+- **🌙 2. Sacred Anna Tyaga Upavasa & Moon Primacy (Unit 89):**
+  - *Sunset Invariant:* ${r.annaTyagaFastingRemedy.sunsetRule}
+  - *Meal Sacrifice:* ${r.annaTyagaFastingRemedy.mealSacrificeRule}
+  - *The Primacy of the Moon (Chandra):* ${r.annaTyagaFastingRemedy.moonPrimacyNote}
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"🫁 Mustard Oil Nasal Shield","prompt":"How do I practice the 6-drop mustard oil nasal remedy between 4 PM and 6 PM?"},{"id":"chip-2","label":"🌙 Anna Tyaga Fasting","prompt":"Explain the sunset-to-sunrise Anna Tyaga fasting protocol and Moon primacy"},{"id":"chip-3","label":"🏹 Rohini Shakata Bhedana","prompt":"What is the legend of King Dasharatha and Rohini Shakata Bhedana in astrology?"}]
+\`\`\``;
+  }
+
+  // Interceptor 31: Makara Rashi (Capricorn), Kurma Avatara Archetype, Saturn's 5-Fold Influence & Kali Yuga Redemption (Sessions 36, 37, 38)
+  if (
+    q.includes("makara") ||
+    q.includes("capricorn") ||
+    q.includes("kurma avatara") ||
+    q.includes("kurma avatar") ||
+    q.includes("samudra manthan") ||
+    q.includes("saturn shadow") ||
+    q.includes("chhaya effect") ||
+    q.includes("heen bhavna") ||
+    q.includes("inferiority complex") ||
+    q.includes("manda effect") ||
+    q.includes("5th from saturn") ||
+    q.includes("multi lagna") ||
+    q.includes("seven lagna") ||
+    q.includes("7 lagna") ||
+    q.includes("artha trikona") ||
+    q.includes("purusha stri") ||
+    q.includes("odd even signs") ||
+    q.includes("parikshit") ||
+    q.includes("kali yuga redemption") ||
+    q.includes("unit 36") ||
+    q.includes("session 36") ||
+    q.includes("unit 37") ||
+    q.includes("session 37") ||
+    q.includes("unit 38") ||
+    q.includes("session 38")
+  ) {
+    const mk = generateMakaraKurmaMasterReport(natalEphem);
+    const ka = mk.kurmaArchetype;
+    const sr = mk.saturnReach;
+    const ml = mk.multiLagna;
+    const gs = mk.gunaStructural;
+    const sm = mk.saturnMaturation;
+    const ky = mk.kaliYugaRedemption;
+
+    return `### 🐢 **Makara Rashi (Capricorn), Kurma Avatara & Saturn's 5-Fold Reach (Units 36, 37, 38):**
+
+#### 🌊 **1. Sri Kurma Avatara Archetype & Capricorn House Law (Unit 37):**
+- **House Occupied by Capricorn:** **House ${ka.capricornHouse}** (${ka.capricornSignName}) — Lord: **${ka.rulingLord}**
+- **The Samudra Manthan Law:** ${ka.samudraManthanDuty}
+- **Selfless Duty Prescription:** ${ka.housePrescription}
+- **Historical Legacy (*Chirasthayi Yash*):** ${ka.chirasthayiYashGuidance}
+${ka.planetsInCapricorn.length > 0 ? `- **Planets in Capricorn:**\n` + ka.planetsInCapricorn.map(p => `  - **${p.planet}:** ${p.dignity} (${p.archetypeRole}) — ${p.hairOrWorkExpression}`).join("\n") : "- **No planetary occupants in Capricorn** (pure Saturnian field)."}
+
+#### 🪐 **2. Saturn's 5-Fold Influence Matrix & Shadow Mechanics (Unit 37):**
+- **Locus & *Heen Bhavna* (House ${sr.occupiedHouse} in ${sr.occupiedSignName}):** ${sr.heenBhavnaDomain}
+- **🌑 Chhaya (Shadow) Flanking Effect:**
+  - *Past Shadow (12th from Saturn / House ${sr.chhayaFlankingBehind.house} in ${sr.chhayaFlankingBehind.signName}):* ${sr.chhayaFlankingBehind.mechanism}
+  - *Future Projection (2nd from Saturn / House ${sr.chhayaFlankingAhead.house} in ${sr.chhayaFlankingAhead.signName}):* ${sr.chhayaFlankingAhead.mechanism}
+- **🌱 4th House Karmic Fruition (House ${sr.fourthHouseFruition.house} in ${sr.fourthHouseFruition.signName}):** ${sr.fourthHouseFruition.fruitionPrinciple}
+- **👁️ Special Drishtis (Aspects):**
+${sr.specialDrishtis.map(d => `  - **${d.aspectLabel} -> House ${d.targetHouse} (${d.targetSignName}):** ${d.karmicImpact}`).join("\n")}
+- **🐢 5th House Limping Trigger (Manda Effect -> House ${sr.manda5thHurdle.house} in ${sr.manda5thHurdle.signName}):** ${sr.manda5thHurdle.limperMechanism}
+- **Karmic Synthesis:** ${sr.fearAsTeacherSynthesis}
+
+#### ☸️ **3. Multi-Lagna 7-Center Framework of Existence (Unit 36):**
+- **Lagna (1st House - Body):** ${ml.centers.lagna.signName} (Lord: ${ml.centers.lagna.signLord}) — *${ml.centers.lagna.spiritualSignificance}*
+- **Lagnesha (Action Demeanor):** House ${ml.centers.lagnesha.houseFromLagna} (${ml.centers.lagnesha.signName}) — *${ml.centers.lagnesha.spiritualSignificance}*
+- **Moon Lagna (Mind & Purva Janma):** House ${ml.centers.moonLagna.houseFromLagna} (${ml.centers.moonLagna.signName}) — *${ml.centers.moonLagna.spiritualSignificance}*
+- **Guru Lagna (Divine Wisdom):** House ${ml.centers.guruLagna.houseFromLagna} (${ml.centers.guruLagna.signName}) — *${ml.centers.guruLagna.spiritualSignificance}*
+- **Surya Lagna (Soul Ambition):** House ${ml.centers.suryaLagna.houseFromLagna} (${ml.centers.suryaLagna.signName}) — *${ml.centers.suryaLagna.spiritualSignificance}*
+- **Saturn (Karma Karaka):** House ${ml.centers.saturnKarma.houseFromLagna} (${ml.centers.saturnKarma.signName}) — *${ml.centers.saturnKarma.spiritualSignificance}*
+- **Arudha Lagna (Public Maya):** House ${ml.centers.arudhaLagna.houseFromLagna} (${ml.centers.arudhaLagna.signName}) — *${ml.centers.arudhaLagna.spiritualSignificance}*
+
+#### ⚖️ **4. Artha Trikona Triad & Saturn House Maturation (Units 36 & 38):**
+- **Taurus (Rajasic Earth - House ${gs.arthaTrikona.taurusH2.houseFromLagna}):** ${gs.arthaTrikona.taurusH2.karmicPrinciple}
+- **Virgo (Tamasic Earth - House ${gs.arthaTrikona.virgoH6.houseFromLagna}):** ${gs.arthaTrikona.virgoH6.karmicPrinciple}
+- **Capricorn (Sattvic Earth - House ${gs.arthaTrikona.capricornH10.houseFromLagna}):** ${gs.arthaTrikona.capricornH10.karmicPrinciple}
+- **Saturn in ${sm.saturnSign} Psychology:** ${sm.signPsychologicalTheme}
+- **Raj Yoga Potential:** ${sm.rajYogaPotential}
+- **House Aging Imprint:** Gravity & early aging target **${sm.houseAgingImpact.agingEntity}** (${sm.houseAgingImpact.maturationSphere}) — *${sm.houseAgingImpact.shastricPrescription}*
+
+#### 🛡️ **5. King Parikshit Kali Yuga Redemption & Daily Conduct (Unit 38):**
+- **The Singular Salvation:** ${ky.singularRedemptionPrinciple}
+- **Daily Protective Chanting:** ${ky.dailyChantingShield}
+- **🫁 Master Respiratory Immunity Shield:**
+  - *Nostrils:* ${ky.respiratoryRemedyAnatomy.outerNostrilsRuler}
+  - *Prana (Inbound):* ${ky.respiratoryRemedyAnatomy.pranaVayuInboundRuler}
+  - *Apana (Outbound) & Oil:* ${ky.respiratoryRemedyAnatomy.apanaVayuOutboundRuler}
+  - *Dosage (6 Drops):* ${ky.respiratoryRemedyAnatomy.sanjeevaniDosageRuler}
+  - *Protocol:* ${ky.respiratoryRemedyAnatomy.protocol}
+- **Hygiene & Grooming Codes:**
+  - *Hair:* ${ka.groomingIndicators.hairHygieneRule}
+  - *Footwear:* ${ka.groomingIndicators.footwearHygieneRule}
+
+---
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"🐢 Kurma Duty in House ${ka.capricornHouse}","prompt":"How do I practice the Kurma Avatara selfless duty in my Capricorn house for Chirasthayi Yash?"},{"id":"chip-2","label":"🪐 Saturn 5-Fold Influence Matrix","prompt":"Analyze Saturn's Chhaya flanking, 4th house fruition, and 5th house Manda effect in my chart"},{"id":"chip-3","label":"☸️ Multi-Lagna 7-Center Audit","prompt":"Compare my 7 reference centers of existence from Lagna to Arudha Lagna"},{"id":"chip-4","label":"🛡️ Kali Yuga Redemption & Mustard Oil Shield","prompt":"Explain King Parikshit's Kali Yuga redemption and the 6-drop mustard oil respiratory shield"}]
+\`\`\``;
+  }
+
+  // Interceptor 32: Aquarius (Kumbha Rashi), Rahu-Saturn-Uranus Triad, Bhrigu Bindu & Karmic Protection (Sessions 39, 40)
+  if (
+    q.includes("kumbha") ||
+    q.includes("aquarius") ||
+    q.includes("bhrigu bindu") ||
+    q.includes("destiny point") ||
+    q.includes("water-bearer") ||
+    q.includes("water bearer") ||
+    q.includes("pitcher") ||
+    q.includes("teeth") ||
+    q.includes("danta") ||
+    q.includes("true friends") ||
+    q.includes("11th friend") ||
+    q.includes("varaha") ||
+    q.includes("jalandhara") ||
+    q.includes("batuk bhairav") ||
+    q.includes("bhairava ashtakam") ||
+    q.includes("exploit rahu") ||
+    q.includes("never exploit") ||
+    q.includes("silver elephant") ||
+    q.includes("unit 39") ||
+    q.includes("session 39") ||
+    q.includes("unit 40") ||
+    q.includes("session 40")
+  ) {
+    const kb = generateKumbhaAquariusMasterReport(natalEphem);
+    const bb = kb.bhriguBinduAxis;
+    const kw = kb.kumbhaWaterBearer;
+    const rn = kb.rahuNonExploitation;
+    const tr = kb.triadRulership;
+    const fa = kb.friendshipAlliances;
+    const ss = kb.spiritualShieldAndRemedies;
+
+    return `### 🏺 **Aquarius (Kumbha Rashi), Bhrigu Bindu & Rahu-Saturn Triad (Units 39 & 40):**
+
+#### 💧 **1. The Water-Bearer (Pitcher) Archetype & Aquarius House Duty:**
+- **House Occupied by Aquarius:** **House ${kw.houseNumber}** (${kw.signName}) — *"${kw.archetypeTitle}"*
+- **The Water-Bearer Duty:** ${kw.waterBearerDuty}
+- **Selfless Giving Mandate:** ${kw.selflessGivingMandate}
+- **Karmic Trap to Avoid:** ${kw.karmicTrap}
+- **Enduring Blessing:** ${kw.enduringBlessing}
+
+#### 🦷 **2. Secret Physical Indicator: Teeth (*Danta*):**
+- **House / Relative Indicated:** **${kw.teethPhysicalIndicator.relativeOrDomain}**
+- **Dental Characteristic:** ${kw.teethPhysicalIndicator.dentalSignature}
+- **Clinical Shastric Observation:** ${kw.teethPhysicalIndicator.clinicalObservation}
+
+#### 🎯 **3. The Bhrigu Bindu & Destiny Point Mathematical Axis:**
+- **Bhrigu Bindu (Karmic Convergence):** **${bb.bhriguBindu.formattedPosition}** (House ${bb.bhriguBindu.houseFromLagna} from Lagna • House ${bb.bhriguBindu.houseFromMoon} from Moon • Nakshatra: **${bb.bhriguBindu.nakshatraName}** Pada ${bb.bhriguBindu.pada})
+- **Destiny Point (180° Trigger):** **${bb.destinyPoint.formattedPosition}** (House ${bb.destinyPoint.houseFromLagna} from Lagna • House ${bb.destinyPoint.houseFromMoon} from Moon • Nakshatra: **${bb.destinyPoint.nakshatraName}** Pada ${bb.destinyPoint.pada})
+- **Shorter-Arc Span (Moon to Rahu):** ${bb.shorterArcSpanDegrees}°
+${bb.conjunctPlanets.length > 0 ? `- **Conjunct Grahas:**\n` + bb.conjunctPlanets.map(c => `  - **${c.planet}** conjunct ${c.targetPoint} (Orb: ${c.orbDegrees}°): ${c.karmicMeaning}`).join("\n") : "- **Zero Natal Grahas Conjunct Axis** (activated primarily by transits)."}
+${bb.aspectingPlanets.length > 0 ? `- **Aspecting Grahas:**\n` + bb.aspectingPlanets.map(a => `  - **${a.planet}** (${a.aspectType} -> ${a.targetPoint}): ${a.karmicMeaning}`).join("\n") : ""}
+- **Activation Directive:** ${bb.transitingActivationGuidance}
+
+#### ⚠️ **4. Universal Law: Never Exploit the Domain of Rahu (House ${rn.rahuHouse}):**
+- **Rahu's Occupied Domain:** **House ${rn.rahuHouse}** (${rn.activeRahuRule.houseSignification})
+- **Strict Danger Zone:** ${rn.activeRahuRule.dangerZoneExploitation}
+- **Karmic Retribution if Exploited:** ${rn.activeRahuRule.karmicBacklash}
+- **Selfless Service Remedy:** ${rn.activeRahuRule.selflessServicePathway}
+
+#### 🤝 **5. True Friendships & 11th House Non-Betrayal Allies:**
+- **11th from Lagna Ally:** **${fa.eleventhFromLagna.signName}** (${fa.eleventhFromLagna.element} • ${fa.eleventhFromLagna.modality}) — Name Sounds: **${fa.eleventhFromLagna.friendlySounds.slice(0, 5).join(", ")}...**
+- **11th from Moon Ally:** **${fa.eleventhFromMoon.signName}** (${fa.eleventhFromMoon.element} • ${fa.eleventhFromMoon.modality}) — Name Sounds: **${fa.eleventhFromMoon.friendlySounds.slice(0, 5).join(", ")}...**
+- **Trinal Supporters:** 9th House (${fa.trinalAllies.ninthSign.name}) for Dharmic Guidance & 5th House (${fa.trinalAllies.fifthSign.name}) for Purva Punya affinity.
+
+#### 🛡️ **6. Batuk Bhairava Spiritual Shield & Animal Remedies:**
+- **Spiritual Shield:** ${ss.batukBhairavShield.mantraOrStotra} — *${ss.batukBhairavShield.dailyProtocol}*
+- **Street Dogs:** ${ss.animalRemedies.streetDogs}
+- **Elephants & Silver:** ${ss.animalRemedies.elephantsAndSilver}
+- **Mythological Guidance:**
+  - *Varaha Avatara:* Perform heavy foundational rescue work without seeking applause.
+  - *Rahu Jalandhara Diplomacy:* Communicate delicate truths calmly and diplomatically without provoking outrage.
+
+---
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"🎯 Bhrigu Bindu Degree","prompt":"Analyze my Bhrigu Bindu and Destiny Point transits and karmic triggers"},{"id":"chip-2","label":"🏺 Aquarius House Duty","prompt":"How do I fulfill the Water-Bearer selfless giving mandate in House ${kw.houseNumber}?"},{"id":"chip-3","label":"⚠️ Rahu House Warning","prompt":"What are the specific non-exploitation warnings for my Rahu in House ${rn.rahuHouse}?"},{"id":"chip-4","label":"🛡️ Bhairava Shield & Animals","prompt":"Explain the Batuk Bhairava spiritual shield and elephant/street dog remedies"}]
+\`\`\``;
+  }
+
+  // Interceptor 33: Meena Rashi (Pisces), Kalapurusha Script Overlay, Elemental Immunity & Special Drishti Matrix (Sessions 42-45)
+  if (
+    q.includes("meena") ||
+    q.includes("pisces") ||
+    q.includes("blind faith") ||
+    q.includes("andha vishwas") ||
+    q.includes("daiva kripa") ||
+    q.includes("divine help") ||
+    q.includes("divine grace") ||
+    q.includes("kalapurusha script") ||
+    q.includes("kalapurusha overlay") ||
+    q.includes("energy script") ||
+    q.includes("script overlay") ||
+    q.includes("elemental immunity") ||
+    q.includes("cellular resistance") ||
+    q.includes("pathogen resistance") ||
+    q.includes("pathogen vulnerability") ||
+    q.includes("water ascendant immunity") ||
+    q.includes("special drishti") ||
+    q.includes("special aspect") ||
+    q.includes("saturn 3rd aspect") ||
+    q.includes("saturn 10th aspect") ||
+    q.includes("mars 4th aspect") ||
+    q.includes("mars 8th aspect") ||
+    q.includes("jupiter 5th aspect") ||
+    q.includes("jupiter 9th aspect") ||
+    q.includes("unit 42") ||
+    q.includes("session 42") ||
+    q.includes("unit 43") ||
+    q.includes("session 43") ||
+    q.includes("unit 44") ||
+    q.includes("session 44") ||
+    q.includes("unit 45") ||
+    q.includes("session 45")
+  ) {
+    const mr = generateMeenaKalapurushaDrishtiMasterReport(natalEphem);
+    const pa = mr.piscesArchetype;
+    const ko = mr.kalapurushaScriptOverlay;
+    const ei = mr.elementalImmunity;
+    const dm = mr.specialDrishtiMatrix;
+
+    const occupantsList = pa.planetaryOccupantsInPisces.length > 0
+      ? `- **Grahas in Pisces:**\n` + pa.planetaryOccupantsInPisces.map(p => `  - **${p.planet}:** ${p.dignity} — ${p.psychologicalExpression} (${p.shastricGuidance})`).join("\n")
+      : "- **Zero Natal Grahas Occupying Pisces** (pure Jovian oceanic field).";
+
+    const overlaySample = ko.houseOverlays.slice(0, 6).map(o => `- **House ${o.houseNumber} (${o.occupyingSignName}):** Imports *${o.kalapurushaArchetype}* into *${o.houseSignification}*.\n  - *Behavioral Script:* ${o.behavioralManifestation}`).join("\n");
+
+    const waterLordNote = ei.waterAscendantFireLordException.isApplicable
+      ? `\n- **Water Ascendant Fire Lord Exception:** ✅ **${ei.waterAscendantFireLordException.agniFortificationBonus}** (Ascendant: ${ei.waterAscendantFireLordException.waterAscendantSign}, Lord: ${ei.waterAscendantFireLordException.lagnaLord} in ${ei.waterAscendantFireLordException.lordFireSign})`
+      : "";
+
+    const aspectLines = dm.aspectVectors.length > 0
+      ? dm.aspectVectors.map(v => `- **${v.aspectingPlanet} ${v.aspectType} -> House ${v.targetHouse} (${v.targetSignName}):**\n  - *Kalapurusha Signification:* ${v.kalapurushaArchetypeResonance}\n  - *Psychological Intent:* ${v.karmicPsychology}\n  - *Action Guidance:* ${v.practicalActionDirective}`).join("\n")
+      : "- *Zero special aspect vectors found.*";
+
+    return `### 🐟 **Pisces (Meena Rashi), Kalapurusha Script Overlay, Elemental Immunity & Special Drishti Matrix (Sessions 42–45):**
+
+#### 🌊 **1. Meena Rashi (Pisces) Archetype & Blind Faith Law (Session 42):**
+- **House Occupied by Pisces:** **House ${pa.piscesHouse.houseNumber}** (${pa.piscesHouse.signName}) — *"${pa.piscesHouse.archetypeTitle}"*
+- **The Blind Faith Law (*Andha Vishwas*):** ${pa.piscesHouse.blindFaithSphere}
+- **Where Human Calculation Fails:** ${pa.piscesHouse.calculationTrap}
+- **Divine Rescue Pathway (*Daiva Kripa*):** ${pa.piscesHouse.daivaKripaMechanism}
+- **Tears & Universal Compassion:** ${pa.universalCompassionTearsSynthesis}
+- **12th House Expenditure & Sanctuary:** Mode: **${pa.twelfthHouseExpenditure.expenditureMode}** | Sanctuary: **${pa.twelfthHouseExpenditure.sleepSanctuaryStatus}** — *${pa.twelfthHouseExpenditure.expenditureGuidance}*
+${occupantsList}
+
+#### 📜 **2. Kalapurusha 12-House Energy Script Overlay (Session 43):**
+*Every house has a fixed domain (1–12), but imports the natural cosmic archetype of its occupying sign:*
+${overlaySample}
+*(Showing first 6 houses; view full chart deck for all 12 script overlays)*
+
+#### 🛡️ **3. Elemental Immunity Hierarchy & Pathogen Vulnerability (Session 44):**
+- **Cellular Resistance Score:** **${ei.cellularResistanceScore} / 100** (${ei.immunityClassification})
+- **Dominant Element:** **${ei.dominantElement}** (Fire: ${ei.agniPercentage}%, Earth: ${ei.prithviPercentage}%, Air: ${ei.vayuPercentage}%, Water: ${ei.jalaPercentage}%)
+- **Vulnerability Profile:** ${ei.pathogenVulnerabilitySummary}
+- **Prescribed Immunity Shield:** ${ei.lifestyleImmunityPrescriptions.join("; ")}${waterLordNote}
+
+#### 👁️ **4. Special Drishti as Kalapurusha Intention (Session 45):**
+*Aspects project intention and desire onto houses carrying the imprint of Kalapurusha signs:*
+${aspectLines}
+
+---
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"🐟 Pisces Blind Faith in House ${pa.piscesHouse.houseNumber}","prompt":"How do I navigate the Blind Faith and Divine Grace requirement in my Pisces house?"},{"id":"chip-2","label":"📜 Kalapurusha Script Overlays","prompt":"Explain how the Kalapurusha sign overlays transform the way my houses operate"},{"id":"chip-3","label":"🛡️ Elemental Immunity Shield","prompt":"Analyze my cellular resistance score and elemental pathogen vulnerability hierarchy"},{"id":"chip-4","label":"👁️ Special Drishti Matrix","prompt":"How do Saturn, Mars, and Jupiter's special aspects project Kalapurusha intentions across my chart?"}]
+\`\`\``;
+  }
+
+  // Interceptor 34: Planetary Dignities (Uchha & Neecha), Conscious Awareness vs. Blind Spot & Transit Dynamics (Sessions 80 & 81)
+  if (
+    q.includes("exaltation vs debilitation") ||
+    q.includes("highest consciousness") ||
+    q.includes("subconscious blind spot") ||
+    q.includes("sovereign shield") ||
+    q.includes("uchha") ||
+    q.includes("neecha") ||
+    q.includes("exaltation") ||
+    q.includes("debilitation") ||
+    q.includes("conscious awareness") ||
+    q.includes("blind spot") ||
+    q.includes("inexperience area") ||
+    q.includes("lagnesha shield") ||
+    q.includes("lagnesha primacy") ||
+    q.includes("primacy of lagnesha") ||
+    q.includes("father-son inversion") ||
+    q.includes("father son inversion") ||
+    q.includes("transit geometric") ||
+    q.includes("transit opposition") ||
+    q.includes("3/11 axis") ||
+    q.includes("6/8 axis") ||
+    q.includes("shadashtaka friction") ||
+    q.includes("moon venus taurus") ||
+    q.includes("moon-venus in taurus") ||
+    q.includes("unit 80") ||
+    q.includes("session 80") ||
+    q.includes("unit 81") ||
+    q.includes("session 81")
+  ) {
+    const un = generateUchhaNeechaAwarenessMasterReport(natalEphem, transitEphem);
+    const ls = un.lagneshaShield;
+    const fsi = un.fatherSonInversion;
+    const tg = un.transitGeometricDynamics;
+    const mvt = tg.moonVenusTaurusConjunction;
+
+    const awarenessSample = un.natalDignityAwareness.map(d =>
+      `- **${d.planet} (${d.dignity} in ${d.signName} • House ${d.houseNumber}):** ${d.awarenessOrBlindSpotCategory}\n  - *Dynamic:* ${d.detailedInterpretation}\n  - *Mindfulness:* ${d.actionableMindfulness}`
+    ).join("\n");
+
+    const oppositionSample = tg.transitOppositions.length > 0
+      ? tg.transitOppositions.map(o =>
+          `- **${o.axisName}:** ${o.planet1} (${o.planet1Sign} ${o.planet1IsRetrograde ? "[Vakri]" : ""}, ${o.planet1Dignity}) vs. ${o.planet2} (${o.planet2Sign} ${o.planet2IsRetrograde ? "[Vakri]" : ""}, ${o.planet2Dignity})\n  - *Dominance:* ⚡ **${o.dominantPlanet} Dominates** (${o.dominanceRationale})\n  - *Real-World Impact:* ${o.realWorldManifestation}\n  - *Strategic Solution:* ${o.strategicLeadershipSolution}`
+        ).join("\n")
+      : "- *No major 180° opposition vectors active in current transits.*";
+
+    const upachayaSample = tg.upachayaInspirations.length > 0
+      ? tg.upachayaInspirations.map(u => `- **${u.pair} (3/11 Upachaya Axis):** ${u.catalyticEffect}`).join("\n")
+      : "- *No prominent 3/11 transit catalysts.*";
+
+    const shadashtakaSample = tg.shadashtakaFrictions.length > 0
+      ? tg.shadashtakaFrictions.map(s => `- **${s.pair} (6/8 Shadashtaka Axis):** ${s.catalyticEffect} — *Remedy:* ${s.guidance}`).join("\n")
+      : "- *No severe 6/8 friction axes.*";
+
+    const moonVenusStatus = mvt.isConjunctionInTaurus
+      ? `🔥 **Active Conjunction in Taurus (Exalted Moon + Swarashi Venus)!**\n  - *Sensory Desire Intensity:* ${mvt.sensoryDesireIntensity}\n  - *Karmic Warning:* ${mvt.karmicWarning}\n  - *Virtuous Blessing:* ${mvt.virtuousConductBlessing}\n  - *Directive:* ${mvt.practicalDirective}`
+      : mvt.isConjunctionAnywhere
+        ? `Transit Moon & Venus conjunct in ${mvt.conjunctionSign}. Warning against relational deceit; practice radical honesty.`
+        : "Moon and Venus operate in separate signs in current transits.";
+
+    return `### ⚖️ **Planetary Dignities (Uchha & Neecha), Conscious Awareness vs. Blind Spot & Transit Dynamics (Units 80 & 81):**
+
+#### 🌟 **1. Conscious Awareness vs. Blind Spot Matrix (Sessions 80 & 81):**
+*Exaltation (Uchha) $\\neq$ Automatic Raja Yoga; it indicates **High Conscious Awareness (*Chetana*)** and past-life perceptual mastery with potential ego blind spots. Debilitation (Neecha) $\\neq$ Curse; it marks an **Inexperience Area / Subconscious Blind Spot** that achieves grounded, ego-less mastery through humble conscious practice.*
+
+${awarenessSample}
+
+#### 🛡️ **2. Absolute Primacy of Lagnesha (The Sovereign Shield):**
+- **Ascendant Lord:** **${ls.lagnaLord}** (Lagna: ${ls.lagnaSign}) placed in **House ${ls.occupiedHouse} (${ls.occupiedSign})** [${ls.dignity}]
+- **The Sovereign Shield Law:** ${ls.protectionShieldStatement}
+- **Vitalized House Signification:** ${ls.vitalizedHouseSignification}
+- **Shastric Counsel:** ${ls.shastricCounsel}
+
+#### ☀️ **3. Father-Son Sun/Saturn Inversion Axis:**
+- **Inversion Status:** ${fsi.inversionActive ? `⚡ **ACTIVE INVERSION (${fsi.inversionType})**` : "Harmonic Non-Inverted Equilibrium"}
+- **Karmic Significance:** ${fsi.karmicSignificance}
+- **Reconciliation Guidance:** ${fsi.reconciliationGuidance}
+
+#### ⚡ **4. Real-Time Transit Geometric Dynamics:**
+- **180° Direct Oppositions (Dominance & Chesta Bala):**
+${oppositionSample}
+- **3/11 Upachaya Growth Vectors:**
+${upachayaSample}
+- **6/8 Shadashtaka Friction Vectors:**
+${shadashtakaSample}
+- **Moon-Venus Conjunction & Relational Ethics:**
+${moonVenusStatus}
+
+---
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"🌟 Exaltation Awareness Zones","prompt":"What are my chart's high conscious awareness superpowers and associated ego pitfalls?"},{"id":"chip-2","label":"⚠️ Debilitation Blind Spots","prompt":"Which areas of my life are subconscious blind spots requiring humble, conscious practice?"},{"id":"chip-3","label":"🛡️ Lagnesha Sovereign Shield","prompt":"How does my Lagnesha actively protect my chart even if functionally challenged or debilitated?"},{"id":"chip-4","label":"⚡ Transit Geometric Dynamics","prompt":"Analyze real-time transit oppositions, 3/11 Upachaya inspirations, and 6/8 Shadashtaka friction axes"}]
+\`\`\``;
+  }
+
+  // Interceptor 35: Three Sages (Rishis) Modality, Sacred Lineage Deities & Sign Lord Blind Spots (Sessions 93, 94 & 95)
+  if (
+    q.includes("three rishi") ||
+    q.includes("three sages") ||
+    q.includes("family deity") ||
+    q.includes("when will my life change") ||
+    q.includes("biggest weakness") ||
+    q.includes("biggest strength") ||
+    q.includes("innate gifts") ||
+    q.includes("three sages") ||
+    q.includes("narada") ||
+    q.includes("agastya") ||
+    q.includes("durvasa") ||
+    q.includes("kula devata") ||
+    q.includes("kuladevata") ||
+    q.includes("dharma devata") ||
+    q.includes("dharmadevata") ||
+    q.includes("ishta devata") ||
+    q.includes("12-year change") ||
+    q.includes("12 year change") ||
+    q.includes("change wave") ||
+    q.includes("paramochha") ||
+    q.includes("paramaneecha") ||
+    q.includes("deep exaltation") ||
+    q.includes("sign lord blind spot") ||
+    q.includes("innate awareness") ||
+    q.includes("rishi drekkana") ||
+    q.includes("drekkana rishi") ||
+    q.includes("session 93") ||
+    q.includes("session 94") ||
+    q.includes("session 95") ||
+    q.includes("unit 93") ||
+    q.includes("unit 94") ||
+    q.includes("unit 95")
+  ) {
+    const rd = generateRishiDrekkanaMasterReport(natalEphem);
+    const rishiAlloc = rd.drekkanaRishiAllocations;
+    const lineage = rd.sacredLineageDeities;
+    const lifeAxis = rd.lifeAxisEntryExit;
+    const blindSpots = rd.nativeSignLordDiagnostics;
+    const lagnaDiag = blindSpots.lagnaSignDiagnostic;
+    const moonDiag = blindSpots.moonSignDiagnostic;
+    const kula = lineage.kulaDevata;
+
+    const rishiBreakdown = rishiAlloc.planets
+      .map(
+        (p) =>
+          `- **${p.planet}:** ${p.signName} (${p.modality}) at ${p.degreeInSign.toFixed(1)}° in Drekkana ${p.drekkanaNumber} → **Presiding Sage: ${p.governingRishi}** (${p.rishiQuality}). Mantra: *${p.salutationMantra}*`
+      )
+      .join("\n");
+
+    const deepDignityList = rd.deepDignityDegrees
+      .filter((d) => d.isDeeplyExalted || d.isDeeplyDebilitated || d.distanceFromParamochhaDeg <= 10 || d.distanceFromParamaneechaDeg <= 10)
+      .map((d) => `- **${d.planet}:** ${d.currentSign} (${d.currentDegree.toFixed(1)}°) → ${d.dignityPotencyNote}`)
+      .join("\n") || "- Classical planetary positions operate at moderate standard orbs.";
+
+    return `### 🧘 **Three Sages (Rishi) Modality, Sacred Lineage Deities & Sign Lord Blind Spots (Units 93, 94 & 95):**
+
+#### 📜 **1. Parashari $10^\\circ$ Drekkana (D-3) Presiding Rishi Allocation:**
+- **Dominant Sage Archetype:** **${rishiAlloc.dominantRishi}** (Narada: ${rishiAlloc.naradaCount} | Agastya: ${rishiAlloc.agastyaCount} | Durvasa: ${rishiAlloc.durvasaCount})
+- **Sages Archetype Significance:**
+  * **Devarshi Narada (Movable / Chara):** Mind, perpetual movement, flexibility, non-attachment, singing *Narayana Narayana*.
+  * **Brahmarshi Agastya (Fixed / Sthira):** Grounded steadfastness, protective anchor, balancing the cosmic Earth, preservation.
+  * **Maharshi Durvasa (Dual / Dwiswabhava):** Fierce penance (*Tapasya*), boundary testing, burning karmic stagnation, uncompromising truth.
+${rishiBreakdown}
+
+#### 🪷 **2. Sacred Lineage of Houses (The Divine Deity Triad):**
+- **4th House → Kula Devata (Ancestral Lineage Deity):**
+  * **Placement:** House ${kula.houseNumber} in **${kula.signName} (${kula.element})** &bull; Lord: ${kula.signLord}
+  * **Elemental Propitiation Protocol:** ${kula.elementalPropitiationProtocol}
+  * **Ancestral Role:** ${kula.ancestralGuidance}
+- **9th House → Dharma Devata:**
+  * **Placement:** House ${lineage.dharmaDevata.houseNumber} in **${lineage.dharmaDevata.signName}** (Lord: ${lineage.dharmaDevata.signLord})
+  * **Spiritual Guidance:** ${lineage.dharmaDevata.philosophicalGuidance}
+- **12th House → Ishta Devata:**
+  * **Placement:** House ${lineage.ishtaDevata.houseNumber} in **${lineage.ishtaDevata.signName}** (Lord: ${lineage.ishtaDevata.signLord})
+  * **Moksha Role:** ${lineage.ishtaDevata.mokshaGuidance}
+
+#### ⏳ **3. Life Axis of Entry and Exit & 12-Year Change Wave:**
+- **3rd House Entry & Courage Axis:** Governed by **House 3 (${lifeAxis.thirdHouseChangeWave.signName})** &bull; Lord: ${lifeAxis.thirdHouseChangeWave.signLord}
+- **12-Year Cyclical Change Wave (Age = 3 + 12k):**
+  * **Current Native Age:** ${lifeAxis.thirdHouseChangeWave.nativeCurrentAge.toFixed(1)} years
+  * **Cyclical Status:** ${lifeAxis.thirdHouseChangeWave.waveStatusDescription}
+  * **Milestone Pivot Ages:** ${lifeAxis.thirdHouseChangeWave.milestoneAges.join(", ")} years
+- **4th House (Birth Entrance) vs. 8th House (Transition Release):**
+  * **Birth Circumstances (4th House):** ${lifeAxis.entryExitPhysicalReality.fourthHouseBirthCondition}
+  * **Transition & Transformation (8th House):** ${lifeAxis.entryExitPhysicalReality.eighthHouseExitRelease}
+- **3rd-to-9th House Spiritual Vector:** ${lifeAxis.entryExitPhysicalReality.spiritualEvolutionAxis}
+
+#### ⚖️ **4. 12-Sign Lord Innate Awareness vs. Subconscious Blind Spot Matrix:**
+- **Ascendant Sign (${lagnaDiag.signName}) Ruling Lord ${lagnaDiag.rulingLord}:**
+  * **Innate Awareness Competence:** House ${lagnaDiag.lordExaltationHouseRelative} in ${lagnaDiag.lordExaltationSign} → *${lagnaDiag.innateAwarenessCompetence}*
+  * **Subconscious Blind Spot:** House ${lagnaDiag.lordDebilitationHouseRelative} in ${lagnaDiag.lordDebilitationSign} → *${lagnaDiag.subconsciousBlindSpot}*
+- **Moon Sign (${moonDiag.signName}) Ruling Lord ${moonDiag.rulingLord}:**
+  * **Emotional Awareness:** House ${moonDiag.lordExaltationHouseRelative} → *${moonDiag.innateAwarenessCompetence}*
+  * **Emotional Blind Spot:** House ${moonDiag.lordDebilitationHouseRelative} → *${moonDiag.subconsciousBlindSpot}*
+
+#### 🎯 **5. Deep Dignity Degrees (Paramochha & Paramaneecha Proximity):**
+${deepDignityList}
+
+---
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"🧘 Three Rishis & D3 Allocation","prompt":"What is my chart's dominant Rishi archetype and how do Narada, Agastya, and Durvasa govern my planets?"},{"id":"chip-2","label":"🪷 Sacred Lineage Deities (4th/9th/12th)","prompt":"How should I propitiate my 4th House Kula Devata based on its element, and who are my Dharma & Ishta Devatas?"},{"id":"chip-3","label":"⏳ 3rd House 12-Year Change Wave","prompt":"When are my major 12-year life change waves (Ages 3, 15, 27, 39, 51, 63, 75) and what is my current cycle?"},{"id":"chip-4","label":"⚖️ Sign Lord Awareness & Blind Spots","prompt":"Where does my Lagna and Moon sign lord give innate brilliance versus a subconscious blind spot?"}]
+\`\`\`
+`;
+  }
+
+  return null;
 }
 
 interface InteractiveBtrProps {
@@ -1416,7 +3009,7 @@ function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: In
         {chitkara && (
           <div className="flex flex-wrap items-center gap-1.5 py-1 px-2.5 rounded-xl bg-purple-950/40 border border-purple-500/30 text-[10px]">
             <span className="font-bold text-purple-300">
-              🔬 Navneet Chitkara Triad: {chitkara.passedCount}/3 ({chitkara.scorePercent}%)
+              🔬 Classical BTR Triad: {chitkara.passedCount}/3 ({chitkara.scorePercent}%)
             </span>
             <span className="text-slate-500">•</span>
             {candidate && candidate.deltaSeconds !== 0 ? (
@@ -1593,7 +3186,7 @@ function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: In
         {chitkara && (
           <div className="flex flex-wrap items-center gap-1.5 py-1 px-2.5 rounded-xl bg-purple-950/40 border border-purple-500/30 text-[10px]">
             <span className="font-bold text-purple-300">
-              🔬 Navneet Chitkara Triad: {chitkara.passedCount}/3 ({chitkara.scorePercent}%)
+              🔬 Classical BTR Triad: {chitkara.passedCount}/3 ({chitkara.scorePercent}%)
             </span>
             <span className="text-slate-500">•</span>
             {candidate && candidate.deltaSeconds !== 0 ? (
@@ -1769,7 +3362,7 @@ function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: In
       {chitkara && (
         <div className="flex flex-wrap items-center gap-1.5 py-1 px-2.5 rounded-xl bg-purple-950/40 border border-purple-500/30 text-[10px]">
           <span className="font-bold text-purple-300">
-            🔬 Navneet Chitkara Triad: {chitkara.passedCount}/3 ({chitkara.scorePercent}%)
+            🔬 Classical BTR Triad: {chitkara.passedCount}/3 ({chitkara.scorePercent}%)
           </span>
           <span className="text-slate-500">•</span>
           {candidate && candidate.deltaSeconds !== 0 ? (
@@ -2377,6 +3970,34 @@ export default function AstroChatbot() {
     const savedKey = localStorage.getItem("vedic_gemini_api_key");
     if (savedKey) setUserApiKey(savedKey);
   }, []);
+
+  // Dynamically personalize initial welcome message when chart is loaded
+  useEffect(() => {
+    if (natalEphemeris && messages.length === 1 && messages[0].id === "welcome") {
+      setMessages([
+        {
+          id: "welcome",
+          role: "assistant",
+          content: buildPersonalizedWelcomeMessage(natalEphemeris),
+          timestamp: new Date(),
+        },
+      ]);
+    }
+  }, [natalEphemeris]);
+
+  // Dynamically personalize initial welcome message when chart is loaded
+  useEffect(() => {
+    if (natalEphemeris && messages.length === 1 && messages[0].id === "welcome") {
+      setMessages([
+        {
+          id: "welcome",
+          role: "assistant",
+          content: buildPersonalizedWelcomeMessage(natalEphemeris),
+          timestamp: new Date(),
+        },
+      ]);
+    }
+  }, [natalEphemeris]);
 
   // Listen for global open-astro-chat event from QuickHighlightsBar and 3D Sky Dome HUD
   useEffect(() => {
@@ -2990,8 +4611,7 @@ export default function AstroChatbot() {
                     {
                       id: "welcome",
                       role: "assistant",
-                      content:
-                        "**Pranam!** 🙏 I am **Acharya Jyotish AI Pro**.\n\nBefore we begin your consultation, **are you here for the first time with this birth chart?**\n\n* ✨ **Option 1 (Recommended):** *If yes, we will first perform a quick Birth Time Verification (BTR) by examining key past life turning points to ensure your chart clock is 100% accurate down to the minute!*\n* 🔮 **Option 2:** *If no (or already verified), we will proceed directly with your questions regarding Career, Marriage, Wealth, Dasha timing, or Remedies.*",
+                      content: buildPersonalizedWelcomeMessage(natalEphemeris),
                       timestamp: new Date(),
                     },
                   ])
@@ -3029,6 +4649,49 @@ export default function AstroChatbot() {
               >
                 <span>{cat.icon}</span>
                 <span>{cat.name}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Master Consultation Journeys Bar */}
+          <div className="px-2.5 py-1.5 bg-slate-950/80 border-b border-slate-800/60 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+            <span className="text-[9px] font-black uppercase text-amber-500/80 tracking-wider flex-shrink-0 flex items-center gap-1 pl-1">
+              <span>⚡</span> Journeys:
+            </span>
+            {[
+              {
+                id: "j-career",
+                label: "💼 Career & Wealth",
+                prompt: "Run a comprehensive Career & Wealth Master Audit for my chart including Indu Lagna, 10th house, and D10.",
+              },
+              {
+                id: "j-pivots",
+                label: "⏳ 12-Year Pivots",
+                prompt: "Analyze my 12-Year Change Wave (3rd House entry/exit axis) and upcoming milestone pivots.",
+              },
+              {
+                id: "j-lineage",
+                label: "🪷 Sacred Lineage",
+                prompt: "Reveal my 4th House Kula Devata elemental propitiation, 9th Dharma, and 12th Ishta Devatas.",
+              },
+              {
+                id: "j-blindspots",
+                label: "⚖️ Blind Spots & Gifts",
+                prompt: "Analyze my Lagna & Moon sign lord Innate Awareness vs Subconscious Blind Spots.",
+              },
+              {
+                id: "j-shield",
+                label: "🛡️ Lagnesha Shield",
+                prompt: "Check my Lagna Lord status, protection shield, and strength.",
+              },
+            ].map((j) => (
+              <button
+                key={j.id}
+                onClick={() => handleSendMessage(j.prompt)}
+                disabled={isLoading}
+                className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-amber-950/40 text-slate-300 hover:text-amber-300 border border-slate-800 hover:border-amber-500/40 text-[9.5px] font-semibold whitespace-nowrap transition-all cursor-pointer flex-shrink-0"
+              >
+                {j.label}
               </button>
             ))}
           </div>
@@ -3195,34 +4858,57 @@ export default function AstroChatbot() {
                     </div>
                   )}
 
+                  {/* Deep-link Action Buttons into Dashboard Analysis Decks */}
+                  {msg.role === "assistant" && parsed.deeplinks && parsed.deeplinks.length > 0 && (
+                    <div className="pt-2 mt-2 border-t border-indigo-900/60 flex flex-wrap items-center gap-1.5">
+                      <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider w-full">
+                        🚀 Direct Dashboard Analysis:
+                      </span>
+                      {parsed.deeplinks.map((dl, idx) => (
+                        <button
+                          key={`dl-${idx}-${dl.tabId}`}
+                          onClick={() => switchDashboardTab(dl.tabId)}
+                          className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-950 via-purple-950 to-blue-950 hover:from-indigo-900 hover:to-blue-900 border border-indigo-500/40 hover:border-amber-400/60 text-[10.5px] text-indigo-200 hover:text-white font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                        >
+                          <span>🔍 View {dl.label}</span>
+                          <span className="text-amber-300">→</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Message Action Bar (Copy & Quick Follow-ups) */}
-                  {msg.role === "assistant" && msg.id !== "welcome" && msg.content && (
+                  {msg.role === "assistant" && msg.content && (
                     <div className="pt-2 mt-2 border-t border-slate-800/80 space-y-2">
                       <div className="flex items-center justify-between text-[10px]">
                         <span className="text-[9.5px] font-bold text-amber-400/80 uppercase tracking-wider">
-                          Quick Follow-Up:
+                          {msg.id === "welcome" ? "🚀 1-Click Consultation Journeys:" : "Quick Follow-Up:"}
                         </span>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(msg.content);
-                          }}
-                          className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer flex items-center gap-1"
-                          title="Copy Reading Text"
-                        >
-                          <span>📋</span>
-                          <span>Copy</span>
-                        </button>
+                        {msg.id !== "welcome" && (
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(msg.content);
+                            }}
+                            className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer flex items-center gap-1"
+                            title="Copy Reading Text"
+                          >
+                            <span>📋</span>
+                            <span>Copy</span>
+                          </button>
+                        )}
                       </div>
 
                       {/* 1-Tap Quick Action Follow-Up Chips */}
                       <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                         {(parsed.chips && parsed.chips.length > 0
                           ? parsed.chips
-                          : [
-                              { id: "c1", label: "⏳ When will this activate?", prompt: "When will this timing activate based on my current Dasha and transits?" },
-                              { id: "c2", label: "📿 Simple Mantra Remedy", prompt: "What is the most effective daily mantra or simple remedy for this?" },
-                              { id: "c3", label: "💼 Career & Wealth impact", prompt: "How does this specifically impact my career and financial growth?" },
-                            ]
+                          : msg.id !== "welcome"
+                            ? [
+                                { id: "c1", label: "⏳ When will this activate?", prompt: "When will this timing activate based on my current Dasha and transits?" },
+                                { id: "c2", label: "📿 Simple Mantra Remedy", prompt: "What is the most effective daily mantra or simple remedy for this?" },
+                                { id: "c3", label: "💼 Career & Wealth impact", prompt: "How does this specifically impact my career and financial growth?" },
+                              ]
+                            : []
                         ).map((chip) => (
                           <button
                             key={chip.id || chip.label}

@@ -5863,3 +5863,2824 @@ test("Subtest 121: Deepanshu Giri D1 Lagna Lord in D10 (Dashamsha), Surroundings
   const syntheticCareer = analyzeCareerJobBusiness(syntheticEphem);
   assert.ok(syntheticCareer.d1LagnaLordInD10.d1LagnaLord === "Venus");
 });
+
+test("Phase 25: Paka Lagna, Annual House Progression (Varsha Chakra), Rahu-Ketu Nuclear Bomb Effect, Trikona Resonance & 9th House Bhagyodaya", async () => {
+  const {
+    generateAnnualActivationMasterSummary,
+    calculateAnnualHouseProgression,
+    detectRahuKetuNuclearBombEffect,
+    calculateTrikonaResonance,
+    calculateBhagyodayaTiming,
+    calculateGrahaUdayaTimeline,
+    calculatePlanetaryReturns,
+    calculatePakaLagnaProfile,
+  } = await import("../src/engine/annualHouseProgression.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1996-05-15T06:30:00Z");
+  const ephem = calculateVedicEphemeris(birthDate, location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Paka Lagna Profile
+  const paka = calculatePakaLagnaProfile(ephem);
+  assert.ok(paka.lagnaRashiName, "Lagna Rashi must exist");
+  assert.ok(paka.lagnesha, "Lagnesha must exist");
+  assert.ok(paka.pakaLagnaHouse >= 1 && paka.pakaLagnaHouse <= 12, "Paka Lagna house must be between 1 and 12");
+  assert.ok(paka.kalapurushaHouseNumber >= 1 && paka.kalapurushaHouseNumber <= 12, "Kalapurusha house must be 1 to 12");
+  assert.ok(paka.operatingSelfBehavior.length > 20, "Operating behavior explanation must be detailed");
+  assert.ok(paka.coreIdentityVsOperatingSummary.length > 20, "Core vs Operating summary must exist");
+
+  // Test Lecture Example: Gemini Lagna with Mercury in Pisces (Kalapurusha 12th house, frugality / hesitation to spend money)
+  const geminiPiscesEphem = {
+    ...ephem,
+    ascendant: {
+      ...ephem.ascendant,
+      rashi: { index: 2, englishName: "Gemini", sanskritName: "Mithuna", lord: "Mercury" },
+      house: 1,
+    },
+    planets: {
+      ...ephem.planets,
+      Mercury: {
+        ...ephem.planets.Mercury,
+        house: 10,
+        rashi: { index: 11, englishName: "Pisces", sanskritName: "Meena", lord: "Jupiter" },
+      },
+    },
+  };
+  const geminiPaka = calculatePakaLagnaProfile(geminiPiscesEphem);
+  assert.strictEqual(geminiPaka.lagnesha, "Mercury");
+  assert.strictEqual(geminiPaka.pakaLagnaHouse, 10);
+  assert.strictEqual(geminiPaka.kalapurushaHouseNumber, 12);
+  assert.strictEqual(geminiPaka.pakaLagnaDignity, "Debilitated (Neecha)");
+  assert.ok(geminiPaka.operatingSelfBehavior.includes("frugality"));
+
+  // 2. Annual House Progression & Varsha Chakra Progression Formula
+  // Test exact lecture examples:
+  // - 1st Year -> H1
+  // - 13th Year -> H1 (Cycle 2)
+  // - 25th Year -> H1 (Cycle 3)
+  // - 27th Year -> H3 (Cycle 3, 27 - 24 = 3)
+  // - 34th Year -> H10 (Cycle 3, 34 - 24 = 10)
+  // - 35th Year -> H11 (Cycle 3)
+  // - 36th Year -> H12 (Cycle 3)
+  const progY1 = calculateAnnualHouseProgression(ephem, birthDate, 0); // Age 0 -> 1st Year
+  assert.strictEqual(progY1.activeHouse, 1);
+  assert.strictEqual(progY1.cycleNumber, 1);
+
+  const progY13 = calculateAnnualHouseProgression(ephem, birthDate, 12); // Age 12 -> 13th Year
+  assert.strictEqual(progY13.activeHouse, 1);
+  assert.strictEqual(progY13.cycleNumber, 2);
+
+  const progY25 = calculateAnnualHouseProgression(ephem, birthDate, 24); // Age 24 -> 25th Year
+  assert.strictEqual(progY25.activeHouse, 1);
+  assert.strictEqual(progY25.cycleNumber, 3);
+
+  const progY27 = calculateAnnualHouseProgression(ephem, birthDate, 26); // Age 26 -> 27th Year
+  assert.strictEqual(progY27.activeHouse, 3);
+  assert.strictEqual(progY27.cycleNumber, 3);
+
+  const progY34 = calculateAnnualHouseProgression(ephem, birthDate, 33); // Age 33 -> 34th Year
+  assert.strictEqual(progY34.activeHouse, 10);
+  assert.strictEqual(progY34.cycleNumber, 3);
+
+  const progY35 = calculateAnnualHouseProgression(ephem, birthDate, 34); // Age 34 -> 35th Year
+  assert.strictEqual(progY35.activeHouse, 11);
+  assert.strictEqual(progY35.cycleNumber, 3);
+
+  const progY36 = calculateAnnualHouseProgression(ephem, birthDate, 35); // Age 35 -> 36th Year
+  assert.strictEqual(progY36.activeHouse, 12);
+  assert.strictEqual(progY36.cycleNumber, 3);
+
+  // Verify Assessment Hierarchy & Delivery Mode
+  assert.ok(["Benefic (Shubha)", "Cruel / Forceful (Kroora)", "Mixed Dynamic"].includes(progY27.deliveryMode));
+  assert.ok(progY27.deliveryExplanation.length > 20);
+  assert.ok(progY27.houseLord);
+  assert.ok(progY27.lordDignity);
+
+  // 3. "Nuclear Bomb" Effect: Nodal Axis & Squares (Kendra from Rahu-Ketu)
+  // Rahu in H11, Ketu in H5:
+  // Direct axis: H11 and H5
+  // Square aspects (4th/10th from Rahu): (11 + 3) % 12 = 2, (11 + 9) % 12 = 8
+  const nodalEphem = {
+    ...ephem,
+    planets: {
+      ...ephem.planets,
+      Rahu: { ...ephem.planets.Rahu, house: 11 },
+      Ketu: { ...ephem.planets.Ketu, house: 5 },
+    },
+  };
+  const bombDirectRahu = detectRahuKetuNuclearBombEffect(11, nodalEphem);
+  assert.strictEqual(bombDirectRahu.isNuclearBombYear, true);
+  assert.strictEqual(bombDirectRahu.triggerType, "Direct Nodal Axis (1st/7th)");
+
+  const bombDirectKetu = detectRahuKetuNuclearBombEffect(5, nodalEphem);
+  assert.strictEqual(bombDirectKetu.isNuclearBombYear, true);
+  assert.strictEqual(bombDirectKetu.triggerType, "Direct Nodal Axis (1st/7th)");
+
+  const bombSquareH2 = detectRahuKetuNuclearBombEffect(2, nodalEphem);
+  assert.strictEqual(bombSquareH2.isNuclearBombYear, true);
+  assert.strictEqual(bombSquareH2.triggerType, "Square to Nodal Axis (4th/10th / Kendra)");
+
+  const bombSquareH8 = detectRahuKetuNuclearBombEffect(8, nodalEphem);
+  assert.strictEqual(bombSquareH8.isNuclearBombYear, true);
+  assert.strictEqual(bombSquareH8.triggerType, "Square to Nodal Axis (4th/10th / Kendra)");
+
+  const bombUnaffected = detectRahuKetuNuclearBombEffect(1, nodalEphem);
+  assert.strictEqual(bombUnaffected.isNuclearBombYear, false);
+  assert.strictEqual(bombUnaffected.triggerType, "None");
+
+  // 4. The Four Trikonas & Simultaneous Trine Resonance
+  const tri1 = calculateTrikonaResonance(1, ephem);
+  assert.strictEqual(tri1.trikonaCategory, "Dharma Trikona (Duty & Soul Grace)");
+  assert.deepStrictEqual(tri1.trikonaHouses, [1, 5, 9]);
+  assert.strictEqual(tri1.karmicProtectionLevel, "Supreme Auspicious Armor (H5/H9 Active)");
+
+  const tri2 = calculateTrikonaResonance(10, ephem);
+  assert.strictEqual(tri2.trikonaCategory, "Artha Trikona (Wealth & Sustenance)");
+  assert.deepStrictEqual(tri2.trikonaHouses, [2, 6, 10]);
+
+  const tri3 = calculateTrikonaResonance(7, ephem);
+  assert.strictEqual(tri3.trikonaCategory, "Kama Trikona (Desire & Alliances)");
+  assert.deepStrictEqual(tri3.trikonaHouses, [3, 7, 11]);
+
+  const tri4 = calculateTrikonaResonance(12, ephem);
+  assert.strictEqual(tri4.trikonaCategory, "Moksha Trikona (Detachment & Transformation)");
+  assert.deepStrictEqual(tri4.trikonaHouses, [4, 8, 12]);
+
+  // 5. 9th House Bhagyodaya Timing
+  const bhagya = calculateBhagyodayaTiming(ephem);
+  assert.ok(bhagya.ninthHouseSignName);
+  assert.ok(bhagya.ninthHouseLord);
+  assert.ok(bhagya.primaryBhagyodayaAge >= 16);
+  assert.ok(bhagya.secondaryBhagyodayaAges.length >= 3);
+  assert.ok(bhagya.synthesisSummary.length > 20);
+
+  // Saturn delay test: Saturn in 9th forces primary age to at least 36
+  const saturnIn9thEphem = {
+    ...ephem,
+    planets: {
+      ...ephem.planets,
+      Saturn: { ...ephem.planets.Saturn, house: 9 },
+    },
+  };
+  const bhagyaSaturn = calculateBhagyodayaTiming(saturnIn9thEphem);
+  assert.strictEqual(bhagyaSaturn.isSaturnDelayingFortune, true);
+  assert.strictEqual(bhagyaSaturn.primaryBhagyodayaAge, 36);
+
+  // 6. Graha Udaya + 12-Year Addition Rule
+  const udaya = calculateGrahaUdayaTimeline(ephem, 28);
+  assert.strictEqual(udaya.allMilestones.length, 9);
+  const jupiterRule = udaya.allMilestones.find((m) => m.planet === "Jupiter");
+  assert.strictEqual(jupiterRule.baseAwakeningAge, 16);
+  assert.deepStrictEqual(jupiterRule.recurringCycles.slice(0, 5), [16, 28, 40, 52, 64]);
+  // At age 28, Jupiter wave (16 + 12 = 28) and Mars (base 28) are active!
+  assert.ok(udaya.activeMilestones.some((m) => m.planet === "Jupiter"));
+  assert.ok(udaya.activeMilestones.some((m) => m.planet === "Mars"));
+
+  // 7. Planetary Returns
+  const returns = calculatePlanetaryReturns(birthDate, ephem, new Date("2026-05-15T12:00:00Z")); // Age 30 completed
+  assert.strictEqual(returns.solarReturnCurrentYear, 31);
+  assert.strictEqual(returns.isSaturnReturnActive, true); // Age 30 is Saturn return
+  assert.ok(returns.activeReturnDescriptions.length >= 2);
+
+  // 8. Master Summary Generator
+  const master = generateAnnualActivationMasterSummary(ephem, birthDate, 26);
+  assert.strictEqual(master.currentLifeYear, 27);
+  assert.strictEqual(master.completedAge, 26);
+  assert.strictEqual(master.annualProgression.activeHouse, 3);
+  assert.ok(master.masterExecutiveSummary.includes("MASTER ANNUAL ACTIVATION"));
+  assert.ok(master.masterExecutiveSummary.includes("Paka Lagna"));
+});
+
+test("Subtest 123: Deepanshu Giri Navamsha Secrets: RTN Dusthana Suffering, D1-D9 Confirmation Law & Navamsha Age Activation Timing System", async () => {
+  const {
+    evaluateRashiTulyaNavamsha,
+    evaluateRtnDusthanaAfflictions,
+    crossConfirmD1InD9,
+    calculateNavamshaAgeActivation,
+    matchLunarAstroNavamshaCaseStudies,
+    generateRashiTulyaNavamshaSummary,
+  } = await import("../src/engine/rashiTulyaNavamsha.ts");
+
+  const date = new Date("1998-06-14T09:32:00Z");
+  const delhi = POPULAR_CITIES.find((c) => c.cityName === "New Delhi") || POPULAR_CITIES[0];
+  const ephem = calculateVedicEphemeris(date, delhi, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Cross Confirmation of D1 in D9 (Seed & Fruit Law)
+  // Cancer Ascendant (index 3). Venus in H8 is a Dusthana in D1!
+  const ephemAfflictedVenus = {
+    ...ephem,
+    ascendant: { ...ephem.ascendant, siderealLongitude: 95 }, // Cancer
+    planets: {
+      ...ephem.planets,
+      Venus: { ...ephem.planets.Venus, house: 8 },
+      Saturn: { ...ephem.planets.Saturn, house: 1 },
+    },
+  };
+  const confirmedH8 = crossConfirmD1InD9("Venus", 8, ephemAfflictedVenus);
+  assert.strictEqual(confirmedH8.isConfirmed, true);
+  assert.ok(confirmedH8.notes.includes("CONFIRMED IN D1"));
+
+  const ephemSafeVenus = {
+    ...ephem,
+    ascendant: { ...ephem.ascendant, siderealLongitude: 95 }, // Cancer
+    planets: {
+      ...ephem.planets,
+      Venus: { ...ephem.planets.Venus, house: 5 },
+      Saturn: { ...ephem.planets.Saturn, house: 5 },
+    },
+  };
+  const unconfirmed = crossConfirmD1InD9("Venus", 8, ephemSafeVenus);
+  assert.strictEqual(unconfirmed.isConfirmed, false);
+  assert.ok(unconfirmed.notes.includes("SEED STATE"));
+
+  // 2. Solvability Hierarchy of RTN Dusthanas (Houses 6, 8, 12)
+  const mockPlanetsForDusthana = {
+    Venus: {
+      planetName: "Venus",
+      d1HouseFromLagna: 7,
+      d9HouseFromD9Lagna: 6,
+      rtnHouseFromD1Lagna: 6,
+      d9Rashi: { index: 5, englishName: "Virgo", sanskritName: "Kanya" },
+    },
+    Mars: {
+      planetName: "Mars",
+      d1HouseFromLagna: 1,
+      d9HouseFromD9Lagna: 8,
+      rtnHouseFromD1Lagna: 8,
+      d9Rashi: { index: 7, englishName: "Scorpio", sanskritName: "Vrishchika" },
+    },
+    Jupiter: {
+      planetName: "Jupiter",
+      d1HouseFromLagna: 9,
+      d9HouseFromD9Lagna: 12,
+      rtnHouseFromD1Lagna: 12,
+      d9Rashi: { index: 11, englishName: "Pisces", sanskritName: "Meena" },
+    },
+    Sun: {
+      planetName: "Sun",
+      d1HouseFromLagna: 1,
+      d9HouseFromD9Lagna: 1,
+      rtnHouseFromD1Lagna: 1,
+      d9Rashi: { index: 0, englishName: "Aries", sanskritName: "Mesha" },
+    },
+  };
+  const afflictions = evaluateRtnDusthanaAfflictions(ephemSafeVenus, 3, mockPlanetsForDusthana);
+  assert.strictEqual(afflictions.length, 3);
+
+  const venusAffliction = afflictions.find((a) => a.planet === "Venus");
+  assert.strictEqual(venusAffliction.rtnHouse, 6);
+  assert.strictEqual(venusAffliction.solvabilityStatus, "Solvable through effort (6th House)");
+  assert.ok(venusAffliction.natureOfSuffering.length > 10);
+  assert.ok(venusAffliction.mitigationOrKarmicAction.length > 10);
+
+  const marsAffliction = afflictions.find((a) => a.planet === "Mars");
+  assert.strictEqual(marsAffliction.rtnHouse, 8);
+  assert.strictEqual(marsAffliction.solvabilityStatus, "Chronic / Unsolvable Shocks (8th House)");
+
+  const jupiterAffliction = afflictions.find((a) => a.planet === "Jupiter");
+  assert.strictEqual(jupiterAffliction.rtnHouse, 12);
+  assert.strictEqual(jupiterAffliction.solvabilityStatus, "Permanent Financial Waste / Losses (12th House)");
+
+  // 3. Navamsha Age Activation Timing System (Strictly D9 Formulation)
+  const actH1 = calculateNavamshaAgeActivation(1, 27);
+  assert.deepStrictEqual(actH1.activationAges, [27]);
+  assert.strictEqual(actH1.isActiveNow, true);
+
+  const actH2 = calculateNavamshaAgeActivation(2, 25);
+  assert.deepStrictEqual(actH2.activationAges, [25]);
+  assert.strictEqual(actH2.isActiveNow, true);
+
+  const actH4 = calculateNavamshaAgeActivation(4, 26);
+  assert.deepStrictEqual(actH4.activationAges, [26]);
+  assert.strictEqual(actH4.isActiveNow, true);
+
+  const actH6 = calculateNavamshaAgeActivation(6, 35);
+  assert.deepStrictEqual(actH6.activationAges, [23, 35]);
+  assert.strictEqual(actH6.isActiveNow, true);
+
+  const actH8 = calculateNavamshaAgeActivation(8, 34);
+  assert.deepStrictEqual(actH8.activationAges, [22, 34]);
+  assert.strictEqual(actH8.isActiveNow, true);
+  assert.ok(actH8.caseStudyLoanHealthWarning.includes("loans"));
+  assert.ok(actH8.caseStudyLoanHealthWarning.includes("severe bodily health issues"));
+
+  const actH12 = calculateNavamshaAgeActivation(12, 36);
+  assert.deepStrictEqual(actH12.activationAges, [12, 36]);
+  assert.strictEqual(actH12.isActiveNow, true);
+
+  // 4. Lunar Astro Lecture Case Study Matches
+  // Case 1: Cancer Lagna (index 3) with Venus & Rahu in 8th RTN
+  const ephemCancer = {
+    ...ephem,
+    ascendant: { ...ephem.ascendant, siderealLongitude: 95 }, // Cancer
+  };
+  const cancerCasePlanets = {
+    Venus: { rtnHouseFromD1Lagna: 8 },
+    Rahu: { rtnHouseFromD1Lagna: 8 },
+  };
+  const cancerMatch = matchLunarAstroNavamshaCaseStudies(ephemCancer, cancerCasePlanets);
+  assert.strictEqual(cancerMatch.isMatched, true);
+  assert.ok(cancerMatch.matchedCaseTitle.includes("Cancer Lagna"));
+  assert.ok(cancerMatch.manifestationDescription.includes("love marriage"));
+
+  // Case 2: Aquarius Lagna (index 10) with Sun & Venus in 6th RTN
+  const ephemAquarius = {
+    ...ephem,
+    ascendant: { ...ephem.ascendant, siderealLongitude: 315 }, // Aquarius
+  };
+  const aquariusCasePlanets = {
+    Sun: { rtnHouseFromD1Lagna: 6 },
+    Venus: { rtnHouseFromD1Lagna: 6 },
+  };
+  const aquariusMatch = matchLunarAstroNavamshaCaseStudies(ephemAquarius, aquariusCasePlanets);
+  assert.strictEqual(aquariusMatch.isMatched, true);
+  assert.ok(aquariusMatch.matchedCaseTitle.includes("Aquarius Lagna"));
+  assert.ok(aquariusMatch.manifestationDescription.includes("divorce"));
+  assert.ok(aquariusMatch.manifestationDescription.includes("legal battles"));
+
+  // Case 3: Leo Lagna (index 4) with Saturn & Mercury in 6th RTN
+  const ephemLeo = {
+    ...ephem,
+    ascendant: { ...ephem.ascendant, siderealLongitude: 130 }, // Leo
+  };
+  const leoCasePlanets = {
+    Saturn: { rtnHouseFromD1Lagna: 6 },
+    Mercury: { rtnHouseFromD1Lagna: 6 },
+  };
+  const leoMatch = matchLunarAstroNavamshaCaseStudies(ephemLeo, leoCasePlanets);
+  assert.strictEqual(leoMatch.isMatched, true);
+  assert.ok(leoMatch.matchedCaseTitle.includes("Leo Lagna"));
+  assert.ok(leoMatch.manifestationDescription.includes("chronic disease"));
+  assert.ok(leoMatch.manifestationDescription.includes("childhood"));
+
+  // 5. Full evaluateRashiTulyaNavamsha and summary generation
+  const rtnFull = evaluateRashiTulyaNavamsha(ephem, ephem, 34);
+  assert.ok(rtnFull.d1LagnaRashi);
+  assert.ok(rtnFull.d9LagnaRashi);
+  assert.ok(Array.isArray(rtnFull.dusthanaAfflictions));
+  assert.ok(rtnFull.d9SunActivation);
+  assert.ok(rtnFull.d9SunActivation.activationAges.length > 0);
+  assert.ok(rtnFull.caseStudyMatch);
+
+  const summary = generateRashiTulyaNavamshaSummary(ephem, ephem, 34);
+  assert.ok(summary.includes("RASHI TULYA NAVAMSHA"));
+  assert.ok(summary.includes("DEEPANSHU GIRI RTN DUSTHANA SUFFERING AUDIT"));
+  assert.ok(summary.includes("NAVAMSHA AGE ACTIVATION TIMING SYSTEM"));
+});
+
+test("Medhaj Astro Gochara & House Activation Engine Verification (Sessions 52–60)", async () => {
+  const {
+    calculateSunTorchlightTransit,
+    calculateMoonMentalTransit,
+    calculateVenusGocharaAndOverlays,
+    calculateMarsTransitAspectsAndOverlays,
+    calculateJupiterHemispheresAndGreatCycle,
+    calculateSaturnSomaticSadeSatiAndAL,
+    calculateNodalHelixAndInvertedReturns,
+    calculateOuterPlanetsGenerationalTransit,
+    generateMedhajGocharaMasterReport,
+  } = await import("../src/engine/medhajGochara.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1995-10-15T06:30:00Z");
+  const targetDate = new Date("2026-09-26T12:00:00Z"); // age ~30.9
+  const natalEphem = calculateVedicEphemeris(birthDate, location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(targetDate, location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Session 52: Sun Torchlight
+  const sunTransit = calculateSunTorchlightTransit(natalEphem, transitEphem);
+  assert.ok(sunTransit.occupiedHouseFromLagna >= 1 && sunTransit.occupiedHouseFromLagna <= 12);
+  assert.ok(sunTransit.torchlightHouseFromLagna >= 1 && sunTransit.torchlightHouseFromLagna <= 12);
+  assert.strictEqual(sunTransit.torchlightHouseFromLagna, (sunTransit.occupiedHouseFromLagna % 12) + 1);
+  assert.ok(sunTransit.environmentalTheme.length > 5);
+  assert.ok(sunTransit.kalapurushaScript.length > 5);
+  assert.ok(sunTransit.ramicDharmaArchetype.length > 5);
+  assert.ok(typeof sunTransit.isSankrantiActive === "boolean");
+  assert.ok(Array.isArray(sunTransit.retrogressionChestabalaTrigger.retrogradesTriggered));
+
+  // 2. Session 53: Moon Mental State Transit Matrix
+  const moonTransit = calculateMoonMentalTransit(natalEphem, transitEphem);
+  assert.ok(moonTransit.transitHouseFromMoon >= 1 && moonTransit.transitHouseFromMoon <= 12);
+  assert.ok(moonTransit.transitHouseFromLagna >= 1 && moonTransit.transitHouseFromLagna <= 12);
+  assert.ok(moonTransit.mentalStateTheme.length > 5);
+  assert.ok(moonTransit.archetype.length > 5);
+  assert.ok(typeof moonTransit.isPeakDayKuladeepak === "boolean");
+  assert.ok(typeof moonTransit.karmicAnxietyAlert === "boolean");
+  assert.ok(moonTransit.transitAdvice.length > 5);
+
+  // 3. Session 54: Venus Gochara, Morning/Evening Star & Overlays
+  const venusTransit = calculateVenusGocharaAndOverlays(natalEphem, transitEphem);
+  assert.ok(venusTransit.starPhase.includes("Star"));
+  assert.ok(venusTransit.ancestralOversight.length > 5);
+  assert.ok(venusTransit.sanjeevaniVidyaTheme.length > 5);
+  assert.ok(Array.isArray(venusTransit.activeOverlays));
+
+  // 4. Session 55: Mars Desire Aspects & Overlays
+  const marsTransit = calculateMarsTransitAspectsAndOverlays(natalEphem, transitEphem);
+  assert.ok(marsTransit.transitHouseFromLagna >= 1 && marsTransit.transitHouseFromLagna <= 12);
+  assert.strictEqual(marsTransit.specialDesireAspects.length, 3);
+  assert.ok(marsTransit.occupiedHouseBurst.length > 5);
+  assert.ok(Array.isArray(marsTransit.activeOverlays));
+
+  // 5. Session 56: Jupiter Hemispheres, Expansion & 20-Year Great Cycle
+  const jupTransit = calculateJupiterHemispheresAndGreatCycle(natalEphem, transitEphem);
+  assert.ok(["Inner Hemisphere (Houses 1–7)", "Outer Hemisphere (Houses 8–12)"].includes(jupTransit.hemisphere));
+  assert.ok(jupTransit.hemisphereDirective.length > 5);
+  assert.ok(jupTransit.universalExpansionVerdict.length > 5);
+  assert.ok(typeof jupTransit.isKharmasActive === "boolean");
+  assert.ok(jupTransit.guruShani20YearCycle.conjunctionSignName.length > 0);
+
+  // 6. Sessions 57 & 58: Saturn Somatic Sade Sati, Kantaka & Arudha Lagna Transit
+  const satTransit = calculateSaturnSomaticSadeSatiAndAL(natalEphem, transitEphem, birthDate, targetDate);
+  assert.ok(typeof satTransit.sadeSatiSomaticPhase.isSadeSatiActive === "boolean");
+  assert.ok(satTransit.sadeSatiSomaticPhase.somaticZone.length > 3);
+  assert.ok(typeof satTransit.kantakaShani.isKantakaFromMoon === "boolean");
+  assert.ok(typeof satTransit.transitOverArudhaLagna.isSaturnOnAL === "boolean");
+  assert.ok(satTransit.humanFoundation90YearCycle.currentCycle.length > 3);
+  assert.ok(typeof satTransit.fifteenYearOppositionTrigger.isOppositionTriggerActive === "boolean");
+
+  // 7. Session 59: Nodal Helix & 9-Year Inverted Nodal Returns
+  const nodTransit = calculateNodalHelixAndInvertedReturns(natalEphem, transitEphem, birthDate, targetDate);
+  assert.ok(Array.isArray(nodTransit.invertedNodalReturn.triggerAges));
+  assert.ok(nodTransit.invertedNodalReturn.triggerAges.includes(27));
+  assert.ok(typeof nodTransit.activeAgeSpan.isRahuSpanActive === "boolean");
+  assert.ok(typeof nodTransit.activeAgeSpan.isKetuSpanActive === "boolean");
+  assert.ok(nodTransit.karmicHelix.rahuHeadMagnification.length > 5);
+  assert.ok(nodTransit.karmicHelix.ketuTailContraction.length > 5);
+  assert.ok(nodTransit.kalaSarpaShivaRemedy.includes("Shiva") || nodTransit.kalaSarpaShivaRemedy.includes("Namah Shivaya"));
+
+  // 8. Session 60: Outer Planets Generational Transits
+  const outerTransit = calculateOuterPlanetsGenerationalTransit(natalEphem, transitEphem);
+  assert.ok(outerTransit.uranusHarshal.generationalTheme.length > 5);
+  assert.ok(outerTransit.neptuneVaruna.generationalTheme.length > 5);
+  assert.ok(outerTransit.plutoYama.generationalTheme.length > 5);
+  assert.strictEqual(outerTransit.uranusHarshal.dwellSpanYears, 7);
+  assert.strictEqual(outerTransit.neptuneVaruna.dwellSpanYears, 14);
+
+  // 9. Master Report Synthesis
+  const masterReport = generateMedhajGocharaMasterReport(natalEphem, transitEphem, birthDate, targetDate);
+  assert.ok(masterReport.masterExecutiveSummary.includes("MASTER GOCHARA & HOUSE ACTIVATION REPORT"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Torchlight"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Sade Sati"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Karmic Helix"));
+  assert.ok(masterReport.sun);
+  assert.ok(masterReport.moon);
+  assert.ok(masterReport.venus);
+  assert.ok(masterReport.mars);
+  assert.ok(masterReport.jupiter);
+  assert.ok(masterReport.saturn);
+  assert.ok(masterReport.nodes);
+  assert.ok(masterReport.outerPlanets);
+});
+
+test("Medhaj Astro Planetary Activations & 5 Geometric Sambandhas (Sessions 68–70) Verification", async () => {
+  const {
+    evaluateSunSaturnConjunction,
+    evaluateJupiterKetuTwelfthActivation,
+    evaluateMarsActivationAndManglikYoga,
+    generateMedhajActivationMasterReport,
+  } = await import("../src/engine/medhajActivation.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "New Delhi", country: "India", latitude: 28.6139, longitude: 77.2090, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1993-05-15T08:30:00Z");
+  const natalEphem = calculateVedicEphemeris(birthDate, location, "Lahiri", "WholeSign", "Mean");
+
+  // Native Age: 33 for testing Age 33 triggers
+  const nativeAge33 = 33;
+  const nativeAge25 = 25;
+
+  // 1. Session 68: Sun-Saturn Conjunction
+  const ssGeneral = evaluateSunSaturnConjunction(natalEphem, nativeAge33);
+  assert.ok(typeof ssGeneral.isConjoined === "boolean");
+  assert.ok(typeof ssGeneral.isAge33Active === "boolean");
+  assert.strictEqual(ssGeneral.isConjoined, false);
+  assert.strictEqual(ssGeneral.isAge33Active, false);
+
+  // Construct synthetic ephemeris with Sun-Saturn Conjunction in 6th house (Libra - Exalted Saturn)
+  const syntheticSS6th = JSON.parse(JSON.stringify(natalEphem));
+  syntheticSS6th.planets.Sun = {
+    ...natalEphem.planets.Sun,
+    house: 6,
+    siderealLongitude: 185.5, // Libra (sign 6) 5.5 deg
+    rashi: { englishName: "Libra", sanskritName: "Tula" },
+  };
+  syntheticSS6th.planets.Saturn = {
+    ...natalEphem.planets.Saturn,
+    house: 6,
+    siderealLongitude: 198.2, // Libra (sign 6) 18.2 deg
+    rashi: { englishName: "Libra", sanskritName: "Tula" },
+  };
+  syntheticSS6th.planets.Jupiter = {
+    ...natalEphem.planets.Jupiter,
+    house: 2, // 5th aspect to 6th house
+  };
+
+  const ssConjoined = evaluateSunSaturnConjunction(syntheticSS6th, 32.5);
+  assert.strictEqual(ssConjoined.isConjoined, true);
+  assert.strictEqual(ssConjoined.house, 6);
+  assert.strictEqual(ssConjoined.signName, "Libra");
+  assert.strictEqual(ssConjoined.lowerDegreePlanet, "Sun"); // 5.5 < 18.2
+  assert.ok(ssConjoined.dominantTone.toLowerCase().includes("authority"));
+  assert.strictEqual(ssConjoined.saturnDignity, "Exalted (Libra)");
+  assert.ok(ssConjoined.fameClassification.includes("Good Fame"));
+  assert.strictEqual(ssConjoined.isAge33Active, true);
+  assert.ok(ssConjoined.age33ActivationEvent.toLowerCase().includes("fateful"));
+  assert.ok(ssConjoined.fatherSonDivergence.includes("Father-Son Divergence"));
+  assert.ok(ssConjoined.rajYogaVerdict.includes("Paradoxical Sovereign Raj Yoga"));
+  assert.strictEqual(ssConjoined.isSixthHouseShatruHanta, true);
+  assert.strictEqual(ssConjoined.shatruHantaDetails.isFormed, true);
+  assert.ok(ssConjoined.shatruHantaDetails.incomingAspects.includes("Jupiter Drishti"));
+  assert.ok(ssConjoined.shatruHantaDetails.aspectModification.includes("neutralizes hostility"));
+
+  // 2. Session 69: Jupiter & Ketu 12th House Activation at Age 25
+  const jkReport = evaluateJupiterKetuTwelfthActivation(natalEphem, nativeAge25);
+  assert.strictEqual(jkReport.isAge25Active, true);
+  assert.ok(jkReport.twelfthFromJupiter.houseFromLagna >= 1 && jkReport.twelfthFromJupiter.houseFromLagna <= 12);
+  assert.ok(jkReport.twelfthFromJupiter.signName.length > 0);
+  assert.ok(jkReport.twelfthFromJupiter.lord.length > 0);
+  assert.ok(jkReport.twelfthFromJupiter.manifestationTheme.length > 10);
+  assert.ok(jkReport.twelfthFromKetu.houseFromLagna >= 1 && jkReport.twelfthFromKetu.houseFromLagna <= 12);
+  assert.ok(jkReport.twelfthFromKetu.signName.length > 0);
+  assert.ok(jkReport.twelfthFromKetu.lord.length > 0);
+  assert.ok(jkReport.twelfthFromKetu.manifestationTheme.length > 10);
+  assert.ok(jkReport.age25ExecutiveGuidance.includes("25TH YEAR"));
+
+  // Fixed Deposit & Disputed Neighbor Synthetic Checks
+  // Case A: Fixed Deposit Rule (Virgo Ascendant -> 2nd Lord Venus in 12th in Leo)
+  const syntheticFD = JSON.parse(JSON.stringify(natalEphem));
+  syntheticFD.ascendant = { siderealLongitude: 160, rashi: { englishName: "Virgo" } };
+  syntheticFD.planets.Venus = {
+    ...natalEphem.planets.Venus,
+    house: 12,
+    siderealLongitude: 130, // Leo (Sthira Fire sign)
+    rashi: { englishName: "Leo" },
+  };
+  const jkFD = evaluateJupiterKetuTwelfthActivation(syntheticFD, 25);
+  assert.strictEqual(jkFD.fixedDepositRule.isMatched, true);
+  assert.ok(jkFD.fixedDepositRule.explanation.includes("Fixed Deposit"));
+
+  // Case B: Disputed Neighbor Rule (Aries Ascendant -> Mars in Gemini in 3rd afflicted by Saturn)
+  const syntheticNeighbor = JSON.parse(JSON.stringify(natalEphem));
+  syntheticNeighbor.ascendant = { siderealLongitude: 10, rashi: { englishName: "Aries" } };
+  syntheticNeighbor.planets.Mars = {
+    ...natalEphem.planets.Mars,
+    house: 3,
+    siderealLongitude: 70, // Gemini
+    rashi: { englishName: "Gemini" },
+  };
+  syntheticNeighbor.planets.Saturn = {
+    ...natalEphem.planets.Saturn,
+    house: 3,
+    siderealLongitude: 75,
+  };
+  syntheticNeighbor.planets.Jupiter = { ...natalEphem.planets.Jupiter, house: 6 };
+
+  const jkNeighbor = evaluateJupiterKetuTwelfthActivation(syntheticNeighbor, 25);
+  assert.strictEqual(jkNeighbor.disputedNeighborRule.isMatched, true);
+  assert.ok(jkNeighbor.disputedNeighborRule.explanation.includes("litigious"));
+
+  // 3. Session 70: Mars Activation, 8/12 Manglik Yoga & 5 Geometric Sambandhas
+  const marsReport = evaluateMarsActivationAndManglikYoga(natalEphem, 27.5);
+  assert.strictEqual(marsReport.isMarsAge28Active, true);
+  assert.ok(marsReport.marsAge28Theme.includes("directly awakened"));
+  assert.ok(marsReport.tenthFromMars.houseFromLagna >= 1 && marsReport.tenthFromMars.houseFromLagna <= 12);
+  assert.ok(marsReport.tenthFromMars.signName.length > 0);
+  assert.ok(marsReport.tenthFromMars.careerKarmaSurge.length > 10);
+  assert.ok(Array.isArray(marsReport.manglikYogaAnalysis.yogaConditionReasons));
+  assert.ok(marsReport.geometricSambandhas.length > 0);
+
+  // Test 8/12 Manglik condition in Fire sign (Aries Mars in 1st house)
+  const syntheticMarsFire = JSON.parse(JSON.stringify(natalEphem));
+  syntheticMarsFire.planets.Mars = {
+    ...natalEphem.planets.Mars,
+    house: 1,
+    siderealLongitude: 10, // Aries (Fire sign & Own sign)
+    rashi: { englishName: "Aries" },
+  };
+  const marsFireReport = evaluateMarsActivationAndManglikYoga(syntheticMarsFire, 33);
+  assert.strictEqual(marsFireReport.tenthFromMars.isAge33Active, true);
+  assert.strictEqual(marsFireReport.manglikYogaAnalysis.isManglikPlacement, true);
+  assert.ok(marsFireReport.manglikYogaAnalysis.classification.includes("Manglik Yoga"));
+  assert.ok(marsFireReport.manglikYogaAnalysis.yogaConditionReasons.some(r => r.toLowerCase().includes("fire sign")));
+  assert.ok(marsFireReport.manglikYogaAnalysis.yogaConditionReasons.some(r => r.toLowerCase().includes("own sign") || r.includes("Swa-Rashi")));
+
+  // Test Scorpio Mars reproductive health alert
+  const syntheticMarsScorpio = JSON.parse(JSON.stringify(natalEphem));
+  syntheticMarsScorpio.planets.Mars = {
+    ...natalEphem.planets.Mars,
+    house: 8,
+    siderealLongitude: 220, // Scorpio
+    rashi: { englishName: "Scorpio" },
+  };
+  syntheticMarsScorpio.planets.Saturn = {
+    ...natalEphem.planets.Saturn,
+    house: 2, // 7th aspect on 8th house
+  };
+  const scorpioReport = evaluateMarsActivationAndManglikYoga(syntheticMarsScorpio, 30);
+  assert.strictEqual(scorpioReport.manglikYogaAnalysis.scorpioReproductiveHealthAlert.isScorpioMars, true);
+  assert.strictEqual(scorpioReport.manglikYogaAnalysis.scorpioReproductiveHealthAlert.isAfflicted, true);
+  assert.ok(scorpioReport.manglikYogaAnalysis.scorpioReproductiveHealthAlert.medicalAdvice.includes("sperm count"));
+
+  // Check 5 Geometric Sambandhas categories present
+  const sambandhaCategories = new Set(marsReport.geometricSambandhas.map(s => s.category));
+  assert.ok(sambandhaCategories.size >= 3);
+
+  // 4. Master Report Synthesis
+  const masterReport = generateMedhajActivationMasterReport(natalEphem, birthDate, new Date("2026-09-26"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("MEDHAJ ASTRO SESSIONS 68, 69 & 70 MASTER ACTIVATION REPORT"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Sun-Saturn"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Twelfth House from Jupiter & Ketu"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Mars Activation, 8/12 Manglik Yoga"));
+  assert.ok(masterReport.sunSaturn);
+  assert.ok(masterReport.jupiterKetuTwelfth);
+  assert.ok(masterReport.marsActivation);
+});
+
+test("Medhaj Astro Arudha Lagna, Presiding Jyotirlinga, Tide Theory & Grand Raj Yogas Verification (Sessions 75–79)", async () => {
+  const {
+    JYOTIRLINGA_MASTER_MAP,
+    evaluatePerceptionVsReality,
+    evaluateSupportAndOpposition,
+    calculatePresidingJyotirlinga,
+    evaluateArudhaTideTheory,
+    evaluateArudhaWealthAndRajYogas,
+    evaluateMokshaDwarDignity,
+    evaluateHouseArudhaTransits,
+    generateMedhajArudhaMasterReport,
+  } = await import("../src/engine/medhajArudha.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const { calculateArudhaPadas } = await import("../src/engine/jaimini.ts");
+
+  const birthDate = new Date("1998-09-17T06:30:00Z");
+  const evaluationDate = new Date("2026-09-26T12:00:00Z");
+  const location = {
+    cityName: "New Delhi",
+    country: "India",
+    latitude: 28.6139,
+    longitude: 77.209,
+    timezoneOffsetHours: 5.5,
+  };
+
+  const natalEphem = calculateVedicEphemeris(birthDate, location);
+  const transitEphem = calculateVedicEphemeris(evaluationDate, location);
+  const padas = calculateArudhaPadas(natalEphem);
+
+  // 1. Verify 12 Jyotirlinga Profiles & Sign Mappings (Session 76)
+  assert.strictEqual(Object.keys(JYOTIRLINGA_MASTER_MAP).length, 12);
+  assert.strictEqual(JYOTIRLINGA_MASTER_MAP[0].name, "Rameshwaram");
+  assert.strictEqual(JYOTIRLINGA_MASTER_MAP[1].name, "Somnath");
+  assert.strictEqual(JYOTIRLINGA_MASTER_MAP[2].name, "Nageshwar");
+  assert.strictEqual(JYOTIRLINGA_MASTER_MAP[3].name, "Omkareshwar");
+  assert.strictEqual(JYOTIRLINGA_MASTER_MAP[4].name, "Baidyanath");
+  assert.strictEqual(JYOTIRLINGA_MASTER_MAP[5].name, "Mallikarjuna");
+  assert.strictEqual(JYOTIRLINGA_MASTER_MAP[6].name, "Mahakaleshwar");
+  assert.strictEqual(JYOTIRLINGA_MASTER_MAP[7].name, "Grishneshwar");
+  assert.strictEqual(JYOTIRLINGA_MASTER_MAP[8].name, "Kashi Vishwanath");
+  assert.strictEqual(JYOTIRLINGA_MASTER_MAP[9].name, "Bhimashankar");
+  assert.strictEqual(JYOTIRLINGA_MASTER_MAP[10].name, "Kedarnath");
+  assert.strictEqual(JYOTIRLINGA_MASTER_MAP[11].name, "Trimbakeshwar");
+
+  // 2. Mathematical Invariant Test: Coprime Step Law in Z_12
+  // Trines from AL (step 4) ∩ Kendras from Moon (step 3) MUST ALWAYS intersect at exactly 1 sign for ALL 144 sign combinations!
+  for (let alSign = 0; alSign < 12; alSign++) {
+    const trines = new Set([alSign, (alSign + 4) % 12, (alSign + 8) % 12]);
+    for (let moonSign = 0; moonSign < 12; moonSign++) {
+      const kendras = [(moonSign + 0) % 12, (moonSign + 3) % 12, (moonSign + 6) % 12, (moonSign + 9) % 12];
+      const intersection = kendras.filter((k) => trines.has(k));
+      assert.strictEqual(
+        intersection.length,
+        1,
+        `Coprime intersection failed for AL=${alSign}, Moon=${moonSign}: found ${intersection.length} common signs`
+      );
+    }
+  }
+
+  // 3. Presiding Jyotirlinga Calculation on Real Chart
+  const jyotirlingaRes = calculatePresidingJyotirlinga(natalEphem, padas);
+  assert.strictEqual(jyotirlingaRes.alTrinesSignIndices.length, 3);
+  assert.strictEqual(jyotirlingaRes.moonKendrasSignIndices.length, 4);
+  assert.ok(jyotirlingaRes.commonSignIndex >= 0 && jyotirlingaRes.commonSignIndex <= 11);
+  assert.ok(jyotirlingaRes.jyotirlinga.name.length > 0);
+  assert.ok(jyotirlingaRes.jyotirlinga.location.length > 0);
+  assert.ok(jyotirlingaRes.ketuKarmaDissolutionGuidance.toLowerCase().includes("ketu"));
+
+  // 4. Perception vs Reality (Session 75)
+  const pvr = evaluatePerceptionVsReality(natalEphem, padas);
+  assert.ok(pvr.physicalLagnaSign.length > 0);
+  assert.ok(pvr.arudhaLagnaSign.length > 0);
+  assert.ok(pvr.contrastTheme.length > 0);
+  assert.ok(pvr.internalReality.length > 0);
+  assert.ok(pvr.societalPerception.length > 0);
+
+  // Test Synthetic Saturn on AL (Direct vs Retrograde)
+  const syntheticSaturnAL = JSON.parse(JSON.stringify(natalEphem));
+  const alPada = padas.find((p) => p.code === "AL") || padas[0];
+  const alSign = alPada.padaSign.englishName;
+  const alSignIdx = alPada.padaSignIndex;
+  syntheticSaturnAL.planets.Saturn = {
+    ...natalEphem.planets.Saturn,
+    house: alPada.padaHouse,
+    siderealLongitude: alSignIdx * 30 + 15,
+    rashi: { englishName: alSign },
+    isRetrograde: false,
+  };
+  const pvrSaturnDirect = evaluatePerceptionVsReality(syntheticSaturnAL, padas);
+  assert.strictEqual(pvrSaturnDirect.saturnOnALStatus.hasSaturnOnAL, true);
+  assert.strictEqual(pvrSaturnDirect.saturnOnALStatus.isRetrograde, false);
+  assert.ok(pvrSaturnDirect.saturnOnALStatus.perceptionEffect.includes("hardworking"));
+
+  syntheticSaturnAL.planets.Saturn.isRetrograde = true;
+  const pvrSaturnRetro = evaluatePerceptionVsReality(syntheticSaturnAL, padas);
+  assert.strictEqual(pvrSaturnRetro.saturnOnALStatus.isRetrograde, true);
+  assert.ok(pvrSaturnRetro.saturnOnALStatus.perceptionEffect.includes("deceptive") || pvrSaturnRetro.saturnOnALStatus.perceptionEffect.includes("Retrograde"));
+
+  // 5. Support & Opposition Matrix (Session 75)
+  const suppOpp = evaluateSupportAndOpposition(natalEphem, padas);
+  assert.ok(suppOpp.support2ndFromAL.houseFromLagna >= 1 && suppOpp.support2ndFromAL.houseFromLagna <= 12);
+  assert.ok(suppOpp.support2ndFromAL.signName.length > 0);
+  assert.ok(suppOpp.support2ndFromAL.lord.length > 0);
+  assert.ok(suppOpp.support2ndFromAL.practicalGuidance.length > 10);
+  assert.ok(suppOpp.opposition7thFromAL.houseFromLagna >= 1 && suppOpp.opposition7thFromAL.houseFromLagna <= 12);
+  assert.ok(suppOpp.opposition7thFromAL.signName.length > 0);
+  assert.ok(suppOpp.opposition7thFromAL.lord.length > 0);
+  assert.ok(suppOpp.opposition7thFromAL.adversaryWarning.length > 10);
+
+  // 6. Tide Theory (Session 77)
+  const tide = evaluateArudhaTideTheory(natalEphem, padas);
+  assert.ok(tide.highTideQuadrant1.tideType.includes("High Tide"));
+  assert.ok(tide.highTideQuadrant4.tideType.includes("High Tide"));
+  assert.ok(tide.lowTideQuadrant7.tideType.includes("Low Tide"));
+  assert.ok(tide.lowTideQuadrant10.tideType.includes("Low Tide"));
+  assert.ok(tide.highTideQuadrant1.psychologicalManifestation.length > 10);
+  assert.ok(tide.highTideQuadrant4.psychologicalManifestation.length > 10);
+  assert.ok(tide.lowTideQuadrant7.psychologicalManifestation.length > 10);
+  assert.ok(tide.lowTideQuadrant10.psychologicalManifestation.length > 10);
+
+  // 7. Wealth, Real Estate & Grand Raj Yogas (Sessions 78 & 79)
+  // Test Synthetic Venus + Moon in 4th from AL (Property Yoga)
+  const syntheticWealth = JSON.parse(JSON.stringify(natalEphem));
+  const fourthFromALSignIdx = (alPada.padaSignIndex + 3) % 12;
+  const fourthFromALSignName = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"][fourthFromALSignIdx];
+  const fourthFromALHouse = ((fourthFromALSignIdx - Math.floor(natalEphem.ascendant.siderealLongitude / 30) + 12) % 12) + 1;
+
+  syntheticWealth.planets.Venus = {
+    ...natalEphem.planets.Venus,
+    house: fourthFromALHouse,
+    siderealLongitude: fourthFromALSignIdx * 30 + 10,
+    rashi: { englishName: fourthFromALSignName },
+  };
+  syntheticWealth.planets.Moon = {
+    ...natalEphem.planets.Moon,
+    house: fourthFromALHouse,
+    siderealLongitude: fourthFromALSignIdx * 30 + 20,
+    rashi: { englishName: fourthFromALSignName },
+  };
+  const wealthRes = evaluateArudhaWealthAndRajYogas(syntheticWealth, padas);
+  assert.strictEqual(wealthRes.fourthFromAL.hasVenusMoonPair, true);
+  assert.ok(wealthRes.fourthFromAL.realEstateVerdict.includes("Session 78"));
+  assert.ok(wealthRes.fourthFromAL.realEstateVerdict.includes("Venus and Moon") || wealthRes.fourthFromAL.realEstateVerdict.includes("Venus + Moon"));
+  assert.ok(wealthRes.fourthFromA9FatherProperty.fatherPropertyVerdict.length > 10);
+  assert.ok(wealthRes.karmicNodesWisdom.rahuOrientation.includes("Rahu"));
+  assert.ok(wealthRes.karmicNodesWisdom.ketuOrientation.includes("Ketu"));
+
+  // Test Synthetic Jupiter + Venus in 7th from AL (Supreme Status Raj Yoga)
+  const seventhFromALSignIdx = (alPada.padaSignIndex + 6) % 12;
+  const seventhFromALSignName = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"][seventhFromALSignIdx];
+  const seventhFromALHouse = ((seventhFromALSignIdx - Math.floor(natalEphem.ascendant.siderealLongitude / 30) + 12) % 12) + 1;
+  const syntheticRajYoga = JSON.parse(JSON.stringify(natalEphem));
+  syntheticRajYoga.planets.Jupiter = {
+    ...natalEphem.planets.Jupiter,
+    house: seventhFromALHouse,
+    siderealLongitude: seventhFromALSignIdx * 30 + 5,
+    rashi: { englishName: seventhFromALSignName },
+  };
+  syntheticRajYoga.planets.Venus = {
+    ...natalEphem.planets.Venus,
+    house: seventhFromALHouse,
+    siderealLongitude: seventhFromALSignIdx * 30 + 15,
+    rashi: { englishName: seventhFromALSignName },
+  };
+  const rajYogaRes = evaluateArudhaWealthAndRajYogas(syntheticRajYoga, padas);
+  assert.strictEqual(rajYogaRes.seventhFromALRajYoga.hasJupiterVenusPair, true);
+  assert.ok(rajYogaRes.seventhFromALRajYoga.rajYogaStatus.includes("Supreme Arudha Raj Yoga") || rajYogaRes.seventhFromALRajYoga.rajYogaStatus.includes("Raj Yoga"));
+
+  // 8. Moksha Dwar Dignity (Session 79)
+  const mokshaRes = evaluateMokshaDwarDignity(syntheticRajYoga, padas);
+  assert.strictEqual(mokshaRes.seventhFromALHouseFromLagna, seventhFromALHouse);
+  assert.strictEqual(mokshaRes.seventhFromALSignName, seventhFromALSignName);
+  assert.ok(mokshaRes.overallMokshaExitDemeanor.length > 10);
+
+  // 9. Transits over House Arudhas (A1–A12, Session 75)
+  // Synthetic: Jupiter transiting over A6
+  const a6Pada = padas.find((p) => p.code === "A6") || padas[5];
+  const a6Sign = a6Pada.padaSignIndex;
+  const a6SignName = a6Pada.padaSign.englishName;
+  const syntheticTransit = JSON.parse(JSON.stringify(transitEphem));
+  syntheticTransit.planets.Jupiter = {
+    ...transitEphem.planets.Jupiter,
+    siderealLongitude: a6Sign * 30 + 12,
+    rashi: { englishName: a6SignName },
+  };
+  const transEvents = evaluateHouseArudhaTransits(natalEphem, syntheticTransit, padas);
+  const jupA6 = transEvents.find((e) => e.padaCode === "A6" && e.transitingPlanets.includes("Jupiter"));
+  assert.ok(jupA6, "Must find Jupiter transiting over A6");
+  assert.ok(jupA6.manifestationImpact.includes("dissolve") || jupA6.manifestationImpact.includes("enemies") || jupA6.manifestationImpact.includes("debts"));
+
+  // 10. Master Report Generation
+  const masterReport = generateMedhajArudhaMasterReport(natalEphem, transitEphem, birthDate, evaluationDate);
+  assert.ok(masterReport.masterExecutiveSummary.includes("MEDHAJ ASTRO ARUDHA LAGNA & JYOTIRLINGA MASTER REPORT"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Presiding Jyotirlinga"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Worldly Support & Opposition Matrix"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("The Tide Theory of Arudha Lagna"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Wealth, Real Estate & Grand Raj Yogas"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Moksha Dwar"));
+  assert.ok(masterReport.presidingJyotirlinga);
+  assert.ok(masterReport.perceptionVsReality);
+  assert.ok(masterReport.supportAndOpposition);
+  assert.ok(masterReport.tideTheory);
+  assert.ok(masterReport.wealthAndRajYogas);
+  assert.ok(masterReport.mokshaDwar);
+});
+
+test("Medhaj Astro Baadhak Theory, Multi-Lagna Audit, Relative Baadhaka & Nodal Transits Verification (Sessions 82, 84, 85)", async () => {
+  const {
+    calculateMultiLagnaBaadhaka,
+    calculateRelativeHouseBaadhakas,
+    evaluateAriesAquariusBaadhaka,
+    evaluateBaadhakaViparitaYoga,
+    evaluateNodalBaadhakaTransits,
+    generateMedhajBaadhakMasterReport,
+    getBaadhakaHouseRule,
+    getSignModality,
+    ZODIAC_SIGNS,
+  } = await import("../src/engine/medhajBaadhak.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const birthDate = new Date("1998-09-17T06:30:00Z");
+  const evaluationDate = new Date("2026-09-26T12:00:00Z");
+  const location = {
+    cityName: "New Delhi",
+    country: "India",
+    latitude: 28.6139,
+    longitude: 77.209,
+    timezoneOffsetHours: 5.5,
+  };
+
+  const natalEphem = calculateVedicEphemeris(birthDate, location);
+  const transitEphem = calculateVedicEphemeris(evaluationDate, location);
+
+  // 1. Foundational Modality Rule & Baadhaka House Invariant (Session 82)
+  // Movable (Chara: 0, 3, 6, 9) -> 11th house (offset +10)
+  // Fixed (Sthira: 1, 4, 7, 10) -> 9th house (offset +8)
+  // Dual (Dwiswabhava: 2, 5, 8, 11) -> 7th house (offset +6)
+  for (let s = 0; s < 12; s++) {
+    const mod = getSignModality(s);
+    const rule = getBaadhakaHouseRule(s);
+    if (s % 3 === 0) {
+      assert.strictEqual(mod, "Movable (Chara)");
+      assert.strictEqual(rule.houseNumber, 11);
+      assert.strictEqual(rule.signOffset, 10);
+    } else if (s % 3 === 1) {
+      assert.strictEqual(mod, "Fixed (Sthira)");
+      assert.strictEqual(rule.houseNumber, 9);
+      assert.strictEqual(rule.signOffset, 8);
+    } else {
+      assert.strictEqual(mod, "Dual (Dwiswabhava)");
+      assert.strictEqual(rule.houseNumber, 7);
+      assert.strictEqual(rule.signOffset, 6);
+    }
+  }
+
+  // 2. Relative Baadhaka for All 12 Houses (Session 82)
+  const relBaadhaka = calculateRelativeHouseBaadhakas(natalEphem);
+  assert.strictEqual(relBaadhaka.houses.length, 12);
+  relBaadhaka.houses.forEach((hEntry) => {
+    assert.ok(hEntry.houseNumber >= 1 && hEntry.houseNumber <= 12);
+    assert.ok(hEntry.relativeBaadhakaHouseNum === 11 || hEntry.relativeBaadhakaHouseNum === 9 || hEntry.relativeBaadhakaHouseNum === 7);
+    assert.ok(hEntry.absoluteChartHouseNum >= 1 && hEntry.absoluteChartHouseNum <= 12);
+    assert.ok(hEntry.livingSignification.length > 0);
+    assert.ok(hEntry.obstructionVector.length > 0);
+    assert.ok(hEntry.viparitaRemedy.length > 0);
+  });
+
+  // Verify Specific Shastric Intersections:
+  // For Virgo Ascendant (Dual sign index 5):
+  // 7th house is Pisces (Dual sign index 11) -> 7th from 7th is 1st house (Lagna)!
+  const syntheticVirgo = JSON.parse(JSON.stringify(natalEphem));
+  syntheticVirgo.ascendant.rashi = { index: 5, englishName: "Virgo", sanskritName: "Kanya" };
+  syntheticVirgo.ascendant.siderealLongitude = 5 * 30 + 10;
+  const virgoRel = calculateRelativeHouseBaadhakas(syntheticVirgo);
+  const h7Virgo = virgoRel.houses.find((h) => h.houseNumber === 7);
+  assert.strictEqual(h7Virgo.absoluteChartHouseNum, 1, "7th from 7th dual sign must be House 1 (Lagna)");
+  assert.ok(virgoRel.pivotalIntersections.some((p) => p.includes("Partner's Baadhaka")));
+
+  // 3. Multi-Lagna Baadhaka Audit (Session 84)
+  const multiLagna = calculateMultiLagnaBaadhaka(natalEphem);
+  assert.strictEqual(multiLagna.allFrames.length, 4);
+  assert.strictEqual(multiLagna.physicalLagna.frame, "Physical Lagna (D1)");
+  assert.strictEqual(multiLagna.moonLagna.frame, "Moon Lagna (Chandra)");
+  assert.strictEqual(multiLagna.sunLagna.frame, "Sun Lagna (Surya)");
+  assert.strictEqual(multiLagna.pakaLagna.frame, "Paka Lagna (Lagnesha)");
+  assert.ok(multiLagna.synthesis.length > 10);
+  multiLagna.allFrames.forEach((f) => {
+    assert.ok([11, 9, 7].includes(f.baadhakaHouse));
+    assert.ok(f.primaryLord.length > 0);
+    assert.ok(f.manifestationFriction.length > 0);
+    assert.ok(f.resolutionPathway.length > 0);
+  });
+
+  // 4. Aries Lagna & Aquarius 11th House Deep Dive (Session 84)
+  const syntheticAries = JSON.parse(JSON.stringify(natalEphem));
+  syntheticAries.ascendant.rashi = { index: 0, englishName: "Aries", sanskritName: "Mesha" };
+  syntheticAries.ascendant.siderealLongitude = 0 * 30 + 15;
+  const ariesAq = evaluateAriesAquariusBaadhaka(syntheticAries);
+  assert.strictEqual(ariesAq.isAriesAscendant, true);
+  assert.strictEqual(ariesAq.aquariusHouse, 11);
+  assert.strictEqual(ariesAq.coLords.primary, "Saturn");
+  assert.strictEqual(ariesAq.coLords.coLord, "Rahu");
+  assert.ok(ariesAq.airFixedDynamics.includes("Aquarius (Kumbha) as 11th House Baadhaka"));
+  assert.strictEqual(ariesAq.occupantProfiles.length, 9);
+  const jupProf = ariesAq.occupantProfiles.find((p) => p.planet === "Jupiter");
+  assert.ok(jupProf.archetypePattern.includes("Counselor"));
+  assert.ok(jupProf.resolutionSadhana.length > 10);
+
+  // 5. Baadhaka-to-Viparita Raja Yoga Transformation (Session 82 & 84)
+  const vyRes = evaluateBaadhakaViparitaYoga(natalEphem);
+  assert.ok(["Supreme", "High", "Moderate", "Guarded"].includes(vyRes.viparitaPotentialLevel));
+  assert.ok(vyRes.firstHouseAmplificationScore >= 0 && vyRes.firstHouseAmplificationScore <= 100);
+  assert.ok(vyRes.fifthHouseAmplificationScore >= 0 && vyRes.fifthHouseAmplificationScore <= 100);
+  assert.ok(vyRes.firstHouseReleaseManifestation.includes("1st House"));
+  assert.ok(vyRes.fifthHouseReleaseManifestation.includes("5th House"));
+  assert.ok(vyRes.totkaWarning.includes("totka") || vyRes.totkaWarning.includes("Karma Phala"));
+  assert.ok(vyRes.coreAphorism.includes("You meet the same people while climbing down that you met while climbing up"));
+
+  // Test Synthetic Dusthana Baadhakesh (Supreme Viparita Raja Yoga)
+  // For Aries Lagna, Baadhakesh is Saturn (11th Lord). Place Saturn in 8th house (Scorpio)
+  syntheticAries.planets.Saturn = {
+    ...syntheticAries.planets.Saturn,
+    house: 8,
+    siderealLongitude: 7 * 30 + 12,
+    rashi: { index: 7, englishName: "Scorpio" }
+  };
+  const vySupreme = evaluateBaadhakaViparitaYoga(syntheticAries);
+  assert.strictEqual(vySupreme.viparitaPotentialLevel, "Supreme");
+  assert.ok(vySupreme.viparitaRationale.includes("Dusthana House 8"));
+
+  // 6. Rahu-Ketu Nodal Transits & F.E.A.R. Radar (Session 85)
+  const nodalRes = evaluateNodalBaadhakaTransits(natalEphem, transitEphem, birthDate, evaluationDate);
+  assert.ok(nodalRes.nativeAgeYears > 20);
+  assert.ok(nodalRes.fearMetricScore >= 0 && nodalRes.fearMetricScore <= 100);
+  assert.ok(nodalRes.shivaPariharaProtocol.includes("Lord Shiva") && nodalRes.shivaPariharaProtocol.includes("Om Namah Shivaya"));
+
+  // Test Synthetic 18.5-Year Nodal Return
+  const syntheticNodalReturn = JSON.parse(JSON.stringify(transitEphem));
+  const natalRahuLon = natalEphem.planets.Rahu.siderealLongitude;
+  syntheticNodalReturn.planets.Rahu.siderealLongitude = natalRahuLon + 2; // Within 15° orb
+  syntheticNodalReturn.planets.Rahu.rashi = { ...natalEphem.planets.Rahu.rashi };
+  const returnRes = evaluateNodalBaadhakaTransits(natalEphem, syntheticNodalReturn, birthDate, evaluationDate);
+  assert.strictEqual(returnRes.isNodalReturnActive, true);
+  assert.ok(returnRes.nodalCyclePhase.includes("18.5-Year Nodal Return"));
+
+  // Test Synthetic Inverted Nodal Return (~9.3 Years)
+  const syntheticInverted = JSON.parse(JSON.stringify(transitEphem));
+  const natalKetuLon = (natalRahuLon + 180) % 360;
+  syntheticInverted.planets.Rahu.siderealLongitude = natalKetuLon + 1; // Over natal Ketu
+  syntheticInverted.planets.Rahu.rashi = { index: Math.floor(natalKetuLon / 30), englishName: ZODIAC_SIGNS[Math.floor(natalKetuLon / 30)] };
+  const invertRes = evaluateNodalBaadhakaTransits(natalEphem, syntheticInverted, birthDate, evaluationDate);
+  assert.strictEqual(invertRes.isNodalReverseReturnActive, true);
+  assert.ok(invertRes.nodalCyclePhase.includes("9.3-Year Inversion Return"));
+
+  // 7. Master Executive Summary & Full Dossier Report
+  const masterReport = generateMedhajBaadhakMasterReport(natalEphem, transitEphem, birthDate, evaluationDate);
+  assert.ok(masterReport.masterExecutiveSummary.includes("MEDHAJ ASTRO BAADHAK THEORY & NODAL TRANSITS MASTER REPORT"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Primary Lagna Baadhaka"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Multi-Lagna Audit Synthesis"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Viparita Raja Yoga Transformation"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Nodal Transit & F.E.A.R. Radar"));
+  assert.ok(masterReport.ascendant);
+  assert.ok(masterReport.baadhakaPrimary);
+  assert.ok(masterReport.multiLagnaAudit);
+  assert.ok(masterReport.relativeHouseBaadhakas);
+  assert.ok(masterReport.ariesAquariusProfile);
+  assert.ok(masterReport.viparitaYoga);
+  assert.ok(masterReport.nodalTransits);
+});
+
+test("Medhaj Astro Sessions 86 & 87: Indu Lagna Wealth Masterclass, Dhana Yogas, 2-4-8 Support Rule, Age Activations & Transit Portals Verification", async () => {
+  const {
+    INDU_KALA_VALUES,
+    ZODIAC_SIGNS,
+    calculateMedhajInduLagna,
+    evaluateInduDhanaYogas,
+    evaluateSustainedSupportPattern,
+    calculateInduPlanetaryAgeActivations,
+    evaluateInduArudhaAlignment,
+    evaluateInduTransitPortals,
+    generateMedhajInduLagnaMasterReport,
+  } = await import("../src/engine/medhajInduLagna.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 1. Planetary Ray (Kala) Values Benchmark (Session 86)
+  assert.strictEqual(INDU_KALA_VALUES.Sun, 30);
+  assert.strictEqual(INDU_KALA_VALUES.Moon, 16);
+  assert.strictEqual(INDU_KALA_VALUES.Mars, 6);
+  assert.strictEqual(INDU_KALA_VALUES.Mercury, 8);
+  assert.strictEqual(INDU_KALA_VALUES.Jupiter, 10);
+  assert.strictEqual(INDU_KALA_VALUES.Venus, 12);
+  assert.strictEqual(INDU_KALA_VALUES.Saturn, 1);
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1990-05-15T10:30:00Z");
+  const evaluationDate = new Date("2026-09-26T12:00:00Z");
+  const natalEphem = calculateVedicEphemeris(birthDate, location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(evaluationDate, location, "Lahiri", "WholeSign", "Mean");
+
+  // 2. Lecture Benchmark 2 Verification (Session 87 Case Study):
+  // Virgo Lagna (9th house Taurus, Venus = 12 Kalas) + Capricorn Moon (9th house Virgo, Mercury = 8 Kalas)
+  // Total = 20. Remainder = 8. Count 8 signs from Capricorn -> Leo (Simha) Indu Lagna!
+  const syntheticVirgoCap = JSON.parse(JSON.stringify(natalEphem));
+  syntheticVirgoCap.ascendant = {
+    siderealLongitude: 5 * 30 + 15,
+    rashi: { index: 5, englishName: "Virgo", sanskritName: "Kanya" }
+  };
+  syntheticVirgoCap.planets.Moon = {
+    ...syntheticVirgoCap.planets.Moon,
+    siderealLongitude: 9 * 30 + 10,
+    rashi: { index: 9, englishName: "Capricorn", sanskritName: "Makara" }
+  };
+
+  const virgoCapIndu = calculateMedhajInduLagna(syntheticVirgoCap);
+  assert.strictEqual(virgoCapIndu.lagnaNinthLord, "Venus");
+  assert.strictEqual(virgoCapIndu.lagnaNinthKala, 12);
+  assert.strictEqual(virgoCapIndu.moonNinthLord, "Mercury");
+  assert.strictEqual(virgoCapIndu.moonNinthKala, 8);
+  assert.strictEqual(virgoCapIndu.totalKalas, 20);
+  assert.strictEqual(virgoCapIndu.remainderKala, 8);
+  assert.strictEqual(virgoCapIndu.induLagnaSignName, "Leo");
+  assert.strictEqual(virgoCapIndu.induLagnaSanskritName, "Simha");
+  assert.strictEqual(virgoCapIndu.induLagnaHouseFromD1, 12); // Leo from Virgo is 12th house (Dusthana toil)
+  assert.strictEqual(virgoCapIndu.isDusthanaFromLagna, true);
+  assert.strictEqual(virgoCapIndu.environmentalDignity, "High-Struggle Toil (Dusthana 6/8/12)");
+
+  // Test Modulo 12 Edge Case: Remainder 0 -> Count 12 Signs
+  // Both Lagna and Moon in Virgo -> 9th house from both is Taurus (Venus = 12 Kalas). Total = 24 % 12 = 0 -> Remainder 12.
+  const syntheticZeroRemainder = JSON.parse(JSON.stringify(natalEphem));
+  syntheticZeroRemainder.ascendant = {
+    siderealLongitude: 5 * 30 + 10, // Virgo Lagna: 9th is Taurus (Venus = 12)
+    rashi: { index: 5, englishName: "Virgo", sanskritName: "Kanya" }
+  };
+  syntheticZeroRemainder.planets.Moon = {
+    ...syntheticZeroRemainder.planets.Moon,
+    siderealLongitude: 5 * 30 + 10, // Virgo Moon: 9th is Taurus (Venus = 12)
+    rashi: { index: 5, englishName: "Virgo", sanskritName: "Kanya" }
+  };
+  const zeroRemainderIndu = calculateMedhajInduLagna(syntheticZeroRemainder);
+  assert.strictEqual(zeroRemainderIndu.totalKalas, 24);
+  assert.strictEqual(zeroRemainderIndu.remainderKala, 12);
+  // Count 12 signs from Virgo (Virgo=1 ... Leo=12) -> Leo!
+  assert.strictEqual(zeroRemainderIndu.induLagnaSignName, "Leo");
+
+  // 3. Dhana Yogas from Indu Lagna Reference Frame (Session 87)
+  const syntheticDhana = JSON.parse(JSON.stringify(natalEphem));
+  // Indu Lagna in Aries (sign index 0)
+  const syntheticAriesInduCore = {
+    induLagnaRashiIndex: 0,
+    induLagnaSignName: "Aries",
+    induLagnaSanskritName: "Mesha",
+    induLagnaLongitude: 15.0,
+    induLagnaHouseFromD1: 1,
+    induLagnaHouseFromMoon: 1,
+    lagnaNinthRashiIndex: 8,
+    lagnaNinthLord: "Jupiter",
+    lagnaNinthKala: 10,
+    moonNinthRashiIndex: 8,
+    moonNinthLord: "Jupiter",
+    moonNinthKala: 10,
+    totalKalas: 20,
+    remainderKala: 8,
+    isKendraFromLagna: true,
+    isTrikonaFromLagna: true,
+    isDusthanaFromLagna: false,
+    environmentalDignity: "Effortless Abundance (Kendra/Trikona)",
+    environmentalDignityExplanation: "Auspicious placement"
+  };
+
+  // Place Jupiter and Venus in Aries (Direct Benefics in Indu Lagna)
+  syntheticDhana.planets.Jupiter = {
+    ...syntheticDhana.planets.Jupiter,
+    siderealLongitude: 0 * 30 + 10,
+    rashi: { index: 0, englishName: "Aries" }
+  };
+  syntheticDhana.planets.Venus = {
+    ...syntheticDhana.planets.Venus,
+    siderealLongitude: 0 * 30 + 20,
+    rashi: { index: 0, englishName: "Aries" }
+  };
+  const supremeDhana = evaluateInduDhanaYogas(syntheticDhana, syntheticAriesInduCore);
+  assert.strictEqual(supremeDhana.dhanaYogaGrade, "Koti-Pati / Imperial Wealth (कोटिपति)");
+  assert.ok(supremeDhana.beneficsInInduLagna.includes("Jupiter"));
+  assert.ok(supremeDhana.beneficsInInduLagna.includes("Venus"));
+  assert.ok(supremeDhana.dhanaYogaVerdict.includes("Supreme Indu Dhana Yoga"));
+
+  // 4. 11th House Entrepreneurial Empire Rule (Session 87)
+  const synthetic11thInduCore = {
+    ...syntheticAriesInduCore,
+    induLagnaHouseFromD1: 11
+  };
+  const dhana11th = evaluateInduDhanaYogas(syntheticDhana, synthetic11thInduCore);
+  assert.strictEqual(dhana11th.isInduLagnaIn11thHouse, true);
+  assert.ok(dhana11th.entrepreneurial11thVerdict.includes("Major Entrepreneurial Wealth Signature"));
+  assert.ok(dhana11th.entrepreneurial11thVerdict.includes("Session 87"));
+
+  // 5. Sustained Support Pattern (2, 4, 8 Rule of Thumb) (Session 86)
+  const synthetic248 = JSON.parse(JSON.stringify(natalEphem));
+  synthetic248.planets.Jupiter = { ...synthetic248.planets.Jupiter, house: 2 };
+  synthetic248.planets.Venus = { ...synthetic248.planets.Venus, house: 4 };
+  synthetic248.planets.Mars = { ...synthetic248.planets.Mars, house: 8 };
+
+  const supportFull = evaluateSustainedSupportPattern(synthetic248);
+  assert.strictEqual(supportFull.isSustainedSupportActive, true);
+  assert.strictEqual(supportFull.supportCoveragePercentage, 100);
+  assert.ok(supportFull.hasHouse2Occupants);
+  assert.ok(supportFull.hasHouse4Occupants);
+  assert.ok(supportFull.hasHouse8Occupants);
+  assert.ok(supportFull.verdict.includes("Sacred 2-4-8 Sustained Support Shield ACTIVE (100%)"));
+
+  // 6. Planetary Activation Ages on Indu Lagna (Session 87)
+  const ageRadar = calculateInduPlanetaryAgeActivations(natalEphem, syntheticAriesInduCore, birthDate, evaluationDate);
+  assert.ok(ageRadar.currentAgeYears > 30);
+  assert.strictEqual(ageRadar.allMilestones.length, 9);
+  const jupEntry = ageRadar.allMilestones.find(m => m.planet === "Jupiter");
+  assert.strictEqual(jupEntry.primaryActivationAge, 16);
+  assert.strictEqual(jupEntry.recurringCycleYears, 12);
+  const sunEntry = ageRadar.allMilestones.find(m => m.planet === "Sun");
+  assert.strictEqual(sunEntry.primaryActivationAge, 22);
+  const moonEntry = ageRadar.allMilestones.find(m => m.planet === "Moon");
+  assert.strictEqual(moonEntry.primaryActivationAge, 24);
+  const venEntry = ageRadar.allMilestones.find(m => m.planet === "Venus");
+  assert.strictEqual(venEntry.primaryActivationAge, 26);
+  const marsEntry = ageRadar.allMilestones.find(m => m.planet === "Mars");
+  assert.strictEqual(marsEntry.primaryActivationAge, 28);
+  const mercEntry = ageRadar.allMilestones.find(m => m.planet === "Mercury");
+  assert.strictEqual(mercEntry.primaryActivationAge, 32);
+  const satEntry = ageRadar.allMilestones.find(m => m.planet === "Saturn");
+  assert.strictEqual(satEntry.primaryActivationAge, 36);
+  const rahuEntry = ageRadar.allMilestones.find(m => m.planet === "Rahu");
+  assert.strictEqual(rahuEntry.primaryActivationAge, 42);
+  const ketuEntry = ageRadar.allMilestones.find(m => m.planet === "Ketu");
+  assert.strictEqual(ketuEntry.primaryActivationAge, 48);
+
+  // 7. Arudha Lagna (AL) Alignment (Session 87)
+  const arudhaRes = evaluateInduArudhaAlignment(natalEphem, syntheticAriesInduCore);
+  assert.ok(arudhaRes.arudhaLagnaSignName);
+  assert.ok(arudhaRes.distanceFromAL >= 1 && arudhaRes.distanceFromAL <= 12);
+  assert.ok(typeof arudhaRes.isInduAlignedWithAL === "boolean");
+  assert.ok(arudhaRes.convergenceInterpretation.length > 20);
+
+  // 8. Real-Time Transit Portals (Session 86)
+  const transitPortals = evaluateInduTransitPortals(transitEphem, syntheticAriesInduCore);
+  assert.ok(Array.isArray(transitPortals.activePortals));
+  assert.ok(typeof transitPortals.hasMajorBeneficPortal === "boolean");
+  assert.ok(transitPortals.transitSummary.length > 10);
+
+  // 9. Full Master Executive Report Generation
+  const masterReport = generateMedhajInduLagnaMasterReport(natalEphem, transitEphem, birthDate, evaluationDate);
+  assert.ok(masterReport.masterExecutiveSummary.includes("MEDHAJ ASTRO INDU LAGNA WEALTH MASTER REPORT (SESSIONS 86 & 87)"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Indu Lagna Derivation:"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Dhana Yoga Grade & Wealth Scaling:"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Sustained Financial Support (2, 4, 8 Rule of Thumb):"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Planetary Activation Ages on Indu Lagna:"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Arudha Lagna (AL) Alignment:"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("Real-Time Transit Portals:"));
+  assert.ok(masterReport.core);
+  assert.ok(masterReport.dhanaYogas);
+  assert.ok(masterReport.sustainedSupport);
+  assert.ok(masterReport.ageActivations);
+  assert.ok(masterReport.arudhaAlignment);
+  assert.ok(masterReport.transitPortals);
+});
+
+test("Medhaj Astro Marana Karaka Sthana (MKS), Automobile Metaphor, Ketu Past Life Roots & Saturn Cosmic Law (Sessions 71, 72 & 74) Verification", async () => {
+  const {
+    HOUSE_NATURAL_KARAKAS,
+    MKS_DEFINITIONS,
+    calculateMaranaKarakaSthana,
+    calculateAutomobileCockpit,
+    calculateKetuPastLifeTelemetry,
+    calculateSaturnCosmicBoundaries,
+    generateMedhajMksPastLifeMasterReport,
+    KETU_PAST_LIFE_DICTIONARY,
+    SATURN_COSMIC_BOUNDARIES,
+  } = await import("../src/engine/medhajMksPastLife.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "New Delhi", country: "India", latitude: 28.6139, longitude: 77.209, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1990-10-24T06:30:00Z");
+  const evaluationDate = new Date("2026-06-21T12:00:00Z");
+  const natalEphem = calculateVedicEphemeris(birthDate, location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Natural Karakas of 12 Houses (Session 71)
+  assert.deepStrictEqual(HOUSE_NATURAL_KARAKAS[1].primaryKarakas, ["Sun"]);
+  assert.deepStrictEqual(HOUSE_NATURAL_KARAKAS[2].primaryKarakas, ["Jupiter"]);
+  assert.deepStrictEqual(HOUSE_NATURAL_KARAKAS[3].primaryKarakas, ["Mars"]);
+  assert.deepStrictEqual(HOUSE_NATURAL_KARAKAS[4].primaryKarakas, ["Moon", "Venus"]);
+  assert.deepStrictEqual(HOUSE_NATURAL_KARAKAS[5].primaryKarakas, ["Jupiter"]);
+  assert.deepStrictEqual(HOUSE_NATURAL_KARAKAS[6].primaryKarakas, ["Saturn"]);
+  assert.deepStrictEqual(HOUSE_NATURAL_KARAKAS[7].primaryKarakas, ["Venus", "Moon"]);
+  assert.deepStrictEqual(HOUSE_NATURAL_KARAKAS[8].primaryKarakas, ["Saturn"]);
+  assert.deepStrictEqual(HOUSE_NATURAL_KARAKAS[9].primaryKarakas, ["Jupiter"]);
+  assert.deepStrictEqual(HOUSE_NATURAL_KARAKAS[10].primaryKarakas, ["Sun"]);
+  assert.deepStrictEqual(HOUSE_NATURAL_KARAKAS[11].primaryKarakas, ["Jupiter", "Mars"]);
+  assert.deepStrictEqual(HOUSE_NATURAL_KARAKAS[12].primaryKarakas, ["Saturn"]);
+
+  // 2. Marana Karaka Sthana (MKS) Detection & Mechanics (Session 71)
+  assert.strictEqual(MKS_DEFINITIONS.Saturn[0].mksHouse, 1);
+  assert.strictEqual(MKS_DEFINITIONS.Jupiter[0].mksHouse, 3);
+  assert.strictEqual(MKS_DEFINITIONS.Mercury[0].mksHouse, 4);
+  assert.strictEqual(MKS_DEFINITIONS.Mercury[1].mksHouse, 7);
+  assert.strictEqual(MKS_DEFINITIONS.Venus[0].mksHouse, 6);
+  assert.strictEqual(MKS_DEFINITIONS.Mars[0].mksHouse, 7);
+  assert.strictEqual(MKS_DEFINITIONS.Moon[0].mksHouse, 8);
+  assert.strictEqual(MKS_DEFINITIONS.Rahu[0].mksHouse, 9);
+  assert.strictEqual(MKS_DEFINITIONS.Sun[0].mksHouse, 12);
+
+  // Synthetic MKS Chart 1: Saturn in 1st, Moon in 8th
+  const syntheticMks1 = JSON.parse(JSON.stringify(natalEphem));
+  syntheticMks1.planets.Saturn = { ...syntheticMks1.planets.Saturn, house: 1, longitude: 15 };
+  syntheticMks1.planets.Moon = { ...syntheticMks1.planets.Moon, house: 8, longitude: 225 };
+  syntheticMks1.planets.Jupiter = { ...syntheticMks1.planets.Jupiter, house: 5, longitude: 130 }; // Not MKS
+  syntheticMks1.planets.Sun = { ...syntheticMks1.planets.Sun, house: 10, longitude: 280 }; // Not MKS
+
+  const mksRes1 = calculateMaranaKarakaSthana(syntheticMks1);
+  assert.strictEqual(mksRes1.hasMksPlanets, true);
+  assert.ok(mksRes1.totalMksCount >= 2);
+  const satMks = mksRes1.mksPlanets.find(p => p.planet === "Saturn");
+  assert.ok(satMks);
+  assert.strictEqual(satMks.house, 1);
+  assert.ok(satMks.suffocationMechanism.includes("radiant self-expression"));
+  assert.ok(satMks.prescribedParihara.includes("selfless seva"));
+  const moonMks = mksRes1.mksPlanets.find(p => p.planet === "Moon");
+  assert.ok(moonMks);
+  assert.strictEqual(moonMks.house, 8);
+  assert.ok(moonMks.suffocationMechanism.includes("subterranean darkness"));
+  assert.ok(moonMks.prescribedParihara.includes("mother"));
+
+  // Synthetic MKS Chart 2: Mercury in 4th and 7th
+  const syntheticMks2 = JSON.parse(JSON.stringify(natalEphem));
+  syntheticMks2.planets.Mercury = { ...syntheticMks2.planets.Mercury, house: 4, longitude: 95 };
+  const mksRes2 = calculateMaranaKarakaSthana(syntheticMks2);
+  const mercMks4 = mksRes2.mksPlanets.find(p => p.planet === "Mercury");
+  assert.ok(mercMks4);
+  assert.strictEqual(mercMks4.house, 4);
+  assert.ok(mercMks4.suffocationMechanism.includes("emotional sanctuary"));
+
+  syntheticMks2.planets.Mercury = { ...syntheticMks2.planets.Mercury, house: 7, longitude: 185 };
+  const mksRes3 = calculateMaranaKarakaSthana(syntheticMks2);
+  const mercMks7 = mksRes3.mksPlanets.find(p => p.planet === "Mercury");
+  assert.ok(mercMks7);
+  assert.strictEqual(mercMks7.house, 7);
+  assert.ok(mercMks7.suffocationMechanism.includes("sacred contract"));
+
+  // 3. The Automobile Metaphor Cockpit (Session 72)
+  const cockpit = calculateAutomobileCockpit(natalEphem);
+  assert.strictEqual(cockpit.rahuDestination.planet, "Rahu");
+  assert.ok(cockpit.rahuDestination.role.includes("Google Maps"));
+  assert.strictEqual(cockpit.ketuPastRoot.planet, "Ketu");
+  assert.ok(cockpit.ketuPastRoot.role.includes("Past Life Root"));
+  assert.strictEqual(cockpit.saturnCosmicLaw.planet, "Saturn");
+  assert.ok(cockpit.saturnCosmicLaw.role.includes("Road Rules"));
+  assert.ok(cockpit.steeringWheels.rahuDispositor);
+  assert.ok(cockpit.steeringWheels.ketuDispositor);
+  assert.ok(cockpit.steeringWheels.steeringDynamics.length > 20);
+
+  // 4. Ketu 12-Sign Past-Life Origins & Rahu Mandates (Sessions 72 & 74)
+  assert.strictEqual(Object.keys(KETU_PAST_LIFE_DICTIONARY).length, 12);
+  // Aries
+  assert.strictEqual(KETU_PAST_LIFE_DICTIONARY[0].signName, "Aries");
+  assert.ok(KETU_PAST_LIFE_DICTIONARY[0].pastLifeArchetype.includes("Warrior"));
+  assert.strictEqual(KETU_PAST_LIFE_DICTIONARY[0].currentLifeRahuSign, "Libra (Tula)");
+  // Leo
+  assert.strictEqual(KETU_PAST_LIFE_DICTIONARY[4].signName, "Leo");
+  assert.ok(KETU_PAST_LIFE_DICTIONARY[4].pastLifeArchetype.includes("Monarch"));
+  assert.strictEqual(KETU_PAST_LIFE_DICTIONARY[4].currentLifeRahuSign, "Aquarius (Kumbha)");
+  // Pisces (Matsya Avatar Warning)
+  assert.strictEqual(KETU_PAST_LIFE_DICTIONARY[11].signName, "Pisces");
+  assert.ok(KETU_PAST_LIFE_DICTIONARY[11].pastLifeArchetype.includes("Monastic"));
+  assert.strictEqual(KETU_PAST_LIFE_DICTIONARY[11].hasSpecialMatsyaWaterWarning, true);
+  assert.ok(KETU_PAST_LIFE_DICTIONARY[11].specialWarning.includes("MATSYA AVATAR WATER WARNING"));
+
+  // Check Ketu Telemetry on Pisces synthetic chart
+  const syntheticPiscesKetu = JSON.parse(JSON.stringify(natalEphem));
+  syntheticPiscesKetu.planets.Ketu = {
+    ...syntheticPiscesKetu.planets.Ketu,
+    longitude: 345,
+    siderealLongitude: 345,
+    house: 12,
+    rashi: { index: 11, name: "Pisces" },
+  };
+  const ketuTelemetry = calculateKetuPastLifeTelemetry(syntheticPiscesKetu);
+  assert.strictEqual(ketuTelemetry.ketuSignIndex, 11);
+  assert.strictEqual(ketuTelemetry.ketuSignName, "Pisces");
+  assert.strictEqual(ketuTelemetry.profile.hasSpecialMatsyaWaterWarning, true);
+  assert.ok(ketuTelemetry.synthesis.includes("MATSYA AVATAR WATER WARNING"));
+
+  // 5. Saturn's Supreme Cosmic Boundary Law across 12 Signs (Session 74)
+  assert.strictEqual(Object.keys(SATURN_COSMIC_BOUNDARIES).length, 12);
+  assert.ok(SATURN_COSMIC_BOUNDARIES[0].nonNegotiableLaw.includes("Action without discipline"));
+  assert.ok(SATURN_COSMIC_BOUNDARIES[3].nonNegotiableLaw.includes("Emotional manipulation"));
+  assert.ok(SATURN_COSMIC_BOUNDARIES[9].nonNegotiableLaw.includes("Cold tyranny"));
+  assert.ok(SATURN_COSMIC_BOUNDARIES[11].nonNegotiableLaw.includes("Escapist"));
+
+  const saturnBoundary = calculateSaturnCosmicBoundaries(natalEphem);
+  assert.ok(saturnBoundary.saturnSignName);
+  assert.ok(saturnBoundary.saturnHouse >= 1 && saturnBoundary.saturnHouse <= 12);
+  assert.ok(saturnBoundary.rule.nonNegotiableLaw);
+  assert.ok(saturnBoundary.rule.violationConsequence);
+  assert.ok(saturnBoundary.rule.masteryKey);
+  assert.ok(saturnBoundary.executiveBoundaryVerdict.includes("Cosmic Law:"));
+
+  // 6. Full Master Executive Report Generation
+  const masterReport = generateMedhajMksPastLifeMasterReport(natalEphem, birthDate, evaluationDate);
+  assert.ok(masterReport.masterExecutiveSummary.includes("MEDHAJ ASTRO MKS, PAST LIFE ROOTS & SATURN COSMIC LAW REPORT (SESSIONS 71, 72 & 74)"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("1. Marana Karaka Sthana (MKS) Suffocation Audit:"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("2. The Automobile Metaphor Cockpit:"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("3. Ketu 12-Sign Past Life Origins & Rahu Destiny Mandate:"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("4. Saturn's Supreme Cosmic Boundary Law:"));
+  assert.ok(masterReport.mks);
+  assert.ok(masterReport.automobileCockpit);
+  assert.ok(masterReport.ketuPastLife);
+  assert.ok(masterReport.saturnBoundary);
+});
+
+test("Medhaj Astro Rahu-Ketu Transit, Rohini Shakata Bhedana, Great 20-Year Conjunction & Sacred Remedies (Sessions 83, 88 & 89) Verification", async () => {
+  const {
+    DESTINY_BREAKER_PROFILES,
+    evaluateRahuKetuDestinyAxis,
+    evaluateGreatConjunctionCycle,
+    evaluateRohiniBhedanaTelemetry,
+    generateMedhajRahuKetuTransitMasterReport,
+    AYURVEDIC_NASAL_PROTOCOL,
+  } = await import("../src/engine/medhajRahuKetuTransit.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "New Delhi", country: "India", latitude: 28.6139, longitude: 77.209, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1992-05-15T08:30:00Z");
+  const evaluationDate = new Date("2021-01-15T12:00:00Z");
+  const natalEphem = calculateVedicEphemeris(birthDate, location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Session 83: Nadi Destiny Breakers Archetype
+  assert.ok(DESTINY_BREAKER_PROFILES.Rahu.role.includes("Worldly Obsession (Bhoga)"));
+  assert.ok(DESTINY_BREAKER_PROFILES.Rahu.nadiArchetype.includes("Destiny Breaker"));
+  assert.ok(DESTINY_BREAKER_PROFILES.Ketu.role.includes("Spiritual Detachment (Moksha)"));
+  assert.ok(DESTINY_BREAKER_PROFILES.Ketu.nadiArchetype.includes("Destiny Breaker"));
+
+  // Synthetic Transit: Rahu in Taurus (15° Taurus), Ketu in Scorpio (15° Scorpio)
+  const syntheticTransitTaurus = JSON.parse(JSON.stringify(natalEphem));
+  syntheticTransitTaurus.planets.Rahu = {
+    ...syntheticTransitTaurus.planets.Rahu,
+    siderealLongitude: 45,
+    house: 2,
+    rashi: { index: 1, name: "Taurus" },
+  };
+  syntheticTransitTaurus.planets.Ketu = {
+    ...syntheticTransitTaurus.planets.Ketu,
+    siderealLongitude: 225,
+    house: 8,
+    rashi: { index: 7, name: "Scorpio" },
+  };
+
+  const axisRes = evaluateRahuKetuDestinyAxis(natalEphem, syntheticTransitTaurus);
+  assert.strictEqual(axisRes.isTaurusScorpioAxisActive, true);
+  assert.strictEqual(axisRes.rahuResourceAmplificationScore, 95);
+  assert.strictEqual(axisRes.ketuUnearnedWealthSeveranceScore, 95);
+  assert.strictEqual(axisRes.fearDiagnostics.fearMetricScore, 85);
+  assert.ok(axisRes.fearDiagnostics.fearMechanism.includes("Kalapurusha 2nd house"));
+  assert.ok(axisRes.fearDiagnostics.confrontationPath.includes("Direct Confrontation Principle"));
+  assert.ok(axisRes.fearDiagnostics.confrontationPath.includes("F.E.A.R."));
+
+  // 2. Session 88: 20-Year Great Conjunction (Jupiter-Saturn at 6° Capricorn Uttara Ashadha)
+  const syntheticGreatConj = JSON.parse(JSON.stringify(natalEphem));
+  syntheticGreatConj.planets.Jupiter = {
+    ...syntheticGreatConj.planets.Jupiter,
+    siderealLongitude: 276.5, // 6.5° Capricorn
+    house: 10,
+    rashi: { index: 9, name: "Capricorn" },
+  };
+  syntheticGreatConj.planets.Saturn = {
+    ...syntheticGreatConj.planets.Saturn,
+    siderealLongitude: 276.2, // 6.2° Capricorn
+    house: 10,
+    rashi: { index: 9, name: "Capricorn" },
+  };
+
+  const conjRes = evaluateGreatConjunctionCycle(syntheticGreatConj, new Date("2020-12-21T18:00:00Z"));
+  assert.strictEqual(conjRes.isConjunctionActive, true);
+  assert.strictEqual(conjRes.isNearSixDegreesCapricorn, true);
+  assert.strictEqual(conjRes.geopoliticalTensionRating, "High / Arduous Forest Climb");
+  assert.ok(conjRes.pranaVayuStatus.includes("Prana Vayu"));
+  assert.ok(conjRes.apanaVayuStatus.includes("Apana Vayu"));
+  assert.ok(conjRes.pharmaceuticalWarning.includes("pharmaceutical"));
+  assert.ok(conjRes.bodilyImmunityGuidance.includes("Jiva"));
+
+  // 3. Session 88: Ayurvedic 6-Drop Mustard Oil Nasal Immunity Protocol
+  assert.strictEqual(AYURVEDIC_NASAL_PROTOCOL.dropDosage, 6);
+  assert.ok(AYURVEDIC_NASAL_PROTOCOL.applicationWindow.includes("4:00 PM and 6:00 PM"));
+  assert.ok(AYURVEDIC_NASAL_PROTOCOL.astrologicalDerivation.nostrilsAndBreath.includes("Mars"));
+  assert.ok(AYURVEDIC_NASAL_PROTOCOL.astrologicalDerivation.nostrilsAndBreath.includes("Jupiter"));
+  assert.ok(AYURVEDIC_NASAL_PROTOCOL.astrologicalDerivation.timeHour.includes("Mars"));
+  assert.ok(AYURVEDIC_NASAL_PROTOCOL.astrologicalDerivation.substanceRuler.includes("Saturn"));
+  assert.ok(AYURVEDIC_NASAL_PROTOCOL.astrologicalDerivation.dropCountRuler.includes("Venus"));
+  assert.ok(AYURVEDIC_NASAL_PROTOCOL.astrologicalDerivation.dropCountRuler.includes("Sanjeevani"));
+
+  // 4. Session 89: Rohini Shakata Bhedana & King Dasharatha Boon
+  const syntheticRohiniBhedana = JSON.parse(JSON.stringify(natalEphem));
+  syntheticRohiniBhedana.planets.Rahu = {
+    ...syntheticRohiniBhedana.planets.Rahu,
+    siderealLongitude: 45.0, // Rohini (40° to 53°20')
+    rashi: { index: 1, name: "Taurus" },
+  };
+
+  const rohiniRes = evaluateRohiniBhedanaTelemetry(syntheticRohiniBhedana, natalEphem);
+  assert.strictEqual(rohiniRes.isRahuInRohini, true);
+  assert.strictEqual(rohiniRes.isRohiniBhedanaActive, true);
+  assert.ok(rohiniRes.legendOfDasharatha.king.includes("King Dasharatha"));
+  assert.ok(rohiniRes.legendOfDasharatha.crisis.includes("Rohini Shakata Bhedana"));
+  assert.ok(rohiniRes.legendOfDasharatha.stutiName.includes("Dasharatha Shani Stuti"));
+  assert.strictEqual(rohiniRes.supplyChainAndWeatherAlert.severity, "Extreme Crisis Alert");
+  assert.ok(rohiniRes.supplyChainAndWeatherAlert.projectedDisruptions.length >= 2);
+
+  // 5. Session 89: Anna Tyaga Upavasa Protocol & Moon Primacy
+  assert.ok(rohiniRes.annaTyagaFastingRemedy.sunsetRule.includes("sunset and sunrise"));
+  assert.ok(rohiniRes.annaTyagaFastingRemedy.mealSacrificeRule.includes("sacrifice one or two meals"));
+  assert.ok(rohiniRes.annaTyagaFastingRemedy.moonPrimacyNote.includes("Primacy of the Moon"));
+  assert.ok(rohiniRes.annaTyagaFastingRemedy.moonPrimacyNote.includes("Raja Yogas"));
+
+  // 6. Full Master Executive Report Generation
+  const masterReport = generateMedhajRahuKetuTransitMasterReport(natalEphem, syntheticTransitTaurus, birthDate, evaluationDate);
+  assert.ok(masterReport.masterExecutiveSummary.includes("MEDHAJ ASTRO RAHU-KETU TRANSIT, ROHINI BHEDANA & REMEDIES REPORT (SESSIONS 83, 88 & 89)"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("1. Nadi \"Destiny Breakers\" & Taurus-Scorpio Axis (Session 83):"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("2. The 20-Year Great Conjunction & Cosmic Reset (Session 88):"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("3. Rohini Shakata Bhedana & King Dasharatha Boon (Session 89):"));
+  assert.ok(masterReport.masterExecutiveSummary.includes("4. Sacred Collective Remedies (Sessions 88 & 89):"));
+  assert.ok(masterReport.destinyAxis);
+  assert.ok(masterReport.greatConjunction);
+  assert.ok(masterReport.nasalProtocol);
+  assert.ok(masterReport.rohiniBhedana);
+});
+
+test("Subtest 131: Classical Agni Trines, Divine Lineage Triad, Water Sign Tears & Dual Sign Degree Matrix (Syllabus Units 90-92) Verification", async () => {
+  const {
+    evaluateAgniTrineTransits,
+    evaluateZodiacGunasAndPerspectives,
+    evaluateWaterSignTears,
+    evaluateDivineLineageTriad,
+    evaluateLagnaTemperamentAndDualSignSplit,
+    evaluateGeometricSambandhas,
+    generateAgniTransitLineageReport
+  } = await import("../src/engine/agniTransitLineage.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-24T05:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Session 90: Agni Trines & Sovereign Fire Alignment
+  const agniNatal = evaluateAgniTrineTransits(natalEphem);
+  assert.ok(agniNatal.marsStatus);
+  assert.ok(agniNatal.sunStatus);
+  assert.ok(agniNatal.jupiterStatus);
+  assert.strictEqual(typeof agniNatal.alignmentScorePercent, "number");
+  assert.strictEqual(typeof agniNatal.tripleFireAlignmentActive, "boolean");
+
+  // Synthetic Sovereign Agni Trine Concurrence (Mars in Aries 6°, Sun in Leo 5°, Jupiter in Sagittarius 7°)
+  const syntheticFireEphem = JSON.parse(JSON.stringify(natalEphem));
+  syntheticFireEphem.planets.Mars = {
+    ...syntheticFireEphem.planets.Mars,
+    siderealLongitude: 6.0,
+    rashi: { index: 0, englishName: "Aries", sanskritName: "Mesha" }
+  };
+  syntheticFireEphem.planets.Sun = {
+    ...syntheticFireEphem.planets.Sun,
+    siderealLongitude: 125.0, // Leo 5°
+    rashi: { index: 4, englishName: "Leo", sanskritName: "Simha" }
+  };
+  syntheticFireEphem.planets.Jupiter = {
+    ...syntheticFireEphem.planets.Jupiter,
+    siderealLongitude: 247.0, // Sagittarius 7°
+    rashi: { index: 8, englishName: "Sagittarius", sanskritName: "Dhanu" },
+    isRetrograde: false
+  };
+  syntheticFireEphem.planets.Uranus = {
+    ...syntheticFireEphem.planets.Uranus,
+    siderealLongitude: 8.5, // Aries 8.5° (2.5° orb with Mars)
+    rashi: { index: 0, englishName: "Aries", sanskritName: "Mesha" }
+  };
+
+  const fireRes = evaluateAgniTrineTransits(natalEphem, syntheticFireEphem);
+  assert.strictEqual(fireRes.tripleFireAlignmentActive, true);
+  assert.strictEqual(fireRes.alignmentScorePercent, 100);
+  assert.strictEqual(fireRes.marsStatus.dimension, "Rajasic ('I to I')");
+  assert.strictEqual(fireRes.sunStatus.dimension, "Tamasic ('I to You')");
+  assert.strictEqual(fireRes.jupiterStatus.dimension, "Sattvic ('I to All')");
+  assert.strictEqual(fireRes.gangaJalDrishti.fifthAspectOnMars, true);
+  assert.strictEqual(fireRes.gangaJalDrishti.ninthAspectOnSun, true);
+  assert.strictEqual(fireRes.gangaJalDrishti.drishtiQualityBadge, "Pure Sattvic Ganga Jal");
+  assert.strictEqual(fireRes.marsUranusCycle.isConjoinedInAries, true);
+  assert.ok(fireRes.marsUranusCycle.marsUranusOrbDegrees <= 5.0);
+
+  // Retrograde Jupiter Test
+  syntheticFireEphem.planets.Jupiter.isRetrograde = true;
+  const fireRetroRes = evaluateAgniTrineTransits(natalEphem, syntheticFireEphem);
+  assert.strictEqual(fireRetroRes.gangaJalDrishti.drishtiQualityBadge, "Polarized / Ideological");
+  assert.ok(fireRetroRes.gangaJalDrishti.retrogradeWarning.includes("Retrograde Jupiter Alert"));
+
+  // 2. Session 91: Macro Zodiac Guna Quadrants & Perspective
+  const gunas = evaluateZodiacGunasAndPerspectives(natalEphem);
+  assert.strictEqual(gunas.rajasicCount + gunas.tamasicCount + gunas.sattvicCount, 9);
+  assert.ok(gunas.dominantGunaPerspective);
+  assert.ok(gunas.psychologicalProfile.length > 20);
+
+  // 3. Session 91: Water Sign Emotional Tears Psychology
+  const tears = evaluateWaterSignTears(natalEphem);
+  assert.ok(["Cries for Self (Cancer)", "Suppressed Volcanic Tears (Scorpio)", "Wipes Tears of Others (Pisces)"].includes(tears.dominantTearsMode));
+  assert.ok(tears.emotionalProcessingStyle.length > 20);
+  assert.ok(tears.detailedSignPhala.cancerPhala);
+  assert.ok(tears.detailedSignPhala.scorpioPhala);
+  assert.ok(tears.detailedSignPhala.piscesPhala);
+
+  // 4. Session 92: Divine Lineage Triad (House 4, 9, 12)
+  const lineage = evaluateDivineLineageTriad(natalEphem);
+  assert.strictEqual(lineage.kulaDevata.houseNumber, 4);
+  assert.ok(lineage.kulaDevata.deityRole.includes("Kula Devata"));
+  assert.ok(lineage.kulaDevata.recommendedDeityForm);
+  assert.ok(lineage.kulaDevata.sanskritMantra);
+  assert.ok(lineage.kulaDevata.esotericGuidance);
+
+  assert.strictEqual(lineage.dharmaDevata.houseNumber, 9);
+  assert.ok(lineage.dharmaDevata.deityRole.includes("Dharma Devata"));
+  assert.ok(lineage.dharmaDevata.recommendedDeityForm);
+  assert.ok(lineage.dharmaDevata.sanskritMantra);
+
+  assert.strictEqual(lineage.ishtaDevata.houseNumber, 12);
+  assert.ok(lineage.ishtaDevata.deityRole.includes("Ishta Devata"));
+  assert.ok(lineage.ishtaDevata.recommendedDeityForm);
+  assert.ok(lineage.ishtaDevata.sanskritMantra);
+  assert.ok(lineage.lineageSynthesis.includes("Divine Deity Lineage Triad"));
+
+  // 5. Session 92: Lagna Behavioral Temperament & Dual Sign 15° Degree Split
+  const temperament = evaluateLagnaTemperamentAndDualSignSplit(natalEphem);
+  assert.ok(temperament.lagnaSignName);
+  assert.ok(temperament.lagnaModality);
+  assert.ok(temperament.lagnaLordName);
+  assert.ok(temperament.lagnaLordModality);
+  assert.ok(temperament.temperamentPattern);
+  assert.ok(temperament.temperamentDescription.length > 20);
+
+  // Test dual sign degree bifurcation on synthetic dual sign placements
+  const syntheticDualEphem = JSON.parse(JSON.stringify(natalEphem));
+  syntheticDualEphem.ascendant = {
+    ...syntheticDualEphem.ascendant,
+    siderealLongitude: 68.0, // Gemini 8° (0°-15° Fixed)
+    rashi: { index: 2, englishName: "Gemini", sanskritName: "Mithuna" }
+  };
+  syntheticDualEphem.planets.Moon = {
+    ...syntheticDualEphem.planets.Moon,
+    siderealLongitude: 262.0, // Sagittarius 22° (15°-30° Movable)
+    rashi: { index: 8, englishName: "Sagittarius", sanskritName: "Dhanu" }
+  };
+
+  const dualSplitRes = evaluateLagnaTemperamentAndDualSignSplit(syntheticDualEphem);
+  const ascSplit = dualSplitRes.dualSignBifurcations.find(b => b.planetOrLagna.includes("Ascendant"));
+  assert.ok(ascSplit);
+  assert.strictEqual(ascSplit.degreeSpan, "0°–15°");
+  assert.strictEqual(ascSplit.subModality, "Fixed Sub-Tone (0°–15°)");
+
+  const moonSplit = dualSplitRes.dualSignBifurcations.find(b => b.planetOrLagna === "Moon");
+  assert.ok(moonSplit);
+  assert.strictEqual(moonSplit.degreeSpan, "15°–30°");
+  assert.strictEqual(moonSplit.subModality, "Movable Sub-Tone (15°–30°)");
+
+  // 6. Session 92: Geometric Sambandhas
+  const sambandhas = evaluateGeometricSambandhas();
+  assert.deepStrictEqual(sambandhas.kendras.houses, [1, 4, 7, 10]);
+  assert.deepStrictEqual(sambandhas.trikonas.houses, [1, 5, 9]);
+  assert.strictEqual(sambandhas.upachayaGrowthAxis.axis, "3/11");
+  assert.strictEqual(sambandhas.feederResourceAxis.axis, "2/12");
+  assert.strictEqual(sambandhas.shadashtakaFrictionAxis.axis, "6/8");
+
+  // 7. Master Synthesis Report Generator
+  const fullReport = generateAgniTransitLineageReport(natalEphem, syntheticFireEphem);
+  assert.ok(fullReport.executiveSummary.includes("Agni Trine Transits"));
+  assert.ok(fullReport.executiveSummary.includes("Zodiac Perspective"));
+  assert.ok(fullReport.executiveSummary.includes("Water Sign Tears"));
+  assert.ok(fullReport.executiveSummary.includes("Divine Lineage Triad"));
+  assert.ok(fullReport.executiveSummary.includes("Lagna Temperament"));
+  assert.ok(fullReport.agniTrines);
+  assert.ok(fullReport.zodiacGunas);
+  assert.ok(fullReport.waterSignTears);
+  assert.ok(fullReport.divineLineage);
+  assert.ok(fullReport.lagnaTemperament);
+  assert.ok(fullReport.sambandhas);
+});
+
+test("Bhagya Bindu (Pars Fortuna) Triggers & Secret Code of Relative Planetary Manifestations (Sessions 97 & 99) Verification", async () => {
+  const {
+    calculateDetailedBhagyaBindu,
+    evaluateSecretCodeOfPlanets,
+    evaluateMercurySpeechDynamics,
+    generateBhagyaBinduSecretCodeReport
+  } = await import("../src/engine/bhagyaBinduSecretCode.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+
+  // 1. Day Birth Horoscope (Sun in 10th house - above horizon)
+  const dayEphem = calculateVedicEphemeris(new Date("1989-11-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const dayBB = calculateDetailedBhagyaBindu(dayEphem);
+
+  assert.strictEqual(dayBB.isDayBirth, true);
+  assert.ok(dayBB.formulaDescription.includes("Day Birth Formula"));
+  assert.ok(dayBB.longitude >= 0 && dayBB.longitude < 360);
+  assert.ok(dayBB.house >= 1 && dayBB.house <= 12);
+  assert.ok(dayBB.rashi.englishName);
+  assert.ok(dayBB.nakshatra);
+  assert.ok(dayBB.pada >= 1 && dayBB.pada <= 4);
+  assert.ok(dayBB.nakshatraLord);
+  assert.ok(dayBB.housePlacementProfile.title);
+  assert.ok(dayBB.housePlacementProfile.description);
+
+  // Geometric Points
+  assert.strictEqual(dayBB.geometricPoints.trines.houses.length, 3);
+  assert.strictEqual(dayBB.geometricPoints.quadrants.houses.length, 4);
+  assert.strictEqual(dayBB.geometricPoints.upachayas.houses.length, 2);
+
+  // 2. Night Birth Horoscope (Sun in 2nd house - below horizon)
+  const nightEphem = calculateVedicEphemeris(new Date("1993-07-22T19:45:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const nightBB = calculateDetailedBhagyaBindu(nightEphem);
+
+  assert.strictEqual(nightBB.isDayBirth, false);
+  assert.ok(nightBB.formulaDescription.includes("Night Birth Formula"));
+  assert.ok(nightBB.longitude >= 0 && nightBB.longitude < 360);
+
+  // 3. Synthetic Verification of 4th House 12-Year Cycle & 11th House Cash Flow
+  const synthetic4thEphem = JSON.parse(JSON.stringify(dayEphem));
+  // Place Bhagya Bindu in 4th house (Lagna at 0° Aries, Moon at 90° Cancer, Sun at 0° Aries -> 0 + 90 - 0 = 90° Cancer, House 4)
+  synthetic4thEphem.ascendant.siderealLongitude = 0.0;
+  synthetic4thEphem.planets.Moon.siderealLongitude = 90.0;
+  synthetic4thEphem.planets.Sun.siderealLongitude = 0.0;
+  synthetic4thEphem.planets.Sun.house = 10; // keep as day birth
+  const bb4th = calculateDetailedBhagyaBindu(synthetic4thEphem);
+  assert.strictEqual(bb4th.house, 4);
+  assert.ok(bb4th.housePlacementProfile.recurringPeakAges);
+  assert.deepStrictEqual(bb4th.housePlacementProfile.recurringPeakAges, [4, 16, 28, 40, 52, 64, 76]);
+
+  // Synthetic 11th house placement
+  synthetic4thEphem.planets.Moon.siderealLongitude = 300.0; // 300° Aquarius (House 11 from Aries)
+  const bb11th = calculateDetailedBhagyaBindu(synthetic4thEphem);
+  assert.strictEqual(bb11th.house, 11);
+  assert.ok(bb11th.housePlacementProfile.cashFlowMultiplier.includes("cash flow multiplier"));
+
+  // 4. Transit Activations on Bhagya Bindu
+  const syntheticTransitEphem = JSON.parse(JSON.stringify(dayEphem));
+  // Set transiting Jupiter exactly conjoining Bhagya Bindu sign
+  syntheticTransitEphem.planets.Jupiter = {
+    siderealLongitude: dayBB.longitude,
+    house: dayBB.house,
+    rashi: dayBB.rashi
+  };
+  // Set transiting Venus in 5th from Bhagya Bindu (Trine)
+  syntheticTransitEphem.planets.Venus = {
+    siderealLongitude: (dayBB.longitude + 120) % 360,
+    house: ((dayBB.house - 1 + 4) % 12) + 1,
+    rashi: { englishName: "TrineRashi" }
+  };
+
+  const bbWithTransits = calculateDetailedBhagyaBindu(dayEphem, syntheticTransitEphem);
+  assert.ok(bbWithTransits.activeTransitTriggers.length >= 2);
+  const jupTrigger = bbWithTransits.activeTransitTriggers.find(t => t.planet === "Jupiter");
+  assert.ok(jupTrigger);
+  assert.strictEqual(jupTrigger.geometricRelation, "Conjunction (1st)");
+  assert.strictEqual(jupTrigger.isExactConjunction, true);
+  assert.ok(jupTrigger.activationEffect.includes("divine blessings"));
+
+  const venTrigger = bbWithTransits.activeTransitTriggers.find(t => t.planet === "Venus");
+  assert.ok(venTrigger);
+  assert.strictEqual(venTrigger.geometricRelation, "Trine (5th/9th)");
+  assert.ok(venTrigger.activationEffect.includes("material comforts"));
+
+  // 5. Secret Code of Planets (Relative High vs. Low Manifestations - Session 99)
+  const syntheticPlanetEphem = JSON.parse(JSON.stringify(dayEphem));
+  // Sun in House 10
+  syntheticPlanetEphem.planets.Sun.house = 10;
+  // Moon in House 1
+  syntheticPlanetEphem.planets.Moon.house = 1;
+  // Venus in House 2
+  syntheticPlanetEphem.planets.Venus.house = 2;
+  // Jupiter in House 4
+  syntheticPlanetEphem.planets.Jupiter.house = 4;
+  // Mercury in House 9
+  syntheticPlanetEphem.planets.Mercury.house = 9;
+  // Mars in House 3
+  syntheticPlanetEphem.planets.Mars.house = 3;
+  // Saturn in House 7
+  syntheticPlanetEphem.planets.Saturn.house = 7;
+
+  const secretCodes = evaluateSecretCodeOfPlanets(syntheticPlanetEphem);
+  assert.strictEqual(secretCodes.length, 7);
+
+  // Sun: MT Leo (5) -> Exalt Aries (1, Dist 9) -> Highest 9th from Sun (10 + 9 - 1 = H6)
+  // Deb Libra (7, Dist 3) -> Lowest 3rd from Sun (10 + 3 - 1 = H12)
+  const sunCode = secretCodes.find(p => p.planet === "Sun");
+  assert.ok(sunCode);
+  assert.strictEqual(sunCode.highestDistance, 9);
+  assert.strictEqual(sunCode.highestHouse, 6);
+  assert.strictEqual(sunCode.lowestDistance, 3);
+  assert.strictEqual(sunCode.lowestHouse, 12);
+  assert.ok(sunCode.remedy.includes("Aditya Hridaya"));
+
+  // Moon: MT Cancer (4) -> Exalt Taurus (2, Dist 11) -> Highest 11th from Moon (1 + 11 - 1 = H11)
+  // Deb Scorpio (8, Dist 5) -> Lowest 5th from Moon (1 + 5 - 1 = H5)
+  const moonCode = secretCodes.find(p => p.planet === "Moon");
+  assert.ok(moonCode);
+  assert.strictEqual(moonCode.highestDistance, 11);
+  assert.strictEqual(moonCode.highestHouse, 11);
+  assert.strictEqual(moonCode.lowestDistance, 5);
+  assert.strictEqual(moonCode.lowestHouse, 5);
+
+  // Venus: MT Libra (7) -> Exalt Pisces (12, Dist 6) -> Highest 6th from Venus (2 + 6 - 1 = H7)
+  // Deb Virgo (6, Dist 12) -> Lowest 12th from Venus (2 + 12 - 1 = H1)
+  const venCode = secretCodes.find(p => p.planet === "Venus");
+  assert.ok(venCode);
+  assert.strictEqual(venCode.highestDistance, 6);
+  assert.strictEqual(venCode.highestHouse, 7);
+  assert.strictEqual(venCode.lowestDistance, 12);
+  assert.strictEqual(venCode.lowestHouse, 1);
+
+  // Jupiter: MT Sag (9) -> Exalt Cancer (4, Dist 8) -> Highest 8th from Jupiter (4 + 8 - 1 = H11)
+  // Deb Cap (10, Dist 2) -> Lowest 2nd from Jupiter (4 + 2 - 1 = H5)
+  const jupCode = secretCodes.find(p => p.planet === "Jupiter");
+  assert.ok(jupCode);
+  assert.strictEqual(jupCode.highestDistance, 8);
+  assert.strictEqual(jupCode.highestHouse, 11);
+  assert.strictEqual(jupCode.lowestDistance, 2);
+  assert.strictEqual(jupCode.lowestHouse, 5);
+  assert.ok(jupCode.lowestPitfall.includes("A prophet is never honored"));
+
+  // Mercury: MT Virgo (6) -> Exalt Virgo (6, Dist 1) -> Highest 1st from Mercury (9 + 1 - 1 = H9)
+  // Deb Pisces (12, Dist 7) -> Lowest 7th from Mercury (9 + 7 - 1 = H3)
+  const mercCode = secretCodes.find(p => p.planet === "Mercury");
+  assert.ok(mercCode);
+  assert.strictEqual(mercCode.highestDistance, 1);
+  assert.strictEqual(mercCode.highestHouse, 9);
+  assert.strictEqual(mercCode.lowestDistance, 7);
+  assert.strictEqual(mercCode.lowestHouse, 3);
+
+  // 6. Mercury Speech Dynamics (Session 99)
+  // Mercury in House 9 -> 2nd from Mercury is House 10 -> continuous conversation focus is Career & Leadership!
+  // 7th from Mercury is House 3 -> speech friction zone is House 3!
+  const speechDynamics = evaluateMercurySpeechDynamics(syntheticPlanetEphem);
+  assert.strictEqual(speechDynamics.mercuryHouse, 9);
+  assert.strictEqual(speechDynamics.secondHouseFromMercury, 10);
+  assert.ok(speechDynamics.continuousConversationFocus.includes("Corporate career status") || speechDynamics.continuousConversationFocus.includes("career"));
+  assert.strictEqual(speechDynamics.seventhHouseFromMercury, 3);
+  assert.ok(speechDynamics.communicationFrictionZone.includes("House 3"));
+  assert.ok(speechDynamics.speechPreservationRemedy.includes("Pause for 3 seconds"));
+
+  // 7. Master Synthesis Report Generator
+  const fullDossier = generateBhagyaBinduSecretCodeReport(dayEphem, syntheticTransitEphem);
+  assert.ok(fullDossier.bhagyaBindu);
+  assert.ok(fullDossier.secretCodeManifestations.length >= 7);
+  assert.ok(fullDossier.mercurySpeech);
+  assert.ok(fullDossier.synthesisSummary.includes("BHAGYA BINDU (PARS FORTUNA)"));
+  assert.ok(fullDossier.synthesisSummary.includes("Secret Code of Planets"));
+  assert.ok(fullDossier.synthesisSummary.includes("Mercury Speech"));
+});
+
+test("Astrological Remedies as a Way of Life & The 40-Day Rule (Session 41) Verification", async () => {
+  const {
+    evaluateLifestyleRemediesWayOfLife,
+    generateLifestyleRemediesReport
+  } = await import("../src/engine/lifestyleRemediesWayOfLife.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1990-05-15T08:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Core Philosophy & 40-Day Rule
+  const report = generateLifestyleRemediesReport(natalEphem, "Saturn");
+  assert.ok(report.corePhilosophy.title.includes("Way of Life"));
+  assert.ok(report.corePhilosophy.the40DayRule.includes("40 consecutive days"));
+  assert.ok(report.corePhilosophy.the40DayRule.includes("41st day"));
+  assert.ok(report.corePhilosophy.habitAnalogy.includes("brushing your teeth"));
+
+  // 2. All 9 Graha Protocols Presence & Integrity
+  const all = report.allGrahaProtocols;
+  const expectedPlanets = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];
+  for (const p of expectedPlanets) {
+    assert.ok(all[p], `Protocol for ${p} must exist`);
+    assert.ok(all[p].coreDailyHabits.length >= 1, `Habits for ${p} must exist`);
+    assert.ok(all[p].strictProhibitions.length >= 1, `Prohibitions for ${p} must exist`);
+    assert.ok(all[p].shastricMechanism.length > 20, `Mechanism for ${p} must exist`);
+    assert.ok(all[p].fortyDayExpectedShift.length > 20, `40-day shift for ${p} must exist`);
+  }
+
+  // Moon water protocols
+  assert.ok(all.Moon.coreDailyHabits.some(h => h.includes("drink a full glass of fresh water immediately before stepping out")));
+  assert.ok(all.Moon.strictProhibitions.some(pr => pr.includes("zero water wastage")));
+
+  // Sun dawn wake up
+  assert.ok(all.Sun.coreDailyHabits.some(h => h.includes("Wake up at least 15 minutes before sunrise")));
+  assert.ok(all.Sun.strictProhibitions.some(pr => pr.includes("Never sleep past sunrise")));
+
+  // Jupiter sweet sharing & elders
+  assert.ok(all.Jupiter.coreDailyHabits.some(h => h.includes("Share sweets")));
+  assert.ok(all.Jupiter.coreDailyHabits.some(h => h.includes("not limited to Thursdays")));
+
+  // Saturn digital self-control & hygiene
+  assert.ok(all.Saturn.coreDailyHabits.some(h => h.includes("Digital Self-Control")));
+  assert.ok(all.Saturn.coreDailyHabits.some(h => h.includes("street shoes")));
+  assert.ok(all.Saturn.strictProhibitions.some(pr => pr.includes("alcohol")));
+
+  // Venus curd curfew
+  assert.ok(all.Venus.coreDailyHabits.some(h => h.includes("curd/yogurt to a woman or a cow")));
+  assert.ok(all.Venus.strictProhibitions.some(pr => pr.includes("Never consume curd/yogurt at night")));
+
+  // Mars sibling integrity
+  assert.ok(all.Mars.coreDailyHabits.some(h => h.includes("brotherly love")));
+  assert.ok(all.Mars.strictProhibitions.some(pr => pr.includes("encroach on anyone's land")));
+
+  // Rahu wire detanglement & bucket/mug rule
+  assert.ok(all.Rahu.coreDailyHabits.some(h => h.includes("Untangle Wires")));
+  assert.ok(all.Rahu.coreDailyHabits.some(h => h.includes("Bucket & Mug Rule")));
+  assert.ok(all.Rahu.coreDailyHabits.some(h => h.includes("trapped loose hair from hairbrushes")));
+
+  // Ketu stillness & Shiva
+  assert.ok(all.Ketu.coreDailyHabits.some(h => h.includes("intentional stillness")));
+  assert.ok(all.Ketu.coreDailyHabits.some(h => h.includes("Om Namah Shivaya")));
+
+  // Mercury joy & children
+  assert.ok(all.Mercury.coreDailyHabits.some(h => h.includes("fodder") || h.includes("spinach")));
+  assert.ok(all.Mercury.coreDailyHabits.some(h => h.includes("laughter")));
+
+  // 3. Personalized Priority Mapping
+  // With "Saturn" as current Dasha lord, Saturn must be marked CRITICAL PRIORITY
+  assert.strictEqual(all.Saturn.priorityLevel, "CRITICAL PRIORITY (Active Dasha / Afflicted)");
+  assert.ok(all.Saturn.personalizationReason.includes("Active Mahadasha"));
+  assert.ok(report.personalizedPriorityHabits.some(p => p.planet === "Saturn"));
+
+  // 4. Synthetic Chart Affliction Prioritization
+  const syntheticAfflictedEphem = JSON.parse(JSON.stringify(natalEphem));
+  // Debilitate Sun in Libra (sign 6, 190°)
+  syntheticAfflictedEphem.planets.Sun.siderealLongitude = 190.0;
+  // Combust Venus within 3° of Sun (192°)
+  syntheticAfflictedEphem.planets.Venus.siderealLongitude = 192.0;
+  // Mars in 8th house
+  syntheticAfflictedEphem.planets.Mars.house = 8;
+
+  const afflictedReport = evaluateLifestyleRemediesWayOfLife(syntheticAfflictedEphem);
+  const sunPrio = afflictedReport.allGrahaProtocols.Sun;
+  assert.strictEqual(sunPrio.priorityLevel, "CRITICAL PRIORITY (Active Dasha / Afflicted)");
+  assert.ok(sunPrio.personalizationReason.includes("Debilitated"));
+
+  const venPrio = afflictedReport.allGrahaProtocols.Venus;
+  assert.strictEqual(venPrio.priorityLevel, "CRITICAL PRIORITY (Active Dasha / Afflicted)");
+  assert.ok(venPrio.personalizationReason.includes("Combust"));
+
+  const marsPrio = afflictedReport.allGrahaProtocols.Mars;
+  assert.strictEqual(marsPrio.priorityLevel, "HIGH PRIORITY (Dusthana / Karmic Friction)");
+  assert.ok(marsPrio.personalizationReason.includes("House 8"));
+
+  // 5. Master Summary String
+  assert.ok(report.masterDossierSummary.includes("ASTROLOGICAL REMEDIES AS A WAY OF LIFE"));
+  assert.ok(report.masterDossierSummary.includes("The 40-Day Rule"));
+  assert.ok(report.masterDossierSummary.includes("Saturn"));
+});
+
+test("Session 46, 47, 48, 49, 96, 98: Classical Natal Panchanga Deep Synthesis, Dagdha Rashis & Yogi/Avayogi Engine", async () => {
+  const {
+    calculateDagdhaRashis,
+    calculateYogiAvayogi,
+    evaluateKaranMarsExecution,
+    evaluatePanchakAbhijit,
+    getThreeTierVishnuArmor,
+    evaluateNatalPanchangaDeep,
+    generateNatalPanchangaDeepReport,
+    DAGDHA_RASHIS_BY_TITHI,
+  } = await import("../src/engine/natalPanchangaDeep.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 1. Dagdha Rashis Lookup Matrix Verification (Session 48)
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[1], [6, 9]); // Pratipada: Libra & Capricorn
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[2], [8, 11]); // Dwitiya: Sagittarius & Pisces
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[3], [4, 9]); // Tritiya: Leo & Capricorn
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[4], [1, 10]); // Chaturthi: Taurus & Aquarius
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[5], [2, 5]); // Panchami: Gemini & Virgo
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[6], [0, 4]); // Shashti: Aries & Leo
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[7], [3, 8]); // Saptami: Cancer & Sagittarius
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[8], [2, 5]); // Ashtami: Gemini & Virgo
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[9], [4, 7]); // Navami: Leo & Scorpio
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[10], [4, 7]); // Dashami: Leo & Scorpio
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[11], [6, 9]); // Ekadashi: Libra & Capricorn
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[12], [0, 6]); // Dwadashi: Aries & Libra
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[13], [1, 4]); // Trayodashi: Taurus & Leo
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[14], [2, 5, 8, 11]); // Chaturdashi: All 4 Dual signs
+  assert.deepStrictEqual(DAGDHA_RASHIS_BY_TITHI[15], []); // Purnima: No Dagdha signs
+
+  // 2. Viparita Raja Yoga Trigger (Dagdha in Dusthana 6, 8, 12 - Session 48)
+  // Taurus Lagna (sign index 1): Libra (sign 6) is House 6 (Dusthana)!
+  const syntheticPlanets = {
+    Sun: { rashi: { index: 0 }, house: 1, isRetrograde: false, isUpagraha: false, isModernPlanet: false },
+    Moon: { rashi: { index: 0 }, house: 1, isRetrograde: false, isUpagraha: false, isModernPlanet: false },
+    Mars: { rashi: { index: 0 }, house: 1, isRetrograde: false, isUpagraha: false, isModernPlanet: false },
+    Mercury: { rashi: { index: 0 }, house: 1, isRetrograde: false, isUpagraha: false, isModernPlanet: false },
+    Jupiter: { rashi: { index: 6 }, house: 6, isRetrograde: true, isUpagraha: false, isModernPlanet: false }, // Retro Jupiter in Dagdha Libra
+  };
+
+  const dagdhaTaurusLagna = calculateDagdhaRashis(1, false, 1, syntheticPlanets);
+  assert.strictEqual(dagdhaTaurusLagna.hasDagdhaSigns, true);
+  assert.strictEqual(dagdhaTaurusLagna.viparitaYogaActive, true, "Libra in House 6 must trigger Viparita Raja Yoga");
+  assert.ok(dagdhaTaurusLagna.viparitaDescription.includes("Viparita Raja Yoga"));
+
+  // Verify Retrograde Remediation in Dagdha Sign
+  const libraSign = dagdhaTaurusLagna.dagdhaSigns.find(d => d.signIndex === 6);
+  assert.ok(libraSign);
+  assert.strictEqual(libraSign.isViparitaRajaYoga, true);
+  const jupOccupant = libraSign.occupyingPlanets.find(p => p.name === "Jupiter");
+  assert.ok(jupOccupant);
+  assert.strictEqual(jupOccupant.isRetrograde, true);
+  assert.strictEqual(jupOccupant.remediationStatus, "Overcomes Burnout (Asset)");
+
+  // Verify Purnima / Amavasya zero dagdha signs
+  const purnimaDagdha = calculateDagdhaRashis(15, false, 0, syntheticPlanets);
+  assert.strictEqual(purnimaDagdha.hasDagdhaSigns, false);
+  assert.strictEqual(purnimaDagdha.dagdhaSigns.length, 0);
+
+  // 3. Yogi, Sahayogi & Avayogi Mathematical Point Calculation (Session 49)
+  // Test Case: Sun = 180°, Moon = 60°
+  // Yogi Point = (180 + 60 + 93.3333333333) % 360 = 333.3333333333° (Pisces, Nakshatra 25 Uttara Bhadrapada)
+  // Sahayogi = Jupiter (lord of Pisces)
+  // Yogi Planet = Saturn (lord of Uttara Bhadrapada)
+  // Avayogi Nakshatra (+6 forward) = (25 + 6) % 27 = 4 (Mrigashira) -> Mars!
+  const ya = calculateYogiAvayogi(180.0, 60.0, {
+    Mars: { house: 8, isUpagraha: false, isModernPlanet: false },
+  });
+  assert.strictEqual(ya.yogiPlanet, "Saturn", "Yogi Planet must be Saturn for 333.33°");
+  assert.strictEqual(ya.sahayogiPlanet, "Jupiter", "Sahayogi Planet must be Jupiter for Pisces");
+  assert.strictEqual(ya.avayogiNakshatra, "Mrigashira", "Avayogi Nakshatra (+6) must be Mrigashira");
+  assert.strictEqual(ya.avayogiPlanet, "Mars", "Avayogi Planet must be Mars");
+  assert.strictEqual(ya.avayogiHouse, 8, "Avayogi House must match Mars placement");
+
+  // 4. Karan Mars Execution Dynamics & De-stigmatization (Sessions 49 & 98)
+  const shakuniKaran = evaluateKaranMarsExecution("Shakuni", 57, {
+    Mars: { house: 10, rashi: { index: 9, sanskritName: "Makara", englishName: "Capricorn" } },
+    Rahu: { house: 11 },
+  });
+  assert.strictEqual(shakuniKaran.isFixedDeStigmatized, true);
+  assert.strictEqual(shakuniKaran.karanLord, "Rahu");
+  assert.ok(shakuniKaran.fixedArchetypeSummary.includes("strategic foresight"));
+  assert.ok(shakuniKaran.workExecutionStyle.length > 20);
+
+  // 5. Panchak & Abhijit (Session 47)
+  // Moon in Revati (index 26, e.g. 355°)
+  const panchakRevati = evaluatePanchakAbhijit(355.0);
+  assert.strictEqual(panchakRevati.isPanchakBirth, true);
+  assert.ok(panchakRevati.panchakMultiplier.includes("5-Fold Multiplication"));
+
+  // Moon in Abhijit Zone (e.g. 278.0°)
+  const abhijitMoon = evaluatePanchakAbhijit(278.0);
+  assert.strictEqual(abhijitMoon.isAbhijitZone, true);
+  assert.ok(abhijitMoon.abhijitSignificance.includes("Abhijit constellation cusp"));
+  assert.ok(abhijitMoon.abhijitSignificance.includes("Krishna"));
+
+  // 6. Three-Tier Vishnu Armor (Session 49)
+  const armor = getThreeTierVishnuArmor();
+  assert.ok(armor.tier1Physical.mantra.includes("Om Narayanaya Namaha"));
+  assert.ok(armor.tier2Mental.mantra.includes("Om Vishnave Namaha"));
+  assert.ok(armor.tier3Spiritual.mantra.includes("Om Namo Bhagavate Vasudevaya"));
+
+  // 7. Full Ephemeris Integration Test
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  const fullReport = evaluateNatalPanchangaDeep(natalEphem);
+  assert.strictEqual(fullReport.elementalLimbs.length, 5);
+  assert.ok(fullReport.weekdayDesire.coreLifelongDesire.length > 20);
+  assert.ok(fullReport.tithiDeity.presidingDeity);
+  assert.ok(fullReport.tithiDeity.healingMantra);
+  assert.ok(fullReport.yogiAvayogi.yogiPlanet);
+  assert.ok(fullReport.karanExecution.workExecutionStyle);
+
+  const textDossier = generateNatalPanchangaDeepReport(natalEphem);
+  assert.ok(textDossier.includes("CLASSICAL NATAL PANCHANGA DEEP BLUEPRINT"));
+  assert.ok(textDossier.includes("Five Elemental Limbs"));
+  assert.ok(textDossier.includes("Dagdha Rashis"));
+  assert.ok(textDossier.includes("Yogi, Sahayogi & Avayogi Points"));
+  assert.ok(textDossier.includes("Three-Tier Vishnu Armor"));
+});
+
+test("Subtest 135: Makara Rashi (Capricorn), Kurma Avatara Archetype, Saturn 5-Fold Influence Matrix & Kali Yuga Redemption (Sessions 36, 37, 38)", async () => {
+  const {
+    calculateMultiLagnaFramework,
+    evaluateGunaStructuralEvolution,
+    evaluateMakaraKurmaArchetype,
+    evaluateSaturnComprehensiveReach,
+    evaluateSaturnMaturationAndSign,
+    evaluatePurushaStriPolarity,
+    evaluateKaliYugaRedemption,
+    generateMakaraKurmaMasterReport,
+    CAPRICORN_HOUSE_DUTY_RULES,
+    SATURN_SIGN_PSYCHOLOGY,
+    SATURN_HOUSE_AGING_RULES
+  } = await import("../src/engine/makaraKurmaSaturn.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Multi-Lagna 7-Center Framework (Session 36)
+  const ml = calculateMultiLagnaFramework(natalEphem);
+  assert.ok(ml.centers.lagna, "Lagna center must exist");
+  assert.ok(ml.centers.lagnesha, "Lagnesha center must exist");
+  assert.ok(ml.centers.moonLagna, "Moon Lagna center must exist");
+  assert.ok(ml.centers.guruLagna, "Guru Lagna center must exist");
+  assert.ok(ml.centers.suryaLagna, "Surya Lagna center must exist");
+  assert.ok(ml.centers.saturnKarma, "Saturn center must exist");
+  assert.ok(ml.centers.arudhaLagna, "Arudha Lagna center must exist");
+  assert.strictEqual(ml.centers.lagna.houseFromLagna, 1);
+  assert.ok(ml.synthesis.includes("distinct existential lenses"));
+
+  // 2. Guna Progression & Artha Trikona Triad (Session 36)
+  const guna = evaluateGunaStructuralEvolution(natalEphem);
+  assert.strictEqual(guna.rajasicQuadrat.perspective, "I to I (Self-Centric)");
+  assert.strictEqual(guna.tamasicQuadrat.perspective, "I to You (Relational / Contractual)");
+  assert.strictEqual(guna.sattvicQuadrat.perspective, "I to All (Universal / Collective)");
+  assert.ok(guna.arthaTrikona.taurusH2.guna.includes("Rajasic Earth"));
+  assert.ok(guna.arthaTrikona.virgoH6.guna.includes("Tamasic Earth"));
+  assert.ok(guna.arthaTrikona.capricornH10.guna.includes("Sattvic Earth"));
+  assert.ok(guna.arthaTrikona.capricornH10.karmicPrinciple.includes("Nishkama Karma"));
+
+  // 3. Kurma Avatara Archetype & Capricorn House Duty (Session 37)
+  const kurma = evaluateMakaraKurmaArchetype(natalEphem);
+  assert.ok(kurma.capricornHouse >= 1 && kurma.capricornHouse <= 12);
+  assert.strictEqual(kurma.capricornSignName, "Capricorn (Makara)");
+  assert.strictEqual(kurma.rulingLord, "Saturn (Shani)");
+  assert.ok(kurma.samudraManthanDuty.includes("Mount Mandara"));
+  assert.ok(kurma.samudraManthanDuty.includes("tortoise"));
+  assert.ok(kurma.chirasthayiYashGuidance.length > 20);
+  assert.ok(kurma.groomingIndicators.hairHygieneRule.includes("Saturn rules head and bodily hair"));
+  assert.ok(kurma.groomingIndicators.footwearHygieneRule.includes("Capricorn governs shoes"));
+
+  // Verify all 12 ascendant Capricorn rules are comprehensively mapped
+  for (let h = 1; h <= 12; h++) {
+    assert.ok(CAPRICORN_HOUSE_DUTY_RULES[h], `House ${h} duty rule must exist`);
+    assert.ok(CAPRICORN_HOUSE_DUTY_RULES[h].selflessLaborGuidance.length > 20);
+    assert.ok(CAPRICORN_HOUSE_DUTY_RULES[h].chirasthayiYashOutcome.length > 20);
+  }
+
+  // 4. Saturn's 5-Fold Influence Matrix & Shadow Mechanics (Session 37)
+  const satReach = evaluateSaturnComprehensiveReach(natalEphem);
+  assert.ok(satReach.occupiedHouse >= 1 && satReach.occupiedHouse <= 12);
+  assert.ok(satReach.heenBhavnaDomain.includes("Heen Bhavna"));
+  assert.strictEqual(satReach.chhayaFlankingBehind.house, ((satReach.occupiedHouse - 2 + 12) % 12) + 1); // 12th from Saturn (1 behind)
+  assert.strictEqual(satReach.chhayaFlankingAhead.house, (satReach.occupiedHouse % 12) + 1); // 2nd from Saturn (1 ahead)
+  assert.strictEqual(satReach.fourthHouseFruition.house, ((satReach.occupiedHouse + 2) % 12) + 1); // 4th from Saturn
+  assert.strictEqual(satReach.manda5thHurdle.house, ((satReach.occupiedHouse + 3) % 12) + 1); // 5th from Saturn
+  assert.strictEqual(satReach.specialDrishtis.length, 3);
+  assert.strictEqual(satReach.specialDrishtis[0].aspectLabel, "3rd Aspect (Tritiya Drishti)");
+  assert.strictEqual(satReach.specialDrishtis[1].aspectLabel, "7th Aspect (Saptama Drishti)");
+  assert.strictEqual(satReach.specialDrishtis[2].aspectLabel, "10th Aspect (Dashama Drishti)");
+  assert.ok(satReach.allInfluencedHouses.length >= 6);
+  assert.ok(satReach.fearAsTeacherSynthesis.includes("Nyayadhikari"));
+
+  // 5. Saturn in 12 Signs & House Maturation / Aging (Session 38)
+  const satMat = evaluateSaturnMaturationAndSign(natalEphem);
+  assert.ok(satMat.saturnSign);
+  assert.ok(satMat.signPsychologicalTheme.length > 20);
+  assert.ok(satMat.rajYogaPotential.length > 20);
+  assert.ok(satMat.houseAgingImpact.agingEntity);
+  assert.ok(satMat.houseAgingImpact.shastricPrescription.length > 20);
+
+  // Verify all 12 signs and houses are populated in reference tables
+  const signList = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
+  for (const s of signList) {
+    assert.ok(SATURN_SIGN_PSYCHOLOGY[s], `Sign ${s} psychology must exist`);
+    assert.ok(SATURN_SIGN_PSYCHOLOGY[s].psychology.length > 20);
+    assert.ok(SATURN_SIGN_PSYCHOLOGY[s].rajYogaPotential.length > 20);
+  }
+  for (let h = 1; h <= 12; h++) {
+    assert.ok(SATURN_HOUSE_AGING_RULES[h], `House ${h} aging rule must exist`);
+    assert.ok(SATURN_HOUSE_AGING_RULES[h].agingEntity.length > 2);
+  }
+
+  // 6. Purusha vs Stri Polarity (Session 38)
+  const polarity = evaluatePurushaStriPolarity(natalEphem);
+  assert.ok(polarity.purushaCount >= 0);
+  assert.ok(polarity.striCount >= 0);
+  assert.strictEqual(polarity.purushaCount + polarity.striCount, 9); // 9 classical grahas
+  assert.ok(["Purusha (Active / Extroverted / Initiative)", "Stri (Receptive / Introverted / Preservation)", "Balanced Equilibrium"].includes(polarity.dominantPolarity));
+  assert.ok(polarity.energeticGuidance.length > 20);
+
+  // 7. King Parikshit Kali Yuga Redemption & Master Respiratory Remedy (Session 38)
+  const kali = evaluateKaliYugaRedemption();
+  assert.ok(kali.shrimadBhagavataContext.includes("Shrimad Bhagavata Mahapurana"));
+  assert.ok(kali.singularRedemptionPrinciple.includes("Holy Name"));
+  assert.ok(kali.dailyChantingShield.includes("Ram"));
+  assert.ok(kali.respiratoryRemedyAnatomy.outerNostrilsRuler.includes("Mars (Mangal)"));
+  assert.ok(kali.respiratoryRemedyAnatomy.pranaVayuInboundRuler.includes("Jupiter (Guru)"));
+  assert.ok(kali.respiratoryRemedyAnatomy.apanaVayuOutboundRuler.includes("Saturn (Shani)"));
+  assert.ok(kali.respiratoryRemedyAnatomy.substanceRuler.includes("Mustard Oil"));
+  assert.ok(kali.respiratoryRemedyAnatomy.sanjeevaniDosageRuler.includes("Venus"));
+  assert.ok(kali.ethicalAstrologyGuardrail.includes("sacred tool for personal life-correction"));
+
+  // 8. Master Synthesis Report Generator
+  const masterRep = generateMakaraKurmaMasterReport(natalEphem);
+  assert.ok(masterRep.masterExecutiveSummary.includes("Makara Rashi (Capricorn) is the cosmic sanctuary of the Kurma Avatara"));
+  assert.ok(masterRep.masterExecutiveSummary.includes("Chirasthayi Yash"));
+  assert.ok(masterRep.saturnReach.fearAsTeacherSynthesis.includes("Nyayadhikari"));
+});
+
+test("Subtest 136: Kumbha Rashi (Aquarius), Bhrigu Bindu, Rahu-Saturn Triad & Karmic Protection (Sessions 39 & 40)", async () => {
+  const {
+    calculateShorterArcMidpoint,
+    calculateBhriguBindu,
+    evaluateKumbhaWaterBearerArchetype,
+    evaluateRahuHouseNonExploitation,
+    evaluateFriendshipZodiacAlignment,
+    evaluateAquariusTriadRulership,
+    generateKumbhaAquariusMasterReport,
+    KUMBHA_HOUSE_ARCHETYPES,
+    RAHU_NON_EXPLOITATION_RULES,
+    BODILY_CORRESPONDENCE_LIST,
+  } = await import("../src/engine/kumbhaAquariusRahu.ts");
+
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const testLocation = { cityName: "New Delhi", country: "India", latitude: 28.6139, longitude: 77.209, timezoneOffsetHours: 5.5 };
+  const natalDate = new Date("1995-10-16T12:00:00Z");
+  const natalEphem = calculateVedicEphemeris(natalDate, testLocation, "Lahiri");
+
+  // 1. Shorter Arc Mathematical Midpoint
+  const m1 = calculateShorterArcMidpoint(30, 90);
+  assert.strictEqual(m1.midpoint, 60);
+  assert.strictEqual(m1.arcSpan, 60);
+
+  const m2 = calculateShorterArcMidpoint(10, 350);
+  assert.strictEqual(m2.midpoint, 0);
+  assert.strictEqual(m2.arcSpan, 20);
+
+  const m3 = calculateShorterArcMidpoint(350, 10);
+  assert.strictEqual(m3.midpoint, 0);
+  assert.strictEqual(m3.arcSpan, 20);
+
+  const m4 = calculateShorterArcMidpoint(0, 180);
+  assert.strictEqual(m4.midpoint, 90);
+  assert.strictEqual(m4.arcSpan, 180);
+
+  // 2. Bhrigu Bindu & Destiny Point Mathematical Axis (Session 40)
+  const bbProfile = calculateBhriguBindu(natalEphem);
+  assert.ok(bbProfile.bhriguBindu);
+  assert.ok(bbProfile.destinyPoint);
+  assert.ok(bbProfile.bhriguBindu.degree >= 0 && bbProfile.bhriguBindu.degree < 360);
+  assert.ok(bbProfile.destinyPoint.degree >= 0 && bbProfile.destinyPoint.degree < 360);
+
+  // Destiny Point is exactly 180° away from Bhrigu Bindu
+  const diffDeg = Math.round(Math.abs(bbProfile.destinyPoint.degree - bbProfile.bhriguBindu.degree));
+  assert.ok(diffDeg === 180 || diffDeg === 180);
+
+  assert.ok(bbProfile.bhriguBindu.signName);
+  assert.ok(bbProfile.bhriguBindu.nakshatraName);
+  assert.ok(bbProfile.bhriguBindu.pada >= 1 && bbProfile.bhriguBindu.pada <= 4);
+  assert.ok(bbProfile.bhriguBindu.houseFromLagna >= 1 && bbProfile.bhriguBindu.houseFromLagna <= 12);
+  assert.ok(bbProfile.bhriguBindu.houseFromMoon >= 1 && bbProfile.bhriguBindu.houseFromMoon <= 12);
+  assert.ok(bbProfile.bhriguBindu.formattedPosition.length > 5);
+
+  assert.ok(bbProfile.destinyPoint.signName);
+  assert.ok(bbProfile.destinyPoint.nakshatraName);
+  assert.ok(bbProfile.destinyPoint.pada >= 1 && bbProfile.destinyPoint.pada <= 4);
+  assert.ok(bbProfile.destinyPoint.houseFromLagna >= 1 && bbProfile.destinyPoint.houseFromLagna <= 12);
+  assert.ok(bbProfile.transitingActivationGuidance.includes("transits of Saturn, Jupiter, Rahu, and Ketu"));
+
+  // 3. Kumbha Water-Bearer Archetype & Teeth Physical Indicator (Session 39)
+  const kw = evaluateKumbhaWaterBearerArchetype(natalEphem);
+  assert.strictEqual(kw.signName, "Aquarius");
+  assert.strictEqual(kw.signIndex, 10);
+  assert.ok(kw.houseNumber >= 1 && kw.houseNumber <= 12);
+  assert.ok(kw.archetypeTitle.length > 5);
+  assert.ok(kw.waterBearerDuty.length > 10);
+  assert.ok(kw.selflessGivingMandate.length > 10);
+  assert.ok(kw.karmicTrap.length > 10);
+  assert.ok(kw.enduringBlessing.length > 10);
+
+  // Teeth Physical Indicator
+  assert.ok(kw.teethPhysicalIndicator.relativeOrDomain);
+  assert.ok(kw.teethPhysicalIndicator.dentalSignature.length > 10);
+  assert.ok(kw.teethPhysicalIndicator.clinicalObservation.length > 10);
+
+  // Check all 12 house archetypes are configured
+  for (let h = 1; h <= 12; h++) {
+    assert.ok(KUMBHA_HOUSE_ARCHETYPES[h], `House ${h} archetype must exist`);
+    assert.ok(KUMBHA_HOUSE_ARCHETYPES[h].teethPhysicalIndicator.relativeOrDomain);
+  }
+
+  // 4. Rahu House Non-Exploitation Universal Law (Session 40)
+  const rne = evaluateRahuHouseNonExploitation(natalEphem);
+  assert.ok(rne.rahuHouse >= 1 && rne.rahuHouse <= 12);
+  assert.ok(rne.aquariusHouse >= 1 && rne.aquariusHouse <= 12);
+  assert.ok(rne.activeRahuRule.houseSignification.length > 5);
+  assert.ok(rne.activeRahuRule.dangerZoneExploitation.includes("Never"));
+  assert.ok(rne.activeRahuRule.karmicBacklash.length > 10);
+  assert.ok(rne.activeRahuRule.selflessServicePathway.length > 10);
+  assert.ok(rne.universalWarning.includes("UNIVERSAL RAHU KARMIC LAW"));
+
+  // Check all 12 Rahu rules exist
+  for (let h = 1; h <= 12; h++) {
+    assert.ok(RAHU_NON_EXPLOITATION_RULES[h], `Rahu House ${h} rule must exist`);
+    assert.ok(RAHU_NON_EXPLOITATION_RULES[h].dangerZoneExploitation.includes("Never"));
+  }
+
+  // 5. 11th House True Friend Rule & Name Initial Matrix (Session 39)
+  const friends = evaluateFriendshipZodiacAlignment(natalEphem, "Anil");
+  assert.ok(friends.eleventhFromLagna.signName);
+  assert.ok(friends.eleventhFromLagna.friendlySounds.length > 0);
+  assert.ok(friends.eleventhFromMoon.signName);
+  assert.ok(friends.eleventhFromMoon.friendlySounds.length > 0);
+  assert.ok(friends.trinalAllies.fifthSign.name);
+  assert.ok(friends.trinalAllies.ninthSign.name);
+  assert.ok(friends.analyzedFriend);
+  assert.strictEqual(friends.analyzedFriend.name, "Anil");
+  assert.strictEqual(friends.analyzedFriend.detectedSignIndex, 0); // 'A' -> Aries
+  assert.ok(friends.analyzedFriend.relationshipStatus);
+  assert.ok(friends.analyzedFriend.detailedGuidance.length > 20);
+
+  // 6. Triad Rulership & Mythological Archetypes (Session 40)
+  const triad = evaluateAquariusTriadRulership(natalEphem);
+  assert.ok(triad.saturnRole.includes("Saturn"));
+  assert.ok(triad.rahuRole.includes("Rahu"));
+  assert.ok(triad.uranusRole.includes("Uranus"));
+  assert.ok(triad.varahaAvataraSynthesis.includes("VARAHA AVATARA"));
+  assert.ok(triad.varahaAvataraSynthesis.includes("Lord Vishnu"));
+  assert.ok(triad.jalandharaDiplomacySynthesis.includes("Jalandhara"));
+  assert.ok(triad.jalandharaDiplomacySynthesis.includes("Lord Shiva"));
+
+  // 7. 9-Point Bodily Correspondences (Session 39)
+  assert.strictEqual(BODILY_CORRESPONDENCE_LIST.length, 9);
+  const handItem = BODILY_CORRESPONDENCE_LIST.find((b) => b.bodyPart.includes("Hand"));
+  assert.ok(handItem && handItem.governingFactor.includes("3rd House"));
+  const speechItem = BODILY_CORRESPONDENCE_LIST.find((b) => b.bodyPart.includes("Speech"));
+  assert.ok(speechItem && speechItem.governingFactor.includes("2nd House"));
+  const clothesItem = BODILY_CORRESPONDENCE_LIST.find((b) => b.bodyPart.includes("Clothes"));
+  assert.ok(clothesItem && clothesItem.governingFactor.includes("Venus"));
+  const breathItem = BODILY_CORRESPONDENCE_LIST.find((b) => b.bodyPart.includes("Breath"));
+  assert.ok(breathItem && breathItem.governingFactor.includes("Jupiter"));
+  const noseItem = BODILY_CORRESPONDENCE_LIST.find((b) => b.bodyPart.includes("Nose"));
+  assert.ok(noseItem && noseItem.governingFactor.includes("Mars"));
+  const hairItem = BODILY_CORRESPONDENCE_LIST.find((b) => b.bodyPart.includes("Hair"));
+  assert.ok(hairItem && hairItem.governingFactor.includes("Saturn"));
+
+  // 8. Master Synthesis Report Generator
+  const masterKumbha = generateKumbhaAquariusMasterReport(natalEphem, "Siddhartha");
+  assert.ok(masterKumbha.holisticDossierSummary.includes("Aquarius (Kumbha Rashi)"));
+  assert.ok(masterKumbha.holisticDossierSummary.includes("Water-Bearer"));
+  assert.ok(masterKumbha.holisticDossierSummary.includes("Bhrigu Bindu"));
+  assert.ok(masterKumbha.holisticDossierSummary.includes("Destiny Point"));
+  assert.ok(masterKumbha.holisticDossierSummary.includes("teeth"));
+  assert.ok(masterKumbha.holisticDossierSummary.includes("Rahu"));
+  assert.ok(masterKumbha.holisticDossierSummary.includes("Batuk Bhairava"));
+  assert.ok(masterKumbha.spiritualShieldAndRemedies.batukBhairavShield.mantraOrStotra.includes("Batuk Bhairav"));
+  assert.ok(masterKumbha.spiritualShieldAndRemedies.animalRemedies.streetDogs.includes("street dogs"));
+  assert.ok(masterKumbha.spiritualShieldAndRemedies.animalRemedies.elephantsAndSilver.includes("silver elephant"));
+});
+
+test("Subtest 137: Meena Rashi (Pisces) Archetype, Kalapurusha Script Overlay, Elemental Immunity Hierarchy & Special Drishti Matrix (Sessions 42-45)", async () => {
+  const {
+    evaluateMeenaPiscesArchetype,
+    evaluateKalapurushaScriptOverlay,
+    evaluateElementalImmunityHierarchy,
+    evaluateSpecialDrishtiKalapurushaResonance,
+    generateMeenaKalapurushaDrishtiMasterReport,
+    PISCES_HOUSE_TEMPLATES,
+    KALAPURUSHA_SIGN_ARCHETYPES,
+  } = await import("../src/engine/meenaKalapurushaDrishti.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  // 1. Template Verification
+  assert.strictEqual(Object.keys(PISCES_HOUSE_TEMPLATES).length, 12);
+  for (let h = 1; h <= 12; h++) {
+    const t = PISCES_HOUSE_TEMPLATES[h];
+    assert.ok(t);
+    assert.ok(t.archetypeTitle.length > 5);
+    assert.ok(t.blindFaithSphere.length > 10);
+    assert.ok(t.daivaKripaMechanism.length > 10);
+    assert.ok(t.calculationTrap.length > 10);
+    assert.ok(t.enduringSpiritualBlessing.length > 10);
+  }
+
+  assert.strictEqual(Object.keys(KALAPURUSHA_SIGN_ARCHETYPES).length, 12);
+  assert.strictEqual(KALAPURUSHA_SIGN_ARCHETYPES[0].naturalHouse, 1);
+  assert.ok(KALAPURUSHA_SIGN_ARCHETYPES[0].theme.length > 5);
+  assert.strictEqual(KALAPURUSHA_SIGN_ARCHETYPES[11].naturalHouse, 12);
+  assert.ok(KALAPURUSHA_SIGN_ARCHETYPES[11].theme.length > 5);
+
+  // 2. Natal Ephemeris Evaluation
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-16T08:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 3. Pisces Archetype & Blind Faith (Session 42)
+  const piscesArchetype = evaluateMeenaPiscesArchetype(natalEphem);
+  assert.ok(piscesArchetype.piscesHouse.houseNumber >= 1 && piscesArchetype.piscesHouse.houseNumber <= 12);
+  assert.strictEqual(piscesArchetype.piscesHouse.signName, "Pisces");
+  assert.ok(piscesArchetype.piscesHouse.blindFaithSphere.length > 10);
+  assert.ok(piscesArchetype.universalCompassionTearsSynthesis.includes("WATER SIGN TEARS HIERARCHY"));
+  assert.ok(piscesArchetype.universalCompassionTearsSynthesis.includes("Cancer"));
+  assert.ok(piscesArchetype.universalCompassionTearsSynthesis.includes("Scorpio"));
+  assert.ok(piscesArchetype.universalCompassionTearsSynthesis.includes("Pisces"));
+
+  // 12th House Expenditure & Sanctuary
+  assert.ok(["Voluntary Auspicious Donation", "Balanced Mixed Outflow", "Forced Unconscious Drainage"].includes(piscesArchetype.twelfthHouseExpenditure.expenditureMode));
+  assert.ok(["Sacred Spiritual Sanctuary", "Restful Peaceful Chamber", "Nocturnal Turbulence & Sensory Excess"].includes(piscesArchetype.twelfthHouseExpenditure.sleepSanctuaryStatus));
+  assert.ok(piscesArchetype.twelfthHouseExpenditure.sanctuaryRecommendations.length > 0);
+  assert.ok(piscesArchetype.twelfthHouseExpenditure.expenditureGuidance.length > 20);
+
+  // 4. Kalapurusha 12-House Energy Script Overlay (Session 43)
+  const overlay = evaluateKalapurushaScriptOverlay(natalEphem);
+  assert.ok(overlay.ascendantSignName);
+  assert.strictEqual(overlay.houseOverlays.length, 12);
+  assert.ok(overlay.masterScriptPhilosophy.includes("Session 43"));
+
+  for (let i = 0; i < 12; i++) {
+    const item = overlay.houseOverlays[i];
+    assert.strictEqual(item.houseNumber, i + 1);
+    assert.ok(item.occupyingSignName);
+    assert.strictEqual(item.occupyingSignIndex, (natalEphem.ascendant ? Math.floor((((natalEphem.ascendant.siderealLongitude % 360) + 360) % 360) / 30) + i : i) % 12);
+    assert.strictEqual(item.kalapurushaHouseNumber, item.occupyingSignIndex + 1);
+    assert.ok(item.kalapurushaArchetype.length > 5);
+    assert.ok(item.houseSignification.length > 5);
+    assert.ok(item.energyScriptSynthesis.length > 10);
+    assert.ok(item.behavioralManifestation.length > 10);
+    assert.ok(item.actionableGuidance.length > 10);
+  }
+
+  // 5. Elemental Immunity Hierarchy & Pathogen Vulnerability (Session 44)
+  const immunity = evaluateElementalImmunityHierarchy(natalEphem);
+  const totalPercentage = immunity.agniPercentage + immunity.prithviPercentage + immunity.vayuPercentage + immunity.jalaPercentage;
+  assert.strictEqual(totalPercentage, 100);
+  assert.ok(immunity.cellularResistanceScore >= 0 && immunity.cellularResistanceScore <= 100);
+  assert.ok(["Fire (Agni)", "Earth (Prithvi)", "Air (Vayu)", "Water (Jala)"].includes(immunity.dominantElement));
+  assert.ok(["Fire (Agni)", "Earth (Prithvi)", "Air (Vayu)", "Water (Jala)"].includes(immunity.secondaryElement));
+  assert.ok(["Superior Cellular Heat & Pathogen Shield", "Robust Structural Stability", "Moderate Nervous & Respiratory Sensitivity", "Vulnerable Fluid-Borne & Contagious Susceptibility"].includes(immunity.immunityClassification));
+  assert.ok(immunity.pathogenVulnerabilitySummary.length > 20);
+  assert.ok(immunity.lifestyleImmunityPrescriptions.length >= 2);
+  assert.ok(typeof immunity.waterAscendantFireLordException.isApplicable === "boolean");
+  assert.ok(immunity.waterAscendantFireLordException.agniFortificationBonus.length > 5);
+
+  // 6. Special Drishti as Kalapurusha Intention Matrix (Session 45)
+  const aspects = evaluateSpecialDrishtiKalapurushaResonance(natalEphem);
+  assert.ok(Array.isArray(aspects));
+  assert.ok(aspects.length > 0);
+
+  // Check Saturn aspects (Saturn must project 3rd Gemini toil and 10th Capricorn duty)
+  const saturn3rd = aspects.find((a) => a.aspectingPlanet === "Saturn" && a.aspectType.includes("3rd"));
+  if (saturn3rd) {
+    assert.ok(saturn3rd.kalapurushaArchetypeResonance.includes("Gemini"));
+    assert.ok(saturn3rd.karmicPsychology.includes("labor") || saturn3rd.karmicPsychology.includes("toil"));
+  }
+  const saturn10th = aspects.find((a) => a.aspectingPlanet === "Saturn" && a.aspectType.includes("10th"));
+  if (saturn10th) {
+    assert.ok(saturn10th.kalapurushaArchetypeResonance.includes("Capricorn"));
+    assert.ok(saturn10th.kalapurushaArchetypeResonance.includes("Duty") || saturn10th.kalapurushaArchetypeResonance.includes("Karma"));
+    assert.ok(saturn10th.karmicPsychology.includes("accountability") || saturn10th.practicalActionDirective.includes("selfless"));
+  }
+
+  // Check Mars aspects (Mars 4th Cancer boundary and 8th Scorpio surgery)
+  const mars4th = aspects.find((a) => a.aspectingPlanet === "Mars" && a.aspectType.includes("4th"));
+  if (mars4th) {
+    assert.ok(mars4th.kalapurushaArchetypeResonance.includes("Cancer"));
+  }
+  const mars8th = aspects.find((a) => a.aspectingPlanet === "Mars" && a.aspectType.includes("8th"));
+  if (mars8th) {
+    assert.ok(mars8th.kalapurushaArchetypeResonance.includes("Scorpio"));
+  }
+
+  // Check Jupiter aspects (Jupiter 5th Leo nurture and 9th Sagittarius fortune)
+  const jupiter5th = aspects.find((a) => a.aspectingPlanet === "Jupiter" && a.aspectType.includes("5th"));
+  if (jupiter5th) {
+    assert.ok(jupiter5th.kalapurushaArchetypeResonance.includes("Leo"));
+  }
+  const jupiter9th = aspects.find((a) => a.aspectingPlanet === "Jupiter" && a.aspectType.includes("9th"));
+  if (jupiter9th) {
+    assert.ok(jupiter9th.kalapurushaArchetypeResonance.includes("Sagittarius"));
+  }
+
+  // 7. Master Synthesis Report Generator
+  const masterReport = generateMeenaKalapurushaDrishtiMasterReport(natalEphem);
+  assert.ok(masterReport.holisticDossierSummary.includes("Pisces (Meena Rashi)"));
+  assert.ok(masterReport.holisticDossierSummary.includes("Blind Faith"));
+  assert.ok(masterReport.holisticDossierSummary.includes("Divine Grace"));
+  assert.ok(masterReport.holisticDossierSummary.includes("Kalapurusha"));
+  assert.ok(masterReport.holisticDossierSummary.includes("Elemental Immunity"));
+  assert.ok(masterReport.holisticDossierSummary.includes("planetary aspects") || masterReport.holisticDossierSummary.includes("Kalapurusha intention"));
+  assert.ok(masterReport.specialDrishtiMatrix.masterAspectPhilosophy.includes("Session 45"));
+});
+
+test("Planetary Dignities (Uchha & Neecha), Conscious Awareness vs. Blind Spot, Father-Son Inversion, and Transit Geometric Axes (Sessions 80 & 81) Verification", async () => {
+  const {
+    PLANETARY_DIGNITY_PSYCHOLOGY,
+    evaluateNatalDignityAwareness,
+    evaluateLagneshaShield,
+    evaluateFatherSonInversionAxis,
+    evaluateTransitGeometricDynamics,
+    generateUchhaNeechaAwarenessMasterReport,
+  } = await import("../src/engine/uchhaNeechaAwareness.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date("2026-09-27T12:00:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Planetary Dignity Psychology Dictionary
+  const planets = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
+  for (const p of planets) {
+    const item = PLANETARY_DIGNITY_PSYCHOLOGY[p];
+    assert.ok(item, `Dignity psychology must exist for ${p}`);
+    assert.strictEqual(item.planet, p);
+    assert.ok(item.moolatrikonaSign);
+    assert.ok(item.moolatrikonaArchetype.length > 5);
+    assert.ok(item.exaltationSign);
+    assert.ok(typeof item.exaltationDegree === "number");
+    assert.ok(item.exaltationEnvironment.length > 5);
+    assert.ok(item.exaltationWhyRejoices.length > 10);
+    assert.ok(item.consciousAwarenessSuperpower.length > 10);
+    assert.ok(item.exaltationEgoPitfall.length > 10);
+    assert.ok(item.debilitationSign);
+    assert.ok(typeof item.debilitationDegree === "number");
+    assert.ok(item.debilitationEnvironment.length > 5);
+    assert.ok(item.debilitationWhyConstrained.length > 10);
+    assert.ok(item.blindSpotInexperience.length > 10);
+    assert.ok(item.remedialMindfulness.length > 10);
+  }
+
+  // Check specific classical rationale: Sun in Aries vs Libra
+  assert.strictEqual(PLANETARY_DIGNITY_PSYCHOLOGY["Sun"].exaltationSign, "Aries");
+  assert.strictEqual(PLANETARY_DIGNITY_PSYCHOLOGY["Sun"].debilitationSign, "Libra");
+  assert.ok(PLANETARY_DIGNITY_PSYCHOLOGY["Sun"].exaltationEnvironment.includes("Dawn"));
+  assert.ok(PLANETARY_DIGNITY_PSYCHOLOGY["Sun"].debilitationEnvironment.includes("Dusk"));
+
+  // Check Moon in Taurus vs Scorpio
+  assert.strictEqual(PLANETARY_DIGNITY_PSYCHOLOGY["Moon"].exaltationSign, "Taurus");
+  assert.strictEqual(PLANETARY_DIGNITY_PSYCHOLOGY["Moon"].debilitationSign, "Scorpio");
+  assert.ok(PLANETARY_DIGNITY_PSYCHOLOGY["Moon"].exaltationWhyRejoices.includes("nourishing"));
+
+  // Check Saturn in Libra vs Aries
+  assert.strictEqual(PLANETARY_DIGNITY_PSYCHOLOGY["Saturn"].exaltationSign, "Libra");
+  assert.strictEqual(PLANETARY_DIGNITY_PSYCHOLOGY["Saturn"].debilitationSign, "Aries");
+  assert.ok(PLANETARY_DIGNITY_PSYCHOLOGY["Saturn"].exaltationEnvironment.includes("Judge") || PLANETARY_DIGNITY_PSYCHOLOGY["Saturn"].exaltationEnvironment.includes("Justice"));
+
+  // 2. Natal Dignity Awareness Evaluation
+  const awarenessReport = evaluateNatalDignityAwareness(natalEphem);
+  assert.ok(Array.isArray(awarenessReport.planets));
+  assert.strictEqual(awarenessReport.planets.length, 7);
+  for (const item of awarenessReport.planets) {
+    assert.ok(item.planet);
+    assert.ok(item.signName);
+    assert.ok(typeof item.signIndex === "number");
+    assert.ok(item.houseNumber >= 1 && item.houseNumber <= 12);
+    assert.ok(["Exalted", "Moolatrikona", "Own Sign", "Friendly", "Neutral", "Enemy", "Debilitated"].includes(item.dignity));
+    assert.ok(typeof item.isExalted === "boolean");
+    assert.ok(typeof item.isDebilitated === "boolean");
+    assert.ok(item.awarenessOrBlindSpotCategory);
+    assert.ok(item.detailedInterpretation.length > 15);
+    assert.ok(item.actionableMindfulness.length > 15);
+  }
+
+  // 3. Lagnesha Shield Evaluation
+  const lagneshaShield = evaluateLagneshaShield(natalEphem);
+  assert.ok(lagneshaShield.lagnaSign);
+  assert.ok(lagneshaShield.lagnaLord);
+  assert.ok(lagneshaShield.occupiedHouse >= 1 && lagneshaShield.occupiedHouse <= 12);
+  assert.ok(lagneshaShield.occupiedSign);
+  assert.ok(lagneshaShield.dignity);
+  assert.ok(typeof lagneshaShield.isDebilitated === "boolean");
+  assert.ok(lagneshaShield.protectionShieldStatement.includes("anchor") || lagneshaShield.protectionShieldStatement.includes("Lagnesha"));
+  assert.ok(lagneshaShield.vitalizedHouseSignification.length > 10);
+  assert.ok(lagneshaShield.shastricCounsel.length > 10);
+
+  // 4. Father-Son Inversion Axis Evaluation
+  const inversionAxis = evaluateFatherSonInversionAxis(natalEphem);
+  assert.ok(typeof inversionAxis.isSunInAries === "boolean");
+  assert.ok(typeof inversionAxis.isSaturnInAries === "boolean");
+  assert.ok(typeof inversionAxis.isSunInLibra === "boolean");
+  assert.ok(typeof inversionAxis.isSaturnInLibra === "boolean");
+  assert.ok(typeof inversionAxis.inversionActive === "boolean");
+  assert.ok(inversionAxis.inversionType);
+  assert.ok(inversionAxis.karmicSignificance.length > 15);
+  assert.ok(inversionAxis.reconciliationGuidance.length > 15);
+
+  // 5. Transit Geometric Dynamics Evaluation
+  const transitDynamics = evaluateTransitGeometricDynamics(transitEphem);
+  assert.ok(Array.isArray(transitDynamics.transitOppositions));
+  assert.ok(Array.isArray(transitDynamics.upachayaInspirations));
+  assert.ok(Array.isArray(transitDynamics.shadashtakaFrictions));
+  assert.ok(transitDynamics.moonVenusTaurusConjunction);
+  assert.ok(transitDynamics.macroTransitSynthesis.length > 20);
+
+  // Check Moon-Venus Conjunction profile
+  const mvt = transitDynamics.moonVenusTaurusConjunction;
+  assert.ok(typeof mvt.isConjunctionInTaurus === "boolean");
+  assert.ok(typeof mvt.isConjunctionAnywhere === "boolean");
+  assert.ok(mvt.sensoryDesireIntensity.length > 5);
+  assert.ok(mvt.karmicWarning.length > 15);
+  assert.ok(mvt.virtuousConductBlessing.length > 15);
+  assert.ok(mvt.practicalDirective.length > 15);
+
+  // 6. Master Synthesis Report Generator
+  const masterReport = generateUchhaNeechaAwarenessMasterReport(natalEphem, transitEphem);
+  assert.ok(masterReport.masterDossierSummary.includes("PLANETARY DIGNITIES"));
+  assert.ok(masterReport.masterDossierSummary.includes("Conscious Awareness"));
+  assert.ok(masterReport.masterDossierSummary.includes("Blind Spot"));
+  assert.ok(masterReport.masterDossierSummary.includes("Lagnesha Sovereign Shield"));
+  assert.ok(masterReport.masterDossierSummary.includes("Father-Son Sun/Saturn Inversion Axis"));
+  assert.ok(masterReport.masterDossierSummary.includes("Transit Geometric Dynamics"));
+  assert.ok(masterReport.panchangaTattvaReminder.includes("Vara") && masterReport.panchangaTattvaReminder.includes("Tithi"));
+});
+
+test("Classical Three Sages (Rishi) Modality, Sacred Lineage Deities, 3rd-House 12-Year Change Wave & 12-Sign Blind Spots (Sessions 93, 94 & 95) Verification", async () => {
+  const {
+    THREE_RISHIS_CONFIG,
+    getSignModality,
+    getDrekkanaRishi,
+    evaluateDrekkanaRishiAllocation,
+    evaluateSacredLineageDeities,
+    evaluateLifeAxisAndEntryExit,
+    evaluateDeepDignityDegrees,
+    evaluateSignLordAwarenessBlindSpots,
+    generateRishiDrekkanaMasterReport,
+  } = await import("../src/engine/rishiDrekkanaAwareness.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Delhi", country: "India", latitude: 28.6139, longitude: 77.2090, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1998-09-17T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Config & Modality Helpers
+  assert.ok(THREE_RISHIS_CONFIG["Devarshi Narada"]);
+  assert.ok(THREE_RISHIS_CONFIG["Brahmarshi Agastya"]);
+  assert.ok(THREE_RISHIS_CONFIG["Maharshi Durvasa"]);
+  assert.strictEqual(getSignModality(0), "Movable"); // Aries
+  assert.strictEqual(getSignModality(1), "Fixed");   // Taurus
+  assert.strictEqual(getSignModality(2), "Dual");    // Gemini
+
+  // 2. Parashari Drekkana Rishi Mapping Rule Verification
+  // Movable: 0-10 Narada, 10-20 Agastya, 20-30 Durvasa
+  assert.strictEqual(getDrekkanaRishi(0, 5).rishi, "Devarshi Narada");
+  assert.strictEqual(getDrekkanaRishi(0, 15).rishi, "Brahmarshi Agastya");
+  assert.strictEqual(getDrekkanaRishi(0, 25).rishi, "Maharshi Durvasa");
+  // Fixed: 0-10 Agastya, 10-20 Durvasa, 20-30 Narada
+  assert.strictEqual(getDrekkanaRishi(1, 5).rishi, "Brahmarshi Agastya");
+  assert.strictEqual(getDrekkanaRishi(1, 15).rishi, "Maharshi Durvasa");
+  assert.strictEqual(getDrekkanaRishi(1, 25).rishi, "Devarshi Narada");
+  // Dual: 0-10 Durvasa, 10-20 Narada, 20-30 Agastya
+  assert.strictEqual(getDrekkanaRishi(2, 5).rishi, "Maharshi Durvasa");
+  assert.strictEqual(getDrekkanaRishi(2, 15).rishi, "Devarshi Narada");
+  assert.strictEqual(getDrekkanaRishi(2, 25).rishi, "Brahmarshi Agastya");
+
+  // 3. Drekkana Rishi Allocation Engine Evaluation
+  const drekkanaAlloc = evaluateDrekkanaRishiAllocation(natalEphem);
+  assert.strictEqual(drekkanaAlloc.planets.length, 10); // Ascendant + 9 planets
+  assert.ok(drekkanaAlloc.naradaCount + drekkanaAlloc.agastyaCount + drekkanaAlloc.durvasaCount === 10);
+  assert.ok(["Devarshi Narada", "Brahmarshi Agastya", "Maharshi Durvasa"].includes(drekkanaAlloc.dominantRishi));
+  assert.ok(drekkanaAlloc.triRishiSynthesis.length > 20);
+
+  for (const p of drekkanaAlloc.planets) {
+    assert.ok(p.planet);
+    assert.ok(p.signName);
+    assert.ok(p.houseNumber >= 1 && p.houseNumber <= 12);
+    assert.ok(p.degreeInSign >= 0 && p.degreeInSign <= 30);
+    assert.ok([1, 2, 3].includes(p.drekkanaNumber));
+    assert.ok(["Movable", "Fixed", "Dual"].includes(p.modality));
+    assert.ok(p.governingRishi);
+    assert.ok(p.rishiQuality.length > 5);
+    assert.ok(p.behavioralExpression.length > 10);
+    assert.ok(p.salutationMantra.includes("Namaha") && p.salutationMantra.length > 10);
+  }
+
+  // 4. Sacred Lineage of Houses (Divine Triad) & Elemental Propitiation
+  const lineage = evaluateSacredLineageDeities(natalEphem);
+  assert.strictEqual(lineage.kulaDevata.houseNumber, 4);
+  assert.ok(lineage.kulaDevata.signName);
+  assert.ok(["Water (Jala)", "Fire (Agni)", "Earth (Prithvi)", "Air (Vayu)"].includes(lineage.kulaDevata.element));
+  assert.ok(lineage.kulaDevata.elementalPropitiationProtocol.length > 15);
+  assert.ok(lineage.kulaDevata.ancestralGuidance.length > 10);
+
+  assert.strictEqual(lineage.dharmaDevata.houseNumber, 9);
+  assert.ok(lineage.dharmaDevata.signName);
+  assert.ok(lineage.dharmaDevata.philosophicalGuidance.length > 10);
+
+  assert.strictEqual(lineage.ishtaDevata.houseNumber, 12);
+  assert.ok(lineage.ishtaDevata.signName);
+  assert.ok(lineage.ishtaDevata.mokshaGuidance.length > 10);
+
+  // 5. Life Axis of Entry and Exit & 12-Year Change Wave
+  const testEvalDate = new Date("2026-09-27T00:00:00Z");
+  const lifeAxis = evaluateLifeAxisAndEntryExit(natalEphem, testEvalDate);
+  assert.strictEqual(lifeAxis.thirdHouseChangeWave.houseNumber, 3);
+  assert.ok(lifeAxis.thirdHouseChangeWave.nativeCurrentAge > 0);
+  assert.deepStrictEqual(lifeAxis.thirdHouseChangeWave.milestoneAges, [3, 15, 27, 39, 51, 63, 75, 87, 99]);
+  assert.ok(lifeAxis.thirdHouseChangeWave.waveStatusDescription.length > 10);
+  assert.ok(lifeAxis.thirdHouseChangeWave.changeInitiativeDirective.length > 10);
+
+  assert.ok(lifeAxis.entryExitPhysicalReality.fourthHouseBirthCondition.length > 10);
+  assert.ok(lifeAxis.entryExitPhysicalReality.eighthHouseExitRelease.length > 10);
+  assert.ok(lifeAxis.entryExitPhysicalReality.spiritualEvolutionAxis.length > 10);
+
+  // 6. Deep Dignity Degrees Proximity
+  const deepDignities = evaluateDeepDignityDegrees(natalEphem);
+  assert.strictEqual(deepDignities.length, 7);
+  for (const dd of deepDignities) {
+    assert.ok(dd.planet);
+    assert.ok(dd.currentSign);
+    assert.ok(typeof dd.isDeeplyExalted === "boolean");
+    assert.ok(typeof dd.isDeeplyDebilitated === "boolean");
+    assert.ok(dd.distanceFromParamochhaDeg >= 0);
+    assert.ok(dd.distanceFromParamaneechaDeg >= 0);
+    assert.ok(dd.dignityPotencyNote.length > 5);
+  }
+
+  // 7. 12-Sign Lord Exaltation (Innate Awareness) vs. Debilitation (Blind Spot) Matrix
+  const blindSpots = evaluateSignLordAwarenessBlindSpots(natalEphem);
+  assert.ok(blindSpots.lagnaSignDiagnostic);
+  assert.ok(blindSpots.moonSignDiagnostic);
+  assert.ok(blindSpots.sunSignDiagnostic);
+  assert.strictEqual(blindSpots.all12SignDiagnostics.length, 12);
+
+  for (const diag of blindSpots.all12SignDiagnostics) {
+    assert.ok(diag.signName);
+    assert.ok(diag.rulingLord);
+    assert.ok(diag.lordExaltationSign);
+    assert.ok(diag.lordExaltationHouseRelative >= 1 && diag.lordExaltationHouseRelative <= 12);
+    assert.ok(diag.lordDebilitationSign);
+    assert.ok(diag.lordDebilitationHouseRelative >= 1 && diag.lordDebilitationHouseRelative <= 12);
+    assert.ok(diag.innateAwarenessCompetence.length > 15);
+    assert.ok(diag.subconsciousBlindSpot.length > 15);
+    assert.ok(diag.actionableMindfulnessRemedy.length > 15);
+  }
+
+  // 8. Master Synthesis Report Generator
+  const masterReport = generateRishiDrekkanaMasterReport(natalEphem, testEvalDate);
+  assert.ok(masterReport.holisticDossierSummary.includes("THREE RISHIS"));
+  assert.ok(masterReport.holisticDossierSummary.includes("Kula Devata"));
+  assert.ok(masterReport.holisticDossierSummary.includes("3rd House Life Axis"));
+  assert.ok(masterReport.holisticDossierSummary.includes("blind spot"));
+  assert.strictEqual(masterReport.dominantRishi, drekkanaAlloc.dominantRishi);
+  assert.ok(masterReport.kulaDevataPropitiation.length > 10);
+  assert.ok(masterReport.thirdHouseChangeWaveStatus.length > 10);
+});
+
+test("Subtest 140: Phase 44 - Bi-Directional Linking, Guided Master Consultation Journeys & Personalized Chatbot Welcome Integration", async () => {
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const {
+    parseMessageContent,
+    buildPersonalizedWelcomeMessage,
+    tryInstantEngineAnswer,
+  } = await import("../src/components/AstroChatbot.tsx");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1998-05-24T18:46:51.000Z"), location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date("2026-08-31T00:00:00.000Z"), location, "Lahiri", "WholeSign", "Mean");
+  const testEvalDate = new Date("2026-09-27T00:00:00Z");
+
+  // 1. parseMessageContent Deep Links & Chips Extraction
+  const sampleAssistantMsg = `### Reading Summary:
+Here is your complete career guidance.
+
+Looking at your chart, this is a 85% Favorable • 15% Friction era.
+
+\`\`\`deeplinks
+[{"tabId":"medhaj_indu","label":"Indu Lagna Wealth Engine"},{"tabId":"rishi_drekkana","label":"Rishi Drekkana Vocation"}]
+\`\`\`
+
+\`\`\`chips
+[{"id":"c1","label":"Career Timing","prompt":"When will my career activate?"}]
+\`\`\``;
+
+  const parsed = parseMessageContent(sampleAssistantMsg);
+  assert.ok(parsed, "Parsed object must exist");
+  assert.strictEqual(parsed.probabilityScore?.favorable, 85);
+  assert.strictEqual(parsed.probabilityScore?.friction, 15);
+  assert.strictEqual(parsed.deeplinks.length, 2);
+  assert.strictEqual(parsed.deeplinks[0].tabId, "medhaj_indu");
+  assert.strictEqual(parsed.deeplinks[0].label, "Indu Lagna Wealth Engine");
+  assert.strictEqual(parsed.deeplinks[1].tabId, "rishi_drekkana");
+  assert.strictEqual(parsed.chips.length, 1);
+  assert.strictEqual(parsed.chips[0].id, "c1");
+  assert.ok(!parsed.cleanedContent.includes("```deeplinks"), "Cleaned content must strip deeplinks block");
+  assert.ok(!parsed.cleanedContent.includes("```chips"), "Cleaned content must strip chips block");
+
+  // 2. buildPersonalizedWelcomeMessage Verification
+  const welcomeNoChart = buildPersonalizedWelcomeMessage(undefined);
+  assert.ok(welcomeNoChart.includes("Pranam!"), "Default welcome must greet user");
+  assert.ok(welcomeNoChart.includes("Birth Time Verification (BTR)"), "Default welcome must offer BTR");
+
+  const personalizedWelcome = buildPersonalizedWelcomeMessage(natalEphem);
+  assert.ok(personalizedWelcome.includes("Personalized Classical Jyotish Consultation"));
+  assert.ok(personalizedWelcome.includes("43 Classical Multi-Varga Engines"));
+  assert.ok(personalizedWelcome.includes("Active 12-Year Change Wave"));
+  assert.ok(personalizedWelcome.includes("Presiding Sage Archetype"));
+  assert.ok(personalizedWelcome.includes("4th House Kula Devata"));
+  assert.ok(personalizedWelcome.includes("Lagna Superpower vs. Blind Spot"));
+  assert.ok(personalizedWelcome.includes("```chips"), "Welcome must include 1-click consultation chips");
+
+  const parsedWelcome = parseMessageContent(personalizedWelcome);
+  assert.strictEqual(parsedWelcome.chips.length, 5, "Personalized welcome must render 5 guided journey chips");
+
+  // 3. Fast-Path Interceptor 36 - Guided Master Consultation Journeys
+  // Journey 1: Career & Wealth Master Audit
+  const careerAns = tryInstantEngineAnswer(
+    "Run a comprehensive Career & Wealth Master Audit for my chart including Indu Lagna, 10th house, and D10.",
+    natalEphem,
+    transitEphem,
+    testEvalDate,
+    new Date("1998-05-24"),
+    "male"
+  );
+  assert.ok(careerAns, "Career & Wealth Master Audit must be caught by Interceptor 36");
+  assert.ok(careerAns.includes("Master Consultation Journey: Career & Wealth Master Audit"));
+  assert.ok(careerAns.includes("Indu Lagna Wealth Engine"));
+  assert.ok(careerAns.includes("10th House Career Destiny & Vocation Drekkana Rishi"));
+  assert.ok(careerAns.includes("The 2-4-8 Wealth Sustenance Matrix"));
+  assert.ok(careerAns.includes("```deeplinks"));
+  const parsedCareer = parseMessageContent(careerAns);
+  assert.ok(parsedCareer.deeplinks.some((d) => d.tabId === "medhaj_indu"));
+  assert.ok(parsedCareer.deeplinks.some((d) => d.tabId === "rishi_drekkana"));
+
+  // Journey 2: 12-Year Change Wave & Milestone Pivots
+  const pivotAns = tryInstantEngineAnswer(
+    "Analyze my 12-Year Change Wave (3rd House entry/exit axis) and upcoming milestone pivots.",
+    natalEphem,
+    transitEphem,
+    testEvalDate,
+    new Date("1998-05-24"),
+    "male"
+  );
+  assert.ok(pivotAns, "12-Year Change Wave must be caught by Interceptor 36");
+  assert.ok(pivotAns.includes("Master Consultation Journey: 12-Year Change Waves & Milestone Pivots"));
+  assert.ok(pivotAns.includes("The 3rd House Cyclical Wave"));
+  assert.ok(pivotAns.includes("Physical Reality Axis: 4th House (Entrance) vs. 8th House (Release)"));
+  assert.ok(pivotAns.includes("Active Vimshottari Dasha Synergy"));
+  const parsedPivot = parseMessageContent(pivotAns);
+  assert.ok(parsedPivot.deeplinks.some((d) => d.tabId === "rishi_drekkana"));
+  assert.ok(parsedPivot.deeplinks.some((d) => d.tabId === "vimshottari"));
+
+  // Journey 3: Sacred Lineage & Elemental Remedies
+  const lineageAns = tryInstantEngineAnswer(
+    "Reveal my 4th House Kula Devata elemental propitiation, 9th Dharma, and 12th Ishta Devatas.",
+    natalEphem,
+    transitEphem,
+    testEvalDate,
+    new Date("1998-05-24"),
+    "male"
+  );
+  assert.ok(lineageAns, "Sacred Lineage must be caught by Interceptor 36");
+  assert.ok(lineageAns.includes("Master Consultation Journey: Sacred Lineage & Elemental Remedies"));
+  assert.ok(lineageAns.includes("4th House Kula Devata"));
+  assert.ok(lineageAns.includes("9th & 12th House Divine Guidance Triad"));
+  assert.ok(lineageAns.includes("The 40-Day Rule of Habit Integration"));
+  const parsedLineage = parseMessageContent(lineageAns);
+  assert.ok(parsedLineage.deeplinks.some((d) => d.tabId === "rishi_drekkana"));
+  assert.ok(parsedLineage.deeplinks.some((d) => d.tabId === "lifestyle_remedies"));
+
+  // Journey 4: Superpowers & Subconscious Blind Spots
+  const blindSpotAns = tryInstantEngineAnswer(
+    "Analyze my Lagna & Moon sign lord Innate Awareness vs Subconscious Blind Spots.",
+    natalEphem,
+    transitEphem,
+    testEvalDate,
+    new Date("1998-05-24"),
+    "male"
+  );
+  assert.ok(blindSpotAns, "Superpowers & Blind Spots must be caught by Interceptor 36");
+  assert.ok(blindSpotAns.includes("Master Consultation Journey: Superpowers & Subconscious Blind Spots"));
+  assert.ok(blindSpotAns.includes("Ascendant Lord Innate Awareness vs. Subconscious Blind Spot"));
+  assert.ok(blindSpotAns.includes("Moon Sign Lord Emotional Intelligence & Vulnerability"));
+  const parsedBlindSpot = parseMessageContent(blindSpotAns);
+  assert.ok(parsedBlindSpot.deeplinks.some((d) => d.tabId === "rishi_drekkana"));
+  assert.ok(parsedBlindSpot.deeplinks.some((d) => d.tabId === "uchha_neecha"));
+
+  // Journey 5: Lagnesha Sovereign Shield
+  const shieldAns = tryInstantEngineAnswer(
+    "Check my Lagna Lord status, protection shield, and strength.",
+    natalEphem,
+    transitEphem,
+    testEvalDate,
+    new Date("1998-05-24"),
+    "male"
+  );
+  assert.ok(shieldAns, "Lagnesha Sovereign Shield must be caught by Interceptor 36");
+  assert.ok(shieldAns.includes("Master Consultation Journey: Lagnesha Sovereign Shield"));
+  assert.ok(shieldAns.includes("The Absolute Primacy of the Ascendant Lord (Lagnesha)"));
+  assert.ok(shieldAns.includes("The Sovereign Bodyguard Law"));
+  assert.ok(shieldAns.includes("Vitalized Life Domain"));
+  const parsedShield = parseMessageContent(shieldAns);
+  assert.ok(parsedShield.deeplinks.some((d) => d.tabId === "uchha_neecha"));
+});
+

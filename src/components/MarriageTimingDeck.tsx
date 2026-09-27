@@ -25,11 +25,11 @@ export default function MarriageTimingDeck() {
           <div className="flex items-center gap-2">
             <span className="text-2xl">💍</span>
             <h2 className="text-lg font-bold text-slate-100">
-              K.N. Rao: Timing of Marriage (Vivaha Kala) Suite
+              Classical Timing of Marriage (Vivaha Kala) Suite
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Bharatiya Vidya Bhavan Method — 3-Tier Composite Predictive Filter (Natal Promise + Dual Dasha + Double Transit).
+            Classical BVB Tradition — 3-Tier Composite Predictive Filter (Natal Promise + Dual Dasha + Double Transit).
           </p>
         </div>
 
@@ -83,7 +83,7 @@ export default function MarriageTimingDeck() {
               : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/80"
           }`}
         >
-          🔍 K.N. Rao 3-Tier Predictive Filter
+          🔍 Classical 3-Tier Predictive Filter
         </button>
         <button
           onClick={() => setActiveTab("d9ul")}
@@ -238,7 +238,7 @@ export default function MarriageTimingDeck() {
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              K.N. Rao emphasizes that while D1 promises the physical marriage, the D9 Navamsha determines the internal harmony, dharma, and lasting durability of the union.
+              Classical Shastric research emphasizes that while D1 promises the physical marriage, the D9 Navamsha determines the internal harmony, dharma, and lasting durability of the union.
             </p>
 
             <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 text-xs text-slate-300 space-y-1">
@@ -281,7 +281,7 @@ export default function MarriageTimingDeck() {
           <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
             <span className="text-xl">🕉️</span>
             <h3 className="text-base font-bold text-slate-100">
-              Classical Marital Harmonization Guidance (K.N. Rao Tradition)
+              Classical Marital Harmonization Guidance (Shastric Tradition)
             </h3>
           </div>
 

@@ -83,6 +83,23 @@ import { generateNakshatraActivationSummary } from "./nakshatraActivation";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
 import { calculateDayMuhurta } from "./muhurta";
+import { generateAnnualActivationMasterSummary } from "./annualHouseProgression";
+import { generateMedhajGocharaMasterReport } from "./medhajGochara";
+import { generateMedhajActivationMasterReport } from "./medhajActivation";
+import { generateMedhajArudhaMasterReport } from "./medhajArudha";
+import { generateMedhajBaadhakMasterReport } from "./medhajBaadhak";
+import { generateMedhajInduLagnaMasterReport } from "./medhajInduLagna";
+import { generateMedhajMksPastLifeMasterReport } from "./medhajMksPastLife";
+import { generateMedhajRahuKetuTransitMasterReport } from "./medhajRahuKetuTransit";
+import { generateAgniTransitLineageReport } from "./agniTransitLineage";
+import { generateBhagyaBinduSecretCodeReport } from "./bhagyaBinduSecretCode";
+import { generateLifestyleRemediesReport } from "./lifestyleRemediesWayOfLife";
+import { generateNatalPanchangaDeepReport } from "./natalPanchangaDeep";
+import { generateMakaraKurmaMasterReport } from "./makaraKurmaSaturn";
+import { generateKumbhaAquariusMasterReport } from "./kumbhaAquariusRahu";
+import { generateMeenaKalapurushaDrishtiMasterReport } from "./meenaKalapurushaDrishti";
+import { generateUchhaNeechaAwarenessMasterReport } from "./uchhaNeechaAwareness";
+import { generateRishiDrekkanaMasterReport } from "./rishiDrekkanaAwareness";
 import { calculateAshtakavargaVastuStrength, calculateAyadiShadvarga, calculateJaiminiArudhaVastu } from "./vastuEngine";
 import { generateBtrMasterSummary } from "./btrEngine";
 import { detectRahuConjunctions } from "./rahuConjunctionsMaster";
@@ -1718,7 +1735,8 @@ export function buildAstroDossier(
   // 69. Rashi Tulya Navamsha (RTN) Cross-Varga Projection Dossier (Deva Keralam & C.S. Patel)
   let rtnSummary = "";
   try {
-    rtnSummary = generateRashiTulyaNavamshaSummary(natalEphemeris, transitEphemeris);
+    const calculatedAge = Math.max(0, Math.floor((evaluationDate.getTime() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)));
+    rtnSummary = generateRashiTulyaNavamshaSummary(natalEphemeris, transitEphemeris, calculatedAge);
   } catch (_) {}
 
   // 70. Dr. Samir Tripathi Classical Daily Vedic Panchanga & Astro Guidance Dossier
@@ -1944,6 +1962,124 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
+  // 80. Paka Lagna, Annual House Progression, Rahu-Ketu Nuclear Bomb Effect & 9th House Bhagyodaya
+  let annualActivationSummary = "";
+  try {
+    const masterAnnualReport = generateAnnualActivationMasterSummary(natalEphemeris, birthDate, evaluationDate);
+    annualActivationSummary = masterAnnualReport.masterExecutiveSummary;
+  } catch (_) {}
+
+  // 81. Medhaj Astro Gochara & Planetary Transits Suite (Sessions 52–60)
+  let medhajGocharaSummary = "";
+  try {
+    const medhajReport = generateMedhajGocharaMasterReport(natalEphemeris, transitEphemeris, birthDate, evaluationDate);
+    medhajGocharaSummary = medhajReport.masterExecutiveSummary;
+  } catch (_) {}
+
+  // 82. Medhaj Astro Planetary Activations, 8/12 Manglik Yoga & 5 Geometric Sambandhas (Sessions 68–70)
+  let medhajActivationSummary = "";
+  try {
+    const medhajActReport = generateMedhajActivationMasterReport(natalEphemeris, birthDate, evaluationDate);
+    medhajActivationSummary = medhajActReport.masterExecutiveSummary;
+  } catch (_) {}
+
+  // 83. Medhaj Astro Arudha Lagna, Jyotirlinga, Tide Theory & Grand Raj Yogas (Sessions 75–79)
+  let medhajArudhaSummary = "";
+  try {
+    const medhajArudhaMaster = generateMedhajArudhaMasterReport(natalEphemeris, transitEphemeris, birthDate, evaluationDate);
+    medhajArudhaSummary = medhajArudhaMaster.masterExecutiveSummary;
+  } catch (_) {}
+
+  // 84. Medhaj Astro Baadhak Theory & Nodal Transits (Sessions 82, 84 & 85)
+  let medhajBaadhakSummary = "";
+  try {
+    const medhajBaadhakMaster = generateMedhajBaadhakMasterReport(natalEphemeris, transitEphemeris, birthDate, evaluationDate);
+    medhajBaadhakSummary = medhajBaadhakMaster.masterExecutiveSummary;
+  } catch (_) {}
+
+  // 85. Medhaj Astro Indu Lagna Wealth Masterclass (Sessions 86 & 87)
+  let medhajInduLagnaSummary = "";
+  try {
+    const medhajInduMaster = generateMedhajInduLagnaMasterReport(natalEphemeris, transitEphemeris, birthDate, evaluationDate);
+    medhajInduLagnaSummary = medhajInduMaster.masterExecutiveSummary;
+  } catch (_) {}
+
+  // 86. Medhaj Astro MKS, Rahu-Ketu Past Life Roots & Saturn Cosmic Law (Sessions 71, 72 & 74)
+  let medhajMksPastLifeSummary = "";
+  try {
+    const medhajMksMaster = generateMedhajMksPastLifeMasterReport(natalEphemeris, birthDate, evaluationDate);
+    medhajMksPastLifeSummary = medhajMksMaster.masterExecutiveSummary;
+  } catch (_) {}
+
+  // 87. Medhaj Astro Rahu-Ketu Transit, Rohini Bhedana & Sacred Remedies (Sessions 83, 88 & 89)
+  let medhajRahuKetuTransitSummary = "";
+  try {
+    const medhajNodalMaster = generateMedhajRahuKetuTransitMasterReport(natalEphemeris, transitEphemeris, birthDate, evaluationDate);
+    medhajRahuKetuTransitSummary = medhajNodalMaster.masterExecutiveSummary;
+  } catch (_) {}
+
+  // 88. Agni Transits in Fire Signs, Divine Lineage Triad & Dual Sign Matrix (Sessions 90, 91 & 92)
+  let agniTransitLineageSummary = "";
+  try {
+    const agniMaster = generateAgniTransitLineageReport(natalEphemeris, transitEphemeris);
+    agniTransitLineageSummary = agniMaster.executiveSummary;
+  } catch (_) {}
+
+  // 89. Bhagya Bindu (Pars Fortuna) Triggers & Secret Code of Planets (Sessions 97 & 99)
+  let bhagyaBinduSecretCodeSummary = "";
+  try {
+    const bbScMaster = generateBhagyaBinduSecretCodeReport(natalEphemeris, transitEphemeris);
+    bhagyaBinduSecretCodeSummary = bbScMaster.synthesisSummary;
+  } catch (_) {}
+
+  // 90. Lifestyle Remedies as a Way of Life & The 40-Day Rule (Session 41)
+  let lifestyleRemediesWayOfLifeSummary = "";
+  try {
+    const lifestyleMaster = generateLifestyleRemediesReport(natalEphemeris);
+    lifestyleRemediesWayOfLifeSummary = lifestyleMaster.masterDossierSummary;
+  } catch (_) {}
+
+  // 91. Natal Panchanga Deep Blueprint, Dagdha Rashis & Yogi/Avayogi (Sessions 46, 47, 48, 49, 96, 98)
+  let natalPanchangaDeepSummary = "";
+  try {
+    natalPanchangaDeepSummary = generateNatalPanchangaDeepReport(natalEphemeris);
+  } catch (_) {}
+
+  // 92. Makara Rashi (Capricorn), Kurma Avatara Archetype & Saturn's 5-Fold Influence (Sessions 36, 37, 38)
+  let makaraKurmaSaturnSummary = "";
+  try {
+    const makaraReport = generateMakaraKurmaMasterReport(natalEphemeris, birthDate.toISOString());
+    makaraKurmaSaturnSummary = makaraReport.masterExecutiveSummary;
+  } catch (_) {}
+
+  // 93. Kumbha Rashi (Aquarius), Bhrigu Bindu, Rahu Triad & Bhairava Shield (Sessions 39, 40)
+  let kumbhaAquariusRahuSummary = "";
+  try {
+    const kumbhaReport = generateKumbhaAquariusMasterReport(natalEphemeris);
+    kumbhaAquariusRahuSummary = kumbhaReport.holisticDossierSummary;
+  } catch (_) {}
+
+  // 94. Meena Rashi (Pisces), Kalapurusha Script Overlay, Elemental Immunity & Special Drishti Matrix (Sessions 42-45)
+  let meenaKalapurushaDrishtiSummary = "";
+  try {
+    const meenaReport = generateMeenaKalapurushaDrishtiMasterReport(natalEphemeris);
+    meenaKalapurushaDrishtiSummary = meenaReport.holisticDossierSummary;
+  } catch (_) {}
+
+  // 95. Planetary Dignities, Conscious Awareness vs. Blind Spot & Transit Geometric Axes (Sessions 80, 81)
+  let uchhaNeechaAwarenessSummary = "";
+  try {
+    const uchhaNeechaReport = generateUchhaNeechaAwarenessMasterReport(natalEphemeris, transitEphemeris);
+    uchhaNeechaAwarenessSummary = uchhaNeechaReport.masterDossierSummary;
+  } catch (_) {}
+
+  // 96. Three Rishis Modality Framework, Sacred Lineage Deities & Sign Lord Blind Spots (Sessions 93, 94 & 95)
+  let rishiDrekkanaSummary = "";
+  try {
+    const rishiDrekkanaReport = generateRishiDrekkanaMasterReport(natalEphemeris, evaluationDate);
+    rishiDrekkanaSummary = rishiDrekkanaReport.masterDossierSummary;
+  } catch (_) {}
+
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
     "- **Current Real-Time Consultation Date:** " + evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (Year: " + evaluationDate.getFullYear() + ")",
@@ -2121,7 +2257,37 @@ export function buildAstroDossier(
       rahuConjunctionsSummary,
       "",
       "#### 📜 77. KUNDLI LIFE REPORT COMPLETE SYNTHESIS & EXECUTIVE BLUEPRINT DOSSIER:",
-      lifeReportSummary
+      lifeReportSummary,
+      "",
+      "#### ⚡ 80. PAKA LAGNA (OPERATING SELF), ANNUAL HOUSE PROGRESSION (VARSHA CHAKRA), NUCLEAR BOMB NODAL SQUARES & 9TH HOUSE BHAGYODAYA DOSSIER:",
+      annualActivationSummary,
+      "",
+      "#### 🪐 81. MEDHAJ ASTRO PLANETARY TRANSITS (GOCHARA), SOMATIC SADE SATI, CONTACT OVERLAYS & GENERATIONAL TELEMETRY DOSSIER:",
+      medhajGocharaSummary,
+      "",
+      "#### ⚡ 82. MEDHAJ ASTRO PLANETARY ACTIVATIONS, 8/12 MANGLIK YOGA & 5 GEOMETRIC SAMBANDHAS DOSSIER:",
+      medhajActivationSummary,
+      "",
+      "#### 🕉️ 83. MEDHAJ ASTRO ARUDHA LAGNA, CONNECTING JYOTIRLINGA, TIDE THEORY & GRAND RAJ YOGAS DOSSIER (SESSIONS 75–79):",
+      medhajArudhaSummary,
+      "",
+      "#### 🛡️ 84. MEDHAJ ASTRO BAADHAK THEORY, MULTI-LAGNA AUDIT & RAHU-KETU NODAL DYNAMICS DOSSIER (SESSIONS 82, 84 & 85):",
+      medhajBaadhakSummary,
+      "",
+      "#### 💰 85. MEDHAJ ASTRO INDU LAGNA WEALTH & PROSPERITY MASTERCLASS DOSSIER (SESSIONS 86 & 87):",
+      medhajInduLagnaSummary,
+      "",
+      "#### 💀 86. MEDHAJ ASTRO MKS, PAST LIFE ROOTS & SATURN COSMIC LAW DOSSIER (SESSIONS 71, 72 & 74):",
+      medhajMksPastLifeSummary,
+      "",
+      "#### 🌪️ 87. MEDHAJ ASTRO RAHU-KETU TRANSIT, ROHINI BHEDANA & REMEDIES DOSSIER (SESSIONS 83, 88 & 89):",
+      medhajRahuKetuTransitSummary,
+      "",
+      "#### ⚖️ 95. PLANETARY DIGNITIES, CONSCIOUS AWARENESS VS. BLIND SPOT & TRANSIT GEOMETRIC AXES DOSSIER (SESSIONS 80 & 81):",
+      uchhaNeechaAwarenessSummary,
+      "",
+      "#### 🧘 96. THREE RISHIS MODALITY, SACRED LINEAGE DEITIES & SIGN LORD BLIND SPOTS DOSSIER (SESSIONS 93, 94 & 95):",
+      rishiDrekkanaSummary
     );
   } else if (intent === "marriage") {
     lines.push(
@@ -2151,7 +2317,25 @@ export function buildAstroDossier(
       gocharaVedhaSummary,
       "",
       "#### 🌪️ 76. ACHARYA VISHNUKRIPA RAHU & KETU CONJUNCTIONS MASTER DOSSIER:",
-      rahuConjunctionsSummary
+      rahuConjunctionsSummary,
+      "",
+      "#### ⚡ 82. MEDHAJ ASTRO PLANETARY ACTIVATIONS, 8/12 MANGLIK YOGA & 5 GEOMETRIC SAMBANDHAS DOSSIER:",
+      medhajActivationSummary,
+      "",
+      "#### 🕉️ 83. MEDHAJ ASTRO ARUDHA LAGNA, CONNECTING JYOTIRLINGA, TIDE THEORY & GRAND RAJ YOGAS DOSSIER (SESSIONS 75–79):",
+      medhajArudhaSummary,
+      "",
+      "#### 🛡️ 84. MEDHAJ ASTRO BAADHAK THEORY, MULTI-LAGNA AUDIT & RAHU-KETU NODAL DYNAMICS DOSSIER (SESSIONS 82, 84 & 85):",
+      medhajBaadhakSummary,
+      "",
+      "#### 💰 85. MEDHAJ ASTRO INDU LAGNA WEALTH & PROSPERITY MASTERCLASS DOSSIER (SESSIONS 86 & 87):",
+      medhajInduLagnaSummary,
+      "",
+      "#### 💀 86. MEDHAJ ASTRO MKS, PAST LIFE ROOTS & SATURN COSMIC LAW DOSSIER (SESSIONS 71, 72 & 74):",
+      medhajMksPastLifeSummary,
+      "",
+      "#### 🌪️ 87. MEDHAJ ASTRO RAHU-KETU TRANSIT, ROHINI BHEDANA & REMEDIES DOSSIER (SESSIONS 83, 88 & 89):",
+      medhajRahuKetuTransitSummary
     );
   } else if (intent === "progeny_children") {
     lines.push(
@@ -2241,7 +2425,40 @@ export function buildAstroDossier(
       gocharaVedhaSummary,
       "",
       "#### 🌪️ 76. ACHARYA VISHNUKRIPA RAHU & KETU CONJUNCTIONS MASTER DOSSIER:",
-      rahuConjunctionsSummary
+      rahuConjunctionsSummary,
+      "",
+      "#### 💀 86. MEDHAJ ASTRO MKS, PAST LIFE ROOTS & SATURN COSMIC LAW DOSSIER (SESSIONS 71, 72 & 74):",
+      medhajMksPastLifeSummary,
+      "",
+      "#### 🌪️ 87. MEDHAJ ASTRO RAHU-KETU TRANSIT, ROHINI BHEDANA & REMEDIES DOSSIER (SESSIONS 83, 88 & 89):",
+      medhajRahuKetuTransitSummary,
+      "",
+      "#### 🔥 88. AGNI TRANSITS IN FIRE SIGNS, DIVINE LINEAGE TRIAD & DUAL-SIGN DEGREE BIFURCATION DOSSIER (SESSIONS 90, 91 & 92):",
+      agniTransitLineageSummary,
+      "",
+      "#### 🎯 89. BHAGYA BINDU (PARS FORTUNA) & SECRET CODE OF PLANETS (SESSIONS 97 & 99):",
+      bhagyaBinduSecretCodeSummary,
+      "",
+      "#### 🌿 90. ASTROLOGICAL REMEDIES AS A WAY OF LIFE & THE 40-DAY RULE (SESSION 41):",
+      lifestyleRemediesWayOfLifeSummary,
+      "",
+      "#### 🌌 91. NATAL PANCHANGA DEEP BLUEPRINT, DAGDHA RASHIS, YOGI/AVAYOGI & VISHNU ARMOR (SESSIONS 46, 47, 48, 49, 96, 98):",
+      natalPanchangaDeepSummary,
+      "",
+      "#### 🐢 92. MAKARA RASHI (CAPRICORN), KURMA AVATARA, SATURN'S 5-FOLD REACH & KALI YUGA REDEMPTION (SESSIONS 36, 37, 38):",
+      makaraKurmaSaturnSummary,
+      "",
+      "#### 🏺 93. KUMBHA RASHI (AQUARIUS), BHRIGU BINDU, RAHU TRIAD & BHAIRAVA SHIELD (SESSIONS 39, 40):",
+      kumbhaAquariusRahuSummary,
+      "",
+      "#### 🐟 94. MEENA RASHI (PISCES), KALAPURUSHA SCRIPT OVERLAY, ELEMENTAL IMMUNITY & SPECIAL DRISHTI MATRIX (SESSIONS 42–45):",
+      meenaKalapurushaDrishtiSummary,
+      "",
+      "#### ⚖️ 95. PLANETARY DIGNITIES, CONSCIOUS AWARENESS VS. BLIND SPOT & TRANSIT GEOMETRIC AXES DOSSIER (SESSIONS 80 & 81):",
+      uchhaNeechaAwarenessSummary,
+      "",
+      "#### 🧘 96. THREE RISHIS MODALITY, SACRED LINEAGE DEITIES & SIGN LORD BLIND SPOTS DOSSIER (SESSIONS 93, 94 & 95):",
+      rishiDrekkanaSummary
     );
   } else {
     // INTENT === "all": FULL 70 SECTIONS ENCYCLOPEDIC DOSSIER
@@ -2441,7 +2658,58 @@ export function buildAstroDossier(
       progenyMasterSummary,
       "",
       "#### 🪷 79. LUNAR ASTRO NAME VIBRATIONAL ENERGY & PARASHARA PLANETARY MATURATION AGES (DEEPANSHU GIRI) DOSSIER:",
-      lunarAstroNameSummary
+      lunarAstroNameSummary,
+      "",
+      "#### ⚡ 80. PAKA LAGNA (OPERATING SELF), ANNUAL HOUSE PROGRESSION (VARSHA CHAKRA), NUCLEAR BOMB NODAL SQUARES & 9TH HOUSE BHAGYODAYA DOSSIER:",
+      annualActivationSummary,
+      "",
+      "#### 🪐 81. MEDHAJ ASTRO PLANETARY TRANSITS (GOCHARA), SOMATIC SADE SATI, CONTACT OVERLAYS & GENERATIONAL TELEMETRY DOSSIER:",
+      medhajGocharaSummary,
+      "",
+      "#### ⚡ 82. MEDHAJ ASTRO PLANETARY ACTIVATIONS, 8/12 MANGLIK YOGA & 5 GEOMETRIC SAMBANDHAS DOSSIER:",
+      medhajActivationSummary,
+      "",
+      "#### 🕉️ 83. MEDHAJ ASTRO ARUDHA LAGNA, CONNECTING JYOTIRLINGA, TIDE THEORY & GRAND RAJ YOGAS DOSSIER (SESSIONS 75–79):",
+      medhajArudhaSummary,
+      "",
+      "#### 🛡️ 84. MEDHAJ ASTRO BAADHAK THEORY, MULTI-LAGNA AUDIT & RAHU-KETU NODAL DYNAMICS DOSSIER (SESSIONS 82, 84 & 85):",
+      medhajBaadhakSummary,
+      "",
+      "#### 💰 85. MEDHAJ ASTRO INDU LAGNA WEALTH & PROSPERITY MASTERCLASS DOSSIER (SESSIONS 86 & 87):",
+      medhajInduLagnaSummary,
+      "",
+      "#### 💀 86. MEDHAJ ASTRO MKS, PAST LIFE ROOTS & SATURN COSMIC LAW DOSSIER (SESSIONS 71, 72 & 74):",
+      medhajMksPastLifeSummary,
+      "",
+      "#### 🌪️ 87. MEDHAJ ASTRO RAHU-KETU TRANSIT, ROHINI BHEDANA & REMEDIES DOSSIER (SESSIONS 83, 88 & 89):",
+      medhajRahuKetuTransitSummary,
+      "",
+      "#### 🔥 88. AGNI TRANSITS IN FIRE SIGNS, DIVINE LINEAGE TRIAD & DUAL-SIGN DEGREE BIFURCATION DOSSIER (SESSIONS 90, 91 & 92):",
+      agniTransitLineageSummary,
+      "",
+      "#### 🎯 89. BHAGYA BINDU (PARS FORTUNA) & SECRET CODE OF PLANETS (SESSIONS 97 & 99):",
+      bhagyaBinduSecretCodeSummary,
+      "",
+      "#### 🌿 90. ASTROLOGICAL REMEDIES AS A WAY OF LIFE & THE 40-DAY RULE (SESSION 41):",
+      lifestyleRemediesWayOfLifeSummary,
+      "",
+      "#### 🌌 91. NATAL PANCHANGA DEEP BLUEPRINT, DAGDHA RASHIS, YOGI/AVAYOGI & VISHNU ARMOR (SESSIONS 46, 47, 48, 49, 96, 98):",
+      natalPanchangaDeepSummary,
+      "",
+      "#### 🐢 92. MAKARA RASHI (CAPRICORN), KURMA AVATARA, SATURN'S 5-FOLD REACH & KALI YUGA REDEMPTION (SESSIONS 36, 37, 38):",
+      makaraKurmaSaturnSummary,
+      "",
+      "#### 🏺 93. KUMBHA RASHI (AQUARIUS), BHRIGU BINDU, RAHU TRIAD & BHAIRAVA SHIELD (SESSIONS 39, 40):",
+      kumbhaAquariusRahuSummary,
+      "",
+      "#### 🐟 94. MEENA RASHI (PISCES), KALAPURUSHA SCRIPT OVERLAY, ELEMENTAL IMMUNITY & SPECIAL DRISHTI MATRIX (SESSIONS 42–45):",
+      meenaKalapurushaDrishtiSummary,
+      "",
+      "#### ⚖️ 95. PLANETARY DIGNITIES, CONSCIOUS AWARENESS VS. BLIND SPOT & TRANSIT GEOMETRIC AXES DOSSIER (SESSIONS 80 & 81):",
+      uchhaNeechaAwarenessSummary,
+      "",
+      "#### 🧘 96. THREE RISHIS MODALITY, SACRED LINEAGE DEITIES & SIGN LORD BLIND SPOTS DOSSIER (SESSIONS 93, 94 & 95):",
+      rishiDrekkanaSummary
     );
   }
 

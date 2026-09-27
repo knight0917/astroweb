@@ -39,6 +39,7 @@ export default function ShodashavargaView() {
     setSelectedEntityId,
     activeVargaId,
     setActiveVargaId,
+    currentDate,
   } = useAstroStore();
 
   const [selectedVarga, setSelectedVarga] = useState<VargaViewId>(() => {
@@ -47,6 +48,13 @@ export default function ShodashavargaView() {
   const [chartType, setChartType] = useState<"north" | "south">("north");
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | "Shadvarga" | "Saptavarga" | "Dashavarga" | "RTN">("ALL");
   const [rtnLayerFilter, setRtnLayerFilter] = useState<"all" | "d9" | "d1">("all");
+
+  const nativeAge = useMemo(() => {
+    if (!currentDate) return 30;
+    const now = new Date();
+    const diff = now.getTime() - new Date(currentDate).getTime();
+    return Math.max(0, Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000)));
+  }, [currentDate]);
 
   // Keep local selectedVarga in sync if activeVargaId changed externally
   useEffect(() => {
@@ -67,8 +75,8 @@ export default function ShodashavargaView() {
   }, [location, ayanamsha, houseSystem, nodeType]);
 
   const rtnResult = useMemo(() => {
-    return evaluateRashiTulyaNavamsha(ephemeris, transitEphemeris);
-  }, [ephemeris, transitEphemeris]);
+    return evaluateRashiTulyaNavamsha(ephemeris, transitEphemeris, nativeAge);
+  }, [ephemeris, transitEphemeris, nativeAge]);
 
   const vargaChart = useMemo(() => {
     const vId: VargaId = isRtnMode ? "D9" : (selectedVarga as VargaId);
@@ -945,6 +953,143 @@ export default function ShodashavargaView() {
                   </p>
                 </div>
               </div>
+
+              {/* Classical Benchmark Case Match Card */}
+              {rtnResult.caseStudyMatch?.isMatched && (
+                <div className="glass-panel p-4 rounded-2xl border border-rose-500/40 bg-rose-950/20 space-y-2 shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>🎯</span>
+                      <span>Classical Divisional Benchmark Match</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-rose-900/60 border border-rose-500/30 text-[9px] font-bold text-rose-200">
+                      Confirmed Pattern
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-900/90 border border-rose-500/30 space-y-1.5">
+                    <div className="font-bold text-amber-300 text-xs">
+                      {rtnResult.caseStudyMatch.matchedCaseTitle}
+                    </div>
+                    <div className="text-[11px] text-slate-300">
+                      <span className="text-slate-400 font-semibold">Placements:</span>{" "}
+                      {rtnResult.caseStudyMatch.rtnKeyPlacements}
+                    </div>
+                    <p className="text-[11px] text-rose-200/90 bg-rose-950/40 p-2 rounded-lg border border-rose-800/40">
+                      {rtnResult.caseStudyMatch.manifestationDescription}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* RTN Dusthana Suffering Card (Houses 6, 8, 12) */}
+              <div className="glass-panel p-4 rounded-2xl border border-purple-500/30 bg-slate-950/90 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>⚡</span>
+                    <span>RTN Dusthana Karmic Suffering Audit</span>
+                  </span>
+                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-purple-950/80 border border-purple-500/40 text-purple-300 font-mono">
+                    Seed (D1) ➔ Fruit (D9)
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Navamsha confirmation law: events must mirror in D9 to physically manifest.
+                  <span className="text-emerald-400 font-semibold ml-1.5">H6: Solvable</span> •
+                  <span className="text-rose-400 font-semibold ml-1.5">H8: Chronic Shock</span> •
+                  <span className="text-amber-400 font-semibold ml-1.5">H12: Resource Loss</span>
+                </p>
+                {rtnResult.dusthanaAfflictions.length === 0 ? (
+                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-emerald-400 flex items-center gap-2">
+                    <span>🛡️</span>
+                    <span>No major Grahas landing in RTN Dusthana houses (6th, 8th, 12th). Protected karmic trajectory.</span>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {rtnResult.dusthanaAfflictions.map((a, idx) => {
+                      const badgeColor =
+                        a.rtnHouse === 6
+                          ? "border-emerald-500/40 bg-emerald-950/40 text-emerald-300"
+                          : a.rtnHouse === 8
+                          ? "border-rose-500/40 bg-rose-950/40 text-rose-300"
+                          : "border-amber-500/40 bg-amber-950/40 text-amber-300";
+                      return (
+                        <div key={`${a.planet}-${idx}`} className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
+                          <div className="flex items-center justify-between flex-wrap gap-1">
+                            <span className="font-bold text-amber-300 text-xs flex items-center gap-1.5">
+                              <span>{a.planet}</span>
+                              <span className="text-slate-400 font-normal">in RTN House {a.rtnHouse} ({a.rtnRashi.englishName})</span>
+                            </span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold ${badgeColor}`}>
+                              {a.solvabilityStatus}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-300">{a.natureOfSuffering}</p>
+                          <div className="text-[10px] text-sky-300/90 bg-sky-950/30 p-2 rounded-lg border border-sky-800/40">
+                            <span className="font-semibold">D-1 Cross-Confirmation:</span> {a.d1ConfirmationNotes}
+                          </div>
+                          <div className="text-[10px] text-slate-400 bg-slate-950/60 p-2 rounded-lg border border-slate-800">
+                            <span className="font-semibold text-purple-300">Remedial Direction:</span> {a.mitigationOrKarmicAction}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Navamsha Age Activation Timing System Card (Sun Surya) */}
+              <div className="glass-panel p-4 rounded-2xl border border-amber-500/30 bg-slate-950/90 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>☀️</span>
+                    <span>Navamsha Age Activation Timing System (Strictly D9)</span>
+                  </span>
+                  {rtnResult.d9SunActivation.isActiveNow && (
+                    <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[9px] font-bold animate-pulse">
+                      🔥 CURRENTLY ACTIVE
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Formulated strictly for Navamsha (D9) positions. Triggers critical karmic shifts at classical milestone ages.
+                </p>
+                <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between text-xs flex-wrap gap-2">
+                    <span className="text-slate-300">
+                      Navamsha Sun in <span className="font-bold text-amber-300">House {rtnResult.d9SunActivation.d9House}</span> ({rtnResult.d9SunActivation.d9Rashi.englishName})
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400 text-[10px]">Activation Ages:</span>
+                      <div className="flex gap-1">
+                        {rtnResult.d9SunActivation.activationAges.map((age) => (
+                          <span
+                            key={age}
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                              Math.abs(nativeAge - age) <= 1
+                                ? "bg-amber-500 text-slate-950 font-black shadow-lg"
+                                : "bg-slate-800 text-amber-300 border border-slate-700"
+                            }`}
+                          >
+                            Age {age}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    {rtnResult.d9SunActivation.activationTheme}
+                  </p>
+                  {rtnResult.d9SunActivation.caseStudyLoanHealthWarning && (
+                    <div className="text-[11px] text-amber-200 bg-amber-950/40 p-2.5 rounded-lg border border-amber-600/40 font-medium">
+                      ⚠️ {rtnResult.d9SunActivation.caseStudyLoanHealthWarning}
+                    </div>
+                  )}
+                  <div className="text-[10px] text-slate-400 border-t border-slate-800/80 pt-1.5 flex justify-between">
+                    <span>Native Age: <span className="text-amber-300 font-mono font-bold">{nativeAge} Yrs</span></span>
+                    <span>Closest Milestone: <span className="text-sky-300 font-mono font-bold">Age {rtnResult.d9SunActivation.closestAge}</span></span>
+                  </div>
+                </div>
+              </div>
             </>
           ) : (
             <>
@@ -1062,7 +1207,7 @@ export default function ShodashavargaView() {
                     </div>
                   )}
 
-                  {/* D-1 10th House Physical Workplace Surroundings Card (Deepanshu Giri Rule) */}
+                  {/* D-1 10th House Physical Workplace Surroundings Card */}
                   <div className="bg-slate-900/70 border border-indigo-500/30 p-3 rounded-xl space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-indigo-300 font-bold flex items-center gap-1">
@@ -1085,7 +1230,7 @@ export default function ShodashavargaView() {
                     </div>
                   </div>
 
-                  {/* Historical Benchmark Card (Deepanshu Giri Lecture Case Studies) */}
+                  {/* Historical Benchmark Card */}
                   {d10CareerAnalysis.d1LagnaLordInD10.historicalBenchmark && (
                     <div className="bg-gradient-to-r from-amber-950/40 to-yellow-950/30 border border-amber-500/40 p-3 rounded-xl space-y-1">
                       <div className="flex items-center justify-between text-xs">
@@ -1094,7 +1239,7 @@ export default function ShodashavargaView() {
                           <span>Classical Benchmark: {d10CareerAnalysis.d1LagnaLordInD10.historicalBenchmark.matchedLeader}</span>
                         </span>
                         <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-900/60 text-amber-200 border border-amber-500/40 font-bold">
-                          Lunar Astro Alignment
+                          Classical Alignment
                         </span>
                       </div>
                       <p className="text-[10.5px] text-amber-200/90 font-medium">

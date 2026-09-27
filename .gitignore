@@ -6,12 +6,15 @@
 
 # testing & coverage
 /coverage
+/.nyc_output
 
 # next.js build & export
 /.next/
 /out/
 /build
 /dist
+/.turbo/
+/.swc/
 
 # misc OS files
 .DS_Store
@@ -27,6 +30,17 @@ $RECYCLE.BIN/
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
+
+# Python cache & environments
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+ENV/
 
 # debug logs
 npm-debug.log*
@@ -64,9 +78,11 @@ next-env.d.ts
 *.cbr
 data/*.tmp.*
 
-# Scratch scripts & temporary scrap files
+# Scratch scripts, temporary scrap files & backups
 scratch/
 *.tmp
+*.temp
+*.bak
 *.log
 extracted_*.txt
 test_*.mjs

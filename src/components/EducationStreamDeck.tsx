@@ -20,11 +20,11 @@ export default function EducationStreamDeck() {
           <div className="flex items-center gap-2">
             <span className="text-2xl">🎓</span>
             <h2 className="text-lg font-bold text-slate-100">
-              K.N. Rao & Naval Singh: Planets & Education Counselling Suite
+              Classical Planets & Education Counselling Suite
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Bharatiya Vidya Bhavan Method — 6-Stream Aptitude Analysis, Tripartite Houses (4/5/9) & D24 Siddhamsa.
+            Classical BVB Tradition — 6-Stream Aptitude Analysis, Tripartite Houses (4/5/9) & D24 Siddhamsa.
           </p>
         </div>
 
@@ -258,7 +258,7 @@ export default function EducationStreamDeck() {
           </div>
 
           <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed">
-            <strong className="text-amber-300">K.N. Rao D24 Dictum:</strong> {report.d24Siddhamsa.classicalInterpretation}
+            <strong className="text-amber-300">Classical D24 Dictum:</strong> {report.d24Siddhamsa.classicalInterpretation}
           </div>
         </div>
       )}

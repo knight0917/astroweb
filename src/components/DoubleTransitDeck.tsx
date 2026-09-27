@@ -25,11 +25,11 @@ export default function DoubleTransitDeck() {
           <div className="flex items-center gap-2">
             <span className="text-2xl">⚡</span>
             <h2 className="text-lg font-bold text-slate-100">
-              K.N. Rao: Double Transit (DTP) & PAC-DARES Predictive Suite
+              Classical Double Transit (DTP) & PAC-DARES Predictive Suite
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Bharatiya Vidya Bhavan (BVB) Method — Real-Time Saturn (Karma) + Jupiter (Grace) Transit Synchronization & PAC Diagnostics.
+            Classical BVB Tradition — Real-Time Saturn (Karma) + Jupiter (Grace) Transit Synchronization & PAC Diagnostics.
           </p>
         </div>
 
@@ -158,7 +158,7 @@ export default function DoubleTransitDeck() {
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 leading-relaxed">
-            <strong className="text-amber-400">K.N. Rao Master Dictum:</strong> "Dasha indicates the promise and probability of an event; the simultaneous Double Transit (DTP) of Saturn and Jupiter fixes the exact time of manifestation."
+            <strong className="text-amber-400">Classical Master Dictum:</strong> "Dasha indicates the promise and probability of an event; the simultaneous Double Transit (DTP) of Saturn and Jupiter fixes the exact time of manifestation."
           </div>
         </div>
       )}

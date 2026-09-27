@@ -20,7 +20,7 @@ export const NAKSHATRA_NAMES: Omit<NakshatraInfo, "pada" | "degreesInNakshatra" 
   { index: 1, sanskritName: "Bharani", lord: "Venus", deity: "Yama", animal: "Elephant", animalSymbol: "🐘" },
   { index: 2, sanskritName: "Krittika", lord: "Sun", deity: "Agni", animal: "Sheep / Goat", animalSymbol: "🐏" },
   { index: 3, sanskritName: "Rohini", lord: "Moon", deity: "Brahma", animal: "Serpent", animalSymbol: "🐍" },
-  { index: 4, sanskritName: "Mrigashira", lord: "Mercury", deity: "Soma", animal: "Serpent", animalSymbol: "🐍" },
+  { index: 4, sanskritName: "Mrigashira", lord: "Mars", deity: "Soma", animal: "Serpent", animalSymbol: "🐍" },
   { index: 5, sanskritName: "Ardra", lord: "Rahu", deity: "Rudra", animal: "Dog", animalSymbol: "🐕" },
   { index: 6, sanskritName: "Punarvasu", lord: "Jupiter", deity: "Aditi", animal: "Cat", animalSymbol: "🐈" },
   { index: 7, sanskritName: "Pushya", lord: "Saturn", deity: "Brihaspati", animal: "Goat / Ram", animalSymbol: "🐐" },

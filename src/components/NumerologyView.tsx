@@ -58,11 +58,11 @@ export default function NumerologyView() {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
-              Vedic Sankhya Shastra & Lunar Astro Suite
+              Vedic Sankhya Shastra & Astro-Phonetics Suite
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Mulank & Chaldean Namank, Loshu Grid, plus Lunar Astro Name Vibrational Energy & Parashara Age Activation
+            Mulank & Chaldean Namank, Loshu Grid, plus Astro-Phonetic Name Vibrational Energy & Parashara Age Activation
           </p>
         </div>
 
@@ -97,7 +97,7 @@ export default function NumerologyView() {
               : "bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800"
           }`}
         >
-          <span>🪷 Lunar Astro Name Vibration & Age Activation</span>
+          <span>🪷 Astro-Phonetic Name Vibration & Age Activation</span>
           <span className="px-1.5 py-0.5 text-[9px] rounded-full bg-amber-500/30 text-amber-300 font-mono font-bold">
             NEW
           </span>
@@ -432,7 +432,7 @@ export default function NumerologyView() {
                 type="text"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
-                placeholder="Enter Full Name (e.g. Narendra Modi, Steve Jobs)..."
+                placeholder="Enter Full Name (e.g. Alexander, Victoria, Michael)..."
                 className="flex-1 bg-slate-900 border border-slate-700 focus:border-amber-500 rounded-xl px-3.5 py-2 text-sm text-slate-100 font-bold placeholder-slate-500"
               />
               <button
@@ -593,7 +593,7 @@ export default function NumerologyView() {
         </>
       )}
 
-      {/* LUNAR ASTRO & PARASHARA MATURATION AGE SUITE */}
+      {/* ASTRO-PHONETIC & PARASHARA MATURATION AGE SUITE */}
       {activeSuiteTab === "lunar_astro" && (
         <div className="flex flex-col gap-6 animate-in fade-in duration-200">
           {/* Interactive Name Profiler Input Card */}
@@ -604,7 +604,7 @@ export default function NumerologyView() {
                   Acoustic Astro-Phonetics Engine
                 </span>
                 <h3 className="text-lg md:text-xl font-bold text-slate-100">
-                  Lunar Astro Name Vibrational Profiler (Deepanshu Giri)
+                  Astro-Phonetic Name Vibrational Profiler (Svara Shastra)
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
                   Test any name to decode its planetary frequency, psychological temperament, relationship patterns, and predicted chart placements.
@@ -740,10 +740,10 @@ export default function NumerologyView() {
               <span className="text-3xl">⚠️</span>
               <div>
                 <h4 className="text-sm md:text-base font-bold text-rose-200">
-                  Critical Lunar Astro Alert: Retrograde Saturn Maturation Window Active (Age 36–42)
+                  Critical Karmic Alert: Retrograde Saturn Maturation Window Active (Age 36–42)
                 </h4>
                 <p className="text-xs text-rose-300/90 mt-1 leading-relaxed">
-                  Per Deepanshu Giri, when natal Saturn is retrograde, reaching age 36 triggers the <strong>Great Karmic Inversion</strong>. Unlike direct Saturn which brings steady structural promotion, Retrograde Saturn triggers sudden disruptions, career overhauls, bold rejections of institutional orthodoxy, and an unavoidable settlement of unfulfilled past-life obligations. Reassure yourself that unexpected disruptions are not failures; they are cosmic realignments freeing you from stale obligations.
+                  In classical Nadi and Parashari shastra, when natal Saturn is retrograde, reaching age 36 triggers the <strong>Great Karmic Inversion</strong>. Unlike direct Saturn which brings steady structural promotion, Retrograde Saturn triggers sudden disruptions, career overhauls, bold rejections of institutional orthodoxy, and an unavoidable settlement of unfulfilled past-life obligations. Reassure yourself that unexpected disruptions are not failures; they are cosmic realignments freeing you from stale obligations.
                 </p>
                 <div className="mt-2 text-xs text-rose-400 font-semibold flex items-center gap-2">
                   <span>🕊️ Prescribed Upaya:</span>
@@ -886,7 +886,7 @@ export default function NumerologyView() {
             {/* Vak Siddhi / Intuition Card */}
             <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
               <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">
-                Vak Siddhi & Astrological Intuition (Deepanshu Giri)
+                Vak Siddhi & Astrological Intuition (Classical Nadi Shastra)
               </span>
               <p className="text-xs text-slate-300 leading-relaxed">
                 Astrological rules operate at 50% capacity; the remaining 50% requires speech intuition (<em>Vak Siddhi</em>). Reciting the Gayatri Mantra at Brahma Muhurta (4:30 AM) awakens the solar Pingala Nadi and grants clear sight into chart root karmas.
