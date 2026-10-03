@@ -1257,12 +1257,12 @@ export default function TimeTravelSlider() {
                       onClick={async () => {
                         setIsSavingChart(true);
                         try {
-                          await syncChartsWithDb(saveEmail.trim() || userEmail || undefined);
-                          setSaveToast("✓ Charts successfully synchronized from cloud vault!");
+                          const profiles = await syncChartsWithDb(saveEmail.trim() || userEmail || undefined, true);
+                          const loaded = profiles?.find((p) => p.isDefault) || profiles?.[0];
+                          setSaveToast(loaded ? `✓ Restored and loaded "${loaded.name}" (${loaded.dob} ${loaded.time})!` : "✓ Charts synchronized!");
                           setTimeout(() => setSaveToast(""), 4000);
                           setShowSaveModal(false);
                           setSyncConflictMsg(null);
-                          setShowProfilesDropdown(true);
                         } catch (_) {}
                         setIsSavingChart(false);
                       }}
@@ -1366,9 +1366,14 @@ export default function TimeTravelSlider() {
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <button
                     onClick={async () => {
-                      await syncChartsWithDb(userEmail);
-                      setSyncStatusMsg("Synced with Cloud DB!");
-                      setTimeout(() => setSyncStatusMsg(null), 3000);
+                      const profiles = await syncChartsWithDb(userEmail, true);
+                      if (profiles && profiles.length > 0) {
+                        const loaded = profiles.find((p) => p.isDefault) || profiles[0];
+                        setSyncStatusMsg(`✅ Synced & loaded "${loaded.name}" (${loaded.dob} ${loaded.time})!`);
+                      } else {
+                        setSyncStatusMsg("Synced with Cloud DB!");
+                      }
+                      setTimeout(() => setSyncStatusMsg(null), 4000);
                     }}
                     disabled={isSyncingDb}
                     className="px-2.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-all"
@@ -1399,14 +1404,38 @@ export default function TimeTravelSlider() {
                     type="email"
                     value={syncEmailInput}
                     onChange={(e) => setSyncEmailInput(e.target.value)}
+                    onKeyDown={async (e) => {
+                      if (e.key === "Enter" && syncEmailInput.trim()) {
+                        const email = syncEmailInput.trim();
+                        setUserEmail(email);
+                        setSyncEmailInput("");
+                        const profiles = await syncChartsWithDb(email, true);
+                        if (profiles && profiles.length > 0) {
+                          const loaded = profiles.find((p) => p.isDefault) || profiles[0];
+                          setSyncStatusMsg(`✅ Restored & loaded "${loaded.name}" (${loaded.dob} ${loaded.time})!`);
+                        } else {
+                          setSyncStatusMsg("Connected to cloud vault (no saved charts found).");
+                        }
+                        setTimeout(() => setSyncStatusMsg(null), 4000);
+                      }
+                    }}
                     placeholder="Enter email to restore charts..."
                     className="flex-1 bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-1.5 text-xs text-slate-100 font-bold focus:outline-none font-mono"
                   />
                   <button
                     onClick={async () => {
                       if (syncEmailInput.trim()) {
-                        setUserEmail(syncEmailInput.trim());
+                        const email = syncEmailInput.trim();
+                        setUserEmail(email);
                         setSyncEmailInput("");
+                        const profiles = await syncChartsWithDb(email, true);
+                        if (profiles && profiles.length > 0) {
+                          const loaded = profiles.find((p) => p.isDefault) || profiles[0];
+                          setSyncStatusMsg(`✅ Restored & loaded "${loaded.name}" (${loaded.dob} ${loaded.time})!`);
+                        } else {
+                          setSyncStatusMsg("Connected to cloud vault (no saved charts found).");
+                        }
+                        setTimeout(() => setSyncStatusMsg(null), 4000);
                       }
                     }}
                     disabled={isSyncingDb}

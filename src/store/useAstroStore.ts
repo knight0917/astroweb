@@ -187,7 +187,7 @@ interface AstroState {
   setNodeType: (node: NodeType) => void;
   setGender: (gender: "male" | "female") => void;
   setUserEmail: (email: string | null) => void;
-  syncChartsWithDb: (customEmail?: string) => Promise<BirthProfile[]>;
+  syncChartsWithDb: (customEmail?: string, autoLoad?: boolean) => Promise<BirthProfile[]>;
   setMatchmakingBoy: (data: Partial<MatchmakingProfileData>) => void;
   setMatchmakingGirl: (data: Partial<MatchmakingProfileData>) => void;
   setMatchmakingState: (state: MatchmakingStoreState) => void;
@@ -264,7 +264,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     }
     set({ userEmail: clean });
     if (clean) {
-      get().syncChartsWithDb(clean);
+      get().syncChartsWithDb(clean, true);
     }
   },
 
@@ -310,7 +310,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
       // 4. Auto-sync profiles with Cloud DB if email is linked
       const currentEmail = get().userEmail;
       if (currentEmail) {
-        await get().syncChartsWithDb(currentEmail);
+        await get().syncChartsWithDb(currentEmail, false);
       }
 
       // 5. Update timestamp
@@ -328,7 +328,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     }
   },
 
-  syncChartsWithDb: async (customEmail) => {
+  syncChartsWithDb: async (customEmail?: string, autoLoad: boolean = true) => {
     const targetEmail = customEmail || get().userEmail;
     if (!targetEmail || typeof window === "undefined") return [];
 
@@ -366,6 +366,15 @@ export const useAstroStore = create<AstroState>((set, get) => ({
           const mergedList = Array.from(mergedMap.values()).sort((a, b) => b.savedAt - a.savedAt);
           saveProfilesToStorage(mergedList);
           set({ savedProfiles: mergedList, isSyncingDb: false });
+
+          // Auto-load profile into active view if autoLoad is requested and profiles exist
+          if (autoLoad && mergedList.length > 0) {
+            const profileToLoad = mergedList.find((p) => p.isDefault) || mergedList[0];
+            if (profileToLoad) {
+              get().loadProfile(profileToLoad);
+            }
+          }
+
           return mergedList;
         }
       }
