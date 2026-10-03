@@ -1,1 +1,94 @@
-[]
+[
+  {
+    "id": "knd_1788110454514_gbbj",
+    "userEmail": "satyamp783@gmail.com",
+    "name": "satyam",
+    "gender": "male",
+    "dateIso": "1998-05-24 18:46:59+00",
+    "dob": "1998-05-25",
+    "time": "00:16",
+    "location": {
+      "cityName": "Mau",
+      "country": "India",
+      "latitude": 25.9416,
+      "longitude": 83.5611,
+      "elevation": 78,
+      "timezoneOffsetHours": 5.5
+    },
+    "ayanamsha": "Lahiri",
+    "houseSystem": "WholeSign",
+    "isDefault": true,
+    "notes": null,
+    "createdAt": "2026-08-30T17:20:56.176Z",
+    "updatedAt": "2026-08-30T17:20:55.780Z"
+  },
+  {
+    "id": "knd_1788208423240_9vcu",
+    "userEmail": "krishnavamsi267@gmail.com",
+    "name": "Vamsi Krishna Tupakula",
+    "gender": "male",
+    "dateIso": "1996-08-23 02:50:56+00",
+    "dob": "1996-08-23",
+    "time": "08:20",
+    "location": {
+      "cityName": "Chevutūru",
+      "country": "India",
+      "latitude": 16.6956,
+      "longitude": 80.5999,
+      "elevation": 44,
+      "timezoneOffsetHours": 5.5
+    },
+    "ayanamsha": "Lahiri",
+    "houseSystem": "WholeSign",
+    "isDefault": true,
+    "notes": null,
+    "createdAt": "2026-08-31T20:33:44.707Z",
+    "updatedAt": "2026-08-31T20:33:44.109Z"
+  },
+  {
+    "id": "knd_1788279298347_i120",
+    "userEmail": "amarsai405@gmail.com",
+    "name": "Venkata",
+    "gender": "male",
+    "dateIso": "2000-09-05 13:06:55+00",
+    "dob": "2000-09-05",
+    "time": "18:36",
+    "location": {
+      "cityName": "Visakhapatnam",
+      "country": "India",
+      "latitude": 17.6868,
+      "longitude": 83.2185,
+      "elevation": 45,
+      "timezoneOffsetHours": 5.5
+    },
+    "ayanamsha": "Lahiri",
+    "houseSystem": "WholeSign",
+    "isDefault": true,
+    "notes": null,
+    "createdAt": "2026-09-01T16:14:58.043Z",
+    "updatedAt": "2026-09-01T16:14:57.395Z"
+  },
+  {
+    "id": "knd_1790086024742_7slk",
+    "userEmail": "satyamp783@gmail.com",
+    "name": "My Birth Chart",
+    "gender": "male",
+    "dateIso": "1998-05-24 18:45:30+00",
+    "dob": "1998-05-25",
+    "time": "00:15",
+    "location": {
+      "cityName": "Mau",
+      "country": "India",
+      "latitude": 25.9416,
+      "longitude": 83.5611,
+      "elevation": 78,
+      "timezoneOffsetHours": 5.5
+    },
+    "ayanamsha": "Lahiri",
+    "houseSystem": "WholeSign",
+    "isDefault": true,
+    "notes": null,
+    "createdAt": "2026-09-22T14:07:07.279Z",
+    "updatedAt": "2026-09-22T14:07:07.224Z"
+  }
+]

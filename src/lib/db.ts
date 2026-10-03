@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { sql } from "./neon";
 import { supabase } from "./supabase";
 
 export interface StoredBirthChart {
@@ -81,12 +82,52 @@ export function normalizeEmail(email: string): string {
 
 /**
  * Get all charts belonging to a specific email (case-insensitive)
- * Checks Supabase Cloud Postgres primary, falls back to local DB.
+ * Checks Neon Postgres primary, falls back to Supabase, then local DB.
  */
 export async function getChartsByEmail(email: string): Promise<StoredBirthChart[]> {
   const norm = normalizeEmail(email);
   if (!norm) return [];
 
+  // 1. Neon Serverless Postgres
+  if (sql) {
+    try {
+      const rows = await sql`
+        SELECT * FROM birth_charts
+        WHERE user_email = ${norm}
+        ORDER BY updated_at DESC;
+      `;
+
+      if (rows && rows.length > 0) {
+        return rows.map((row: any) => ({
+          id: row.id,
+          userEmail: row.user_email,
+          name: row.name,
+          gender: row.gender || "male",
+          dateIso: row.date_iso,
+          dob: row.dob,
+          time: row.time,
+          location: {
+            cityName: row.city_name || "Unknown City",
+            country: row.country || "India",
+            latitude: Number(row.latitude),
+            longitude: Number(row.longitude),
+            elevation: Number(row.elevation || 0),
+            timezoneOffsetHours: Number(row.timezone_offset_hours || 5.5),
+          },
+          ayanamsha: row.ayanamsha || "Lahiri",
+          houseSystem: row.house_system || "WholeSign",
+          isDefault: Boolean(row.is_default),
+          notes: row.notes,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+        }));
+      }
+    } catch (err) {
+      console.warn("Neon query fallback:", err);
+    }
+  }
+
+  // 2. Supabase Legacy Fallback
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -95,7 +136,7 @@ export async function getChartsByEmail(email: string): Promise<StoredBirthChart[
         .eq("user_email", norm)
         .order("updated_at", { ascending: false });
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         return data.map((row: any) => ({
           id: row.id,
           userEmail: row.user_email,
@@ -125,7 +166,7 @@ export async function getChartsByEmail(email: string): Promise<StoredBirthChart[
     }
   }
 
-  // Fallback to local DB
+  // 3. Fallback to local DB
   const all = readAllChartsLocal();
   return all
     .filter((c) => normalizeEmail(c.userEmail) === norm)
@@ -133,12 +174,7 @@ export async function getChartsByEmail(email: string): Promise<StoredBirthChart[
 }
 
 /**
- * Save or update a birth chart in Supabase and local cache
- */
-
-/**
  * Check if a chart with the same birth data already exists under the specified email.
- * Matches by (Name + DOB) or (DOB + Time + Coordinates).
  */
 export async function findExistingChartByEmailAndData(
   email: string,
@@ -188,6 +224,9 @@ export async function findExistingChartByEmailAndData(
   return null;
 }
 
+/**
+ * Save or update a birth chart in Neon, Supabase, and local cache
+ */
 export async function saveChart(
   chart: Omit<StoredBirthChart, "createdAt" | "updatedAt"> & { id?: string }
 ): Promise<StoredBirthChart> {
@@ -208,10 +247,47 @@ export async function saveChart(
     updatedAt: nowIso,
   };
 
-  // 1. Save to Supabase Cloud Postgres
+  // 1. Save to Neon Serverless Postgres
+  if (sql) {
+    try {
+      await sql`
+        INSERT INTO birth_charts (
+          id, user_email, name, gender, date_iso, dob, time,
+          city_name, country, latitude, longitude, elevation,
+          timezone_offset_hours, ayanamsha, house_system, is_default, notes, updated_at
+        ) VALUES (
+          ${record.id}, ${record.userEmail}, ${record.name}, ${record.gender}, ${record.dateIso}, ${record.dob}, ${record.time},
+          ${record.location.cityName}, ${record.location.country}, ${record.location.latitude}, ${record.location.longitude}, ${record.location.elevation || 0},
+          ${record.location.timezoneOffsetHours || 5.5}, ${record.ayanamsha || "Lahiri"}, ${record.houseSystem || "WholeSign"}, ${Boolean(record.isDefault)}, ${record.notes || null}, ${nowIso}
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          user_email = EXCLUDED.user_email,
+          name = EXCLUDED.name,
+          gender = EXCLUDED.gender,
+          date_iso = EXCLUDED.date_iso,
+          dob = EXCLUDED.dob,
+          time = EXCLUDED.time,
+          city_name = EXCLUDED.city_name,
+          country = EXCLUDED.country,
+          latitude = EXCLUDED.latitude,
+          longitude = EXCLUDED.longitude,
+          elevation = EXCLUDED.elevation,
+          timezone_offset_hours = EXCLUDED.timezone_offset_hours,
+          ayanamsha = EXCLUDED.ayanamsha,
+          house_system = EXCLUDED.house_system,
+          is_default = EXCLUDED.is_default,
+          notes = EXCLUDED.notes,
+          updated_at = EXCLUDED.updated_at;
+      `;
+    } catch (err) {
+      console.warn("Neon save error, falling back:", err);
+    }
+  }
+
+  // 2. Fallback to Supabase
   if (supabase) {
     try {
-      const { error } = await supabase.from("birth_charts").upsert({
+      await supabase.from("birth_charts").upsert({
         id: record.id,
         user_email: record.userEmail,
         name: record.name,
@@ -231,15 +307,12 @@ export async function saveChart(
         notes: record.notes,
         updated_at: nowIso,
       });
-      if (error) {
-        console.warn("Supabase upsert error, saved to local fallback:", error);
-      }
     } catch (err) {
       console.warn("Supabase save exception:", err);
     }
   }
 
-  // 2. Save to local fallback cache
+  // 3. Save to local fallback cache
   try {
     const all = readAllChartsLocal();
     const existingIdx = all.findIndex((c) => c.id === id);
@@ -255,12 +328,26 @@ export async function saveChart(
 }
 
 /**
- * Delete a chart by ID and Email from Supabase and local cache
+ * Delete a chart by ID and Email
  */
 export async function deleteChart(id: string, email: string): Promise<boolean> {
   const normEmail = normalizeEmail(email);
   let deletedFromCloud = false;
 
+  // 1. Neon Serverless Postgres
+  if (sql) {
+    try {
+      await sql`
+        DELETE FROM birth_charts
+        WHERE id = ${id} AND user_email = ${normEmail};
+      `;
+      deletedFromCloud = true;
+    } catch (err) {
+      console.warn("Neon delete exception:", err);
+    }
+  }
+
+  // 2. Supabase
   if (supabase) {
     try {
       const { error } = await supabase
@@ -274,7 +361,7 @@ export async function deleteChart(id: string, email: string): Promise<boolean> {
     }
   }
 
-  // Local fallback cleanup
+  // 3. Local fallback cleanup
   const all = readAllChartsLocal();
   const filtered = all.filter((c) => !(c.id === id && normalizeEmail(c.userEmail) === normEmail));
   if (filtered.length !== all.length) {
@@ -320,6 +407,31 @@ function writeAllReviewsLocal(reviews: StoredReview[]): void {
  * Get all reviews (ordered newest first)
  */
 export async function getReviews(): Promise<StoredReview[]> {
+  // 1. Neon Postgres
+  if (sql) {
+    try {
+      const rows = await sql`
+        SELECT * FROM reviews
+        ORDER BY created_at DESC;
+      `;
+
+      if (rows && rows.length > 0) {
+        return rows.map((row: any) => ({
+          id: row.id,
+          name: row.name,
+          email: row.email,
+          subject: row.subject,
+          description: row.description,
+          rating: Number(row.rating) || 5,
+          createdAt: row.created_at,
+        }));
+      }
+    } catch (err) {
+      console.warn("Neon fetch reviews exception:", err);
+    }
+  }
+
+  // 2. Supabase Fallback
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -327,7 +439,7 @@ export async function getReviews(): Promise<StoredReview[]> {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         return data.map((row: any) => ({
           id: row.id,
           name: row.name,
@@ -348,7 +460,7 @@ export async function getReviews(): Promise<StoredReview[]> {
 }
 
 /**
- * Save a new review to Supabase and local JSON fallback
+ * Save a new review to Neon and local JSON fallback
  */
 export async function saveReview(reviewData: {
   name: string;
@@ -359,9 +471,7 @@ export async function saveReview(reviewData: {
 }): Promise<StoredReview> {
   const id = `rev_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const createdAt = new Date().toISOString();
-
-  // Enforce max 20 characters on subject
-  const cleanSubject = reviewData.subject.trim().slice(0, 20);
+  const cleanSubject = reviewData.subject.trim().slice(0, 50);
 
   const newReview: StoredReview = {
     id,
@@ -373,6 +483,28 @@ export async function saveReview(reviewData: {
     createdAt,
   };
 
+  // 1. Neon Postgres
+  if (sql) {
+    try {
+      await sql`
+        INSERT INTO reviews (id, name, email, subject, description, rating, created_at)
+        VALUES (
+          ${newReview.id},
+          ${newReview.name},
+          ${newReview.email},
+          ${newReview.subject},
+          ${newReview.description},
+          ${newReview.rating},
+          ${newReview.createdAt}
+        )
+        ON CONFLICT (id) DO NOTHING;
+      `;
+    } catch (err) {
+      console.warn("Neon save review exception:", err);
+    }
+  }
+
+  // 2. Supabase Fallback
   if (supabase) {
     try {
       await supabase.from("reviews").insert([
@@ -391,6 +523,7 @@ export async function saveReview(reviewData: {
     }
   }
 
+  // 3. Local fallback
   try {
     const all = readAllReviewsLocal();
     all.unshift(newReview);
@@ -403,7 +536,7 @@ export async function saveReview(reviewData: {
 }
 
 /**
- * Check if a review has already been submitted by this email in the last `hours` (default 24 hours)
+ * Check if a review has already been submitted by this email in the last `hours`
  */
 export async function hasRecentReviewByEmail(email: string, hours: number = 24): Promise<boolean> {
   const norm = normalizeEmail(email);
@@ -412,6 +545,23 @@ export async function hasRecentReviewByEmail(email: string, hours: number = 24):
   const thresholdMs = Date.now() - hours * 60 * 60 * 1000;
   const thresholdIso = new Date(thresholdMs).toISOString();
 
+  // 1. Neon Postgres
+  if (sql) {
+    try {
+      const rows = await sql`
+        SELECT created_at FROM reviews
+        WHERE email = ${norm} AND created_at >= ${thresholdIso}
+        LIMIT 1;
+      `;
+      if (rows && rows.length > 0) {
+        return true;
+      }
+    } catch (err) {
+      console.warn("Neon check recent review exception:", err);
+    }
+  }
+
+  // 2. Supabase
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -425,10 +575,11 @@ export async function hasRecentReviewByEmail(email: string, hours: number = 24):
         return true;
       }
     } catch (err) {
-      console.warn("Supabase check recent review exception, falling back to local DB:", err);
+      console.warn("Supabase check recent review exception:", err);
     }
   }
 
+  // 3. Local fallback
   const local = readAllReviewsLocal();
   const recent = local.find(
     (r) => normalizeEmail(r.email) === norm && new Date(r.createdAt).getTime() >= thresholdMs

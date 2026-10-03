@@ -87,3 +87,12 @@ scratch/
 extracted_*.txt
 test_*.mjs
 test_*.js
+
+# Database backups, dumps & exports (never commit raw database backups)
+*.backup
+*.backup.*
+*.backup.gz
+*.dump
+*.sql
+*.tar.gz
+restored_backup*
