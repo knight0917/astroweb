@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getChartsByEmail, saveChart, deleteChart, normalizeEmail, findExistingChartByEmailAndData } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -14,7 +17,14 @@ export async function GET(req: NextRequest) {
     }
 
     const charts = await getChartsByEmail(email);
-    return NextResponse.json({ success: true, charts, count: charts.length });
+    return NextResponse.json(
+      { success: true, charts, count: charts.length },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      }
+    );
   } catch (err: any) {
     console.error("Error in GET /api/charts:", err);
     return NextResponse.json(

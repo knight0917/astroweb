@@ -1366,14 +1366,19 @@ export default function TimeTravelSlider() {
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <button
                     onClick={async () => {
-                      const profiles = await syncChartsWithDb(userEmail, true);
-                      if (profiles && profiles.length > 0) {
-                        const loaded = profiles.find((p) => p.isDefault) || profiles[0];
-                        setSyncStatusMsg(`✅ Synced & loaded "${loaded.name}" (${loaded.dob} ${loaded.time})!`);
-                      } else {
-                        setSyncStatusMsg("Synced with Cloud DB!");
+                      if (!userEmail) return;
+                      try {
+                        const profiles = await syncChartsWithDb(userEmail, true);
+                        if (profiles && profiles.length > 0) {
+                          const loaded = profiles.find((p) => p.isDefault) || profiles[0];
+                          setSyncStatusMsg(`✅ Found ${profiles.length} chart${profiles.length > 1 ? "s" : ""}! Loaded "${loaded.name}" (${loaded.dob || ""} ${loaded.time || ""}, ${loaded.location?.cityName || ""}).`);
+                        } else {
+                          setSyncStatusMsg("Synced with Cloud DB (no charts found).");
+                        }
+                      } catch (err: any) {
+                        setSyncStatusMsg(`❌ Sync error: ${err.message}`);
                       }
-                      setTimeout(() => setSyncStatusMsg(null), 4000);
+                      setTimeout(() => setSyncStatusMsg(null), 6000);
                     }}
                     disabled={isSyncingDb}
                     className="px-2.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-all"
@@ -1406,17 +1411,21 @@ export default function TimeTravelSlider() {
                     onChange={(e) => setSyncEmailInput(e.target.value)}
                     onKeyDown={async (e) => {
                       if (e.key === "Enter" && syncEmailInput.trim()) {
-                        const email = syncEmailInput.trim();
+                        const email = syncEmailInput.trim().toLowerCase();
                         setUserEmail(email);
                         setSyncEmailInput("");
-                        const profiles = await syncChartsWithDb(email, true);
-                        if (profiles && profiles.length > 0) {
-                          const loaded = profiles.find((p) => p.isDefault) || profiles[0];
-                          setSyncStatusMsg(`✅ Restored & loaded "${loaded.name}" (${loaded.dob} ${loaded.time})!`);
-                        } else {
-                          setSyncStatusMsg("Connected to cloud vault (no saved charts found).");
+                        try {
+                          const profiles = await syncChartsWithDb(email, true);
+                          if (profiles && profiles.length > 0) {
+                            const loaded = profiles.find((p) => p.isDefault) || profiles[0];
+                            setSyncStatusMsg(`✅ Found ${profiles.length} chart${profiles.length > 1 ? "s" : ""}! Loaded "${loaded.name}" (${loaded.dob || ""} ${loaded.time || ""}, ${loaded.location?.cityName || ""}).`);
+                          } else {
+                            setSyncStatusMsg(`⚠️ Connected to vault, but no saved charts were found under "${email}".`);
+                          }
+                        } catch (err: any) {
+                          setSyncStatusMsg(`❌ Sync error: ${err.message}`);
                         }
-                        setTimeout(() => setSyncStatusMsg(null), 4000);
+                        setTimeout(() => setSyncStatusMsg(null), 6000);
                       }
                     }}
                     placeholder="Enter email to restore charts..."
@@ -1425,17 +1434,21 @@ export default function TimeTravelSlider() {
                   <button
                     onClick={async () => {
                       if (syncEmailInput.trim()) {
-                        const email = syncEmailInput.trim();
+                        const email = syncEmailInput.trim().toLowerCase();
                         setUserEmail(email);
                         setSyncEmailInput("");
-                        const profiles = await syncChartsWithDb(email, true);
-                        if (profiles && profiles.length > 0) {
-                          const loaded = profiles.find((p) => p.isDefault) || profiles[0];
-                          setSyncStatusMsg(`✅ Restored & loaded "${loaded.name}" (${loaded.dob} ${loaded.time})!`);
-                        } else {
-                          setSyncStatusMsg("Connected to cloud vault (no saved charts found).");
+                        try {
+                          const profiles = await syncChartsWithDb(email, true);
+                          if (profiles && profiles.length > 0) {
+                            const loaded = profiles.find((p) => p.isDefault) || profiles[0];
+                            setSyncStatusMsg(`✅ Found ${profiles.length} chart${profiles.length > 1 ? "s" : ""}! Loaded "${loaded.name}" (${loaded.dob || ""} ${loaded.time || ""}, ${loaded.location?.cityName || ""}).`);
+                          } else {
+                            setSyncStatusMsg(`⚠️ Connected to vault, but no saved charts were found under "${email}".`);
+                          }
+                        } catch (err: any) {
+                          setSyncStatusMsg(`❌ Sync error: ${err.message}`);
                         }
-                        setTimeout(() => setSyncStatusMsg(null), 4000);
+                        setTimeout(() => setSyncStatusMsg(null), 6000);
                       }
                     }}
                     disabled={isSyncingDb}
@@ -1515,7 +1528,11 @@ export default function TimeTravelSlider() {
                           </div>
                           <div className="text-xs text-slate-400 mt-1 flex flex-wrap items-center gap-1.5 font-medium">
                             <span className="text-slate-200">
-                              🗓️ {pDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
+                              🗓️ {p.dob ? new Date(`${p.dob}T00:00:00Z`).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : pDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
+                            </span>
+                            <span>•</span>
+                            <span className="text-amber-300 font-bold">
+                              ⏰ {p.time || pDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                             </span>
                             <span>•</span>
                             <span className="text-slate-300">

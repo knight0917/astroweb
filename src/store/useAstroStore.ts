@@ -334,7 +334,9 @@ export const useAstroStore = create<AstroState>((set, get) => ({
 
     set({ isSyncingDb: true });
     try {
-      const res = await fetch(`/api/charts?email=${encodeURIComponent(targetEmail)}`);
+      const res = await fetch(`/api/charts?email=${encodeURIComponent(targetEmail)}&_t=${Date.now()}`, {
+        cache: "no-store",
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.charts && Array.isArray(data.charts)) {
@@ -368,7 +370,12 @@ export const useAstroStore = create<AstroState>((set, get) => ({
           set({ savedProfiles: mergedList, isSyncingDb: false });
 
           // Auto-load profile into active view if autoLoad is requested and profiles exist
-          if (autoLoad && mergedList.length > 0) {
+          if (autoLoad && dbProfiles.length > 0) {
+            const profileToLoad = dbProfiles.find((p) => p.isDefault) || dbProfiles[0];
+            if (profileToLoad) {
+              get().loadProfile(profileToLoad);
+            }
+          } else if (autoLoad && mergedList.length > 0) {
             const profileToLoad = mergedList.find((p) => p.isDefault) || mergedList[0];
             if (profileToLoad) {
               get().loadProfile(profileToLoad);
