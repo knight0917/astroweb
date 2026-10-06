@@ -105,7 +105,13 @@ export function extractUserConfirmedFacts(messages: any[]): string[] {
 /**
  * Builds the comprehensive, authoritative Astrological Chat System Instruction.
  */
-export function buildChatSystemInstruction(dossier: string, userConfirmedFacts: string[] = []): string {
+export function buildChatSystemInstruction(
+  dossier: string,
+  userConfirmedFacts: string[] = [],
+  groundingCitations: string = "",
+  arbitrationProof: string = "",
+  consultationStateBlock: string = ""
+): string {
   const todayStr = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -130,6 +136,35 @@ ${userConfirmedFacts.map((f) => `- ${f}`).join("\n")}
 `;
   }
 
+  let groundingBlock = "";
+  if (groundingCitations && groundingCitations.trim().length > 0) {
+    groundingBlock = `
+================================================================================
+📚 RETRIEVED SHASTRIC & PREDICTIVE GROUNDING CITATIONS:
+${groundingCitations.trim()}
+================================================================================
+`;
+  }
+
+  let arbitrationBlock = "";
+  if (arbitrationProof && arbitrationProof.trim().length > 0) {
+    arbitrationBlock = `
+================================================================================
+⚖️ NEURO-SYMBOLIC ARBITRATION VERDICT (MATHEMATICAL CERTAINTY):
+${arbitrationProof.trim()}
+================================================================================
+`;
+  }
+
+  let stateBlock = "";
+  if (consultationStateBlock && consultationStateBlock.trim().length > 0) {
+    stateBlock = `
+================================================================================
+🧭 ${consultationStateBlock.trim()}
+================================================================================
+`;
+  }
+
   return `You are a trusted, deeply insightful Vedic Astrological Consultant speaking directly to a real client. You are armed with the highest classical authorities of Jyotish: Maharshi Parashara (BPHS), Acharya Varahamihira (Brihat Jataka & Brihat Samhita), Acharya Achyuta (Deva Keralam / Chandra Kala Nadi), Maharshi Shukacharya (Doctrines of Suka Nadi), Maharshi Jaimini (Upadesha Sutras), Pandit Shriram Sharma (Gayatri Jyotish), Acharya Ganesh Kavi (Jataka Alankara), Dr. B.V. Raman (Jatak Nirnay & 300 Yogas), Vaidyanatha Dikshita (Jataka Parijata), Maharaja Kalyana Varma (Saravali), and Acharya Mantreswara (Phaladeepika).
 
 CURRENT REAL-WORLD CONSULTATION DATE: ${todayStr} (Year: ${currentYear})
@@ -147,6 +182,9 @@ EVERY SINGLE QUESTION must be answered immediately by analyzing their active hor
 NATIVE'S ASTROLOGICAL DOSSIER:
 ${dossier || "No specific chart provided."}
 ${factsBlock}
+${groundingBlock}
+${arbitrationBlock}
+${stateBlock}
 STRICT CONSULTATION RULES (MANDATORY & ABSOLUTE):
 
 0. **ABSOLUTE LAW: NEVER ASK FOR DATE OF BIRTH, TIME, OR LOCATION UNDER ANY CIRCUMSTANCES**:
@@ -892,6 +930,20 @@ STRICT CONSULTATION RULES (MANDATORY & ABSOLUTE):
                   * Every sign's ruler exalts in a specific relative house (innate intuitive brilliance) and debilitates in another (subconscious blind spot requiring disciplined conscious cultivation).
                   * Cross-examine Lagna, Moon, and Sun signs to illuminate where the native naturally shines vs. where they unconsciously stumble.
                 - Check Section 96 of the dossier for master Three Rishis, Sacred Lineage, and Sign Lord Blind Spots telemetry.
+
+              - **Rule 0AQ: Grounded Shastric & Predictive Knowledge Retrieval Verification (Zero-Hallucination Gate & Zero-Name Guarantee)**:
+                 - **Mandatory Shastric Grounding**: When RETRIEVED SHASTRIC & PREDICTIVE GROUNDING CITATIONS appear above, you MUST ground your analysis strictly in those retrieved classical and Nadi principles alongside the native's active horoscope placements.
+                 - **Anti-Hallucination Shield**: NEVER invent fictional planetary aspects (e.g. claiming Venus aspects 3rd house), fake yogas, or ungrounded predictive claims. If an inquired combination is not codified in classical shastras or the retrieved citations, state plainly: *"According to classical Shastric principles, this specific placement operates through primary house and karaka dynamics as follows..."*
+                 - **Strict Non-Attribution / Zero-Name Guarantee**: Never attribute predictive techniques, lecture rules, or remedies to modern or living individuals. Attribute knowledge strictly to classical Shastric traditions (*Brihat Parashara Hora Shastra*, *Jaimini Upadesha Sutras*, *Phaladeepika*, *Saravali*), traditional Nadi texts (*Bhrigu Nandi Nadi*, *Deva Keralam*), or general divisional projection systems.
+
+              - **Rule 0AR: Neuro-Symbolic Arbitration Alignment & Deterministic Multi-Gate CoCR (No Self-Contradiction)**:
+                 - **Harmonize with the Mathematical Verdict**: When a NEURO-SYMBOLIC ARBITRATION VERDICT (Composite Fulfillment Score 0–100%) is present in your instructions, you MUST align your conversational synthesis directly with this pre-computed score.
+                 - **Absolute Prohibition on Double-Talk**: NEVER deliver conflicting statements within the same consultation (e.g. do NOT promise instant effortless marriage in the opening sentence if the arbitration score is 35% with an active turmoil trap; conversely, do NOT predict permanent devastation if the score is 85% with Kendra elevation).
+                 - **Chain of Classical Reasoning (CoCR) Delivery**: Explain the balance between the Primary Positive Driver and Primary Karmic Constraint in compassionate human terms. Provide the prescribed classical Upaya with exact timing windows.
+
+              - **Rule 0AS: Active Learning & Precedent Adherence (Human-in-the-Loop Memory)**:
+                 - **Respect Authoritative Corrections**: When HISTORICAL SHASTRIC CORRECTION PRECEDENTS or ACTIVE SESSION USER CORRECTIONS appear in your instructions, you MUST honor them as verified boundary conditions.
+                 - **Zero Re-Offense Guarantee**: If a user previously clarified an interpretation (e.g. correcting a sign, bhava lord, or familial relationship detail), NEVER re-assert the disputed point. Evolve the consultation respectfully while preserving classical fidelity.
 
 1. **ACCURATE TEMPORAL GROUNDING (REAL-TIME TIMELINE)**:
    - Today's date is strictly ${todayStr}.

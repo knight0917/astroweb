@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildChatSystemInstruction, extractUserConfirmedFacts } from "@/engine/chatPrompt";
+import { retrieveGroundedAstroKnowledge } from "@/lib/ragRetriever";
+import { arbitratePredictiveQuery } from "@/engine/predictiveArbitrator";
+import { buildConsultationState, formatConsultationStateBlock } from "@/engine/consultationState";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { messages, astroDossier, userApiKey } = body;
+    const { messages, astroDossier, userApiKey, natalEphemeris, transitEphemeris, runningDasha, activeCorrections } = body;
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -33,7 +36,51 @@ export async function POST(req: NextRequest) {
 
     // Extract user-confirmed facts from conversation history
     const userConfirmedFacts = extractUserConfirmedFacts(messages);
-    const systemInstruction = buildChatSystemInstruction(astroDossier, userConfirmedFacts);
+
+    // Find the latest user query to perform grounded vector retrieval
+    const lastUserMessage = [...messages].reverse().find((m: any) => m.role === "user" || m.sender === "user")?.content || "";
+    
+    // 1. Retrieve grounded Shastric & Nadi rules from Neon pgvector using Astrological HyDE
+    let groundingCitations = "";
+    let detectedDomain = "general";
+    if (lastUserMessage.trim()) {
+      try {
+        const ragRes = await retrieveGroundedAstroKnowledge(lastUserMessage, {
+          userApiKey: apiKey,
+          chartDossier: astroDossier,
+          limit: 4,
+        });
+        groundingCitations = ragRes.groundingText;
+        detectedDomain = ragRes.domain;
+      } catch (ragErr) {
+        console.warn("[AstroChat] RAG retrieval note:", ragErr);
+      }
+    }
+
+    // 2. Perform Neuro-Symbolic Predictive Arbitration if natal ephemeris is available
+    let arbitrationProof = "";
+    let prescribedUpaya = "";
+    if (natalEphemeris && natalEphemeris.ascendant && natalEphemeris.planets) {
+      try {
+        const arbitration = arbitratePredictiveQuery(detectedDomain, natalEphemeris, transitEphemeris, runningDasha);
+        arbitrationProof = arbitration.conciseSummaryProof;
+        prescribedUpaya = arbitration.recommendedUpaya;
+      } catch (arbErr) {
+        console.warn("[AstroChat] Arbitration note:", arbErr);
+      }
+    }
+
+    // 3. Track Multi-Turn Consultation State Graph (including active human corrections)
+    const consultationState = buildConsultationState(messages, lastUserMessage, prescribedUpaya, activeCorrections);
+    const consultationStateBlock = formatConsultationStateBlock(consultationState);
+
+    const systemInstruction = buildChatSystemInstruction(
+      astroDossier,
+      userConfirmedFacts,
+      groundingCitations,
+      arbitrationProof,
+      consultationStateBlock
+    );
 
     // Filter chat history to retain rich conversation memory without runaway token bloat
     const filteredHistory = messages

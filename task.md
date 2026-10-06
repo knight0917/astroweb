@@ -1080,3 +1080,217 @@
   - [x] Run `npm test` (all 140 tests passing).
   - [x] Run `npx tsc --noEmit` (0 errors).
   - [x] Run `npm run build` (clean Next.js production build).
+
+---
+
+# Phase 45: Root vs Fruit Divisional Projection Matrix & Navamsha Manifestation Timing Engine
+
+## Status: Complete & Verified (All 141 Tests Passing & Production Build Clean)
+- **Keywords:** `root-vs-fruit-matrix`, `divisional-projection-engine`, `navamsha-marriage-fruition`, `navamsha-career-fruition`, `saturn-dietary-nadi`, `sign-dasha-archetypes`, `zero-names-frontend-guarantee`
+- **Scope:**
+  1. Core Root-Fruit Projection Engine (`src/engine/rootFruitProjection.ts`):
+     - D1 House Sign to D9 House Projection Matrix for all 12 houses (Seed vs Manifestation Fruit).
+     - 7th House Marital Fruition Gate & Post-Marriage Turmoil Risk Assessment (D1 7th sign falling in D9 6th/8th/12th vs Lagna/Kendra).
+     - 10th House Career Manifestation Gate (D1 10th sign falling in D9 4th = domestic sanctuary / remote architecture; Gemini career overhaul & transfer triggers).
+     - Special Dietary & Fasting Nadi Rule (Saturn 2nd house in Rohini caloric restriction vs Bharani / other nakshatras).
+     - Sign Dasha Functional Alignment (benefics, Yogakarakas, Marakas, and 6th/8th lords from running sign).
+  2. Engine Cross-Linking:
+     - Connect into `src/engine/rashiTulyaNavamsha.ts` and `src/engine/predictiveDecisionGates.ts`.
+     - Expose to LLM system context in `src/engine/chatContext.ts` without personal names.
+  3. Frontend UI Integration (`src/components/ShodashavargaView.tsx`):
+     - Interactive Root vs Fruit Projection panel under RTN view displaying 12-house matrix, marriage fruition gate, career environment gate, and dietary markers.
+     - Strict Zero-Name Policy: No personal/author names in UI or user-facing strings.
+  4. Frontend UI Cleanups (`src/components/AstroChatbot.tsx` & `src/components/DashaView.tsx`):
+     - Purge legacy author names from chatbot message generators and dashboard tab headings.
+     - Add Fast-Path Interceptor 37 for instant answers to Root vs Fruit and Navamsha manifestation inquiries.
+  5. Automated Verification in `tests/engine.test.mjs`:
+     - Add Subtest 141 verifying mathematical projections, marriage gates, career gates, dietary logic, and zero personal names in UI outputs.
+     - Ensure 100% test pass rate, 0 TypeScript errors, and clean Next.js build.
+
+## Phases & Milestones
+
+- [x] **Phase 45.1: Core Root-Fruit Projection & Navamsha Manifestation Engine (`src/engine/rootFruitProjection.ts`)**
+  - [x] Implement `calculateD1D9RootFruitProjections(natalEphemeris: EphemerisResult): RootFruitProjectionResult`.
+  - [x] Implement `evaluateMarriageFruition(natalEphemeris: EphemerisResult): MarriageFruitionResult`.
+  - [x] Implement `evaluateCareerFruition(natalEphemeris: EphemerisResult): CareerFruitionResult`.
+  - [x] Implement `evaluateSpecialDietaryNadiRule(natalEphemeris: EphemerisResult): DietaryNadiRuleResult`.
+  - [x] Implement `evaluateSignDashaArchetypes(runningSignIndex: number, natalEphemeris: EphemerisResult): SignDashaArchetypeAnalysis`.
+
+- [x] **Phase 45.2: Engine Cross-Linking & Chat Context (`src/engine/rashiTulyaNavamsha.ts` & `src/engine/chatContext.ts`)**
+  - [x] Connect `rootFruitProjection` outputs into `evaluateRashiTulyaNavamsha()`.
+  - [x] Add Section 80 (Root vs Fruit Matrix) to `chatContext.ts` with strict zero personal names.
+
+- [x] **Phase 45.3: Frontend UI Integration & Zero-Name Compliance (`src/components/ShodashavargaView.tsx`)**
+  - [x] Add dedicated Root vs Fruit interactive panel in RTN mode of `ShodashavargaView.tsx`.
+  - [x] Render 12-house projection grid, marriage fruition gate, career environment architecture, and dietary/maturation markers.
+  - [x] Enforce zero author/guru names across all UI labels.
+
+- [x] **Phase 45.4: Frontend Cleanups & Fast-Path Interceptor 37 (`src/components/AstroChatbot.tsx` & `src/components/DashaView.tsx`)**
+  - [x] Clean up legacy author references in `AstroChatbot.tsx` and `DashaView.tsx`.
+  - [x] Add Fast-Path Interceptor 37 in `AstroChatbot.tsx` for Root vs Fruit / Navamsha Fruition queries.
+
+- [x] **Phase 45.5: Automated Verification & Production Build (`tests/engine.test.mjs`)**
+  - [x] Add Subtest 141 in `tests/engine.test.mjs`.
+  - [x] Run `npm test` (all 141 tests passing).
+  - [x] Run `npx tsc --noEmit` (0 errors).
+  - [x] Run `npm run build` (clean Next.js production build).
+
+---
+
+# Phase 46: Unified Astrological Knowledge Base & Zero-Hallucination Vector RAG Architecture (Neon pgvector + Semantic Retrieval)
+
+## Status: Complete & Verified (All 142 Tests Passing & Production Build Clean)
+- **Keywords:** `astro-knowledge-rag`, `neon-pgvector`, `gemini-text-embeddings`, `grounded-retrieval-engine`, `zero-hallucination-gate`, `zero-names-frontend-guarantee`, `shastric-corpus-vectorization`
+- **Scope:**
+  1. Neon pgvector Infrastructure & Schema (`src/lib/vectorDb.ts`):
+     - Initialize `pgvector` extension and table `astro_knowledge_chunks` with `vector(768)` embeddings, HNSW index, JSONB conditions, and source tags.
+     - Provide fallback in-memory cosine similarity retrieval for offline / local-development reliability with zero database bloat.
+  2. Universal Astrological Knowledge Corpus (`src/data/astroKnowledgeCorpus.ts`):
+     - Exhaustive compilation of Shastric rules (BPHS, Jaimini, Phaladeepika, Saravali, Nadi classics), modern methodologies (Raman, KN Rao, CS Patel, Samir Tripathi, BTR), and advanced lecture techniques (Root vs Fruit, Name Vibrations, Maturation Ages, Medhaj series, D10 surroundings, Dietary Nadi rules).
+     - Atomic chunking with structured metadata (house, planet, sign, varga, category, timing).
+  3. Semantic Embedding & Ingestion Engine (`src/lib/embeddingService.ts`):
+     - Batch embedding using Google Gemini embedding models (`gemini-embedding-001` / `gemini-embedding-2` with 768 dimensions).
+     - Deterministic chunk hash idempotency to prevent redundant vector storage.
+  4. Hybrid RAG Retrieval & Context Fusion (`src/lib/ragRetriever.ts` & `src/app/api/astro-chat/route.ts`):
+     - Semantic query expansion combining user query with active horoscope facts.
+     - Top-K cosine similarity retrieval with metadata pre-filtering.
+     - Dynamic injection into chat prompt while stripping personal author names.
+  5. Grounded Anti-Hallucination Guardrails (`src/engine/chatPrompt.ts`):
+     - Implement Rule 0AQ (Grounded Verification Gate): strict mandate to cite retrieved Shastric principles and explicitly refuse to invent ungrounded predictions.
+     - Enforce Strict Zero-Name Frontend Policy.
+  6. Automated Verification Suite (`tests/engine.test.mjs`):
+     - Subtest 142 testing corpus schema, vector similarity search, context fusion, and zero-name compliance.
+     - Verify full test suite passing, 0 TypeScript errors, and clean Next.js build.
+
+## Phases & Milestones
+
+- [x] **Phase 46.1: Database Schema & Neon pgvector Infrastructure (`src/lib/vectorDb.ts`)**
+  - [x] Implement `initVectorDb()` to execute idempotent table & index creation in Neon Postgres.
+  - [x] Implement `upsertKnowledgeChunks(chunks)` and `searchSimilarRules(embedding, options)`.
+  - [x] Implement client/in-memory fallback vector cosine similarity for zero-latency / offline resilience.
+
+- [x] **Phase 46.2: Universal Astrological Knowledge Corpus (`src/data/astroKnowledgeCorpus.ts`)**
+  - [x] Compile comprehensive knowledge nodes across Classical Shastras (BPHS, Jaimini, Phaladeepika, Saravali, Nadi texts).
+  - [x] Compile modern techniques (Raman 300 yogas, KN Rao PAC-DARES, CS Patel RTN/Ashtakavarga, BTR triad).
+  - [x] Compile lecture techniques (Root-Fruit matrix, 7th marriage gate, 10th career sanctuary, Saturn Rohini diet, Name vibrations, Age 36 retrograde, Medhaj series).
+  - [x] Tag every node with structured conditions `{ houses, planets, signs, vargas, topics }`.
+
+- [x] **Phase 46.3: Semantic Embedding Service (`src/lib/embeddingService.ts`)**
+  - [x] Implement Gemini embedding models with 768-dimension normalization and error handling.
+  - [x] Implement fast normalized cosine similarity calculation.
+  - [x] Implement pre-calculated embeddings and seed script (`scripts/seedKnowledgeCorpus.ts`).
+
+- [x] **Phase 46.4: RAG Retriever & Chat API Integration (`src/lib/ragRetriever.ts` & `src/app/api/astro-chat/route.ts`)**
+  - [x] Implement `retrieveGroundedAstroKnowledge(query)` fusing query semantics with active chart factors.
+  - [x] Integrate retrieved context into `astro-chat/route.ts` system prompt.
+  - [x] Ensure strict adherence to Zero-Name Frontend rule via `sanitizeZeroNames()`.
+
+- [x] **Phase 46.5: Anti-Hallucination Guardrails (`src/engine/chatPrompt.ts`)**
+  - [x] Add Rule 0AQ (Grounded Shastric Verification Gate) to `buildChatSystemInstruction`.
+  - [x] Enforce verification against retrieved rule nodes before making any predictive statement.
+
+- [x] **Phase 46.6: Automated Regression Verification & Production Build (`tests/engine.test.mjs`)**
+  - [x] Add Subtest 142 covering knowledge corpus validity, vector retrieval ranking, context fusion, and zero-name compliance.
+  - [x] Run `npm test` to verify all 142 tests pass.
+  - [x] Run `npx tsc --noEmit` to verify zero type errors.
+  - [x] Run `npm run build` to verify production build.
+
+---
+
+# Phase 47: Cognitive AI Upgrade: Astrological HyDE, Neuro-Symbolic Arbitration & Two-Stage Chain of Classical Reasoning (CoCR)
+
+## Status: Complete & Verified (All 143 Tests Passing & Production Build Clean)
+- **Keywords:** `astrological-hyde`, `neuro-symbolic-arbitrator`, `composite-fulfillment-score`, `two-stage-cocr`, `consultation-state-graph`, `zero-hallucination-gate`, `zero-names-frontend-guarantee`
+- **Scope:**
+  1. Astrological HyDE (Hypothetical Chart-Query Entity Expansion) (`src/lib/ragRetriever.ts`):
+     - Expand raw user queries with the native's active astrological placements (Lagna, relevant Bhavas, Lords, D9/D10 coordinates, active Dasha, SAV bindus) prior to vector search in Neon pgvector.
+  2. Neuro-Symbolic Predictive Arbitration Engine (`src/engine/predictiveArbitrator.ts`):
+     - Deterministic 6-Gate Arbitration Matrix: (1) D1 Seed, (2) D9 Fruit, (3) Dasha Window, (4) Double Transit Sanction, (5) Ashtakavarga Bindus, (6) Affliction/Bhanga Neutralization.
+     - Compute unified Composite Fulfillment Score (0-100%) and Verdict Category to eliminate self-contradictory LLM statements.
+  3. Two-Stage CoCR & Chat API Integration (`src/app/api/astro-chat/route.ts` & `src/engine/chatPrompt.ts`):
+     - Inject pre-computed Arbitration Proof directly into the LLM system prompt.
+     - Mandate that the assistant align its conversational narrative with the deterministic Composite Fulfillment Score.
+  4. Multi-Turn Consultation State Graph (`src/engine/consultationState.ts`):
+     - Track consultation domain, explored bhavas, diagnosed challenges, and already-prescribed remedies across conversational turns.
+  5. Automated Verification Suite (`tests/engine.test.mjs`):
+     - Add Subtest 143 covering HyDE expansion, 6-Gate arbitration, state graph transitions, and zero-name compliance.
+     - Verify full test suite passing, 0 TypeScript errors, and clean Next.js build.
+
+## Phases & Milestones
+
+- [x] **Phase 47.1: Astrological HyDE Query Expansion (`src/lib/ragRetriever.ts`)**
+  - [x] Implement `expandQueryWithChartEntities(query, natalEphemeris)` resolving relevant houses, lords, D9 positions, and dasha context.
+  - [x] Fuse expanded entities into the vector embedding query sent to Neon pgvector.
+
+- [x] **Phase 47.2: Neuro-Symbolic Predictive Arbitration Engine (`src/engine/predictiveArbitrator.ts`)**
+  - [x] Implement `arbitratePredictiveQuery(domain, natalEphemeris, transitEphemeris, dashaResult)` calculating scores across all 6 Classical Gates.
+  - [x] Generate deterministic `ArbitrationProof` with Composite Fulfillment Score (0-100%), Active Timing Window, and Primary Classical Driver.
+
+- [x] **Phase 47.3: Two-Stage CoCR & Chat API Integration (`src/app/api/astro-chat/route.ts` & `src/engine/chatPrompt.ts`)**
+  - [x] Incorporate `arbitratePredictiveQuery` into `POST /api/astro-chat`.
+  - [x] Add Rule 0AR (Neuro-Symbolic Arbitration Alignment) to `buildChatSystemInstruction`.
+
+- [x] **Phase 47.4: Multi-Turn Consultation State Graph (`src/engine/consultationState.ts`)**
+  - [x] Implement `updateConsultationState(prevState, newMessages, currentReading)` tracking explored domains and prescribed remedies.
+  - [x] Prevent repetitive advice loops across multi-turn chats.
+
+- [x] **Phase 47.5: Automated Regression Verification & Production Build (`tests/engine.test.mjs`)**
+  - [x] Add Subtest 143 verifying HyDE expansion, 6-Gate composite scoring, consultation state graph, and zero-name compliance.
+  - [x] Run `npm test` to verify all 143 tests pass.
+  - [x] Run `npx tsc --noEmit` to verify zero type errors.
+  - [x] Run `npm run build` to verify production build.
+
+---
+
+# Phase 48: Human-in-the-Loop Active Learning & Chat Feedback Architecture (RLHF / HITL Correction Loop)
+
+## Status: Complete & Verified (All 144 Tests Passing & Production Build Clean)
+- **Keywords:** `human-in-the-loop`, `rlhf-feedback-loop`, `active-learning-corrections`, `neon-feedback-table`, `golden-precedent-rag`, `zero-names-frontend-guarantee`
+- **Scope:**
+  1. Neon Postgres Table (`chat_feedback_corrections`) & Data Access Layer (`src/lib/feedbackDb.ts`):
+     - Store micro-feedback (`helpful`, `inaccurate`, `correction`), categories, user corrections, chart context, domain, and vector embedding.
+     - Dual-tier local JSON fallback cache (`data/chat_feedback_db.json`) ensuring resilience.
+  2. Next.js API Routes (`/api/chat-feedback`):
+     - `POST /api/chat-feedback` validating payload, generating text embeddings for user corrections, and inserting into Neon Postgres.
+     - `GET /api/chat-feedback` retrieving stats and recent feedback for auditing.
+  3. Dynamic In-Session State Graph (`src/engine/consultationState.ts`):
+     - Support `activeCorrections` in `ConsultationStateGraph` to immediately prevent repetition of disputed claims within the ongoing conversation.
+     - Inject active user corrections as authoritative axioms for subsequent turns.
+  4. Vector Precedent RAG Retriever Integration (`src/lib/ragRetriever.ts`):
+     - Retrieve verified user corrections / golden precedents matching the query and inject them as `HISTORICAL SHASTRIC CORRECTION PRECEDENTS`.
+  5. UI Micro-Feedback Actions & Shastric Correction Modal (`src/components/AstroChatbot.tsx`):
+     - Render 👍 (Helpful) and 👎/✏️ (Suggest Correction) on all assistant message cards.
+     - Interactive slide-down / modal with category selectors (`Wrong House/Lord`, `Contradictory Timing`, `Incorrect Remedy`, `Calculation Discrepancy`, `Other`), text area, and submit action.
+  6. Automated Verification Suite (`tests/engine.test.mjs`):
+     - Add Subtest 144 covering feedback validation, state graph correction integration, RAG precedent formatting, and zero-name compliance.
+     - Run `npm test`, `npx tsc --noEmit`, and `npm run build`.
+
+## Phases & Milestones
+
+- [x] **Phase 48.1: Neon Postgres Database Layer (`src/lib/feedbackDb.ts`)**
+  - [x] Implement `initFeedbackDb()` creating `chat_feedback_corrections` table and indexes.
+  - [x] Implement `saveChatFeedback()` with Neon SQL query and local JSON fallback.
+  - [x] Implement `getVerifiedPrecedentCorrections()` for vector retrieval.
+
+- [x] **Phase 48.2: Next.js Feedback API Endpoint (`src/app/api/chat-feedback/route.ts`)**
+  - [x] Implement `POST /api/chat-feedback` with validation, embedding generation, and error handling.
+  - [x] Implement `GET /api/chat-feedback` for admin audit and statistics.
+
+- [x] **Phase 48.3: Dynamic In-Session State Graph (`src/engine/consultationState.ts`)**
+  - [x] Add `activeCorrections` to `ConsultationStateGraph`.
+  - [x] Update `buildConsultationState` and `formatConsultationStateBlock` to inject active user corrections as hard axioms.
+
+- [x] **Phase 48.4: Vector Precedent Integration in RAG Retriever (`src/lib/ragRetriever.ts`)**
+  - [x] Query and fuse verified golden precedents into system prompt context.
+  - [x] Add Rule 0AS to `src/engine/chatPrompt.ts` enforcing precedent adherence.
+
+- [x] **Phase 48.5: Chatbot UI Micro-Feedback & Correction Modal (`src/components/AstroChatbot.tsx`)**
+  - [x] Add feedback buttons (👍 / 👎 / ✏️) to assistant message cards.
+  - [x] Build interactive correction form with category picker and text input.
+  - [x] Link submitted corrections into active session state.
+
+- [x] **Phase 48.6: Automated Regression Verification Suite & Production Build (`tests/engine.test.mjs`)**
+  - [x] Add Subtest 144 verifying feedback storage, state graph correction injection, and zero-name compliance.
+  - [x] Run `npm test` verifying 144/144 tests pass.
+  - [x] Run `npx tsc --noEmit` verifying 0 type errors.
+  - [x] Run `npm run build` verifying clean production build.

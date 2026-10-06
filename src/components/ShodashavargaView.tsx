@@ -48,6 +48,7 @@ export default function ShodashavargaView() {
   const [chartType, setChartType] = useState<"north" | "south">("north");
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | "Shadvarga" | "Saptavarga" | "Dashavarga" | "RTN">("ALL");
   const [rtnLayerFilter, setRtnLayerFilter] = useState<"all" | "d9" | "d1">("all");
+  const [selectedRfHouse, setSelectedRfHouse] = useState<number | null>(7);
 
   const nativeAge = useMemo(() => {
     if (!currentDate) return 30;
@@ -977,6 +978,195 @@ export default function ShodashavargaView() {
                     <p className="text-[11px] text-rose-200/90 bg-rose-950/40 p-2 rounded-lg border border-rose-800/40">
                       {rtnResult.caseStudyMatch.manifestationDescription}
                     </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Root vs Fruit Divisional Projection Matrix & Manifestation Gates */}
+              {rtnResult.rootFruitProjections && (
+                <div className="glass-panel p-4 rounded-2xl border border-emerald-500/30 bg-slate-950/90 space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>🌳</span>
+                      <span>Root vs Fruit Matrix (D1 Seed to D9 Manifestation)</span>
+                    </span>
+                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 font-mono">
+                      Divisional Projection Protocol
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    {rtnResult.rootFruitProjections.summaryVerdict}
+                  </p>
+
+                  {/* High-Impact Life Gates Grid (Marriage & Career) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Gate 1: 7th House Marital Fruition */}
+                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                          <span>💍</span>
+                          <span>7th House Marital Fruition Gate</span>
+                        </span>
+                        <span
+                          className={`text-[9px] px-2 py-0.5 rounded-full border font-bold ${
+                            rtnResult.rootFruitProjections.marriageFruition.isTurmoilTrap
+                              ? "bg-rose-950/80 text-rose-300 border-rose-500/50"
+                              : "bg-emerald-950/80 text-emerald-300 border-emerald-500/50"
+                          }`}
+                        >
+                          {rtnResult.rootFruitProjections.marriageFruition.isTurmoilTrap
+                            ? "Dusthana Risk"
+                            : "Protected Manifestation"}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-300 font-medium">
+                        D-1 7th Sign ({rtnResult.rootFruitProjections.marriageFruition.d1SeventhSign.englishName}) ──►{" "}
+                        <span className="text-amber-400 font-bold">
+                          D-9 House {rtnResult.rootFruitProjections.marriageFruition.d9HouseOfSeventhSign}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        {rtnResult.rootFruitProjections.marriageFruition.verdictDescription}
+                      </p>
+                      <div className="text-[10px] text-sky-300/90 bg-sky-950/30 p-2 rounded-lg border border-sky-800/40">
+                        <span className="font-semibold">Partner Archetype:</span>{" "}
+                        {rtnResult.rootFruitProjections.marriageFruition.partnerArchetype}
+                      </div>
+                      <div className="text-[10px] text-slate-400 bg-slate-950/60 p-2 rounded-lg border border-slate-800">
+                        <span className="font-semibold text-purple-300">Guidance:</span>{" "}
+                        {rtnResult.rootFruitProjections.marriageFruition.mitigationProtocol}
+                      </div>
+                    </div>
+
+                    {/* Gate 2: 10th House Career Manifestation */}
+                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-sky-300 flex items-center gap-1.5">
+                          <span>💼</span>
+                          <span>10th House Career Fruition Gate</span>
+                        </span>
+                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-sky-950/80 text-sky-300 border border-sky-500/50 font-bold">
+                          D-9 House {rtnResult.rootFruitProjections.careerFruition.d9HouseOfTenthSign}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-300 font-medium">
+                        D-1 10th Sign ({rtnResult.rootFruitProjections.careerFruition.d1TenthSign.englishName}) ──►{" "}
+                        <span className="text-sky-400 font-bold">
+                          {rtnResult.rootFruitProjections.careerFruition.environmentArchetype}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        {rtnResult.rootFruitProjections.careerFruition.manifestationDescription}
+                      </p>
+                      <div className="text-[10px] text-amber-300/90 bg-amber-950/30 p-2 rounded-lg border border-amber-800/40">
+                        <span className="font-semibold">Transfer / Pivot Dynamics:</span>{" "}
+                        {rtnResult.rootFruitProjections.careerFruition.transferTriggerNotes}
+                      </div>
+                      <div className="text-[10px] text-slate-400 bg-slate-950/60 p-2 rounded-lg border border-slate-800">
+                        <span className="font-semibold text-sky-300">Strategy:</span>{" "}
+                        {rtnResult.rootFruitProjections.careerFruition.strategicCareerGuidance}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dietary & Fasting Marker (Saturn 2nd House) */}
+                  {rtnResult.rootFruitProjections.dietaryRule.hasSaturnInSecondHouse && (
+                    <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-amber-300 flex items-center gap-1.5 text-xs">
+                          <span>🍲</span>
+                          <span>2nd House Dietary & Fasting Marker (Saturn)</span>
+                        </span>
+                        {rtnResult.rootFruitProjections.dietaryRule.isRohiniStrictAusterityActive && (
+                          <span className="text-[9px] px-2 py-0.5 rounded-full bg-rose-950 border border-rose-500/50 text-rose-300 font-bold">
+                            50% Intake Reduction Marker
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-slate-300 leading-relaxed">
+                        {rtnResult.rootFruitProjections.dietaryRule.dietaryPatternSummary}
+                      </p>
+                      <p className="text-slate-400 text-[10px]">
+                        <span className="text-purple-300 font-semibold">Protocol:</span>{" "}
+                        {rtnResult.rootFruitProjections.dietaryRule.guidanceProtocol}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 12-House Seed-to-Fruit Interactive Matrix Grid */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-slate-300 flex items-center gap-1">
+                        <span>🧭</span>
+                        <span>12-House Seed-to-Fruit Projection Matrix</span>
+                      </span>
+                      <span className="text-[10px] text-slate-400">Click any house to inspect</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5">
+                      {rtnResult.rootFruitProjections.projections.map((p) => {
+                        const isSelected = selectedRfHouse === p.d1House;
+                        const badgeColor =
+                          p.classification === "Kendra"
+                            ? "text-sky-300 bg-sky-950/60 border-sky-500/40"
+                            : p.classification === "Trikona"
+                            ? "text-emerald-300 bg-emerald-950/60 border-emerald-500/40"
+                            : p.classification === "Dusthana"
+                            ? "text-rose-300 bg-rose-950/60 border-rose-500/40"
+                            : p.classification === "Upachaya"
+                            ? "text-purple-300 bg-purple-950/60 border-purple-500/40"
+                            : "text-amber-300 bg-amber-950/60 border-amber-500/40";
+
+                        return (
+                          <button
+                            key={p.d1House}
+                            type="button"
+                            onClick={() => setSelectedRfHouse(isSelected ? null : p.d1House)}
+                            className={`p-2 rounded-xl text-left border transition-all cursor-pointer ${
+                              isSelected
+                                ? "bg-slate-800 border-amber-400 shadow-md ring-1 ring-amber-400/50"
+                                : "bg-slate-900/70 border-slate-800 hover:border-slate-700"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between text-[10px] mb-1">
+                              <span className="font-bold text-slate-200">D1 H{p.d1House}</span>
+                              <span className={`px-1 py-0.5 rounded text-[8px] font-mono border ${badgeColor}`}>
+                                D9 H{p.d9House}
+                              </span>
+                            </div>
+                            <div className="text-[10px] font-medium text-slate-400 truncate">
+                              {p.d1Sign.englishName}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Selected House Deep Dive */}
+                    {selectedRfHouse !== null && (
+                      <div className="p-3 rounded-xl bg-slate-900 border border-amber-500/30 space-y-1 mt-2">
+                        {(() => {
+                          const p = rtnResult.rootFruitProjections.projections.find(
+                            (x) => x.d1House === selectedRfHouse
+                          );
+                          if (!p) return null;
+                          return (
+                            <>
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="font-bold text-amber-300">{p.themeTitle}</span>
+                                <span className="text-[10px] font-mono text-slate-400">
+                                  Seed Sign: {p.d1Sign.englishName} ({p.d1Sign.sanskritName})
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-300 leading-relaxed">
+                                {p.manifestationDescription}
+                              </p>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

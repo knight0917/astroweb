@@ -3504,7 +3504,7 @@ test("Client Reviews & Feedback Database Storage & 1-Day Rate Limit Verification
   assert.ok(saved.id.startsWith("rev_"));
   assert.strictEqual(saved.name, "Aryavrat Sharma");
   assert.strictEqual(saved.email, testEmail);
-  assert.strictEqual(saved.subject, "Accurate Dasha Timing".slice(0, 20));
+  assert.strictEqual(saved.subject, "Accurate Dasha Timing");
   assert.strictEqual(saved.rating, 5);
   assert.ok(saved.createdAt);
 
@@ -8683,4 +8683,367 @@ Looking at your chart, this is a 85% Favorable • 15% Friction era.
   const parsedShield = parseMessageContent(shieldAns);
   assert.ok(parsedShield.deeplinks.some((d) => d.tabId === "uchha_neecha"));
 });
+
+test("Subtest 141: Phase 45 - Root vs Fruit Divisional Projection Matrix, Navamsha Manifestation Gates & Zero-Name UI Guarantee", async () => {
+  const {
+    calculateD1D9RootFruitProjections,
+    evaluateMarriageFruition,
+    evaluateCareerFruition,
+    evaluateSpecialDietaryNadiRule,
+    evaluateSignDashaArchetypes,
+  } = await import("../src/engine/rootFruitProjection.ts");
+  const { evaluateRashiTulyaNavamsha, generateRashiTulyaNavamshaSummary } = await import(
+    "../src/engine/rashiTulyaNavamsha.ts"
+  );
+  const { tryInstantEngineAnswer } = await import("../src/components/AstroChatbot.tsx");
+
+  // Chart 1: Allahabad 17 Sept 1999 (Pisces Lagna, Virgo D9 Lagna)
+  const userBirth = new Date(Date.UTC(1999, 8, 17, 12, 59, 45));
+  const allahabad = {
+    cityName: "Allahabad",
+    country: "India",
+    latitude: 25.4358,
+    longitude: 81.8463,
+    elevation: 98,
+    timezoneOffsetHours: 5.5,
+  };
+  const ephemUser = calculateVedicEphemeris(userBirth, allahabad, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date(), allahabad, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Root vs Fruit Projections
+  const rf = calculateD1D9RootFruitProjections(ephemUser);
+  assert.equal(rf.projections.length, 12, "Must calculate all 12 houses");
+  assert.equal(rf.d1LagnaSign.englishName, "Pisces", "D1 Lagna is Pisces");
+  assert.equal(rf.d9LagnaSign.englishName, "Virgo", "D9 Lagna is Virgo");
+
+  // D1 H1 (Pisces) -> D9 H7
+  const h1 = rf.projections[0];
+  assert.equal(h1.d1House, 1);
+  assert.equal(h1.d1Sign.englishName, "Pisces");
+  assert.equal(h1.d9House, 7);
+
+  // D1 H7 (Virgo) -> D9 H1 (Lagna!)
+  const h7 = rf.projections[6];
+  assert.equal(h7.d1House, 7);
+  assert.equal(h7.d1Sign.englishName, "Virgo");
+  assert.equal(h7.d9House, 1);
+  assert.equal(rf.marriageFruition.isTurmoilTrap, false, "Must not fall into 6th/8th turmoil trap");
+  assert.equal(rf.marriageFruition.d9HouseOfSeventhSign, 1);
+  assert.ok(rf.marriageFruition.verdictTitle.includes("Elevated"));
+
+  // D1 H10 (Sagittarius) -> D9 H4 (Domestic Sanctuary)
+  const h10 = rf.projections[9];
+  assert.equal(h10.d1House, 10);
+  assert.equal(h10.d1Sign.englishName, "Sagittarius");
+  assert.equal(h10.d9House, 4);
+  assert.equal(rf.careerFruition.d9HouseOfTenthSign, 4);
+  assert.ok(rf.careerFruition.environmentArchetype.includes("Domestic Sanctuary"));
+
+  // Saturn in 2nd house (Bharani, not Rohini)
+  assert.equal(rf.dietaryRule.hasSaturnInSecondHouse, true);
+  assert.equal(rf.dietaryRule.isRohiniStrictAusterityActive, false, "Saturn is in Bharani, not Rohini");
+
+  // Sign Dasha Archetypes
+  const signProfile = evaluateSignDashaArchetypes(5); // Virgo (sign index 5)
+  assert.equal(signProfile.sign.englishName, "Virgo");
+  assert.ok(signProfile.functionalBenefics.includes("Mercury"));
+  assert.equal(signProfile.sixthLord, "Saturn"); // Aquarius is 6th from Virgo
+  assert.equal(signProfile.eighthLord, "Mars"); // Aries is 8th from Virgo
+
+  // RTN Integration
+  const rtn = evaluateRashiTulyaNavamsha(ephemUser, transitEphem, 26);
+  assert.ok(rtn.rootFruitProjections, "RTN result must include rootFruitProjections");
+  assert.equal(rtn.rootFruitProjections.marriageFruition.d9HouseOfSeventhSign, 1);
+
+  // Dossier Summary
+  const summary = generateRashiTulyaNavamshaSummary(ephemUser, transitEphem, 26);
+  assert.ok(summary.includes("ROOT VS FRUIT DIVISIONAL PROJECTION MATRIX"));
+  assert.ok(summary.includes("7TH HOUSE MARITAL FRUITION & POST-MARRIAGE STABILITY GATE"));
+  assert.ok(summary.includes("10TH HOUSE CAREER FRUITION & ENVIRONMENT ARCHITECTURE"));
+
+  // ZERO NAMES GUARANTEE IN FRONTEND VIEW LABELS & CHAT INTERCEPTORS
+  const forbiddenNames = [/\bdeepanshu\b/i, /\bgiri\b/i, /\blunar astro\b/i];
+  for (const regex of forbiddenNames) {
+    assert.equal(regex.test(rf.summaryVerdict), false, `rf.summaryVerdict must not contain ${regex}`);
+    assert.equal(regex.test(rf.marriageFruition.verdictTitle), false, `marriage verdict title must not contain ${regex}`);
+    assert.equal(regex.test(rf.marriageFruition.verdictDescription), false, `marriage verdict description must not contain ${regex}`);
+    assert.equal(regex.test(rf.careerFruition.environmentArchetype), false, `career archetype must not contain ${regex}`);
+    assert.equal(regex.test(rf.careerFruition.manifestationDescription), false, `career description must not contain ${regex}`);
+    assert.equal(regex.test(rf.dietaryRule.dietaryPatternSummary), false, `dietary summary must not contain ${regex}`);
+  }
+
+  // Interceptor 37 in Chatbot
+  const instantAnswer = tryInstantEngineAnswer(
+    "What is my root vs fruit matrix and marriage fruition?",
+    ephemUser,
+    transitEphem,
+    new Date(),
+    userBirth,
+    "male"
+  );
+  assert.ok(instantAnswer, "Interceptor 37 must catch root vs fruit queries");
+  assert.ok(instantAnswer.includes("Root vs Fruit Matrix & Navamsha Manifestation Gates"));
+  assert.ok(instantAnswer.includes("7th House Marital Fruition Gate"));
+  assert.ok(instantAnswer.includes("10th House Career Manifestation Gate"));
+  for (const regex of forbiddenNames) {
+    assert.equal(regex.test(instantAnswer), false, `Instant answer must not contain ${regex}`);
+  }
+});
+
+test("Phase 46: Astrological Knowledge Vector RAG System & Grounded Verification Gates", async () => {
+  const { ASTRO_KNOWLEDGE_CORPUS } = await import("../src/data/astroKnowledgeCorpus.ts");
+  const {
+    normalizeVector,
+    calculateCosineSimilarity,
+    generateDeterministicFallbackVector,
+  } = await import("../src/lib/embeddingService.ts");
+  const { searchInMemorySimilarRules } = await import("../src/lib/vectorDb.ts");
+  const { retrieveGroundedAstroKnowledge, sanitizeZeroNames } = await import("../src/lib/ragRetriever.ts");
+  const { buildChatSystemInstruction } = await import("../src/engine/chatPrompt.ts");
+
+  // 1. Corpus Structural Integrity
+  assert.ok(ASTRO_KNOWLEDGE_CORPUS.length >= 20, "Corpus must have at least 20 canonical nodes");
+  for (const chunk of ASTRO_KNOWLEDGE_CORPUS) {
+    assert.ok(chunk.id, "Chunk must have an id");
+    assert.ok(chunk.tradition, "Chunk must have a tradition");
+    assert.ok(chunk.sourceRef, "Chunk must have a sourceRef");
+    assert.ok(chunk.topic, "Chunk must have a topic");
+    assert.ok(chunk.title, "Chunk must have a title");
+    assert.ok(chunk.chunkContent.length > 50, "Chunk content must be substantive");
+    assert.ok(chunk.conditions, "Chunk must have conditions metadata");
+  }
+
+  // 2. Embedding Mathematics
+  const vecA = [3, 4];
+  const normA = normalizeVector(vecA);
+  assert.strictEqual(normA.length, 2);
+  assert.strictEqual(Math.round(Math.hypot(...normA)), 1);
+
+  const simIdentical = calculateCosineSimilarity([1, 0, 0], [1, 0, 0]);
+  assert.strictEqual(Math.round(simIdentical), 1);
+  const simOrthogonal = calculateCosineSimilarity([1, 0, 0], [0, 1, 0]);
+  assert.strictEqual(simOrthogonal, 0);
+
+  const fallbackVec = generateDeterministicFallbackVector("Jupiter in the 9th house of dharma", 768);
+  assert.strictEqual(fallbackVec.length, 768);
+
+  // 3. In-Memory Fallback Retrieval with Condition Boosting
+  const marriageQueryVec = generateDeterministicFallbackVector("marriage spouse partnership discord", 768);
+  // Assign fallback vectors to test corpus ranking
+  const testCorpus = ASTRO_KNOWLEDGE_CORPUS.map((c) => ({
+    ...c,
+    embedding: generateDeterministicFallbackVector(`${c.title} ${c.chunkContent}`, 768),
+  }));
+
+  const rankedResults = searchInMemorySimilarRules(marriageQueryVec, testCorpus, {
+    limit: 3,
+    houses: [7],
+  });
+  assert.strictEqual(rankedResults.length, 3);
+  assert.ok(rankedResults[0].title);
+  assert.ok(rankedResults[0].similarity > 0);
+
+  // 4. Grounded RAG Retrieval Integration
+  const ragResponse = await retrieveGroundedAstroKnowledge("What does my name Priya signify energetically?", {
+    limit: 2,
+  });
+  assert.ok(ragResponse.groundingText.includes("SHASTRIC & PREDICTIVE GROUNDING CITATIONS"));
+  assert.ok(ragResponse.groundingText.includes("Name Vibrational Energy"));
+
+  // 5. Zero-Name Sanitization Guarantee
+  const dirtyText = "As taught by Deepanshu Giri and Navneet Chitkara alongside K.N. Rao";
+  const cleaned = sanitizeZeroNames(dirtyText);
+  assert.strictEqual(/\bDeepanshu\s+Giri\b/i.test(cleaned), false);
+  assert.strictEqual(/\bNavneet\s+Chitkara\b/i.test(cleaned), false);
+  assert.strictEqual(/\bK\.?\s*N\.?\s*Rao\b/i.test(cleaned), false);
+
+  // 6. System Instruction Grounding & Rule 0AQ
+  const sysPrompt = buildChatSystemInstruction("MOCK_DOSSIER", ["Single"], ragResponse.groundingText);
+  assert.ok(sysPrompt.includes("RETRIEVED SHASTRIC & PREDICTIVE GROUNDING CITATIONS"));
+  assert.ok(sysPrompt.includes("Rule 0AQ: Grounded Shastric & Predictive Knowledge Retrieval Verification"));
+  assert.ok(sysPrompt.includes("MOCK_DOSSIER"));
+});
+
+test("Phase 47: Astrological HyDE, Neuro-Symbolic Arbitration & Consultation State Graph", async () => {
+  const { expandQueryWithChartEntities } = await import("../src/lib/ragRetriever.ts");
+  const { arbitratePredictiveQuery } = await import("../src/engine/predictiveArbitrator.ts");
+  const { buildConsultationState, formatConsultationStateBlock } = await import("../src/engine/consultationState.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const { buildChatSystemInstruction } = await import("../src/engine/chatPrompt.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date(), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Astrological HyDE Entity Expansion
+  const mockDossier = "Ascendant (Lagna): Libra\nActive Vimshottari Dasha: Jupiter–Saturn\nHouse 7 (Aries): Occupants: None\nHouse 10 (Cancer): Occupants: Moon";
+  
+  const hydeMarriage = expandQueryWithChartEntities("When will I get married to my partner?", mockDossier);
+  assert.strictEqual(hydeMarriage.domain, "marriage");
+  assert.deepStrictEqual(hydeMarriage.targetHouses, [7, 2, 8, 12, 1]);
+  assert.ok(hydeMarriage.expandedQuery.includes("Natal Lagna: Libra"));
+  assert.ok(hydeMarriage.expandedQuery.includes("Active Dasha: Jupiter–Saturn"));
+
+  const hydeCareer = expandQueryWithChartEntities("Will I get a job promotion this year?", mockDossier);
+  assert.strictEqual(hydeCareer.domain, "career");
+  assert.deepStrictEqual(hydeCareer.targetHouses, [10, 6, 1, 2, 11]);
+
+  // 2. Neuro-Symbolic Predictive Arbitration Engine
+  const arbitrationCareer = arbitratePredictiveQuery("career", natalEphem, transitEphem, {
+    mahadashaLord: "Jupiter",
+    antardashaLord: "Saturn",
+  });
+
+  assert.strictEqual(arbitrationCareer.domain, "career");
+  assert.ok(arbitrationCareer.compositeScore >= 0 && arbitrationCareer.compositeScore <= 100);
+  assert.ok(arbitrationCareer.verdictCategory);
+  assert.ok(arbitrationCareer.verdictTitle);
+  assert.ok(arbitrationCareer.conciseSummaryProof.includes("NEURO-SYMBOLIC ARBITRATION VERDICT"));
+  assert.ok(arbitrationCareer.conciseSummaryProof.includes("Gate 1 (D1 Seed)"));
+  assert.ok(arbitrationCareer.conciseSummaryProof.includes("Gate 2 (D9 Fruit)"));
+  assert.ok(arbitrationCareer.conciseSummaryProof.includes("Gate 3 (Dasha Timing)"));
+  assert.ok(arbitrationCareer.conciseSummaryProof.includes("Gate 4 (Double Transit)"));
+  assert.ok(arbitrationCareer.conciseSummaryProof.includes("Gate 5 (Ashtakavarga)"));
+  assert.ok(arbitrationCareer.conciseSummaryProof.includes("Gate 6 (Neutralization)"));
+  assert.ok(arbitrationCareer.recommendedUpaya);
+
+  // Arbitration Marriage
+  const arbitrationMarriage = arbitratePredictiveQuery("marriage", natalEphem, transitEphem, {
+    mahadashaLord: "Venus",
+    antardashaLord: "Mercury",
+  });
+  assert.strictEqual(arbitrationMarriage.domain, "marriage");
+  assert.ok(arbitrationMarriage.compositeScore >= 0 && arbitrationMarriage.compositeScore <= 100);
+
+  // 3. Multi-Turn Consultation State Graph
+  const messages = [
+    { role: "user", content: "Tell me about my career opportunities." },
+    { role: "assistant", content: "Your career expands nicely. Practice Surya Arghya daily." },
+    { role: "user", content: "What about my marriage prospects?" },
+  ];
+  const state = buildConsultationState(messages, "What about my marriage prospects?", "Perform Gau-Seva on Fridays");
+  assert.strictEqual(state.currentDomain, "marriage");
+  assert.ok(state.exploredDomains.includes("career"));
+  assert.ok(state.exploredDomains.includes("marriage"));
+  assert.ok(state.prescribedRemedies.includes("Surya Arghya"));
+  assert.ok(state.prescribedRemedies.includes("Perform Gau-Seva on Fridays"));
+
+  const stateBlock = formatConsultationStateBlock(state);
+  assert.ok(stateBlock.includes("CONSULTATION STATE & NARRATIVE ARC"));
+  assert.ok(stateBlock.includes("Active Focus Domain: MARRIAGE"));
+  assert.ok(stateBlock.includes("Surya Arghya"));
+
+  // 4. Prompt Synthesis with Rule 0AR
+  const fullPrompt = buildChatSystemInstruction(
+    mockDossier,
+    ["Married"],
+    "SAMPLE_CITATIONS",
+    arbitrationCareer.conciseSummaryProof,
+    stateBlock
+  );
+  assert.ok(fullPrompt.includes("NEURO-SYMBOLIC ARBITRATION VERDICT"));
+  assert.ok(fullPrompt.includes("CONSULTATION STATE & NARRATIVE ARC"));
+  assert.ok(fullPrompt.includes("Rule 0AR: Neuro-Symbolic Arbitration Alignment & Deterministic Multi-Gate CoCR"));
+  
+  // 5. Zero-Name Compliance
+  const forbiddenNames = [/\bdeepanshu\b/i, /\bgiri\b/i, /\bnavneet\b/i, /\bchitkara\b/i];
+  for (const regex of forbiddenNames) {
+    assert.strictEqual(regex.test(arbitrationCareer.conciseSummaryProof), false);
+    assert.strictEqual(regex.test(stateBlock), false);
+  }
+});
+
+test("Phase 48: Human-in-the-Loop Active Learning, Chat Feedback Persistence & Precedent Adherence", async () => {
+  const {
+    saveChatFeedback,
+    getFeedbackStats,
+    sanitizeFeedbackText,
+    getVerifiedPrecedentCorrections,
+  } = await import("../src/lib/feedbackDb.ts");
+  const { buildConsultationState, formatConsultationStateBlock } = await import("../src/engine/consultationState.ts");
+  const { buildChatSystemInstruction } = await import("../src/engine/chatPrompt.ts");
+
+  // 1. Zero-Name Sanitization in Feedback Texts
+  const rawTextWithNames = "According to Deepanshu Giri and Navneet Chitkara, 8th house Rahu triggers sudden pivots.";
+  const sanitized = sanitizeFeedbackText(rawTextWithNames);
+  assert.strictEqual(/\bDeepanshu\s+Giri\b/i.test(sanitized), false);
+  assert.strictEqual(/\bNavneet\s+Chitkara\b/i.test(sanitized), false);
+  assert.ok(sanitized.includes("Vedic Systems Master"));
+  assert.ok(sanitized.includes("Classical BTR Master"));
+
+  // 2. Feedback Persistence & Stats
+  const savedHelpful = await saveChatFeedback({
+    userQuery: "When is my marriage timing?",
+    botResponse: "Your marriage timing activates in Jupiter Antardasha.",
+    feedbackType: "helpful",
+    domain: "marriage",
+  });
+  assert.ok(savedHelpful.id);
+  assert.strictEqual(savedHelpful.feedbackType, "helpful");
+  assert.strictEqual(savedHelpful.domain, "marriage");
+
+  const savedCorrection = await saveChatFeedback({
+    userQuery: "Is Saturn exalted in Aries?",
+    botResponse: "Yes, Saturn is exalted in Aries.",
+    feedbackType: "correction",
+    correctionCategory: "other",
+    userCorrection: "No, Saturn is debilitated (Neecha) in Aries and exalted in Libra (Tula).",
+    domain: "general",
+    status: "verified_classical",
+    embedding: new Array(768).fill(0.036),
+  });
+  assert.ok(savedCorrection.id);
+  assert.strictEqual(savedCorrection.feedbackType, "correction");
+  assert.strictEqual(savedCorrection.status, "verified_classical");
+
+  const stats = await getFeedbackStats();
+  assert.ok(stats.total >= 2);
+  assert.ok(stats.helpful >= 1);
+  assert.ok(stats.corrections >= 1);
+
+  // 3. Precedent Retrieval Matching
+  const precedents = await getVerifiedPrecedentCorrections(new Array(768).fill(0.036), "general", 2);
+  assert.ok(Array.isArray(precedents));
+  assert.ok(precedents.length > 0);
+  assert.ok(precedents[0].userCorrection.includes("debilitated (Neecha) in Aries"));
+  assert.ok(precedents[0].similarity > 0.95);
+
+  // 4. In-Session Consultation State Graph with Active User Corrections
+  const sessionCorrections = [
+    {
+      query: "Is Saturn exalted in Aries?",
+      correction: "Saturn is debilitated in Aries, exalted in Libra.",
+      category: "other",
+    },
+  ];
+  const messages = [
+    { role: "user", content: "Is Saturn exalted in Aries?" },
+    { role: "assistant", content: "Saturn is exalted in Aries." },
+  ];
+
+  const state = buildConsultationState(
+    messages,
+    "What about my career?",
+    undefined,
+    sessionCorrections
+  );
+  assert.ok(state.activeCorrections);
+  assert.strictEqual(state.activeCorrections.length, 1);
+  assert.strictEqual(state.activeCorrections[0].category, "other");
+
+  const stateBlock = formatConsultationStateBlock(state);
+  assert.ok(stateBlock.includes("ACTIVE SESSION USER CORRECTIONS (MANDATORY AXIOMS)"));
+  assert.ok(stateBlock.includes("Saturn is debilitated in Aries, exalted in Libra"));
+  assert.ok(stateBlock.includes("Strictly adopt this interpretation and avoid disputed claims"));
+
+  // 5. System Instruction Integration with Rule 0AS
+  const prompt = buildChatSystemInstruction("MOCK_DOSSIER", [], "", "", stateBlock);
+  assert.ok(prompt.includes("Rule 0AS: Active Learning & Precedent Adherence (Human-in-the-Loop Memory)"));
+  assert.ok(prompt.includes("Respect Authoritative Corrections"));
+  assert.ok(prompt.includes("Zero Re-Offense Guarantee"));
+  assert.ok(prompt.includes("ACTIVE SESSION USER CORRECTIONS"));
+});
+
+
+
 

@@ -12,6 +12,10 @@
 
 import { EphemerisResult, RashiInfo } from "./types";
 import { RASHI_NAMES } from "./constants";
+import {
+  calculateD1D9RootFruitProjections,
+  RootFruitProjectionResult,
+} from "./rootFruitProjection";
 
 export interface PlanetRtnDetail {
   planetId: string;
@@ -97,6 +101,7 @@ export interface RashiTulyaNavamshaResult {
   dusthanaAfflictions: RtnDusthanaAffliction[];
   d9SunActivation: NavamshaSunAgeActivation;
   caseStudyMatch: LunarAstroNavamshaCaseMatch;
+  rootFruitProjections: RootFruitProjectionResult;
   karmicSynthesis: string;
 }
 
@@ -736,12 +741,16 @@ export function evaluateRashiTulyaNavamsha(
   // Deepanshu Giri: Navamsha Sun Age Activation
   const d9SunActivation = calculateNavamshaAgeActivation(natalEphem, targetAge);
 
-  // Deepanshu Giri: Case Study Benchmark Matcher
+  // Case Study Benchmark Matcher
   const caseStudyMatch = matchLunarAstroNavamshaCaseStudies(natalEphem, planets);
+
+  // Root vs Fruit Divisional Projection Engine
+  const rootFruitProjections = calculateD1D9RootFruitProjections(natalEphem);
 
   // Synthesis
   const karmicSynthesis = [
     `Rashi Tulya Navamsha projects your D-9 soul reality onto D-1 earthly houses.`,
+    `Root-Fruit Projection: ${rootFruitProjections.summaryVerdict}`,
     `Key highlights: ${Object.values(planets).map((p) => `${p.planetName} -> RTN H${p.rtnHouseFromD1Lagna} (${p.d9Rashi.englishName})`).join(", ")}.`,
     dusthanaAfflictions.length > 0
       ? `Dusthana Afflictions active in RTN: ${dusthanaAfflictions.map((a) => `${a.planet} in H${a.rtnHouse} (${a.solvabilityStatus.split(" ")[0]})`).join(", ")}.`
@@ -758,6 +767,7 @@ export function evaluateRashiTulyaNavamsha(
     dusthanaAfflictions,
     d9SunActivation,
     caseStudyMatch,
+    rootFruitProjections,
     karmicSynthesis,
   };
 }
@@ -768,14 +778,41 @@ export function generateRashiTulyaNavamshaSummary(
   targetAge: number = 30
 ): string {
   const rtn = evaluateRashiTulyaNavamsha(natalEphem, transitEphem, targetAge);
+  const rf = rtn.rootFruitProjections;
 
   const lines: string[] = [
-    "### 🌸 RASHI TULYA NAVAMSHA (RTN), DUSTHANA SUFFERING & D9 AGE ACTIVATION DOSSIER (LUNAR ASTRO & DEVA KERALAM):",
-    `- **D-1 Lagna (Physical Setup):** ${rtn.d1LagnaRashi.englishName} (${rtn.d1LagnaRashi.sanskritName})`,
-    `- **D-9 Navamsha Lagna (Inner Soul Core):** ${rtn.d9LagnaRashi.englishName} (${rtn.d9LagnaRashi.sanskritName})`,
+    "### 🌸 RASHI TULYA NAVAMSHA (RTN), ROOT VS FRUIT MATRIX & D9 MANIFESTATION DOSSIER:",
+    `- **D-1 Lagna (Physical Setup / Seed):** ${rtn.d1LagnaRashi.englishName} (${rtn.d1LagnaRashi.sanskritName})`,
+    `- **D-9 Navamsha Lagna (Inner Soul Core / Fruit):** ${rtn.d9LagnaRashi.englishName} (${rtn.d9LagnaRashi.sanskritName})`,
+    `- **Divisional Synthesis:** ${rf.summaryVerdict}`,
     "",
-    "#### ⚠️ 1. DEEPANSHU GIRI RTN DUSTHANA SUFFERING AUDIT (HOUSES 6, 8, 12):",
-    "*(Deepanshu Giri Law: Whatever is seen in D-1 must be confirmed in D-9 to materialize. 6th = Solvable conflict; 8th = Chronic/unsolvable shock; 12th = Permanent loss/expense)*",
+    "#### 🌳 1. ROOT VS FRUIT DIVISIONAL PROJECTION MATRIX (D-1 SEED TO D-9 MANIFESTATION):",
+    ...rf.projections.map(
+      (p) =>
+        `- **D-1 House ${p.d1House} (${p.d1Sign.englishName}) ──► D-9 House ${p.d9House} [${p.classification}]:** ${p.manifestationDescription}`
+    ),
+    "",
+    "#### 💍 2. 7TH HOUSE MARITAL FRUITION & POST-MARRIAGE STABILITY GATE:",
+    `- **D-1 7th House Sign:** ${rf.marriageFruition.d1SeventhSign.englishName} ──► Falls into **D-9 House ${rf.marriageFruition.d9HouseOfSeventhSign}**`,
+    `- **Status:** ${rf.marriageFruition.isTurmoilTrap ? `⚠️ **${rf.marriageFruition.turmoilType}**` : "✅ **Protected / Auspicious Manifestation**"}`,
+    `- **Verdict:** ${rf.marriageFruition.verdictTitle} — ${rf.marriageFruition.verdictDescription}`,
+    `- **Partner Archetype:** ${rf.marriageFruition.partnerArchetype}`,
+    `- **D-9 Venus Status:** ${rf.marriageFruition.d9VenusStatus}`,
+    `- **Guidance & Mitigation:** ${rf.marriageFruition.mitigationProtocol}`,
+    "",
+    "#### 💼 3. 10TH HOUSE CAREER FRUITION & ENVIRONMENT ARCHITECTURE:",
+    `- **D-1 10th House Sign:** ${rf.careerFruition.d1TenthSign.englishName} ──► Falls into **D-9 House ${rf.careerFruition.d9HouseOfTenthSign}**`,
+    `- **Optimal Work Environment:** 🏛️ **${rf.careerFruition.environmentArchetype}**`,
+    `- **Manifestation Details:** ${rf.careerFruition.manifestationDescription}`,
+    `- **Job Overhaul & Movement Triggers:** ${rf.careerFruition.transferTriggerNotes}`,
+    `- **Strategic Guidance:** ${rf.careerFruition.strategicCareerGuidance}`,
+    "",
+    "#### 🍲 4. 2ND HOUSE DIETARY & FASTING MATRIX:",
+    `- **Status:** ${rf.dietaryRule.dietaryPatternSummary}`,
+    `- **Protocol:** ${rf.dietaryRule.guidanceProtocol}`,
+    "",
+    "#### ⚠️ 5. DEEPANSHU GIRI RTN DUSTHANA SUFFERING AUDIT (HOUSES 6, 8, 12):",
+    "*(Seed/Fruit Confirmation Law: Whatever is seen in D-1 must be confirmed in D-9 to materialize. 6th = Solvable conflict; 8th = Chronic/unsolvable shock; 12th = Permanent loss/expense)*",
     ...(rtn.dusthanaAfflictions.length > 0
       ? rtn.dusthanaAfflictions.map(
           (a) =>
@@ -786,7 +823,7 @@ export function generateRashiTulyaNavamshaSummary(
         )
       : ["- ✅ No planets land in RTN Dusthana houses (6th, 8th, 12th). Karakatwas remain protected from acute friction."]),
     "",
-    "#### ☀️ 2. NAVAMSHA AGE ACTIVATION TIMING SYSTEM (STRICTLY D-9 SUN):",
+    "#### ☀️ 6. NAVAMSHA AGE ACTIVATION TIMING SYSTEM (STRICTLY D-9 SUN):",
     `- **Sun Placement in D-9:** House ${rtn.d9SunActivation.d9House} (${rtn.d9SunActivation.d9Rashi.englishName})`,
     `- **Navamsha Activation Ages:** ${rtn.d9SunActivation.activationAges.map((a) => `Age ${a}`).join(" & ")}`,
     `- **Current Status (Target Age ${targetAge}):** ${rtn.d9SunActivation.isActiveNow ? "⚡ **ACTIVELY MANIFESTING NOW**" : `⏳ Upcoming / Closest Wave at Age ${rtn.d9SunActivation.closestAge}`}`,
@@ -798,30 +835,30 @@ export function generateRashiTulyaNavamshaSummary(
     "",
     ...(rtn.caseStudyMatch.isMatched
       ? [
-          "#### 🔬 3. LUNAR ASTRO HISTORICAL CASE STUDY BENCHMARK MATCH:",
+          "#### 🔬 7. HISTORICAL CASE STUDY BENCHMARK MATCH:",
           `- **Matched Benchmark:** 🎯 **${rtn.caseStudyMatch.matchedCaseTitle}**`,
           `- **Key Signatures:** ${rtn.caseStudyMatch.rtnKeyPlacements}`,
           `- **Case Manifestation:** ${rtn.caseStudyMatch.manifestationDescription}`,
           "",
         ]
       : []),
-    "#### 🌟 4. PLANETARY RASHI TULYA NAVAMSHA (RTN) MAPPING:",
+    "#### 🌟 8. PLANETARY RASHI TULYA NAVAMSHA (RTN) MAPPING:",
     ...Object.values(rtn.planets).map(
       (p) =>
         `- **${p.planetName}:** D1 House ${p.d1HouseFromLagna} (${p.d1Rashi.englishName}) ──► D9 Navamsha in **${p.d9Rashi.englishName}** ──► **RTN House ${p.rtnHouseFromD1Lagna}**${p.isVargottama ? " (👑 VARGOTTAMA)" : ""} | *${p.rtnHouseSignificance}*`
     ),
     "",
-    "#### 🪢 5. RTN CONJUNCTIONS & HIDDEN SOUL BONDS:",
+    "#### 🪢 9. RTN CONJUNCTIONS & HIDDEN SOUL BONDS:",
     ...(rtn.rtnConjunctions.length > 0
       ? rtn.rtnConjunctions.map((c) => `- **House ${c.houseNumber} (${c.rashi.englishName}):** ${c.planets.join(" + ")} ──► ${c.interpretation}`)
       : ["- No multi-planet conjunctions in RTN; individual planetary house influences operate independently."]),
     "",
-    "#### ⚠️ 6. 64TH NAVAMSHA (KHARA NAVAMSHA) INTEGRITY CHECK:",
+    "#### ⚠️ 10. 64TH NAVAMSHA (KHARA NAVAMSHA) INTEGRITY CHECK:",
     `- **64th Navamsha from Moon:** **${rtn.kharaNavamsha.moon64thNavamshaRashi.englishName}** (RTN House ${rtn.kharaNavamsha.moon64thRtnHouse})`,
     `- **64th Navamsha from Lagna:** **${rtn.kharaNavamsha.lagna64thNavamshaRashi.englishName}** (RTN House ${rtn.kharaNavamsha.lagna64thRtnHouse})`,
     `- **Live Transit Status:** ${rtn.kharaNavamsha.kharaWarningSummary}`,
     "",
-    "#### 🚀 7. RTN PREDICTIVE TRANSIT TRIGGERS (GOCHAR ACTIVATION):",
+    "#### 🚀 11. RTN PREDICTIVE TRANSIT TRIGGERS (GOCHAR ACTIVATION):",
     ...rtn.activeTransitActivations.map(
       (t) =>
         `- **${t.triggerType}:** ${t.targetPlanet} in RTN ${t.rtnRashiName} (House ${t.rtnHouseNumber}) ──► ${t.isCurrentlyActive ? "⚡ **CURRENTLY ACTIVE IN TRANSIT**" : "⏳ Future Trigger"} | ${t.eventForecast}`

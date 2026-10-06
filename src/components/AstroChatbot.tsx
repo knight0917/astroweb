@@ -25,6 +25,7 @@ import {
   buildFullChronologicalDashaTimeline,
 } from "../engine/btrEngine";
 import { evaluateRashiTulyaNavamsha } from "../engine/rashiTulyaNavamsha";
+import { calculateD1D9RootFruitProjections } from "../engine/rootFruitProjection";
 import { calculateSamirTripathiPanchang } from "../engine/samirTripathiPanchang";
 import { evaluateNakshatraActivation } from "../engine/nakshatraActivation";
 import { analyzeNameVibrationalEnergy, evaluateChartNameCongruence } from "../engine/lunarAstroNameEnergy";
@@ -1685,10 +1686,10 @@ ${nameProfile.predictedChartPlacements.map((p) => `  - 🌟 ${p}`).join("\n")}
     const nameCongruence = evaluateChartNameCongruence(targetName, natalEphem);
 
     const saturnWarning = ageReport.isRetrogradeSaturnActive
-      ? `\n> ⚠️ **CRITICAL RETROGRADE SATURN AGE 36 INVERSION:** You have natal Retrograde Saturn active in the Age 36–42 window. Per Deepanshu Giri, this forces an unavoidable karmic course correction, dismantling conventional structures and resetting your life direction.\n`
+      ? `\n> ⚠️ **CRITICAL RETROGRADE SATURN AGE 36 INVERSION:** You have natal Retrograde Saturn active in the Age 36–42 window. Per classical retrograde maturation principles, this forces an unavoidable karmic course correction, dismantling conventional structures and resetting your life direction.\n`
       : "";
 
-    return `### 🪷 **Lunar Astro Name Vibrational Energy & Planetary Maturation Analysis**
+    return `### 🪷 **Acoustic Name Vibrational Energy & Planetary Maturation Analysis**
 
 #### 🔤 **1. Acoustic Astro-Phonetics for "${targetName}":**
 - **Dominant Planetary Frequency:** **${nameProfile.primaryPlanets.join(" + ")}** • Secondary: **${nameProfile.secondaryPlanets.join(" + ")}**
@@ -2925,6 +2926,52 @@ ${deepDignityList}
 `;
   }
 
+  // 37. Root vs Fruit (D1 Seed to D9 Manifestation), Marriage & Career Fruition Gates
+  if (
+    /\b(root vs fruit|seed vs fruit|d1 to d9|d1 in d9|7th in d9|10th in d9|navamsha fruit|marriage fruition|career fruition|post-marriage turmoil|rohani food|saturn food|job transfer timing|d1-d9 matrix)\b/i.test(q)
+  ) {
+    const rf = calculateD1D9RootFruitProjections(natalEphem);
+    const p7 = rf.projections.find((p) => p.d1House === 7);
+    const p10 = rf.projections.find((p) => p.d1House === 10);
+
+    return `### 🌳 **Root vs Fruit Matrix & Navamsha Manifestation Gates**
+
+> **Core Shastric Principle:** The D-1 Rashi chart represents the root/tree (physical karma and circumstances), while the D-9 Navamsha represents the fruit (experiential manifestation and true experiential outcome). Where a D-1 house sign lands in D-9 reveals the physical arena where that domain bears fruit.
+
+#### 💍 **1. 7th House Marital Fruition Gate:**
+- **D-1 7th House Sign:** **${rf.marriageFruition.d1SeventhSign.englishName}** ──► Projects into **D-9 House ${rf.marriageFruition.d9HouseOfSeventhSign}**
+- **Post-Marriage Stability Status:** ${rf.marriageFruition.isTurmoilTrap ? `⚠️ **${rf.marriageFruition.turmoilType}**` : "✅ **Protected / Auspicious Manifestation**"}
+- **Fruition Verdict:** ${rf.marriageFruition.verdictTitle}
+- **Experiential Reality:** ${rf.marriageFruition.verdictDescription}
+- **Spouse Archetype:** ${rf.marriageFruition.partnerArchetype}
+- **Navamsha Venus Alignment:** ${rf.marriageFruition.d9VenusStatus}
+- **Strategic Mitigation:** ${rf.marriageFruition.mitigationProtocol}
+
+#### 💼 **2. 10th House Career Manifestation Gate:**
+- **D-1 10th House Sign:** **${rf.careerFruition.d1TenthSign.englishName}** ──► Projects into **D-9 House ${rf.careerFruition.d9HouseOfTenthSign}**
+- **Optimal Work Environment:** 🏛️ **${rf.careerFruition.environmentArchetype}**
+- **Career Fruition Reality:** ${rf.careerFruition.manifestationDescription}
+- **Job Overhaul & Location Pivots:** ${rf.careerFruition.transferTriggerNotes}
+- **Autonomous Architecture Guidance:** ${rf.careerFruition.strategicCareerGuidance}
+
+#### 🍲 **3. 2nd House Dietary & Speech Marker:**
+- **Saturn 2nd House Assessment:** ${rf.dietaryRule.dietaryPatternSummary}
+- **Ayurvedic / Fasting Protocol:** ${rf.dietaryRule.guidanceProtocol}
+
+#### 🧭 **4. Key Root-to-Fruit Divisional Projections:**
+- **House 1 (Self):** ${rf.projections[0].d1Sign.englishName} ──► D-9 House ${rf.projections[0].d9House} (${rf.projections[0].classification}) • *${rf.projections[0].manifestationDescription}*
+- **House 7 (Spouse):** ${p7?.d1Sign.englishName} ──► D-9 House ${p7?.d9House} (${p7?.classification}) • *${p7?.manifestationDescription}*
+- **House 10 (Career):** ${p10?.d1Sign.englishName} ──► D-9 House ${p10?.d9House} (${p10?.classification}) • *${p10?.manifestationDescription}*
+
+---
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"💍 Marriage Fruition Deep Dive","prompt":"Explain my 7th house seed in D9 and partner archetype in detail"},{"id":"chip-2","label":"💼 Career Sanctuary & Environment","prompt":"Where does my 10th house seed manifest in D9 and should I work remotely or corporate?"},{"id":"chip-3","label":"🌳 View Full 12-House Matrix","prompt":"Show me the full 12-house root vs fruit projection table from D1 to D9"}]
+\`\`\`
+`;
+  }
+
   return null;
 }
 
@@ -3962,6 +4009,20 @@ export default function AstroChatbot() {
   const [userApiKey, setUserApiKey] = useState("");
   const [showSettings, setShowSettings] = useState(false);
 
+  // Active human feedback and correction loop state (RLHF / HITL)
+  const [sessionCorrections, setSessionCorrections] = useState<
+    Array<{ query: string; correction: string; category?: string }>
+  >([]);
+  const [feedbackStatus, setFeedbackStatus] = useState<
+    Record<string, { type: "helpful" | "inaccurate" | "correction"; message?: string }>
+  >({});
+  const [activeCorrectionMsgId, setActiveCorrectionMsgId] = useState<string | null>(null);
+  const [correctionCategory, setCorrectionCategory] = useState<
+    "bhavas" | "timing" | "upaya" | "calculation" | "other"
+  >("timing");
+  const [correctionText, setCorrectionText] = useState("");
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -4475,6 +4536,9 @@ export default function AstroChatbot() {
             })),
             astroDossier: slicedDossier,
             userApiKey: activeKey,
+            natalEphemeris: natalEphemeris,
+            transitEphemeris: transitEphemeris,
+            activeCorrections: sessionCorrections,
           }),
         });
 
@@ -4505,6 +4569,103 @@ export default function AstroChatbot() {
 
   const ascRashi = natalEphemeris.ascendant.rashi.englishName;
   const moonRashi = natalEphemeris.planets.Moon?.rashi.englishName || "Aries";
+
+  const handleQuickFeedback = async (
+    msgId: string,
+    type: "helpful" | "inaccurate",
+    botText: string
+  ) => {
+    if (feedbackStatus[msgId]) return;
+    setFeedbackStatus((prev) => ({
+      ...prev,
+      [msgId]: { type, message: type === "helpful" ? "Thanks for your feedback!" : "Flagged for review" },
+    }));
+
+    const msgIdx = messages.findIndex((m) => m.id === msgId);
+    const userQuery =
+      msgIdx > 0 && messages[msgIdx - 1]?.role === "user"
+        ? messages[msgIdx - 1].content
+        : "General inquiry";
+
+    try {
+      await fetch("/api/chat-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: `fb_${msgId}`,
+          userQuery,
+          botResponse: botText.slice(0, 500),
+          feedbackType: type,
+          domain: activeCategory === "all" ? "general" : activeCategory,
+          chartContext: {
+            lagna: ascRashi,
+            moon: moonRashi,
+          },
+        }),
+      });
+    } catch (err) {
+      console.warn("Feedback submission notice:", err);
+    }
+  };
+
+  const handleOpenCorrection = (msgId: string) => {
+    setActiveCorrectionMsgId((prev) => (prev === msgId ? null : msgId));
+    setCorrectionText("");
+  };
+
+  const handleSubmitCorrection = async (msgId: string, botText: string) => {
+    if (!correctionText.trim() || isSubmittingFeedback) return;
+    setIsSubmittingFeedback(true);
+
+    const msgIdx = messages.findIndex((m) => m.id === msgId);
+    const userQuery =
+      msgIdx > 0 && messages[msgIdx - 1]?.role === "user"
+        ? messages[msgIdx - 1].content
+        : "General inquiry";
+
+    const newCorrection = {
+      query: userQuery,
+      correction: correctionText.trim(),
+      category: correctionCategory,
+    };
+
+    try {
+      await fetch("/api/chat-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: `fb_corr_${msgId}_${Date.now()}`,
+          userQuery,
+          botResponse: botText.slice(0, 1000),
+          feedbackType: "correction",
+          userCorrection: correctionText.trim(),
+          correctionCategory,
+          domain: activeCategory === "all" ? "general" : activeCategory,
+          chartContext: {
+            lagna: ascRashi,
+            moon: moonRashi,
+          },
+        }),
+      });
+
+      // Add to session corrections for immediate in-session active learning
+      setSessionCorrections((prev) => [...prev, newCorrection]);
+
+      setFeedbackStatus((prev) => ({
+        ...prev,
+        [msgId]: {
+          type: "correction",
+          message: "Correction recorded & applied to current consultation!",
+        },
+      }));
+      setActiveCorrectionMsgId(null);
+      setCorrectionText("");
+    } catch (err) {
+      console.warn("Correction submission failed:", err);
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
 
   const selectedCategoryMeta =
     CONSULTATION_CATEGORIES.find((c) => c.id === activeCategory) ||
@@ -4897,6 +5058,111 @@ export default function AstroChatbot() {
                           </button>
                         )}
                       </div>
+
+                      {/* Human Feedback & Active Learning Actions */}
+                      {msg.id !== "welcome" && (
+                        <div className="flex flex-wrap items-center justify-between gap-1.5 py-1 px-2 rounded-xl bg-slate-950/70 border border-slate-800/80 text-[10px]">
+                          <div className="flex items-center gap-1.5">
+                            {/* Helpful button */}
+                            <button
+                              onClick={() => handleQuickFeedback(msg.id, "helpful", msg.content)}
+                              className={`px-2 py-0.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 text-[9.5px] ${
+                                feedbackStatus[msg.id]?.type === "helpful"
+                                  ? "bg-emerald-950/70 border-emerald-500/50 text-emerald-300 font-bold"
+                                  : "bg-slate-900 hover:bg-slate-800 border-slate-700/60 text-slate-400 hover:text-slate-200"
+                              }`}
+                              title="Mark this reading as accurate & helpful"
+                            >
+                              <span>👍</span>
+                              <span>Helpful</span>
+                            </button>
+
+                            {/* Suggest Correction button */}
+                            <button
+                              onClick={() => handleOpenCorrection(msg.id)}
+                              className={`px-2 py-0.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 text-[9.5px] ${
+                                activeCorrectionMsgId === msg.id || feedbackStatus[msg.id]?.type === "correction"
+                                  ? "bg-amber-950/70 border-amber-500/50 text-amber-300 font-bold"
+                                  : "bg-slate-900 hover:bg-slate-800 border-slate-700/60 text-slate-400 hover:text-slate-200"
+                              }`}
+                              title="Report inaccuracy or suggest correct astrological rule"
+                            >
+                              <span>✏️</span>
+                              <span>Suggest Correction</span>
+                            </button>
+                          </div>
+
+                          {feedbackStatus[msg.id]?.message ? (
+                            <span className="text-[9px] text-emerald-400 font-medium animate-in fade-in">
+                              ✓ {feedbackStatus[msg.id]?.message}
+                            </span>
+                          ) : (
+                            <span className="text-[8.5px] text-slate-500 font-mono">
+                              Reinforcement Loop
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Active Correction Drawer Modal */}
+                      {activeCorrectionMsgId === msg.id && (
+                        <div className="p-2.5 rounded-xl bg-slate-950 border border-amber-500/50 text-[10.5px] space-y-2 animate-in fade-in slide-in-from-top-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-amber-300 flex items-center gap-1">
+                              <span>⚖️</span>
+                              <span>Submit Astrological Correction:</span>
+                            </span>
+                            <button
+                              onClick={() => setActiveCorrectionMsgId(null)}
+                              className="text-slate-400 hover:text-slate-200 text-xs px-1"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1">
+                            {(["timing", "bhavas", "upaya", "calculation", "other"] as const).map((cat) => (
+                              <button
+                                key={cat}
+                                onClick={() => setCorrectionCategory(cat)}
+                                className={`px-2 py-0.5 rounded-lg text-[9.5px] font-semibold border transition-all cursor-pointer ${
+                                  correctionCategory === cat
+                                    ? "bg-amber-500 text-slate-950 border-amber-400 font-bold"
+                                    : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                                }`}
+                              >
+                                {cat === "timing"
+                                  ? "⏳ Timing Window"
+                                  : cat === "bhavas"
+                                  ? "🏛️ House / Lord"
+                                  : cat === "upaya"
+                                  ? "📿 Remedy / Upaya"
+                                  : cat === "calculation"
+                                  ? "🔢 Calculation"
+                                  : "📝 Other"}
+                              </button>
+                            ))}
+                          </div>
+                          <textarea
+                            rows={2}
+                            placeholder="State the correct classical interpretation or rule (e.g. 'Sun in 10th house has Digbala; timing activates during Sun Antardasha')..."
+                            value={correctionText}
+                            onChange={(e) => setCorrectionText(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-1.5 text-[11px] text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 resize-none"
+                          />
+                          <div className="flex items-center justify-between pt-0.5">
+                            <span className="text-[8.5px] text-slate-500">
+                              Directly updates current session memory & records precedent.
+                            </span>
+                            <button
+                              onClick={() => handleSubmitCorrection(msg.id, msg.content)}
+                              disabled={!correctionText.trim() || isSubmittingFeedback}
+                              className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 disabled:opacity-40 text-slate-950 font-bold text-[10px] cursor-pointer shadow-sm transition-all"
+                            >
+                              {isSubmittingFeedback ? "Saving..." : "Submit Correction"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       {/* 1-Tap Quick Action Follow-Up Chips */}
                       <div className="flex flex-wrap items-center gap-1.5 pt-0.5">

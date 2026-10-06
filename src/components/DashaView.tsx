@@ -180,7 +180,7 @@ export default function DashaView() {
                 Vedic Temporal Timing & Activation Architecture
               </h2>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                Classical Parashari & Lunar Astro
+                Classical Parashari & Divisional Astro
               </span>
             </div>
             <p className="text-xs text-slate-400">
