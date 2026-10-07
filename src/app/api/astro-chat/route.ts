@@ -3,11 +3,12 @@ import { buildChatSystemInstruction, extractUserConfirmedFacts } from "@/engine/
 import { retrieveGroundedAstroKnowledge } from "@/lib/ragRetriever";
 import { arbitratePredictiveQuery } from "@/engine/predictiveArbitrator";
 import { buildConsultationState, formatConsultationStateBlock } from "@/engine/consultationState";
+import { formatClientMemoryPromptContext } from "@/engine/clientMemoryVault";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { messages, astroDossier, userApiKey, natalEphemeris, transitEphemeris, runningDasha, activeCorrections } = body;
+    const { messages, astroDossier, userApiKey, natalEphemeris, transitEphemeris, runningDasha, activeCorrections, clientMemory } = body;
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -73,13 +74,15 @@ export async function POST(req: NextRequest) {
     // 3. Track Multi-Turn Consultation State Graph (including active human corrections)
     const consultationState = buildConsultationState(messages, lastUserMessage, prescribedUpaya, activeCorrections);
     const consultationStateBlock = formatConsultationStateBlock(consultationState);
+    const clientMemoryBlock = clientMemory ? formatClientMemoryPromptContext(clientMemory) : "";
 
     const systemInstruction = buildChatSystemInstruction(
       astroDossier,
       userConfirmedFacts,
       groundingCitations,
       arbitrationProof,
-      consultationStateBlock
+      consultationStateBlock,
+      clientMemoryBlock
     );
 
     // Filter chat history to retain rich conversation memory without runaway token bloat

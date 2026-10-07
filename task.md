@@ -1294,3 +1294,45 @@
   - [x] Run `npm test` verifying 144/144 tests pass.
   - [x] Run `npx tsc --noEmit` verifying 0 type errors.
   - [x] Run `npm run build` verifying clean production build.
+
+---
+
+# Phase 49: Generative UI, In-Chat Dasha Timeline, Interactive Upaya Sadhana Counter & Persistent Client Memory Vault
+
+## Status: Complete & Verified (All 145 Tests Passing & Production Build Clean)
+- **Keywords:** `generative-ui`, `dasha-timeline-widget`, `sadhana-japa-counter`, `persistent-memory-vault`, `cross-session-anti-amnesia`, `shastric-consensus-badge`, `zero-names-frontend-guarantee`
+- **Scope:**
+  1. Interactive Generative UI Components (`src/components/AstroChatbot.tsx`):
+     - Interactive Event Horizon & Dasha Timeline Card: Visual horizontal progress bar mapping active Mahadasha, Antardasha, and transit alignments with color-coded energetic status (Fruitful, Testing, Karmic Shift) and 1-tap query triggers.
+     - Interactive Upaya Sadhana & 108 Japa Mala Counter Card: Direct in-chat remedial action card with 108-repetition tap counter, completion feedback, Muhurta timing recommendation, and 40-day Sankalpa tracker.
+     - Classical Shastric Consensus & Verification Badge: Displays deterministic neuro-symbolic arbitration agreement, composite fulfillment score, and classical authorities cited.
+  2. Persistent Client Memory Vault (`src/engine/clientMemoryVault.ts`):
+     - Cross-session persistent storage (localStorage) for client life milestones (marital status, children, relocation, education, calling name), active remedies, and consultation history.
+     - Dynamic returning-client welcome message recognizing established facts.
+     - Automatic injection of persistent memory into server-side API payloads to guarantee permanent anti-amnesia.
+  3. Cleanups & Regression Hardening:
+     - Deduplicate duplicate welcome-message effect in `src/components/AstroChatbot.tsx`.
+     - Automated test suite verification (Subtest 145) covering client memory serialization, generative UI widget payload parsing, and zero-name compliance.
+     - Full verification: `npm test` (145/145), `npx tsc --noEmit` (0 errors), and `npm run build`.
+
+## Phases & Milestones
+
+- [x] **Phase 49.1: Client Memory Vault Engine (`src/engine/clientMemoryVault.ts`)**
+  - [x] Implement persistent client memory state interface, load/save helpers, and fact synchronization.
+  - [x] Implement returning-client personalized greeting generation.
+
+- [x] **Phase 49.2: Generative UI Timeline & Sadhana Counter Cards (`src/components/AstroChatbot.tsx`)**
+  - [x] Create `EventHorizonTimelineCard` with horizontal dasha progress, transit flags, and clickable query drill-down chips.
+  - [x] Create `UpayaSadhanaCounterCard` with real-time 108 Japa bead counter, completion pulse, and 40-day commitment tracker.
+  - [x] Create `ShastricConsensusBadge` visualizing classical authority agreement and neuro-symbolic certainty score.
+  - [x] Integrate cards into `parseMessageContent` and message rendering flow.
+
+- [x] **Phase 49.3: Chat Prompt & Context Synchronization (`src/engine/chatPrompt.ts` & `src/app/api/astro-chat/route.ts`)**
+  - [x] Instruct LLM on structured tags for generating event horizon timeline nodes and sadhana cards when discussing timing or remedies.
+  - [x] Pass persistent memory vault anchors into server API route to guarantee cross-session memory retention.
+
+- [x] **Phase 49.4: Automated Test Suite & Production Build Verification (`tests/engine.test.mjs`)**
+  - [x] Add Subtest 145 verifying Client Memory Vault operations, Generative UI parser, and Zero-Name compliance.
+  - [x] Run `npm test` verifying 145/145 tests pass.
+  - [x] Run `npx tsc --noEmit` verifying 0 type errors.
+  - [x] Run `npm run build` verifying clean production build.

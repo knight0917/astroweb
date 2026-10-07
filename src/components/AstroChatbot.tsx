@@ -48,6 +48,15 @@ import { generateMeenaKalapurushaDrishtiMasterReport } from "../engine/meenaKala
 import { generateUchhaNeechaAwarenessMasterReport } from "../engine/uchhaNeechaAwareness";
 import { generateRishiDrekkanaMasterReport } from "../engine/rishiDrekkanaAwareness";
 import { EphemerisResult } from "../engine/types";
+import {
+  loadClientMemoryVault,
+  saveClientMemoryVault,
+  syncMessagesToMemoryVault,
+  recordSadhanaProgress,
+  buildReturningClientWelcome,
+  ClientMemoryVault,
+  ActiveSadhanaItem,
+} from "../engine/clientMemoryVault";
 
 interface Message {
   id: string;
@@ -62,11 +71,42 @@ export interface DeepLinkItem {
   label: string;
 }
 
+export interface EventHorizonPeriod {
+  id: string;
+  years: string;
+  dashaTitle: string;
+  grahaIcon: string;
+  status: "fruitful" | "testing" | "karmic_shift";
+  highlightBadge: string;
+  description: string;
+  drillDownPrompt: string;
+}
+
+export interface UpayaSadhanaData {
+  id: string;
+  mantraOrUpaya: string;
+  presidingDeityOrGraha: string;
+  targetMalaReps: number;
+  targetDays: number;
+  timingRecommendation: string;
+  spiritualBenefit: string;
+}
+
+export interface ShastricConsensusData {
+  consensusPercent: number;
+  verdictLabel: string;
+  classicalAuthorities: string[];
+  dashaSanction: "Sanctioned" | "Conditional" | "Obstructed";
+}
+
 export interface ParsedMessageData {
   cleanedContent: string;
   probabilityScore: { favorable: number; friction: number } | null;
   chips: { id: string; label: string; prompt: string }[];
   deeplinks: DeepLinkItem[];
+  timeline: EventHorizonPeriod[];
+  upayaSadhana: UpayaSadhanaData | null;
+  shastricConsensus: ShastricConsensusData | null;
 }
 
 export function switchDashboardTab(tabId: string) {
@@ -76,7 +116,17 @@ export function switchDashboardTab(tabId: string) {
 }
 
 export function parseMessageContent(content: string): ParsedMessageData {
-  if (!content) return { cleanedContent: "", probabilityScore: null, chips: [], deeplinks: [] };
+  if (!content) {
+    return {
+      cleanedContent: "",
+      probabilityScore: null,
+      chips: [],
+      deeplinks: [],
+      timeline: [],
+      upayaSadhana: null,
+      shastricConsensus: null,
+    };
+  }
 
   let cleaned = content;
 
@@ -100,6 +150,48 @@ export function parseMessageContent(content: string): ParsedMessageData {
     } catch (_) {}
   }
 
+  // 1c. Extract Timeline block if present
+  let timeline: EventHorizonPeriod[] = [];
+  const timelineMatch = cleaned.match(/```timeline\s*([\s\S]*?)\s*```/);
+  if (timelineMatch) {
+    try {
+      timeline = JSON.parse(timelineMatch[1].trim());
+      cleaned = cleaned.replace(/```timeline[\s\S]*?```/g, "").trim();
+    } catch (_) {}
+  }
+
+  // 1d. Extract Sadhana block if present
+  let upayaSadhana: UpayaSadhanaData | null = null;
+  const sadhanaMatch = cleaned.match(/```sadhana\s*([\s\S]*?)\s*```/);
+  if (sadhanaMatch) {
+    try {
+      upayaSadhana = JSON.parse(sadhanaMatch[1].trim());
+      cleaned = cleaned.replace(/```sadhana[\s\S]*?```/g, "").trim();
+    } catch (_) {}
+  }
+
+  // 1e. Extract Consensus block if present
+  let shastricConsensus: ShastricConsensusData | null = null;
+  const consensusMatch = cleaned.match(/```consensus\s*([\s\S]*?)\s*```/);
+  if (consensusMatch) {
+    try {
+      shastricConsensus = JSON.parse(consensusMatch[1].trim());
+      cleaned = cleaned.replace(/```consensus[\s\S]*?```/g, "").trim();
+    } catch (_) {}
+  }
+
+  // Fallback auto-detection for Shastric Consensus
+  if (!shastricConsensus && /Composite Fulfillment Score|Neuro-Symbolic Arbitration|Parashari Consensus/i.test(cleaned)) {
+    const scoreMatch = cleaned.match(/(?:Fulfillment Score|Consensus|Certainty):\s*(\d{1,3})%/i);
+    const scoreVal = scoreMatch ? parseInt(scoreMatch[1], 10) : 88;
+    shastricConsensus = {
+      consensusPercent: Math.min(100, Math.max(10, scoreVal)),
+      verdictLabel: scoreVal >= 75 ? "Destined Fruitful" : scoreVal >= 45 ? "Conditional Testing" : "Karmic Shift",
+      classicalAuthorities: ["BPHS", "Phaladeepika", "Saravali"],
+      dashaSanction: scoreVal >= 60 ? "Sanctioned" : "Conditional",
+    };
+  }
+
   // 2. Extract Probability Score if present
   let probabilityScore: { favorable: number; friction: number } | null = null;
   const scoreMatch = cleaned.match(/(\d{1,2})%\s*Favorable\s*(?:•|\/|vs)?\s*(\d{1,2})%\s*Friction/i);
@@ -110,10 +202,16 @@ export function parseMessageContent(content: string): ParsedMessageData {
     };
   }
 
-  return { cleanedContent: cleaned, probabilityScore, chips, deeplinks };
+  return { cleanedContent: cleaned, probabilityScore, chips, deeplinks, timeline, upayaSadhana, shastricConsensus };
 }
 
 export function buildPersonalizedWelcomeMessage(natalEphem?: EphemerisResult): string {
+  // Check if returning client has verified realities in memory vault
+  const vault = loadClientMemoryVault();
+  if (vault.consultationCount > 0 || vault.confirmedFacts.length > 0 || vault.activeSadhana.length > 0) {
+    return buildReturningClientWelcome(vault);
+  }
+
   if (!natalEphem) {
     return (
       "**Pranam!** 🙏 I am **Acharya Jyotish AI Pro**.\n\n" +
@@ -1667,7 +1765,7 @@ ${nameProfile.predictedChartPlacements.map((p) => `  - 🌟 ${p}`).join("\n")}
 \`\`\``;
   }
 
-  // 16. Lunar Astro Name Vibrational Energy & Age 36 Maturation (Deepanshu Giri)
+  // 16. Lunar Astro Name Vibrational Energy & Age 36 Maturation (Classical Astro-Phonetics)
   if (
     /\b(name energy|energy of name|name vibration|astro-phonetics|lunar astro name|aniket|priyanka|sonal|alok|sachin|what does my name mean)\b/i.test(q) ||
     (/\b(age 36|saturn at 36|retrograde saturn at 36|planetary age|maturation age)\b/i.test(q))
@@ -3980,6 +4078,276 @@ function MonthDrillDownCard({
   );
 }
 
+export function EventHorizonTimelineCard({
+  timeline,
+  onSelect,
+  isLoading,
+}: {
+  timeline: EventHorizonPeriod[];
+  onSelect: (prompt: string) => void;
+  isLoading: boolean;
+}) {
+  const [selectedId, setSelectedId] = useState<string>(timeline[0]?.id || "");
+
+  if (!timeline || timeline.length === 0) return null;
+
+  return (
+    <div className="my-3 p-3 bg-slate-950/95 border-2 border-amber-500/40 rounded-2xl space-y-2.5 shadow-xl shadow-amber-950/20 not-prose">
+      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-base">⏳</span>
+          <div>
+            <h4 className="font-extrabold text-amber-300 text-xs tracking-wide">
+              Event Horizon &amp; Dasha Timeline
+            </h4>
+            <p className="text-[10px] text-slate-400">
+              Interactive timeline of cosmic activation portals. Tap to explore:
+            </p>
+          </div>
+        </div>
+        <span className="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
+          Gochara &amp; Dasha
+        </span>
+      </div>
+
+      {/* Horizontal Scrollable Timeline Bar */}
+      <div className="flex gap-2 overflow-x-auto pb-1.5 pt-0.5 custom-scrollbar">
+        {timeline.map((period) => {
+          const isSelected = selectedId === period.id;
+          const statusColors =
+            period.status === "fruitful"
+              ? "border-emerald-500/50 bg-emerald-950/40 text-emerald-300"
+              : period.status === "testing"
+              ? "border-amber-500/50 bg-amber-950/40 text-amber-300"
+              : "border-cyan-500/50 bg-cyan-950/40 text-cyan-300";
+
+          return (
+            <button
+              key={period.id}
+              type="button"
+              onClick={() => setSelectedId(period.id)}
+              className={`flex-shrink-0 p-2.5 rounded-xl border text-left transition-all cursor-pointer min-w-[150px] sm:min-w-[170px] ${
+                isSelected
+                  ? "ring-2 ring-amber-400 border-amber-400 bg-slate-900 shadow-md"
+                  : "bg-slate-900/80 border-slate-800 hover:border-slate-700 hover:bg-slate-850"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-1 mb-1">
+                <span className="font-black text-[11px] text-slate-100 flex items-center gap-1">
+                  <span>{period.grahaIcon || "🪐"}</span>
+                  <span>{period.years}</span>
+                </span>
+                <span className={`text-[8.5px] font-bold px-1.5 py-0.2 rounded border uppercase ${statusColors}`}>
+                  {period.status === "fruitful" ? "Fruitful" : period.status === "testing" ? "Testing" : "Shift"}
+                </span>
+              </div>
+              <div className="text-[10px] font-bold text-amber-300/90 truncate">
+                {period.dashaTitle}
+              </div>
+              <div className="text-[9.5px] text-slate-400 mt-0.5 line-clamp-1">
+                {period.highlightBadge}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Selected Period Detail Drawer */}
+      {(() => {
+        const active = timeline.find((t) => t.id === selectedId) || timeline[0];
+        if (!active) return null;
+        return (
+          <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 animate-in fade-in duration-150">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="font-bold text-amber-200 flex items-center gap-1.5">
+                <span>{active.grahaIcon || "🪐"}</span>
+                <span>{active.years} — {active.dashaTitle}</span>
+              </span>
+              <span className="text-[9.5px] font-mono text-slate-400">
+                {active.highlightBadge}
+              </span>
+            </div>
+            <p className="text-[10.5px] text-slate-300 leading-relaxed">
+              {active.description}
+            </p>
+            <button
+              type="button"
+              onClick={() => onSelect(active.drillDownPrompt || `Deep dive into my ${active.dashaTitle} timing window`)}
+              disabled={isLoading}
+              className="w-full mt-1 py-1.5 px-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-[10.5px] flex items-center justify-center gap-1 transition-all cursor-pointer shadow-sm"
+            >
+              <span>🔍 Consult Acharya on this {active.years} Window</span>
+              <span>→</span>
+            </button>
+          </div>
+        );
+      })()}
+    </div>
+  );
+}
+
+export function UpayaSadhanaCounterCard({
+  sadhana,
+}: {
+  sadhana: UpayaSadhanaData;
+}) {
+  const [reps, setReps] = useState<number>(0);
+  const [completedDays, setCompletedDays] = useState<number>(0);
+  const [justCompletedMala, setJustCompletedMala] = useState<boolean>(false);
+
+  // Initialize from local vault on mount
+  useEffect(() => {
+    const vault = loadClientMemoryVault();
+    const id = `sadhana_${sadhana.presidingDeityOrGraha.toLowerCase().replace(/\s+/g, "_")}`;
+    const found = vault.activeSadhana.find((s) => s.id === id);
+    if (found) {
+      setReps(found.currentRepetition);
+      setCompletedDays(found.completedDays);
+    }
+  }, [sadhana.presidingDeityOrGraha]);
+
+  const handleIncrement = (delta: number) => {
+    const nextReps = Math.min(sadhana.targetMalaReps, reps + delta);
+    setReps(nextReps);
+
+    if (nextReps >= sadhana.targetMalaReps) {
+      // 108 Repetitions reached!
+      setJustCompletedMala(true);
+      const nextDays = Math.min(sadhana.targetDays, completedDays + 1);
+      setCompletedDays(nextDays);
+      recordSadhanaProgress(sadhana.mantraOrUpaya, sadhana.presidingDeityOrGraha, delta, true);
+      setTimeout(() => setJustCompletedMala(false), 3000);
+      setReps(0);
+    } else {
+      recordSadhanaProgress(sadhana.mantraOrUpaya, sadhana.presidingDeityOrGraha, delta, false);
+    }
+  };
+
+  const handleReset = () => {
+    setReps(0);
+    recordSadhanaProgress(sadhana.mantraOrUpaya, sadhana.presidingDeityOrGraha, -reps, false);
+  };
+
+  const percent = Math.min(100, Math.round((reps / sadhana.targetMalaReps) * 100));
+
+  return (
+    <div className="my-3 p-3.5 bg-slate-950/95 border-2 border-emerald-500/50 rounded-2xl space-y-3 shadow-xl shadow-emerald-950/20 not-prose">
+      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">📿</span>
+          <div>
+            <h4 className="font-extrabold text-emerald-300 text-xs tracking-wide">
+              Classical Upaya &amp; 108 Japa Mala Counter
+            </h4>
+            <p className="text-[10px] text-slate-400">
+              Interactive spiritual practice. Tap beads to count your daily recitation:
+            </p>
+          </div>
+        </div>
+        <span className="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+          40-Day Sankalpa
+        </span>
+      </div>
+
+      {/* Mantra Header */}
+      <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+        <div className="flex items-center justify-between text-[10.5px]">
+          <span className="font-bold text-amber-300">
+            Deity / Graha: {sadhana.presidingDeityOrGraha}
+          </span>
+          <span className="text-slate-400 font-mono text-[9.5px]">
+            ⏰ {sadhana.timingRecommendation}
+          </span>
+        </div>
+        <div className="text-xs font-serif font-semibold text-slate-100 italic bg-slate-950/80 p-2 rounded-lg border border-slate-800 text-center">
+          "{sadhana.mantraOrUpaya}"
+        </div>
+        {sadhana.spiritualBenefit && (
+          <p className="text-[10px] text-slate-400 text-center">
+            ✨ {sadhana.spiritualBenefit}
+          </p>
+        )}
+      </div>
+
+      {/* 108 Mala Japa Tap Station */}
+      <div className="p-3 rounded-xl bg-slate-900/95 border border-emerald-500/30 space-y-2.5 text-center">
+        {justCompletedMala ? (
+          <div className="p-2 rounded-lg bg-emerald-500/20 border border-emerald-400 text-emerald-300 text-xs font-bold animate-bounce">
+            🎉 108 Japa Mala Complete! Day {completedDays}/{sadhana.targetDays} credited to your Sankalpa!
+          </div>
+        ) : (
+          <div className="flex items-center justify-between px-2">
+            <span className="text-[11px] font-bold text-slate-300">
+              Current Mala: <strong className="text-emerald-400 text-sm">{reps}</strong> / {sadhana.targetMalaReps}
+            </span>
+            <span className="text-[10px] font-mono font-bold text-amber-400">
+              Day {completedDays} of {sadhana.targetDays} Completed
+            </span>
+          </div>
+        )}
+
+        {/* Progress Bar */}
+        <div className="w-full h-2 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
+          <div
+            className="h-full bg-gradient-to-r from-emerald-500 to-amber-400 transition-all duration-200"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+
+        {/* Interactive Tap Buttons */}
+        <div className="flex items-center justify-center gap-2 pt-1">
+          <button
+            type="button"
+            onClick={() => handleIncrement(1)}
+            className="flex-1 py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black text-xs transition-all cursor-pointer shadow-md shadow-emerald-500/20 flex items-center justify-center gap-1.5"
+          >
+            <span>📿</span>
+            <span>Tap Bead (+1)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleIncrement(10)}
+            className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-750 active:scale-95 text-slate-200 font-bold text-xs transition-all cursor-pointer border border-slate-700"
+          >
+            +10
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="py-2 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs transition-all cursor-pointer border border-slate-800"
+            title="Reset Mala Count"
+          >
+            ↺
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ShastricConsensusBadge({
+  consensus,
+}: {
+  consensus: ShastricConsensusData;
+}) {
+  return (
+    <div className="inline-flex flex-wrap items-center gap-1.5 py-1 px-2.5 mb-2 rounded-xl bg-slate-950/90 border border-amber-500/40 text-[10px]">
+      <span className="font-bold text-amber-300 flex items-center gap-1">
+        <span>🏛️</span>
+        <span>Parashari Consensus: {consensus.consensusPercent}%</span>
+      </span>
+      <span className="text-slate-500">•</span>
+      <span className="text-cyan-300 font-semibold truncate max-w-[170px]" title={consensus.classicalAuthorities.join(", ")}>
+        📚 {consensus.classicalAuthorities.slice(0, 2).join(" • ")}
+      </span>
+      <span className="text-slate-500">•</span>
+      <span className={`font-bold ${consensus.dashaSanction === "Sanctioned" ? "text-emerald-400" : "text-amber-400"}`}>
+        ✓ Dasha {consensus.dashaSanction}
+      </span>
+    </div>
+  );
+}
+
 export default function AstroChatbot() {
   const {
     currentDate,
@@ -4031,20 +4399,6 @@ export default function AstroChatbot() {
     const savedKey = localStorage.getItem("vedic_gemini_api_key");
     if (savedKey) setUserApiKey(savedKey);
   }, []);
-
-  // Dynamically personalize initial welcome message when chart is loaded
-  useEffect(() => {
-    if (natalEphemeris && messages.length === 1 && messages[0].id === "welcome") {
-      setMessages([
-        {
-          id: "welcome",
-          role: "assistant",
-          content: buildPersonalizedWelcomeMessage(natalEphemeris),
-          timestamp: new Date(),
-        },
-      ]);
-    }
-  }, [natalEphemeris]);
 
   // Dynamically personalize initial welcome message when chart is loaded
   useEffect(() => {
@@ -4481,6 +4835,7 @@ export default function AstroChatbot() {
 
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
+    syncMessagesToMemoryVault(updatedMessages);
     setInputPrompt("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -4524,6 +4879,9 @@ export default function AstroChatbot() {
           );
         }
       );
+      if (reply) {
+        syncMessagesToMemoryVault([...updatedMessages, { role: "assistant", content: reply }]);
+      }
     } catch (err: any) {
       try {
         const response = await fetch("/api/astro-chat", {
@@ -4539,14 +4897,17 @@ export default function AstroChatbot() {
             natalEphemeris: natalEphemeris,
             transitEphemeris: transitEphemeris,
             activeCorrections: sessionCorrections,
+            clientMemory: loadClientMemoryVault(),
           }),
         });
 
         if (response.ok) {
           const data = await response.json();
-          setMessages((prev) =>
-            prev.map((m) => (m.id === assistantMsgId ? { ...m, content: data.reply } : m))
-          );
+          setMessages((prev) => {
+            const next = prev.map((m) => (m.id === assistantMsgId ? { ...m, content: data.reply } : m));
+            syncMessagesToMemoryVault(next);
+            return next;
+          });
           return;
         }
       } catch (_) {}
@@ -4953,9 +5314,27 @@ export default function AstroChatbot() {
                     </div>
                   )}
 
+                  {msg.role === "assistant" && parsed.shastricConsensus && (
+                    <ShastricConsensusBadge consensus={parsed.shastricConsensus} />
+                  )}
+
                   <div className="whitespace-pre-wrap space-y-1.5">
                     {parsed.cleanedContent}
                   </div>
+
+                  {/* Interactive Generative UI: Event Horizon Timeline */}
+                  {msg.role === "assistant" && parsed.timeline && parsed.timeline.length > 0 && (
+                    <EventHorizonTimelineCard
+                      timeline={parsed.timeline}
+                      onSelect={(prompt) => handleSendMessage(prompt)}
+                      isLoading={isLoading}
+                    />
+                  )}
+
+                  {/* Interactive Generative UI: Upaya Sadhana & 108 Japa Mala Counter */}
+                  {msg.role === "assistant" && parsed.upayaSadhana && (
+                    <UpayaSadhanaCounterCard sadhana={parsed.upayaSadhana} />
+                  )}
 
                   {/* 1. Initial 6-Point Questionnaire (Only on Step 1 Initial Prompt) */}
                   {msg.role === "assistant" &&

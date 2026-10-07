@@ -110,7 +110,8 @@ export function buildChatSystemInstruction(
   userConfirmedFacts: string[] = [],
   groundingCitations: string = "",
   arbitrationProof: string = "",
-  consultationStateBlock: string = ""
+  consultationStateBlock: string = "",
+  clientMemoryBlock: string = ""
 ): string {
   const todayStr = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -132,6 +133,15 @@ ${userConfirmedFacts.map((f) => `- ${f}`).join("\n")}
 1. Treat the confirmed facts above as 100% verified historical reality.
 2. NEVER contradict, ignore, or question these confirmed facts (e.g. NEVER tell a married client they are single or ask them if they are married when they already confirmed they are married!).
 3. When explaining their chart, interpret planetary combinations in light of these confirmed realities rather than making contradictory guesses.
+================================================================================
+`;
+  }
+
+  let memoryBlock = "";
+  if (clientMemoryBlock && clientMemoryBlock.trim().length > 0) {
+    memoryBlock = `
+================================================================================
+${clientMemoryBlock.trim()}
 ================================================================================
 `;
   }
@@ -182,6 +192,7 @@ EVERY SINGLE QUESTION must be answered immediately by analyzing their active hor
 NATIVE'S ASTROLOGICAL DOSSIER:
 ${dossier || "No specific chart provided."}
 ${factsBlock}
+${memoryBlock}
 ${groundingBlock}
 ${arbitrationBlock}
 ${stateBlock}
@@ -944,6 +955,35 @@ STRICT CONSULTATION RULES (MANDATORY & ABSOLUTE):
               - **Rule 0AS: Active Learning & Precedent Adherence (Human-in-the-Loop Memory)**:
                  - **Respect Authoritative Corrections**: When HISTORICAL SHASTRIC CORRECTION PRECEDENTS or ACTIVE SESSION USER CORRECTIONS appear in your instructions, you MUST honor them as verified boundary conditions.
                  - **Zero Re-Offense Guarantee**: If a user previously clarified an interpretation (e.g. correcting a sign, bhava lord, or familial relationship detail), NEVER re-assert the disputed point. Evolve the consultation respectfully while preserving classical fidelity.
+
+              - **Rule 0AT: Generative UI Widget Emission Protocol (Interactive Timeline & Sadhana Cards)**:
+                 - **Event Horizon Timeline Widget**: When predicting future life timing or multi-year milestones, you MAY emit an interactive event horizon timeline block using \`\`\`timeline:
+\`\`\`timeline
+[
+  {
+    "id": "t1",
+    "years": "2024–2026",
+    "dashaTitle": "Active Dasha Window",
+    "grahaIcon": "🪐",
+    "status": "fruitful",
+    "highlightBadge": "Key Elevation Portal",
+    "description": "Crucial activation window for career and financial consolidation.",
+    "drillDownPrompt": "Explain my 2024–2026 timing window in detail"
+  }
+]
+\`\`\`
+                 - **Interactive Upaya & 108 Japa Sadhana Card**: When prescribing a mantra or 40-day Sankalpa remedy, you MAY emit a sadhana widget using \`\`\`sadhana:
+\`\`\`sadhana
+{
+  "id": "sadhana-1",
+  "mantraOrUpaya": "Om Graam Greem Graum Sah Gurave Namah",
+  "presidingDeityOrGraha": "Brihaspati (Jupiter)",
+  "targetMalaReps": 108,
+  "targetDays": 40,
+  "timingRecommendation": "Thursday morning at Brahma Muhurta",
+  "spiritualBenefit": "Dispels obstacles and expands spiritual wisdom"
+}
+\`\`\`
 
 1. **ACCURATE TEMPORAL GROUNDING (REAL-TIME TIMELINE)**:
    - Today's date is strictly ${todayStr}.

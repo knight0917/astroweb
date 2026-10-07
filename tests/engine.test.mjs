@@ -9044,6 +9044,139 @@ test("Phase 48: Human-in-the-Loop Active Learning, Chat Feedback Persistence & P
   assert.ok(prompt.includes("ACTIVE SESSION USER CORRECTIONS"));
 });
 
+test("Phase 49: Generative UI, In-Chat Dasha Timeline, Upaya Sadhana 108 Counter & Persistent Client Memory Vault", async () => {
+  const {
+    createDefaultMemoryVault,
+    syncMessagesToMemoryVault,
+    recordSadhanaProgress,
+    buildReturningClientWelcome,
+    formatClientMemoryPromptContext,
+  } = await import("../src/engine/clientMemoryVault.ts");
+  const { parseMessageContent } = await import("../src/components/AstroChatbot.tsx");
+  const { buildChatSystemInstruction } = await import("../src/engine/chatPrompt.ts");
+
+  // 1. Client Memory Vault Fact Extraction & Persistence
+  const defaultVault = createDefaultMemoryVault();
+  assert.strictEqual(defaultVault.version, 1);
+  assert.strictEqual(defaultVault.confirmedFacts.length, 0);
+
+  const sampleMessages = [
+    { role: "user", content: "My name is Aryavrat and I am married with a son." },
+    { role: "assistant", content: "Pranam Aryavrat, noted your family reality." },
+    { role: "user", content: "I completed 10th board in 2012 and degree in 2016. I am the eldest brother." },
+  ];
+
+  const populatedVault = syncMessagesToMemoryVault(sampleMessages, defaultVault);
+  assert.strictEqual(populatedVault.clientCallingName, "Aryavrat");
+  assert.strictEqual(populatedVault.maritalStatus, "Married");
+  assert.strictEqual(populatedVault.hasChildren, true);
+  assert.strictEqual(populatedVault.birthOrder, "Eldest");
+  assert.ok(populatedVault.educationMilestones.some(e => e.includes("2012")));
+  assert.ok(populatedVault.educationMilestones.some(e => e.includes("2016")));
+  assert.ok(populatedVault.confirmedFacts.length >= 3);
+
+  // 2. Returning Client Welcome & Prompt Context
+  const returningGreeting = buildReturningClientWelcome(populatedVault);
+  assert.ok(returningGreeting.includes("Aryavrat"));
+  assert.ok(returningGreeting.includes("Verified Memory Profile"));
+
+  const memoryContext = formatClientMemoryPromptContext(populatedVault);
+  assert.ok(memoryContext.includes("PERSISTENT CLIENT MEMORY VAULT"));
+  assert.ok(memoryContext.includes("Married"));
+  assert.ok(memoryContext.includes("Eldest"));
+
+  // 3. Active Sadhana Progress Recording & 108 Repetitions
+  const initialSadhanaVault = recordSadhanaProgress(
+    "Om Graam Greem Graum Sah Gurave Namah",
+    "Brihaspati",
+    54,
+    false
+  );
+  assert.ok(initialSadhanaVault.activeSadhana.length > 0);
+  const item = initialSadhanaVault.activeSadhana[0];
+  assert.strictEqual(item.currentRepetition, 54);
+  assert.strictEqual(item.completedDays, 0);
+
+  // Complete a full day (108 reps)
+  const completedDayVault = recordSadhanaProgress(
+    "Om Graam Greem Graum Sah Gurave Namah",
+    "Brihaspati",
+    54,
+    true
+  );
+  const completedItem = completedDayVault.activeSadhana[0];
+  assert.strictEqual(completedItem.completedDays, 1);
+  assert.strictEqual(completedItem.currentRepetition, 0);
+
+  // 4. Generative UI Widget Parser: Event Horizon Timeline
+  const rawTimelineMessage = `Here is your career timeline:
+
+\`\`\`timeline
+[
+  {
+    "id": "t1",
+    "years": "2024–2026",
+    "dashaTitle": "Saturn MD / Venus AD",
+    "grahaIcon": "🪐",
+    "status": "fruitful",
+    "highlightBadge": "Career Consolidation",
+    "description": "Saturn transiting 10th house brings solid professional growth.",
+    "drillDownPrompt": "Explain 2024-2026 period in detail"
+  }
+]
+\`\`\`
+`;
+  const parsedTimeline = parseMessageContent(rawTimelineMessage);
+  assert.strictEqual(parsedTimeline.timeline.length, 1);
+  assert.strictEqual(parsedTimeline.timeline[0].years, "2024–2026");
+  assert.strictEqual(parsedTimeline.timeline[0].status, "fruitful");
+  assert.strictEqual(parsedTimeline.cleanedContent.includes("```timeline"), false);
+
+  // 5. Generative UI Widget Parser: Upaya Sadhana Counter
+  const rawSadhanaMessage = `Recommended spiritual practice:
+
+\`\`\`sadhana
+{
+  "id": "sadhana-1",
+  "mantraOrUpaya": "Om Namah Shivaya",
+  "presidingDeityOrGraha": "Shiva",
+  "targetMalaReps": 108,
+  "targetDays": 40,
+  "timingRecommendation": "Monday morning during sunrise",
+  "spiritualBenefit": "Calms mental agitation and fortifies emotional resilience"
+}
+\`\`\`
+`;
+  const parsedSadhana = parseMessageContent(rawSadhanaMessage);
+  assert.ok(parsedSadhana.upayaSadhana);
+  assert.strictEqual(parsedSadhana.upayaSadhana.presidingDeityOrGraha, "Shiva");
+  assert.strictEqual(parsedSadhana.upayaSadhana.targetMalaReps, 108);
+  assert.strictEqual(parsedSadhana.upayaSadhana.targetDays, 40);
+  assert.strictEqual(parsedSadhana.cleanedContent.includes("```sadhana"), false);
+
+  // 6. Generative UI Widget Parser: Shastric Consensus
+  const rawArbitrationText = "Composite Fulfillment Score: 89% with high Parashari Consensus across Kendra gates.";
+  const parsedConsensus = parseMessageContent(rawArbitrationText);
+  assert.ok(parsedConsensus.shastricConsensus);
+  assert.strictEqual(parsedConsensus.shastricConsensus.consensusPercent, 89);
+  assert.strictEqual(parsedConsensus.shastricConsensus.verdictLabel, "Destined Fruitful");
+
+  // 7. System Instruction Integration with Rule 0AT & Client Memory Block
+  const prompt = buildChatSystemInstruction("MOCK_DOSSIER", [], "", "", "", memoryContext);
+  assert.ok(prompt.includes("Rule 0AT: Generative UI Widget Emission Protocol"));
+  assert.ok(prompt.includes("Event Horizon Timeline Widget"));
+  assert.ok(prompt.includes("Interactive Upaya & 108 Japa Sadhana Card"));
+  assert.ok(prompt.includes("PERSISTENT CLIENT MEMORY VAULT"));
+
+  // 8. Strict Zero-Name Compliance
+  const forbiddenNames = [/\bdeepanshu\b/i, /\bgiri\b/i, /\bnavneet\b/i, /\bchitkara\b/i];
+  for (const regex of forbiddenNames) {
+    assert.strictEqual(regex.test(memoryContext), false);
+    assert.strictEqual(regex.test(returningGreeting), false);
+  }
+});
+
+
 
 
 
