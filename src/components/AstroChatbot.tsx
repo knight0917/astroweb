@@ -4613,6 +4613,13 @@ export default function AstroChatbot() {
     setCorrectionText("");
   };
 
+  const scrollToMessage = (msgId: string) => {
+    const el = document.getElementById(`chat-msg-${msgId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
   const handleSubmitCorrection = async (msgId: string, botText: string) => {
     if (!correctionText.trim() || isSubmittingFeedback) return;
     setIsSubmittingFeedback(true);
@@ -4916,12 +4923,17 @@ export default function AstroChatbot() {
           )}
 
           {/* Chat Messages List */}
-          <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 custom-scrollbar bg-slate-950/60">
+          <div
+            className={`flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 custom-scrollbar bg-slate-950/60 ${
+              activeCorrectionMsgId ? "pb-80" : ""
+            }`}
+          >
             {messages.map((msg) => {
               const parsed = parseMessageContent(msg.content);
               return (
               <div
                 key={msg.id}
+                id={`chat-msg-${msg.id}`}
                 className={`flex flex-col ${
                   msg.role === "user" ? "items-end" : "items-start"
                 }`}
@@ -5059,106 +5071,61 @@ export default function AstroChatbot() {
                         )}
                       </div>
 
-                      {/* Human Feedback & Active Learning Actions */}
+                      {/* Human Feedback & Active Learning Actions - Bright, High-Contrast & Prominent */}
                       {msg.id !== "welcome" && (
-                        <div className="flex flex-wrap items-center justify-between gap-1.5 py-1 px-2 rounded-xl bg-slate-950/70 border border-slate-800/80 text-[10px]">
-                          <div className="flex items-center gap-1.5">
-                            {/* Helpful button */}
+                        <div className="p-2.5 rounded-xl bg-slate-900/90 border-2 border-amber-500/40 shadow-md space-y-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                              <span>⚖️</span>
+                              <span>Reading Accuracy & Feedback:</span>
+                            </span>
+                            {feedbackStatus[msg.id]?.message ? (
+                              <span className="text-[11px] text-emerald-300 font-bold bg-emerald-950/90 border border-emerald-500/60 px-2 py-0.5 rounded-lg flex items-center gap-1 animate-in fade-in">
+                                <span>✓</span>
+                                <span>{feedbackStatus[msg.id]?.message}</span>
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
+                                <span>🔄</span>
+                                <span>Reinforcement Active</span>
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2">
+                            {/* Helpful button: Bigger, brighter emerald */}
                             <button
                               onClick={() => handleQuickFeedback(msg.id, "helpful", msg.content)}
-                              className={`px-2 py-0.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 text-[9.5px] ${
+                              className={`px-3 py-1.5 rounded-xl border-2 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-sm ${
                                 feedbackStatus[msg.id]?.type === "helpful"
-                                  ? "bg-emerald-950/70 border-emerald-500/50 text-emerald-300 font-bold"
-                                  : "bg-slate-900 hover:bg-slate-800 border-slate-700/60 text-slate-400 hover:text-slate-200"
+                                  ? "bg-emerald-500 text-slate-950 border-emerald-300 shadow-emerald-500/30 font-black"
+                                  : "bg-emerald-950/80 hover:bg-emerald-900 border-emerald-500/60 text-emerald-200 hover:text-white"
                               }`}
                               title="Mark this reading as accurate & helpful"
                             >
-                              <span>👍</span>
-                              <span>Helpful</span>
+                              <span className="text-sm">👍</span>
+                              <span>Helpful & Accurate</span>
                             </button>
 
-                            {/* Suggest Correction button */}
+                            {/* Suggest Correction button: Bigger, brighter amber */}
                             <button
                               onClick={() => handleOpenCorrection(msg.id)}
-                              className={`px-2 py-0.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 text-[9.5px] ${
-                                activeCorrectionMsgId === msg.id || feedbackStatus[msg.id]?.type === "correction"
-                                  ? "bg-amber-950/70 border-amber-500/50 text-amber-300 font-bold"
-                                  : "bg-slate-900 hover:bg-slate-800 border-slate-700/60 text-slate-400 hover:text-slate-200"
+                              className={`px-3 py-1.5 rounded-xl border-2 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-sm ${
+                                activeCorrectionMsgId === msg.id
+                                  ? "bg-amber-400 text-slate-950 border-amber-300 shadow-amber-500/40 font-black ring-2 ring-amber-300"
+                                  : feedbackStatus[msg.id]?.type === "correction"
+                                  ? "bg-amber-950/90 border-amber-400 text-amber-200 font-bold"
+                                  : "bg-amber-950/80 hover:bg-amber-900 border-amber-500/70 text-amber-200 hover:text-white"
                               }`}
                               title="Report inaccuracy or suggest correct astrological rule"
                             >
-                              <span>✏️</span>
+                              <span className="text-sm">✏️</span>
                               <span>Suggest Correction</span>
-                            </button>
-                          </div>
-
-                          {feedbackStatus[msg.id]?.message ? (
-                            <span className="text-[9px] text-emerald-400 font-medium animate-in fade-in">
-                              ✓ {feedbackStatus[msg.id]?.message}
-                            </span>
-                          ) : (
-                            <span className="text-[8.5px] text-slate-500 font-mono">
-                              Reinforcement Loop
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Active Correction Drawer Modal */}
-                      {activeCorrectionMsgId === msg.id && (
-                        <div className="p-2.5 rounded-xl bg-slate-950 border border-amber-500/50 text-[10.5px] space-y-2 animate-in fade-in slide-in-from-top-1">
-                          <div className="flex items-center justify-between">
-                            <span className="font-bold text-amber-300 flex items-center gap-1">
-                              <span>⚖️</span>
-                              <span>Submit Astrological Correction:</span>
-                            </span>
-                            <button
-                              onClick={() => setActiveCorrectionMsgId(null)}
-                              className="text-slate-400 hover:text-slate-200 text-xs px-1"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-1">
-                            {(["timing", "bhavas", "upaya", "calculation", "other"] as const).map((cat) => (
-                              <button
-                                key={cat}
-                                onClick={() => setCorrectionCategory(cat)}
-                                className={`px-2 py-0.5 rounded-lg text-[9.5px] font-semibold border transition-all cursor-pointer ${
-                                  correctionCategory === cat
-                                    ? "bg-amber-500 text-slate-950 border-amber-400 font-bold"
-                                    : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
-                                }`}
-                              >
-                                {cat === "timing"
-                                  ? "⏳ Timing Window"
-                                  : cat === "bhavas"
-                                  ? "🏛️ House / Lord"
-                                  : cat === "upaya"
-                                  ? "📿 Remedy / Upaya"
-                                  : cat === "calculation"
-                                  ? "🔢 Calculation"
-                                  : "📝 Other"}
-                              </button>
-                            ))}
-                          </div>
-                          <textarea
-                            rows={2}
-                            placeholder="State the correct classical interpretation or rule (e.g. 'Sun in 10th house has Digbala; timing activates during Sun Antardasha')..."
-                            value={correctionText}
-                            onChange={(e) => setCorrectionText(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-1.5 text-[11px] text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 resize-none"
-                          />
-                          <div className="flex items-center justify-between pt-0.5">
-                            <span className="text-[8.5px] text-slate-500">
-                              Directly updates current session memory & records precedent.
-                            </span>
-                            <button
-                              onClick={() => handleSubmitCorrection(msg.id, msg.content)}
-                              disabled={!correctionText.trim() || isSubmittingFeedback}
-                              className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 disabled:opacity-40 text-slate-950 font-bold text-[10px] cursor-pointer shadow-sm transition-all"
-                            >
-                              {isSubmittingFeedback ? "Saving..." : "Submit Correction"}
+                              {activeCorrectionMsgId === msg.id && (
+                                <span className="ml-1 text-[10px] bg-slate-950 text-amber-300 px-1.5 py-0.5 rounded-md font-mono">
+                                  Editing ↓
+                                </span>
+                              )}
                             </button>
                           </div>
                         </div>
@@ -5268,6 +5235,103 @@ export default function AstroChatbot() {
               <span>🚀</span>
             </button>
           </form>
+
+          {/* Docked Active Correction Panel - Permanently pinned at bottom while user scrolls chat */}
+          {activeCorrectionMsgId && (
+            <div className="absolute bottom-0 left-0 right-0 z-40 bg-slate-950/98 border-t-2 border-amber-500 shadow-2xl p-3.5 space-y-2.5 backdrop-blur-md animate-in slide-in-from-bottom-4 duration-200">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs sm:text-sm font-black text-amber-300 flex items-center gap-1.5">
+                    <span>⚖️</span>
+                    <span>Astrological Correction:</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => scrollToMessage(activeCorrectionMsgId)}
+                    className="px-2 py-0.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10.5px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                    title="Jump to reading in chat"
+                  >
+                    <span>🔍</span>
+                    <span>View Reading</span>
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveCorrectionMsgId(null)}
+                  className="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
+                  title="Close Correction Panel"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Category Pills */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {(["timing", "bhavas", "upaya", "calculation", "other"] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setCorrectionCategory(cat)}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-[10.5px] font-bold border transition-all cursor-pointer ${
+                      correctionCategory === cat
+                        ? "bg-amber-400 text-slate-950 border-amber-300 shadow-md shadow-amber-500/20 font-black"
+                        : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                    }`}
+                  >
+                    {cat === "timing"
+                      ? "⏳ Timing Window"
+                      : cat === "bhavas"
+                      ? "🏛️ House / Lord"
+                      : cat === "upaya"
+                      ? "📿 Remedy / Upaya"
+                      : cat === "calculation"
+                      ? "🔢 Calculation"
+                      : "📝 Other"}
+                  </button>
+                ))}
+              </div>
+
+              {/* High Visibility Docked Textarea */}
+              <div className="relative">
+                <textarea
+                  rows={3}
+                  placeholder="State the correct classical astrological rule (e.g. 'Sun in 10th house has Digbala; timing activates during Sun-Jupiter Antardasha')..."
+                  value={correctionText}
+                  onChange={(e) => setCorrectionText(e.target.value)}
+                  className="w-full bg-slate-900/95 border-2 border-amber-500/70 focus:border-amber-400 rounded-xl p-2.5 text-xs text-slate-100 placeholder-slate-400 focus:outline-none transition-colors resize-none shadow-inner"
+                  autoFocus
+                />
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex items-center justify-between pt-0.5">
+                <span className="text-[10px] text-slate-400 font-medium truncate max-w-[200px] sm:max-w-none">
+                  💡 Pinned to bottom: scroll chat above freely to review reading.
+                </span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setActiveCorrectionMsgId(null)}
+                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const targetMsg = messages.find((m) => m.id === activeCorrectionMsgId);
+                      handleSubmitCorrection(activeCorrectionMsgId, targetMsg?.content || "");
+                    }}
+                    disabled={!correctionText.trim() || isSubmittingFeedback}
+                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-40 text-slate-950 font-black text-xs cursor-pointer shadow-md shadow-amber-500/20 transition-all flex items-center gap-1.5"
+                  >
+                    <span>{isSubmittingFeedback ? "Saving..." : "Submit Correction"}</span>
+                    <span>✓</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>
