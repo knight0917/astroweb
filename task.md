@@ -1363,3 +1363,27 @@
 - [x] **Phase 50.2: Positions Table Deep Integration (`src/components/PositionsTable.tsx`)**
 - [x] **Phase 50.3: Floating Drawer & Dossier Modal (`src/components/PlanetIndexDeck.tsx` & `src/components/EntityDetailModal.tsx`)**
 - [x] **Phase 50.4: Automated Test Suite & Production Verification (`tests/engine.test.mjs`)**
+
+---
+
+# Phase 51: Chatbot Personalized Sub-Planet (Upagraha) & 15-Lagna Natal Grounding System
+
+## Status: Complete & Verified (All 147 Tests Passing & Production Build Clean)
+- **Keywords:** `personalized-upagraha-grounding`, `15-lagna-chat-context`, `section-2d-matrix`, `rule-0au-grounding`, `zero-encyclopedia-drift`, `zero-names-frontend-guarantee`
+- **Scope:**
+  1. Primary Chat Context Injection (`src/engine/chatContext.ts`):
+     - Inject Section 2D: 15 Classical & Special Lagnas Matrix (`#### 🏛️ 2D. 15 CLASSICAL & SPECIAL LAGNAS MATRIX`) directly alongside Section 2A (Houses), Section 2B (Navagrahas), and Section 2C (11 Upagrahas) using `calculateAllLagnas(natalEphemeris)`.
+  2. Prompt Grounding & Rule 0AU Protocol (`src/engine/chatPrompt.ts`):
+     - Implement Rule 0AU: Explicitly instruct Acharya Jyotish AI that whenever answering questions regarding sub-planets (Upagrahas) or any of the 15 Lagnas, it must mandatory lead with the native's exact House number, Rashi, degrees & minutes, and Nakshatra/Pada before providing tailored life interpretation and classical remedies.
+  3. UI Instant Suggestion Chips (`src/components/AstroChatbot.tsx`):
+     - Add interactive chips for "My 11 Sub-Planets (Upagrahas)" and "My 15 Classical Lagnas".
+  4. Automated Verification Suite (`tests/engine.test.mjs`):
+     - Add Subtest 147 verifying dossier Section 2D generation, Rule 0AU presence, and Zero-Name compliance.
+     - Verification: `npm test` (147/147), `npx tsc --noEmit` (0 errors), `npm run build`.
+
+## Phases & Milestones
+
+- [x] **Phase 51.1: Primary Chat Context Section 2D Injection (`src/engine/chatContext.ts`)**
+- [x] **Phase 51.2: Chatbot Rule 0AU Natal Grounding Protocol (`src/engine/chatPrompt.ts`)**
+- [x] **Phase 51.3: UI Instant Suggestion Chips (`src/components/AstroChatbot.tsx`)**
+- [x] **Phase 51.4: Automated Test Suite & Production Build Verification (`tests/engine.test.mjs`)**

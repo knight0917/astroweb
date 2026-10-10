@@ -9254,6 +9254,43 @@ test("Phase 50: Classical 15-Lagna Unified Ascendant Matrix, Astrological Attrib
   }
 });
 
+test("Phase 51: Chatbot Personalized Sub-Planet (Upagraha) & 15-Lagna Natal Grounding System Verification", async () => {
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { buildChatSystemInstruction } = await import("../src/engine/chatPrompt.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date("2026-10-10T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Verify buildAstroDossier generates Section 2D
+  const dossier = buildAstroDossier(natalEphem, transitEphem);
+  assert.ok(dossier.includes("#### 🏛️ 2D. 15 CLASSICAL & SPECIAL LAGNAS MATRIX (सर्वविध लग्न स्थिति):"), "Dossier includes Section 2D header");
+  assert.ok(dossier.includes("#### 🌑 2C. 11 CLASSICAL UPAGRAHAS & SUB-PLANETS (छाया ग्रह एवं उपग्रह स्थिति):"), "Dossier includes Section 2C header");
+
+  // 2. Verify all 15 Lagnas are present in the dossier
+  const expectedCodes = ["ASC", "CHL", "SYL", "PAKA", "AL", "UL", "HL", "GL", "SL", "IL", "BL", "VL", "KL", "SWAMSHA", "MC"];
+  for (const code of expectedCodes) {
+    assert.ok(dossier.includes(`(${code} /`), `Section 2D contains Lagna code: ${code}`);
+  }
+
+  // 3. Verify Section 2A houses occupancy includes Lagnas
+  assert.ok(dossier.includes("Lagnas: ASC"), "House 1 includes ASC in Section 2A");
+
+  // 4. Verify buildChatSystemInstruction includes Rule 0AU & Rule 0H updates
+  const systemInstruction = buildChatSystemInstruction(dossier);
+  assert.ok(systemInstruction.includes("Rule 0AU: Personalized Sub-Planet (Upagraha) & 15-Lagna Natal Grounding Protocol"), "Rule 0AU present in prompt");
+  assert.ok(systemInstruction.includes("Section 2D: 15 CLASSICAL & SPECIAL LAGNAS MATRIX"), "Rule 0H references Section 2D");
+  assert.ok(systemInstruction.includes("Mandatory First-Sentence Natal Grounding"), "Rule 0AU mandates first-sentence natal grounding");
+  assert.ok(systemInstruction.includes("Strict Prohibition on Detached Encyclopedic Definitions"), "Rule 0AU bans abstract encyclopedic drift");
+
+  // 5. Zero-Name Shastric Compliance
+  const forbidden = [/\bdeepanshu\b/i, /\bgiri\b/i, /\bnavneet\b/i, /\bchitkara\b/i];
+  for (const regex of forbidden) {
+    assert.strictEqual(regex.test(systemInstruction.slice(systemInstruction.indexOf("Rule 0AU"))), false, "Rule 0AU zero-name compliant");
+  }
+});
+
 
 
 

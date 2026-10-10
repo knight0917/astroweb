@@ -106,6 +106,7 @@ import { detectRahuConjunctions } from "./rahuConjunctionsMaster";
 import { calculateLaypersonReport } from "./laypersonReportEngine";
 import { evaluateProgenyMaster } from "./progenyMaster";
 import { calculateOmniAspectMatrix } from "./omniAspectEngine";
+import { calculateAllLagnas, UnifiedLagnaInfo } from "./allLagnas";
 import { GeoLocation } from "./types";
 import { RASHI_NAMES } from "./constants";
 
@@ -304,9 +305,11 @@ export function buildAstroDossier(
 
   const houseOccupants: Record<number, string[]> = {};
   const houseUpagrahas: Record<number, string[]> = {};
+  const houseLagnas: Record<number, string[]> = {};
   for (let h = 1; h <= 12; h++) {
     houseOccupants[h] = [];
     houseUpagrahas[h] = [];
+    houseLagnas[h] = [];
   }
 
   Object.values(natalEphemeris.planets).forEach((p) => {
@@ -326,14 +329,25 @@ export function buildAstroDossier(
     });
   }
 
+  let allLagnas: UnifiedLagnaInfo[] = [];
+  try {
+    allLagnas = calculateAllLagnas(natalEphemeris);
+    allLagnas.forEach((l) => {
+      if (houseLagnas[l.house]) {
+        houseLagnas[l.house].push(`${l.code} (${(l.siderealLongitude % 30).toFixed(1)}°)`);
+      }
+    });
+  } catch (_) {}
+
   const twelveHousesFormatted: string[] = [];
   for (let h = 1; h <= 12; h++) {
     const signIdx = (ascRashiIdx + (h - 1)) % 12;
     const sign = RASHI_NAMES[signIdx];
     const occupants = houseOccupants[h].length > 0 ? houseOccupants[h].join(", ") : "None (Vacant)";
     const upagrahas = houseUpagrahas[h].length > 0 ? ` | Upagrahas: ${houseUpagrahas[h].join(", ")}` : "";
+    const lagnas = houseLagnas[h].length > 0 ? ` | Lagnas: ${houseLagnas[h].join(", ")}` : "";
     twelveHousesFormatted.push(
-      `- **House ${h} (${HOUSE_NAMES_SANSKRIT[h - 1]}):** Sign: **${sign.englishName} (${sign.sanskritName})** • Ruling Lord: **${sign.lord}** • **Occupants:** **${occupants}**${upagrahas}`
+      `- **House ${h} (${HOUSE_NAMES_SANSKRIT[h - 1]}):** Sign: **${sign.englishName} (${sign.sanskritName})** • Ruling Lord: **${sign.lord}** • **Occupants:** **${occupants}**${upagrahas}${lagnas}`
     );
   }
 
@@ -362,6 +376,12 @@ export function buildAstroDossier(
       );
     });
   }
+
+  // 9D. 15 Classical & Special Lagnas Matrix (सर्वविध लग्न स्थिति)
+  const lagnasFormatted: string[] = allLagnas.map((l) => {
+    const deg = (l.siderealLongitude % 30).toFixed(2);
+    return `- **${l.name} (${l.code} / ${l.sanskritName}):** **House ${l.house}** in **${l.rashi.englishName} (${l.rashi.sanskritName})** at **${deg}°** (${l.formattedLongitude}) in **${l.nakshatra.sanskritName} Pada ${l.nakshatra.pada}** [${l.system}] -> ${l.signification} (${l.dossierDescription})`;
+  });
 
   // 10. B.V. Raman 300 Yogas with Potency & Bhanga Analysis
   const ramanAnalysis = evaluateRamanYogas(natalEphemeris);
@@ -2168,6 +2188,9 @@ export function buildAstroDossier(
     "",
     "#### 🌑 2C. 11 CLASSICAL UPAGRAHAS & SUB-PLANETS (छाया ग्रह एवं उपग्रह स्थिति):",
     upagrahasFormatted.length > 0 ? upagrahasFormatted.join("\n") : "- Standard shadow points calculated.",
+    "",
+    "#### 🏛️ 2D. 15 CLASSICAL & SPECIAL LAGNAS MATRIX (सर्वविध लग्न स्थिति):",
+    lagnasFormatted.length > 0 ? lagnasFormatted.join("\n") : "- Classical ascendants calculated.",
     "",
     "#### 🤝 3. PANCHA-DA MAITRI (5-FOLD RELATIONSHIP WITH SIGN DISPOSITOR):",
     panchadaSummary,

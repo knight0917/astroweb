@@ -47,6 +47,7 @@ import { generateKumbhaAquariusMasterReport } from "../engine/kumbhaAquariusRahu
 import { generateMeenaKalapurushaDrishtiMasterReport } from "../engine/meenaKalapurushaDrishti";
 import { generateUchhaNeechaAwarenessMasterReport } from "../engine/uchhaNeechaAwareness";
 import { generateRishiDrekkanaMasterReport } from "../engine/rishiDrekkanaAwareness";
+import { calculateAllLagnas } from "../engine/allLagnas";
 import { EphemerisResult } from "../engine/types";
 import {
   loadClientMemoryVault,
@@ -321,6 +322,16 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
         icon: "⚡",
         title: "Gochara Vedha Transit Shields",
         prompt: "Are any of my favorable planetary transits currently blocked by Gochara Vedha or are inauspicious transits shielded by Vipareeta Vedha according to Phaladeepika Ch. 26?",
+      },
+      {
+        icon: "🌑",
+        title: "My 11 Sub-Planets (Upagrahas)",
+        prompt: "What are the exact house placements, signs, and degrees of my 11 Classical Upagrahas (Mandi, Gulika, Kaala, Mrityu, Yamaghantaka, etc.) in my chart and how do they influence my life?",
+      },
+      {
+        icon: "🏛️",
+        title: "My 15 Classical Lagnas",
+        prompt: "What are the exact placements and house coordinates of my 15 Classical and Special Lagnas (Janma, Chandra, Surya, Paka, Arudha, Upapada, Hora, Ghatika, Shree, Indu, etc.) and what do they reveal about my destiny?",
       },
     ],
   },
@@ -3068,6 +3079,93 @@ ${deepDignityList}
 [{"id":"chip-1","label":"💍 Marriage Fruition Deep Dive","prompt":"Explain my 7th house seed in D9 and partner archetype in detail"},{"id":"chip-2","label":"💼 Career Sanctuary & Environment","prompt":"Where does my 10th house seed manifest in D9 and should I work remotely or corporate?"},{"id":"chip-3","label":"🌳 View Full 12-House Matrix","prompt":"Show me the full 12-house root vs fruit projection table from D1 to D9"}]
 \`\`\`
 `;
+  }
+
+  // Interceptor 38: 11 Classical Upagrahas & Sub-Planets (छाया ग्रह एवं उपग्रह स्थिति)
+  if (
+    /\b(sub-planets|subplanets|upagrahas|upagraha|shadow planets|mandi|gulika|yamaghantaka|ardhaprahara|dhuma|vyatipata|parivesha|indrachapa|upaketu)\b/i.test(q) ||
+    q.includes("my 11 sub-planets") ||
+    q.includes("11 sub-planets") ||
+    q.includes("sub-planet") ||
+    q.includes("upagrahas")
+  ) {
+    if (natalEphem.upagrahas) {
+      const upaEntries = Object.values(natalEphem.upagrahas);
+      const listStr = upaEntries.map((u) => {
+        const deg = (u.siderealLongitude % 30).toFixed(2);
+        return `- **${u.name} (${u.sanskritName}):** **House ${u.house}** in **${u.rashi.englishName} (${u.rashi.sanskritName})** at **${deg}°** in **${u.nakshatra.sanskritName} Pada ${u.nakshatra.pada}** [${u.category}] — *${u.description}*`;
+      }).join("\n");
+
+      const mandi = natalEphem.upagrahas.mandi;
+      const gulika = natalEphem.upagrahas.gulika;
+      const mandiStr = mandi ? `House ${mandi.house} in ${mandi.rashi.englishName} (${(mandi.siderealLongitude % 30).toFixed(2)}°)` : "Calculated";
+      const gulikaStr = gulika ? `House ${gulika.house} in ${gulika.rashi.englishName} (${(gulika.siderealLongitude % 30).toFixed(2)}°)` : "Calculated";
+
+      return `### 🌑 **Classical 11 Upagrahas & Sub-Planets Placements (छाया ग्रह एवं उपग्रह)**
+
+> **Shastric Principle (BPHS Ch. 3 & Phaladeepika):** The Upagrahas (secondary shadow planets) represent concentrated karmic nodal points. While Sun-based Upagrahas (Dhuma, Vyatipata, Parivesha, Indrachapa, Upaketu) track solar light refractions, Gulika and Mandi (Saturn's sons) represent intense purva-janma karmic seeds and timing triggers.
+
+#### 📍 **Natal Placement Summary for Your Horoscope:**
+- 🪐 **Mandi (मांदि — Son of Saturn):** **${mandiStr}**
+- ⚰️ **Gulika (गुलिक — Poison Point):** **${gulikaStr}**
+
+#### 📜 **Complete 11 Upagrahas Coordinates & Significations:**
+${listStr}
+
+---
+💡 **Personalized Astrological Insight:**
+In your birth chart, Mandi placed in **House ${mandi?.house ?? 1}** indicates where past-life karmic duties require disciplined, selfless dedication. Upagrahas placed in Upachaya houses (3, 6, 10, 11) transform challenges into profound competitive victories over time.
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"🪐 Mandi & Gulika Upayas","prompt":"What are the specific classical Vedic remedies for Mandi and Gulika in my chart?"},{"id":"chip-2","label":"🏛️ My 15 Classical Lagnas","prompt":"What are the exact coordinates and houses of my 15 Classical and Special Lagnas?"},{"id":"chip-3","label":"💎 Shadbala Planetary Strengths","prompt":"How strong are the rulers of the houses occupied by my Upagrahas?"}]
+\`\`\``;
+    }
+  }
+
+  // Interceptor 39: 15 Classical & Special Lagnas Matrix (सर्वविध लग्न स्थिति)
+  if (
+    /\b(15 lagnas|various lagnas|special lagnas|classical lagnas|all lagnas|different lagnas|hora lagna|ghatika lagna|shree lagna|indu lagna|bhava lagna|varnada lagna|karakamsha lagna|swamsha lagna|paka lagna|arudha lagna|upapada lagna)\b/i.test(q) ||
+    q.includes("my 15 classical lagnas") ||
+    q.includes("15 classical lagnas") ||
+    q.includes("special ascendants")
+  ) {
+    const lagnas = calculateAllLagnas(natalEphem);
+    const lagnasFormatted = lagnas.map((l) => {
+      const deg = (l.siderealLongitude % 30).toFixed(2);
+      return `- **${l.name} (${l.code} / ${l.sanskritName}):** **House ${l.house}** in **${l.rashi.englishName} (${l.rashi.sanskritName})** at **${deg}°** (${l.formattedLongitude}) in **${l.nakshatra.sanskritName} Pada ${l.nakshatra.pada}** [${l.system}] — *${l.signification}* (${l.dossierDescription})`;
+    }).join("\n");
+
+    const janma = lagnas.find(l => l.code === "ASC");
+    const arudha = lagnas.find(l => l.code === "AL");
+    const indu = lagnas.find(l => l.code === "IL");
+    const paka = lagnas.find(l => l.code === "PAKA");
+    const upapada = lagnas.find(l => l.code === "UL");
+
+    return `### 🏛️ **Classical 15-Lagna Unified Ascendant Matrix (सर्वविध लग्न स्थिति)**
+
+> **Shastric Principle (BPHS Ch. 4 & 5, Jaimini Sutras):** While the Janma Lagna (Ascendant) anchors the physical body and constitutional vitality, the soul and its karma operate through multiple reference planes: Arudha Lagna (social perception), Paka Lagna (operating demeanor), Indu Lagna (wealth potential), Hora Lagna (financial inflow), and Ghatika Lagna (authority & power).
+
+#### 🌟 **Core Ascendant Reference Highlights in Your Chart:**
+- 🏛️ **Janma Lagna (ASC):** **House 1** in **${janma?.rashi.englishName ?? ""}** (${janma?.formattedLongitude ?? ""}) — Physical body, vitality & personal identity.
+- 👤 **Paka Lagna (PAKA):** **House ${paka?.house ?? 1}** in **${paka?.rashi.englishName ?? ""}** (${paka?.formattedLongitude ?? ""}) — Where your mind and conscious efforts are deployed.
+- 🪞 **Arudha Lagna (AL):** **House ${arudha?.house ?? 1}** in **${arudha?.rashi.englishName ?? ""}** (${arudha?.formattedLongitude ?? ""}) — Worldly status and societal perception.
+- 💰 **Indu Lagna (IL):** **House ${indu?.house ?? 1}** in **${indu?.rashi.englishName ?? ""}** (${indu?.formattedLongitude ?? ""}) — Inherent prosperity and cosmic wealth reservoir.
+- 💍 **Upapada Lagna (UL):** **House ${upapada?.house ?? 1}** in **${upapada?.rashi.englishName ?? ""}** (${upapada?.formattedLongitude ?? ""}) — Marriage commitment and spouse's family background.
+
+#### 📜 **Complete 15 Classical Lagnas Table:**
+${lagnasFormatted}
+
+---
+💡 **Personalized Astrological Guidance:**
+Whenever analyzing life domains, look at the house from the relevant Lagna: wealth from **Hora Lagna** and **Indu Lagna**, power from **Ghatika Lagna**, reputation from **Arudha Lagna**, and marital destiny from **Upapada Lagna**.
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-1","label":"💰 Indu Lagna Wealth Reading","prompt":"What does my Indu Lagna reveal about my wealth potential and financial growth?"},{"id":"chip-2","label":"💍 Upapada Lagna & Marriage","prompt":"What does my Upapada Lagna (UL) show about my marriage timing and spouse?"},{"id":"chip-3","label":"🌑 My 11 Sub-Planets (Upagrahas)","prompt":"What are the exact house placements and degrees of my 11 Sub-Planets (Upagrahas)?"}]
+\`\`\``;
   }
 
   return null;
