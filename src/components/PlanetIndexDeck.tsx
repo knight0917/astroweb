@@ -12,6 +12,9 @@ export default function PlanetIndexDeck() {
     setSelectedEntityId,
     showUpagrahas,
     showModernPlanets,
+    chartReferenceLagna,
+    setChartReferenceLagna,
+    resetChartRotation,
   } = useAstroStore();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -44,7 +47,7 @@ export default function PlanetIndexDeck() {
   }));
 
   const visibleLagnas = filterTab === "navagraha" 
-    ? lagnaItems.filter((item) => item.id === "Lagna_Janma" || item.id === "Lagna_MC")
+    ? lagnaItems.filter((item) => item.id === "Lagna_Janma")
     : lagnaItems;
 
   return (
@@ -154,20 +157,35 @@ export default function PlanetIndexDeck() {
             {(filterTab === "all" || filterTab === "lagnas" || filterTab === "navagraha") && (
               <div className="space-y-1 pt-1 first:pt-0">
                 <span className="text-[9px] font-extrabold text-teal-400 uppercase tracking-wider px-1">
-                  {filterTab === "navagraha" ? "Cardinal Points (Lagna & MC)" : `Classical Lagnas (${visibleLagnas.length})`}
+                  {filterTab === "navagraha" ? "Ascendant (Janma Lagna)" : `Lagnas (${visibleLagnas.length})`}
                 </span>
                 {visibleLagnas.map((item) => {
                   const isSelected = selectedEntityId === item.id;
+                  const isReferenceActive = chartReferenceLagna?.id === item.id;
                   return (
                     <div
                       key={item.id}
-                      onClick={() => setSelectedEntityId(item.id)}
+                      onClick={() => {
+                        setSelectedEntityId(item.id);
+                        if (chartReferenceLagna?.id === item.id) {
+                          resetChartRotation();
+                        } else {
+                          setChartReferenceLagna({
+                            id: item.id,
+                            name: item.name,
+                            sanskritName: item.sanskritName,
+                            house: item.house,
+                            code: item.code,
+                            color: item.color,
+                          });
+                        }
+                      }}
                       style={{
-                        borderColor: isSelected ? item.color : "transparent",
-                        backgroundColor: isSelected ? `${item.color}20` : undefined,
+                        borderColor: isReferenceActive ? "#f59e0b" : isSelected ? item.color : "transparent",
+                        backgroundColor: isReferenceActive ? "#f59e0b20" : isSelected ? `${item.color}20` : undefined,
                       }}
                       className={`p-2 rounded-xl border transition-all cursor-pointer select-none group flex items-center justify-between hover:bg-slate-900/80 ${
-                        !isSelected ? "border-slate-800/60 bg-slate-900/30" : "shadow-lg"
+                        !isSelected && !isReferenceActive ? "border-slate-800/60 bg-slate-900/30" : "shadow-lg"
                       }`}
                     >
                       <div className="flex items-center gap-2">

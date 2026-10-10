@@ -60,6 +60,15 @@ export interface MatchmakingStoreState {
   girl: MatchmakingProfileData;
 }
 
+export interface ReferenceLagnaInfo {
+  id: string;
+  name: string;
+  sanskritName?: string;
+  house: number;
+  code?: string;
+  color?: string;
+}
+
 const STORAGE_ACTIVE_KEY = "vedic_active_chart_data";
 const STORAGE_PROFILES_KEY = "vedic_saved_birth_profiles";
 const STORAGE_USER_EMAIL_KEY = "vedic_user_email";
@@ -202,6 +211,11 @@ interface AstroState {
   setSkyViewType: (type: SkyViewType) => void;
   setSelectedEntityId: (id: string | null) => void;
   setInspectorEntityId: (id: string | null) => void;
+  chartRotationHouse: number;
+  chartReferenceLagna: ReferenceLagnaInfo | null;
+  setChartRotationHouse: (house: number) => void;
+  setChartReferenceLagna: (lagna: ReferenceLagnaInfo | null) => void;
+  resetChartRotation: () => void;
   recompute: () => void;
 
   // Saved Profile Methods
@@ -242,6 +256,8 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   skyViewType: "ecliptic",
   selectedEntityId: null,
   inspectorEntityId: null,
+  chartRotationHouse: 1,
+  chartReferenceLagna: null,
   savedProfiles: [],
   activeProfileName: null,
   userEmail: null,
@@ -504,6 +520,25 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   setSkyViewType: (skyViewType) => set({ skyViewType }),
   setSelectedEntityId: (selectedEntityId) => set({ selectedEntityId }),
   setInspectorEntityId: (inspectorEntityId) => set({ inspectorEntityId }),
+  setChartRotationHouse: (chartRotationHouse) => {
+    const currentRef = get().chartReferenceLagna;
+    if (currentRef && currentRef.house !== chartRotationHouse) {
+      set({ chartRotationHouse, chartReferenceLagna: null });
+    } else {
+      set({ chartRotationHouse });
+    }
+  },
+  setChartReferenceLagna: (lagna) => {
+    if (!lagna) {
+      set({ chartRotationHouse: 1, chartReferenceLagna: null });
+    } else {
+      set({
+        chartRotationHouse: lagna.house || 1,
+        chartReferenceLagna: lagna,
+      });
+    }
+  },
+  resetChartRotation: () => set({ chartRotationHouse: 1, chartReferenceLagna: null }),
 
   recompute: () => {
     const { currentDate, location, ayanamsha, houseSystem, nodeType } = get();
@@ -600,6 +635,8 @@ export const useAstroStore = create<AstroState>((set, get) => ({
       ayanamsha: aya,
       activeProfileName: profile.name,
       gender: profGender,
+      chartRotationHouse: 1,
+      chartReferenceLagna: null,
       ephemeris: calculateVedicEphemeris(date, loc, aya, houseSystem, nodeType),
     });
   },
@@ -631,6 +668,8 @@ export const useAstroStore = create<AstroState>((set, get) => ({
       currentDate: liveNow,
       location: targetLoc,
       activeProfileName: "🔴 Live Transit (Now)",
+      chartRotationHouse: 1,
+      chartReferenceLagna: null,
       ephemeris: calculateVedicEphemeris(liveNow, targetLoc, ayanamsha, houseSystem, nodeType),
     });
   },

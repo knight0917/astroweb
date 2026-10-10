@@ -12,13 +12,16 @@ import { calculateAllLagnas, UnifiedLagnaInfo, LagnaSystem } from "../engine/all
 export default function PositionsTable() {
   const [activeTab, setActiveTab] = useState<"planets" | "lagnas" | "upagrahas" | "panchanga">("planets");
   const [lagnaSystemFilter, setLagnaSystemFilter] = useState<string>("ALL");
-  const [includeLagnasInPlanetTable, setIncludeLagnasInPlanetTable] = useState<boolean>(true);
   const {
     ephemeris,
     showModernPlanets,
     selectedEntityId,
     setSelectedEntityId,
     setInspectorEntityId,
+    chartRotationHouse,
+    chartReferenceLagna,
+    setChartReferenceLagna,
+    resetChartRotation,
   } = useAstroStore();
 
   const planetList = Object.values(ephemeris.planets).filter((p) => {
@@ -63,7 +66,7 @@ export default function PositionsTable() {
                 : "text-slate-400 hover:text-slate-200 bg-slate-900/50"
             }`}
           >
-            Classical Lagnas ({allLagnas.length})
+            Lagnas ({allLagnas.length})
           </button>
           <button
             onClick={() => setActiveTab("upagrahas")}
@@ -95,29 +98,7 @@ export default function PositionsTable() {
 
       {/* Tab 1: Planets Table */}
       {activeTab === "planets" && (
-        <div className="space-y-2">
-          {/* Inline Lagnas Inclusion Bar */}
-          <div className="flex items-center justify-between px-1 bg-slate-900/40 py-1.5 px-3 rounded-xl border border-slate-800/80">
-            <div className="text-[11px] text-slate-300 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-              <span className="font-semibold">Comprehensive Grahas & Ascendants</span>
-              <span className="text-[10px] text-slate-400">
-                ({planetList.length} Planets + {includeLagnasInPlanetTable ? allLagnas.length : 1} Lagnas)
-              </span>
-            </div>
-            <button
-              onClick={() => setIncludeLagnasInPlanetTable(!includeLagnasInPlanetTable)}
-              className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
-                includeLagnasInPlanetTable
-                  ? "bg-teal-950/80 text-teal-300 border-teal-600/70 shadow"
-                  : "bg-slate-900/80 text-slate-400 border-slate-800 hover:text-slate-200"
-              }`}
-            >
-              <span>{includeLagnasInPlanetTable ? "✓ Showing All 15 Lagnas in Table" : "+ Expand All 15 Lagnas Here"}</span>
-            </button>
-          </div>
-
-          <div className="overflow-x-auto">
+        <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-slate-200">
               <thead className="bg-slate-900/80 text-slate-400 font-semibold border-b border-slate-800">
                 <tr>
@@ -137,7 +118,10 @@ export default function PositionsTable() {
               <tbody className="divide-y divide-slate-800/60">
                 {/* Janma Lagna (Ascendant Row) */}
                 <tr
-                  onClick={() => setSelectedEntityId("Ascendant")}
+                  onClick={() => {
+                    setSelectedEntityId("Ascendant");
+                    resetChartRotation();
+                  }}
                   className={`cursor-pointer transition-colors ${
                     selectedEntityId === "Ascendant" ? "bg-emerald-950/40" : "hover:bg-slate-900/40"
                   }`}
@@ -185,72 +169,7 @@ export default function PositionsTable() {
                   </td>
                 </tr>
 
-                {/* Additional 14 Classical Lagnas when toggled on */}
-                {includeLagnasInPlanetTable &&
-                  allLagnas.slice(1).map((lagna) => {
-                    const isSelected = selectedEntityId === lagna.id;
-                    return (
-                      <tr
-                        key={lagna.id}
-                        onClick={() => setSelectedEntityId(lagna.id)}
-                        className={`cursor-pointer transition-colors ${
-                          isSelected ? "bg-teal-950/40" : "hover:bg-slate-900/40 bg-teal-950/10"
-                        }`}
-                      >
-                        <td className="py-2 px-3 font-bold flex items-center gap-1.5" style={{ color: lagna.color }}>
-                          <span className="px-1 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-700 font-mono">
-                            {lagna.code}
-                          </span>
-                          <span className="truncate max-w-[150px]">{lagna.name}</span>
-                        </td>
-                        <td className="py-2 px-3 text-slate-400 font-medium">{lagna.sanskritName.split(" (")[0]}</td>
-                        <td className="py-2 px-3 font-mono font-bold" style={{ color: lagna.color }}>
-                          {lagna.formattedLongitude}
-                        </td>
-                        <td className="py-2 px-3">
-                          <span className="font-semibold text-slate-200">{lagna.rashi.sanskritName}</span>{" "}
-                          <span className="text-slate-400">({formatDMS(lagna.rashi.degreesInSign)})</span>
-                        </td>
-                        <td className="py-2 px-3">
-                          <div className="flex items-center gap-1.5">
-                            <span>{lagna.nakshatra.animalSymbol}</span>
-                            <span className="font-semibold text-slate-200">{lagna.nakshatra.sanskritName}</span>
-                            <span className="font-bold text-[11px]" style={{ color: lagna.color }}>
-                              P{lagna.nakshatra.pada}
-                            </span>
-                          </div>
-                          <div className="text-[10px] text-slate-400 font-mono">
-                            {lagna.nakshatra.animal} • {lagna.nakshatra.deity}
-                          </div>
-                        </td>
-                        <td className="py-2 px-3 font-bold" style={{ color: lagna.color }}>
-                          H{lagna.house}
-                        </td>
-                        <td className="py-2 px-3">
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-900 border border-slate-700 text-teal-300">
-                            {lagna.system}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 text-slate-500">—</td>
-                        <td className="py-2 px-3 text-slate-300 text-[10px] truncate max-w-[130px]" title={lagna.signification}>
-                          {lagna.signification.split(",")[0]}
-                        </td>
-                        <td className="py-2 px-3 text-slate-400 font-mono text-[10px]">Direct</td>
-                        <td className="py-2 px-3 text-right">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setInspectorEntityId(lagna.id);
-                            }}
-                            title={`Open ${lagna.name} Dossier`}
-                            className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-teal-500 hover:text-slate-950 text-slate-300 font-bold text-[10px] transition-all border border-slate-700 hover:border-teal-400 cursor-pointer"
-                          >
-                            🔍 Info
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+
 
                 {/* Planets */}
               {planetList.map((p) => {
@@ -376,8 +295,7 @@ export default function PositionsTable() {
             </tbody>
           </table>
         </div>
-      </div>
-    )}
+      )}
 
       {/* Tab 2: Classical 15 Lagnas Dedicated Table */}
       {activeTab === "lagnas" && (
@@ -406,7 +324,7 @@ export default function PositionsTable() {
               )}
             </div>
             <div className="text-[11px] text-teal-400 font-medium">
-              Unified 15 Classical Ascendant Matrix
+              Unified 15 Ascendants Matrix
             </div>
           </div>
 
@@ -415,26 +333,44 @@ export default function PositionsTable() {
               <thead className="bg-teal-950/40 text-teal-300 font-semibold border-b border-slate-800">
                 <tr>
                   <th className="py-2.5 px-3">Lagna / Code</th>
-                  <th className="py-2.5 px-3">Sanskrit Name</th>
-                  <th className="py-2.5 px-3">Classical System</th>
                   <th className="py-2.5 px-3">Sidereal Longitude</th>
                   <th className="py-2.5 px-3">Rashi</th>
                   <th className="py-2.5 px-3">Nakshatra & Pada</th>
                   <th className="py-2.5 px-3 text-center">House</th>
-                  <th className="py-2.5 px-3">Classical Shastric Signification</th>
+                  <th className="py-2.5 px-3">Signification</th>
                   <th className="py-2.5 px-3 text-right">Inspect</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {filteredLagnas.map((lagna) => {
                   const isSelected = selectedEntityId === lagna.id;
+                  const isReferenceActive = chartReferenceLagna?.id === lagna.id;
                   return (
                     <tr
                       key={lagna.id}
-                      onClick={() => setSelectedEntityId(lagna.id)}
+                      onClick={() => {
+                        setSelectedEntityId(lagna.id);
+                        if (chartReferenceLagna?.id === lagna.id) {
+                          resetChartRotation();
+                        } else {
+                          setChartReferenceLagna({
+                            id: lagna.id,
+                            name: lagna.name,
+                            sanskritName: lagna.sanskritName,
+                            house: lagna.house,
+                            code: lagna.code,
+                            color: lagna.color,
+                          });
+                        }
+                      }}
                       className={`cursor-pointer transition-colors ${
-                        isSelected ? "bg-teal-950/40" : "hover:bg-slate-900/40"
+                        isReferenceActive
+                          ? "bg-amber-950/40 ring-1 ring-amber-500/60"
+                          : isSelected
+                          ? "bg-teal-950/40"
+                          : "hover:bg-slate-900/40"
                       }`}
+                      title={`Click to rotate chart with ${lagna.name} in House 1`}
                     >
                       <td className="py-2.5 px-3 font-bold flex items-center gap-2">
                         <span
@@ -448,12 +384,11 @@ export default function PositionsTable() {
                           {lagna.code}
                         </span>
                         <span className="text-slate-100 font-bold">{lagna.name}</span>
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-400 font-medium">{lagna.sanskritName}</td>
-                      <td className="py-2.5 px-3">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 border border-slate-700 text-teal-300">
-                          {lagna.system}
-                        </span>
+                        {isReferenceActive && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500 text-slate-950 shadow animate-pulse">
+                            Active H1
+                          </span>
+                        )}
                       </td>
                       <td className="py-2.5 px-3 font-mono font-bold" style={{ color: lagna.color }}>
                         {lagna.formattedLongitude}
@@ -479,7 +414,13 @@ export default function PositionsTable() {
                         </div>
                       </td>
                       <td className="py-2.5 px-3 font-bold text-center">
-                        <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/60 font-mono text-xs">
+                        <span
+                          className={`px-2 py-0.5 rounded font-mono text-xs border ${
+                            isReferenceActive
+                              ? "bg-amber-500 text-slate-950 border-amber-300 font-black shadow"
+                              : "bg-emerald-950 text-emerald-300 border-emerald-800/60"
+                          }`}
+                        >
                           H{lagna.house}
                         </span>
                       </td>

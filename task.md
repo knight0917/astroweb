@@ -1387,3 +1387,36 @@
 - [x] **Phase 51.2: Chatbot Rule 0AU Natal Grounding Protocol (`src/engine/chatPrompt.ts`)**
 - [x] **Phase 51.3: UI Instant Suggestion Chips (`src/components/AstroChatbot.tsx`)**
 - [x] **Phase 51.4: Automated Test Suite & Production Build Verification (`tests/engine.test.mjs`)**
+
+---
+
+# Phase 52: Interactive Lagna-Driven Chart Rotation, Table Streamlining & Navagrahas Isolation
+
+## Status: Completed & Verified (148/148 Tests Passed)
+- **Keywords:** `lagna-chart-rotation`, `rotate-h1-to-lagna`, `planets-table-isolation`, `remove-sanskrit-classical-columns`, `lagnas-table-streamlining`, `zero-names-frontend-guarantee`
+- **Scope:**
+  1. Interactive Lagna-Driven Chart Rotation (`src/store/useAstroStore.ts` & `src/components/KundliChart.tsx`):
+     - Store State: Add `chartRotationHouse: number` (1..12), `chartReferenceLagna: { id: string; name: string; house: number; code?: string; color?: string } | null`, `setChartReferenceLagna()`, and `resetChartRotation()`.
+     - `KundliChart.tsx`: Sync rotation with store state so when any Lagna is clicked, the North and South Indian chart rotates that Lagna's sign into House 1 (e.g. Chandra Lagna rotates House 9 Vrischika into H1, Surya Lagna rotates House 7 Kanya into H1, Arudha Lagna rotates AL sign into H1).
+     - Visual Indicator: Render active reference banner (`🔄 Chart Rotated to: [Lagna Name] [H1 = Sign Name]`) with a 1-tap `[Reset to Natal Lagna]` button, and show the Lagna title in House 1.
+  2. Table Streamlining & Navagrahas Isolation (`src/components/PositionsTable.tsx`):
+     - **Navagrahas Tab Isolation**: Remove `includeLagnasInPlanetTable` state and toggle bar from `Navagrahas & Planets`. Remove `allLagnas.slice(1)` injection so only Janma Lagna (Ascendant) and the 9 Grahas/Planets are displayed.
+     - **Lagnas Tab Streamlining**:
+       - Rename tab button from `Classical Lagnas (15)` to `Lagnas (15)`.
+       - Remove `Sanskrit Name` column and remove `Classical System` column from the Lagnas table header and rows.
+       - Rename `Classical Shastric Signification` column to `Signification`.
+       - Update sub-header to `Unified 15 Ascendants Matrix`.
+     - **Click-to-Rotate Handler**: On clicking any Lagna row, trigger `setChartReferenceLagna(lagna)` and visually highlight active rotating Lagna with badge `Active H1`.
+  3. Floating Drawer Calibration (`src/components/PlanetIndexDeck.tsx`):
+     - In `navagraha` filter tab, strictly show Janma Lagna (`Lagna_Janma`) alongside planets.
+     - Clicking any Lagna in drawer also rotates the Kundli chart.
+  4. Automated Verification:
+     - Run `npx tsc --noEmit` and `npm test` (all 148 tests pass).
+     - Run `npm run build`.
+
+## Phases & Milestones
+
+- [x] **Phase 52.1: Store State & KundliChart Lagna Rotation Engine (`src/store/useAstroStore.ts` & `src/components/KundliChart.tsx`)**
+- [x] **Phase 52.2: PositionsTable Navagrahas Isolation & Lagnas Column Removal (`src/components/PositionsTable.tsx`)**
+- [x] **Phase 52.3: PlanetIndexDeck Filter & Rotation Calibration (`src/components/PlanetIndexDeck.tsx`)**
+- [x] **Phase 52.4: Automated Test Suite & Production Build Verification (`npm test` & `npm run build`)**

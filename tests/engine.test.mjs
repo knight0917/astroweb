@@ -9291,6 +9291,56 @@ test("Phase 51: Chatbot Personalized Sub-Planet (Upagraha) & 15-Lagna Natal Grou
   }
 });
 
+test("Phase 52: Interactive Lagna-Driven Chart Rotation, Navagrahas Isolation & Lagnas Table Streamlining", async () => {
+  const { calculateAllLagnas } = await import("../src/engine/allLagnas.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const { useAstroStore } = await import("../src/store/useAstroStore.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Verify 15 Lagnas calculated accurately
+  const lagnas = calculateAllLagnas(natalEphem);
+  assert.strictEqual(lagnas.length, 15, "Unified 15 Lagnas calculated");
+
+  const chandraLagna = lagnas.find((l) => l.code === "CHL");
+  assert.ok(chandraLagna, "Chandra Lagna exists");
+  assert.ok(chandraLagna.house >= 1 && chandraLagna.house <= 12, "Lagna has valid house");
+
+  // 2. Verify useAstroStore Chart Rotation State and Actions
+  const store = useAstroStore.getState();
+  assert.strictEqual(store.chartRotationHouse, 1, "Default chart rotation house is 1");
+  assert.strictEqual(store.chartReferenceLagna, null, "Default chart reference lagna is null");
+  assert.strictEqual(typeof store.setChartRotationHouse, "function", "setChartRotationHouse is a function");
+  assert.strictEqual(typeof store.setChartReferenceLagna, "function", "setChartReferenceLagna is a function");
+  assert.strictEqual(typeof store.resetChartRotation, "function", "resetChartRotation is a function");
+
+  // 3. Test Rotation to Chandra Lagna
+  store.setChartReferenceLagna({
+    id: chandraLagna.id,
+    name: chandraLagna.name,
+    sanskritName: chandraLagna.sanskritName,
+    house: chandraLagna.house,
+    code: chandraLagna.code,
+    color: chandraLagna.color,
+  });
+
+  const rotatedState = useAstroStore.getState();
+  assert.strictEqual(rotatedState.chartRotationHouse, chandraLagna.house, "Store chartRotationHouse matches Chandra Lagna house");
+  assert.strictEqual(rotatedState.chartReferenceLagna.id, chandraLagna.id, "Store chartReferenceLagna is set");
+
+  // 4. Test Manual House Override clears Reference Lagna if house differs
+  store.setChartRotationHouse((chandraLagna.house % 12) + 1);
+  const manualState = useAstroStore.getState();
+  assert.strictEqual(manualState.chartReferenceLagna, null, "Manual house override clears reference lagna when house differs");
+
+  // 5. Test Reset to Natal Lagna
+  store.resetChartRotation();
+  const resetState = useAstroStore.getState();
+  assert.strictEqual(resetState.chartRotationHouse, 1, "Reset chartRotationHouse to 1");
+  assert.strictEqual(resetState.chartReferenceLagna, null, "Reset chartReferenceLagna to null");
+});
+
 
 
 

@@ -30,8 +30,6 @@ function KundliChart() {
   const [aspectMode, setAspectMode] = useState<"all" | "graha" | "rashi" | "off">("all");
   const [hoveredEntity, setHoveredEntity] = useState<ActiveHoverEntity | null>(null);
   const [showKarakaTable, setShowKarakaTable] = useState(true);
-  const [rotatedHouse, setRotatedHouse] = useState<number>(1); // 1 = Natal Lagna, 2..12 = Derived Houses
-
   const {
     ephemeris,
     showModernPlanets,
@@ -39,7 +37,14 @@ function KundliChart() {
     selectedEntityId,
     setSelectedEntityId,
     setViewMode,
+    chartRotationHouse,
+    chartReferenceLagna,
+    setChartRotationHouse,
+    resetChartRotation,
   } = useAstroStore();
+
+  const rotatedHouse = chartRotationHouse;
+  const setRotatedHouse = setChartRotationHouse;
 
   const jaimini = useMemo(() => calculateJaiminiKarakas(ephemeris), [ephemeris]);
   const induLagna = useMemo(() => calculateInduLagna(ephemeris), [ephemeris]);
@@ -413,9 +418,9 @@ function KundliChart() {
           })}
         </div>
 
-        {rotatedHouse !== 1 && (
+        {(rotatedHouse !== 1 || chartReferenceLagna) && (
           <button
-            onClick={() => setRotatedHouse(1)}
+            onClick={() => resetChartRotation()}
             className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-[10px] transition-all shadow-sm flex items-center gap-1 shrink-0 cursor-pointer ml-1"
             title="Reset chart back to Natal 1st House (Lagna)"
           >
@@ -425,21 +430,33 @@ function KundliChart() {
         )}
       </div>
 
-      {/* Derived View Active Alert Banner */}
-      {rotatedHouse !== 1 && (
+      {/* Derived / Reference Lagna Active Alert Banner */}
+      {(rotatedHouse !== 1 || chartReferenceLagna) && (
         <div className="w-full max-w-[840px] mb-2.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-transparent border border-amber-500/40 flex items-center justify-between gap-2 text-xs animate-in fade-in duration-150">
           <div className="flex items-center gap-2 truncate">
-            <span className="text-amber-400 text-sm">💡</span>
+            <span className="text-amber-400 text-sm">🔄</span>
             <span className="font-semibold text-slate-200 truncate">
-              Derived Bhavat Bhavam: Viewing chart perspective from{" "}
-              <strong className="text-amber-300 font-extrabold">
-                House {rotatedHouse} ({RASHIS[effectiveAscRashiIndex].englishName})
-              </strong>{" "}
-              as 1st House.
+              {chartReferenceLagna ? (
+                <>
+                  Chart Rotated to:{" "}
+                  <strong className="text-amber-300 font-extrabold">
+                    {chartReferenceLagna.name}
+                  </strong>{" "}
+                  ({RASHIS[effectiveAscRashiIndex].englishName} &bull; House {rotatedHouse} as H1)
+                </>
+              ) : (
+                <>
+                  Derived Bhavat Bhavam: Viewing chart perspective from{" "}
+                  <strong className="text-amber-300 font-extrabold">
+                    House {rotatedHouse} ({RASHIS[effectiveAscRashiIndex].englishName})
+                  </strong>{" "}
+                  as 1st House.
+                </>
+              )}
             </span>
           </div>
           <button
-            onClick={() => setRotatedHouse(1)}
+            onClick={() => resetChartRotation()}
             className="text-[11px] font-bold text-amber-300 hover:text-amber-200 underline underline-offset-2 shrink-0 cursor-pointer"
           >
             Reset to Natal Lagna
@@ -452,7 +469,11 @@ function KundliChart() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <span className="text-amber-400 font-bold">
-              {rotatedHouse === 1 ? "Lagna:" : `Derived Lagna (H${rotatedHouse}):`}
+              {chartReferenceLagna
+                ? `${chartReferenceLagna.name}:`
+                : rotatedHouse === 1
+                ? "Lagna:"
+                : `Derived Lagna (H${rotatedHouse}):`}
             </span>
             <span className="font-extrabold text-slate-100">
               {RASHIS[effectiveAscRashiIndex].englishName} ({RASHIS[effectiveAscRashiIndex].sanskritName})
@@ -460,7 +481,7 @@ function KundliChart() {
             <span className="font-mono text-amber-300 text-[11px]">
               {(ephemeris.ascendant.siderealLongitude % 30).toFixed(2)}°
             </span>
-            {rotatedHouse !== 1 && (
+            {(rotatedHouse !== 1 || chartReferenceLagna) && (
               <span className="text-[10px] text-slate-400">
                 (Natal Lagna: {ephemeris.ascendant.rashi.englishName})
               </span>
@@ -604,12 +625,16 @@ function KundliChart() {
                   x="200"
                   y="38"
                   textAnchor="middle"
-                  fill={rotatedHouse === 1 ? "#10b981" : "#f59e0b"}
-                  fontSize={rotatedHouse === 1 ? "9" : "8"}
+                  fill={rotatedHouse === 1 && !chartReferenceLagna ? "#10b981" : "#f59e0b"}
+                  fontSize={chartReferenceLagna ? "7.5" : rotatedHouse === 1 ? "9" : "8"}
                   fontWeight="900"
                   letterSpacing="1"
                 >
-                  {rotatedHouse === 1 ? "LAGNA" : `H1 (FROM H${rotatedHouse})`}
+                  {chartReferenceLagna
+                    ? `${(chartReferenceLagna.code || chartReferenceLagna.name).toUpperCase().substring(0, 10)} LAGNA`
+                    : rotatedHouse === 1
+                    ? "LAGNA"
+                    : `H1 (FROM H${rotatedHouse})`}
                 </text>
                 <foreignObject x="110" y="42" width="180" height="120" className="overflow-visible pointer-events-none">
                   <div className="h-full flex items-center justify-center">{renderPlanetList(getOriginalHouseForSlot(1))}</div>
@@ -803,7 +828,11 @@ function KundliChart() {
                         <span className="text-slate-400 font-semibold">{rashi.sanskritName}</span>
                         {isLagna && (
                           <span className="text-[8.5px] font-extrabold px-1 bg-emerald-500 text-slate-950 rounded">
-                            {rotatedHouse === 1 ? "LAGNA" : "DERIVED H1"}
+                            {chartReferenceLagna
+                              ? (chartReferenceLagna.code || chartReferenceLagna.name).toUpperCase().substring(0, 8)
+                              : rotatedHouse === 1
+                              ? "LAGNA"
+                              : "DERIVED H1"}
                           </span>
                         )}
                         <span className="text-slate-400 font-mono font-bold">
@@ -821,13 +850,17 @@ function KundliChart() {
                 <div className="col-start-2 col-span-2 row-start-2 row-span-2 border border-slate-800 bg-slate-950/80 flex flex-col items-center justify-center text-center p-2">
                   <span className="text-xs font-bold text-slate-200">Rashi Kundli</span>
                   <span className="text-[10px] text-slate-400 font-mono mt-0.5">
-                    {rotatedHouse === 1 ? "Natal Lagna View" : `Derived from H${rotatedHouse} (${RASHIS[effectiveAscRashiIndex].englishName})`}
+                    {chartReferenceLagna
+                      ? `${chartReferenceLagna.name} View (${RASHIS[effectiveAscRashiIndex].englishName})`
+                      : rotatedHouse === 1
+                      ? "Natal Lagna View"
+                      : `Derived from H${rotatedHouse} (${RASHIS[effectiveAscRashiIndex].englishName})`}
                   </span>
-                  {rotatedHouse !== 1 && (
+                  {(rotatedHouse !== 1 || chartReferenceLagna) && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setRotatedHouse(1);
+                        resetChartRotation();
                       }}
                       className="mt-1.5 px-2 py-0.5 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 text-[9.5px] font-black cursor-pointer shadow"
                     >
