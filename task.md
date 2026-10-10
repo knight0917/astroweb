@@ -1336,3 +1336,30 @@
   - [x] Run `npm test` verifying 145/145 tests pass.
   - [x] Run `npx tsc --noEmit` verifying 0 type errors.
   - [x] Run `npm run build` verifying clean production build.
+
+---
+
+# Phase 50: Classical 15-Lagna Unified Ascendant Matrix & Planet Table Deep Integration
+
+## Status: Complete & Verified (All 146 Tests Passing & Production Build Clean)
+- **Keywords:** `15-classical-lagnas`, `unified-ascendant-matrix`, `positions-table-lagnas`, `planet-index-drawer`, `nakshatra-pada-coordinates`, `zero-names-frontend-guarantee`
+- **Scope:**
+  1. Unified Lagnas Calculation Engine (`src/engine/allLagnas.ts`):
+     - Exhaustive derivation of 15 Classical Lagnas: Janma Lagna, Chandra Lagna, Surya Lagna, Paka Lagna, Arudha Lagna (AL), Upapada Lagna (UL), Hora Lagna (HL), Ghatika Lagna (GL), Shree Lagna (SL), Indu Lagna (IL), Bhava Lagna (BL), Varnada Lagna (VL), Karakamsha Lagna (KL), Swamsha Lagna, and Madhya Lagna (MC).
+     - Standardized astronomical attributes for each: Sidereal Longitude, DMS formatting, Rashi (name, Sanskrit, deg in sign), Nakshatra (animal icon, deity, pada 1-4), House from Janma Lagna, Classical System classification, and Shastric signification.
+  2. Positions Table Deep Integration (`src/components/PositionsTable.tsx`):
+     - Added 4th tab `Classical Lagnas (15)` with comprehensive table view of all 15 ascendants.
+     - Added inline toggle in `Navagrahas & Planets` tab to display all 15 Lagnas side-by-side with planets.
+  3. Quick Floating Drawer & Dossier Modal Integration:
+     - Expanded `src/components/PlanetIndexDeck.tsx` to list all 15 Lagnas with dedicated filter tab.
+     - Expanded `src/components/EntityDetailModal.tsx` to inspect any of the 15 Lagnas with full dossier data.
+  4. Automated Verification Suite:
+     - Subtest 146 in `tests/engine.test.mjs` verifying coordinates, padas, houses, and zero-name compliance for all 15 Lagnas.
+     - Verification: `npm test` (146/146), `npx tsc --noEmit` (0 errors), `npm run build`.
+
+## Phases & Milestones
+
+- [x] **Phase 50.1: Unified Lagnas Calculation Engine (`src/engine/allLagnas.ts`)**
+- [x] **Phase 50.2: Positions Table Deep Integration (`src/components/PositionsTable.tsx`)**
+- [x] **Phase 50.3: Floating Drawer & Dossier Modal (`src/components/PlanetIndexDeck.tsx` & `src/components/EntityDetailModal.tsx`)**
+- [x] **Phase 50.4: Automated Test Suite & Production Verification (`tests/engine.test.mjs`)**

@@ -9176,6 +9176,84 @@ test("Phase 49: Generative UI, In-Chat Dasha Timeline, Upaya Sadhana 108 Counter
   }
 });
 
+test("Phase 50: Classical 15-Lagna Unified Ascendant Matrix, Astrological Attributes & Planet Table Deep Integration", async () => {
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const { calculateAllLagnas, getLagnaById } = await import("../src/engine/allLagnas.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const birthDate = new Date("1995-10-15T07:30:00+05:30");
+  const ephem = calculateVedicEphemeris(birthDate, location, "Lahiri");
+
+  // 1. Calculate All 15 Lagnas
+  const lagnas = calculateAllLagnas(ephem);
+  assert.strictEqual(lagnas.length, 15, "Must compute exactly 15 unified classical lagnas");
+
+  // 2. Expected codes and systems
+  const expectedCodes = [
+    "ASC", "CHL", "SYL", "PAKA", "AL", "UL", "HL", "GL", "SL", "IL", "BL", "VL", "KL", "SWAMSHA", "MC"
+  ];
+  const computedCodes = lagnas.map((l) => l.code);
+  assert.deepStrictEqual(computedCodes, expectedCodes);
+
+  // 3. Mathematical validation of all 15 Lagnas
+  for (const lagna of lagnas) {
+    assert.ok(lagna.id && lagna.id.startsWith("Lagna_"), `Valid lagna id: ${lagna.id}`);
+    assert.ok(lagna.name && lagna.name.length > 3, `Valid lagna name: ${lagna.name}`);
+    assert.ok(lagna.sanskritName && lagna.sanskritName.length > 2, `Valid sanskrit name: ${lagna.sanskritName}`);
+    assert.ok(lagna.system, `Valid system classification: ${lagna.system}`);
+
+    // Coordinates
+    assert.ok(typeof lagna.siderealLongitude === "number", `Numeric longitude: ${lagna.id}`);
+    assert.ok(lagna.siderealLongitude >= 0 && lagna.siderealLongitude < 360, `Longitude in [0, 360): ${lagna.siderealLongitude}`);
+    assert.ok(lagna.formattedLongitude.includes("°") && lagna.formattedLongitude.includes("'"), `DMS formatting: ${lagna.formattedLongitude}`);
+
+    // Rashi & Nakshatra
+    assert.ok(lagna.rashi.index >= 0 && lagna.rashi.index <= 11, `Valid rashi index: ${lagna.rashi.index}`);
+    assert.ok(lagna.rashi.degreesInSign >= 0 && lagna.rashi.degreesInSign < 30, `Degrees in sign: ${lagna.rashi.degreesInSign}`);
+    assert.ok(lagna.nakshatra.index >= 0 && lagna.nakshatra.index <= 26, `Valid nakshatra index: ${lagna.nakshatra.index}`);
+    assert.ok(lagna.nakshatra.pada >= 1 && lagna.nakshatra.pada <= 4, `Valid pada: ${lagna.nakshatra.pada}`);
+    assert.ok(lagna.house >= 1 && lagna.house <= 12, `Valid house: ${lagna.house}`);
+    assert.ok(lagna.signification && lagna.signification.length > 10, `Valid signification: ${lagna.signification}`);
+    assert.ok(lagna.dossierDescription && lagna.dossierDescription.length > 10, `Valid dossier description`);
+  }
+
+  // 4. Test Specific Special Lagnas
+  const janma = getLagnaById(lagnas, "Lagna_Janma");
+  assert.ok(janma);
+  assert.strictEqual(janma.house, 1);
+  assert.strictEqual(janma.system, "Parashari Core");
+
+  const hora = getLagnaById(lagnas, "HL");
+  assert.ok(hora);
+  assert.strictEqual(hora.system, "BPHS Special");
+
+  const arudha = getLagnaById(lagnas, "AL");
+  assert.ok(arudha);
+  assert.strictEqual(arudha.system, "Jaimini Sutras");
+
+  const indu = getLagnaById(lagnas, "IL");
+  assert.ok(indu);
+  assert.strictEqual(indu.system, "Wealth & Kala");
+
+  const karakamsha = getLagnaById(lagnas, "KL");
+  assert.ok(karakamsha);
+  assert.strictEqual(karakamsha.system, "Divisional D9");
+
+  const mc = getLagnaById(lagnas, "MC");
+  assert.ok(mc);
+  assert.strictEqual(mc.house, 10);
+
+  // 5. Zero-Name Shastric Compliance
+  const forbidden = [/\bdeepanshu\b/i, /\bgiri\b/i, /\bnavneet\b/i, /\bchitkara\b/i];
+  for (const lagna of lagnas) {
+    for (const regex of forbidden) {
+      assert.strictEqual(regex.test(lagna.name), false);
+      assert.strictEqual(regex.test(lagna.signification), false);
+      assert.strictEqual(regex.test(lagna.dossierDescription), false);
+    }
+  }
+});
+
 
 
 

@@ -7,9 +7,12 @@ import { evaluatePanchadaMaitri } from "../engine/panchadaMaitri";
 import { calculateIshtaKashta } from "../engine/ishtaKashta";
 import { calculateBadhakaAvasthas } from "../engine/badhakaAvasthas";
 import { evaluateNatalPanchangaDeep } from "../engine/natalPanchangaDeep";
+import { calculateAllLagnas, UnifiedLagnaInfo, LagnaSystem } from "../engine/allLagnas";
 
 export default function PositionsTable() {
-  const [activeTab, setActiveTab] = useState<"planets" | "upagrahas" | "panchanga">("planets");
+  const [activeTab, setActiveTab] = useState<"planets" | "lagnas" | "upagrahas" | "panchanga">("planets");
+  const [lagnaSystemFilter, setLagnaSystemFilter] = useState<string>("ALL");
+  const [includeLagnasInPlanetTable, setIncludeLagnasInPlanetTable] = useState<boolean>(true);
   const {
     ephemeris,
     showModernPlanets,
@@ -25,17 +28,23 @@ export default function PositionsTable() {
 
   const upagrahaList = Object.values(ephemeris.upagrahas);
 
-  // Classical B.V. Raman Calculations
+  // Classical B.V. Raman Calculations & 15-Lagna Matrix
   const panchadaReport = useMemo(() => evaluatePanchadaMaitri(ephemeris), [ephemeris]);
   const ishtaKashtaReport = useMemo(() => calculateIshtaKashta(ephemeris), [ephemeris]);
   const badhakaAvasthas = useMemo(() => calculateBadhakaAvasthas(ephemeris), [ephemeris]);
   const deepPanchang = useMemo(() => evaluateNatalPanchangaDeep(ephemeris), [ephemeris]);
+  const allLagnas = useMemo(() => calculateAllLagnas(ephemeris), [ephemeris]);
+
+  const filteredLagnas = useMemo(() => {
+    if (lagnaSystemFilter === "ALL") return allLagnas;
+    return allLagnas.filter((l) => l.system === lagnaSystemFilter);
+  }, [allLagnas, lagnaSystemFilter]);
 
   return (
     <div className="glass-panel p-5 rounded-2xl border border-slate-800 shadow-2xl flex flex-col h-full">
       {/* Tabs */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setActiveTab("planets")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -45,6 +54,16 @@ export default function PositionsTable() {
             }`}
           >
             Navagrahas & Planets ({planetList.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("lagnas")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              activeTab === "lagnas"
+                ? "bg-teal-500 text-slate-950 shadow"
+                : "text-slate-400 hover:text-slate-200 bg-slate-900/50"
+            }`}
+          >
+            Classical Lagnas ({allLagnas.length})
           </button>
           <button
             onClick={() => setActiveTab("upagrahas")}
@@ -76,70 +95,164 @@ export default function PositionsTable() {
 
       {/* Tab 1: Planets Table */}
       {activeTab === "planets" && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-200">
-            <thead className="bg-slate-900/80 text-slate-400 font-semibold border-b border-slate-800">
-              <tr>
-                <th className="py-2.5 px-3">Graha</th>
-                <th className="py-2.5 px-3">Sanskrit</th>
-                <th className="py-2.5 px-3">Sidereal Longitude</th>
-                <th className="py-2.5 px-3">Rashi</th>
-                <th className="py-2.5 px-3">Nakshatra (Pada)</th>
-                <th className="py-2.5 px-3">House</th>
-                <th className="py-2.5 px-3">Pancha-da Maitri</th>
-                <th className="py-2.5 px-3">Ishta / Kashta (Res %)</th>
-                <th className="py-2.5 px-3">Avastha & Badhaka</th>
-                <th className="py-2.5 px-3">Motion</th>
-                <th className="py-2.5 px-3 text-right">Inspect</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {/* Ascendant Row */}
-              <tr
-                onClick={() => setSelectedEntityId("Ascendant")}
-                className={`cursor-pointer transition-colors ${
-                  selectedEntityId === "Ascendant" ? "bg-emerald-950/40" : "hover:bg-slate-900/40"
-                }`}
-              >
-                <td className="py-2 px-3 font-bold text-emerald-400 flex items-center gap-1.5">
-                  <span>ASC</span> Ascendant
-                </td>
-                <td className="py-2 px-3 text-slate-400 font-medium">Lagna</td>
-                <td className="py-2 px-3 font-mono text-emerald-300">
-                  {formatDMS(ephemeris.ascendant.siderealLongitude)}
-                </td>
-                <td className="py-2 px-3">
-                  <span className="font-semibold text-slate-200">{ephemeris.ascendant.rashi.sanskritName}</span>{" "}
-                  <span className="text-slate-400">({formatDMS(ephemeris.ascendant.rashi.degreesInSign)})</span>
-                </td>
-                <td className="py-2 px-3">
-                  <div className="flex items-center gap-1.5">
-                    <span>{ephemeris.ascendant.nakshatra.animalSymbol}</span>
-                    <span className="font-semibold text-slate-200">{ephemeris.ascendant.nakshatra.sanskritName}</span>
-                    <span className="text-emerald-400 font-bold text-[11px]">P{ephemeris.ascendant.nakshatra.pada}</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400 font-mono">{ephemeris.ascendant.nakshatra.animal}</div>
-                </td>
-                <td className="py-2 px-3 font-bold text-emerald-400">H1</td>
-                <td className="py-2 px-3 text-slate-500">—</td>
-                <td className="py-2 px-3 text-slate-500">—</td>
-                <td className="py-2 px-3 text-slate-500">—</td>
-                <td className="py-2 px-3 text-slate-400">—</td>
-                <td className="py-2 px-3 text-right">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setInspectorEntityId("Ascendant");
-                    }}
-                    title="Open Ascendant Dossier"
-                    className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-slate-300 font-bold text-[10px] transition-all border border-slate-700 hover:border-emerald-400 cursor-pointer"
-                  >
-                    🔍 Info
-                  </button>
-                </td>
-              </tr>
+        <div className="space-y-2">
+          {/* Inline Lagnas Inclusion Bar */}
+          <div className="flex items-center justify-between px-1 bg-slate-900/40 py-1.5 px-3 rounded-xl border border-slate-800/80">
+            <div className="text-[11px] text-slate-300 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+              <span className="font-semibold">Comprehensive Grahas & Ascendants</span>
+              <span className="text-[10px] text-slate-400">
+                ({planetList.length} Planets + {includeLagnasInPlanetTable ? allLagnas.length : 1} Lagnas)
+              </span>
+            </div>
+            <button
+              onClick={() => setIncludeLagnasInPlanetTable(!includeLagnasInPlanetTable)}
+              className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
+                includeLagnasInPlanetTable
+                  ? "bg-teal-950/80 text-teal-300 border-teal-600/70 shadow"
+                  : "bg-slate-900/80 text-slate-400 border-slate-800 hover:text-slate-200"
+              }`}
+            >
+              <span>{includeLagnasInPlanetTable ? "✓ Showing All 15 Lagnas in Table" : "+ Expand All 15 Lagnas Here"}</span>
+            </button>
+          </div>
 
-              {/* Planets */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-slate-200">
+              <thead className="bg-slate-900/80 text-slate-400 font-semibold border-b border-slate-800">
+                <tr>
+                  <th className="py-2.5 px-3">Graha / Entity</th>
+                  <th className="py-2.5 px-3">Sanskrit</th>
+                  <th className="py-2.5 px-3">Sidereal Longitude</th>
+                  <th className="py-2.5 px-3">Rashi</th>
+                  <th className="py-2.5 px-3">Nakshatra (Pada)</th>
+                  <th className="py-2.5 px-3">House</th>
+                  <th className="py-2.5 px-3">Pancha-da / System</th>
+                  <th className="py-2.5 px-3">Ishta / Kashta (Res %)</th>
+                  <th className="py-2.5 px-3">Avastha & Badhaka</th>
+                  <th className="py-2.5 px-3">Motion</th>
+                  <th className="py-2.5 px-3 text-right">Inspect</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {/* Janma Lagna (Ascendant Row) */}
+                <tr
+                  onClick={() => setSelectedEntityId("Ascendant")}
+                  className={`cursor-pointer transition-colors ${
+                    selectedEntityId === "Ascendant" ? "bg-emerald-950/40" : "hover:bg-slate-900/40"
+                  }`}
+                >
+                  <td className="py-2 px-3 font-bold text-emerald-400 flex items-center gap-1.5">
+                    <span className="px-1 py-0.5 rounded text-[10px] bg-emerald-950 border border-emerald-800/60 font-mono">ASC</span>
+                    <span>Janma Lagna (Ascendant)</span>
+                  </td>
+                  <td className="py-2 px-3 text-slate-400 font-medium">जन्म लग्न</td>
+                  <td className="py-2 px-3 font-mono text-emerald-300">
+                    {formatDMS(ephemeris.ascendant.siderealLongitude)}
+                  </td>
+                  <td className="py-2 px-3">
+                    <span className="font-semibold text-slate-200">{ephemeris.ascendant.rashi.sanskritName}</span>{" "}
+                    <span className="text-slate-400">({formatDMS(ephemeris.ascendant.rashi.degreesInSign)})</span>
+                  </td>
+                  <td className="py-2 px-3">
+                    <div className="flex items-center gap-1.5">
+                      <span>{ephemeris.ascendant.nakshatra.animalSymbol}</span>
+                      <span className="font-semibold text-slate-200">{ephemeris.ascendant.nakshatra.sanskritName}</span>
+                      <span className="text-emerald-400 font-bold text-[11px]">P{ephemeris.ascendant.nakshatra.pada}</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono">{ephemeris.ascendant.nakshatra.animal}</div>
+                  </td>
+                  <td className="py-2 px-3 font-bold text-emerald-400">H1</td>
+                  <td className="py-2 px-3">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-900 border border-slate-700 text-teal-300">
+                      Parashari Core
+                    </span>
+                  </td>
+                  <td className="py-2 px-3 text-slate-500">—</td>
+                  <td className="py-2 px-3 text-emerald-400 text-[10px] font-mono">Physical Self</td>
+                  <td className="py-2 px-3 text-slate-400 text-[10px]">Direct</td>
+                  <td className="py-2 px-3 text-right">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setInspectorEntityId("Ascendant");
+                      }}
+                      title="Open Ascendant Dossier"
+                      className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-slate-300 font-bold text-[10px] transition-all border border-slate-700 hover:border-emerald-400 cursor-pointer"
+                    >
+                      🔍 Info
+                    </button>
+                  </td>
+                </tr>
+
+                {/* Additional 14 Classical Lagnas when toggled on */}
+                {includeLagnasInPlanetTable &&
+                  allLagnas.slice(1).map((lagna) => {
+                    const isSelected = selectedEntityId === lagna.id;
+                    return (
+                      <tr
+                        key={lagna.id}
+                        onClick={() => setSelectedEntityId(lagna.id)}
+                        className={`cursor-pointer transition-colors ${
+                          isSelected ? "bg-teal-950/40" : "hover:bg-slate-900/40 bg-teal-950/10"
+                        }`}
+                      >
+                        <td className="py-2 px-3 font-bold flex items-center gap-1.5" style={{ color: lagna.color }}>
+                          <span className="px-1 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-700 font-mono">
+                            {lagna.code}
+                          </span>
+                          <span className="truncate max-w-[150px]">{lagna.name}</span>
+                        </td>
+                        <td className="py-2 px-3 text-slate-400 font-medium">{lagna.sanskritName.split(" (")[0]}</td>
+                        <td className="py-2 px-3 font-mono font-bold" style={{ color: lagna.color }}>
+                          {lagna.formattedLongitude}
+                        </td>
+                        <td className="py-2 px-3">
+                          <span className="font-semibold text-slate-200">{lagna.rashi.sanskritName}</span>{" "}
+                          <span className="text-slate-400">({formatDMS(lagna.rashi.degreesInSign)})</span>
+                        </td>
+                        <td className="py-2 px-3">
+                          <div className="flex items-center gap-1.5">
+                            <span>{lagna.nakshatra.animalSymbol}</span>
+                            <span className="font-semibold text-slate-200">{lagna.nakshatra.sanskritName}</span>
+                            <span className="font-bold text-[11px]" style={{ color: lagna.color }}>
+                              P{lagna.nakshatra.pada}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-slate-400 font-mono">
+                            {lagna.nakshatra.animal} • {lagna.nakshatra.deity}
+                          </div>
+                        </td>
+                        <td className="py-2 px-3 font-bold" style={{ color: lagna.color }}>
+                          H{lagna.house}
+                        </td>
+                        <td className="py-2 px-3">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-900 border border-slate-700 text-teal-300">
+                            {lagna.system}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 text-slate-500">—</td>
+                        <td className="py-2 px-3 text-slate-300 text-[10px] truncate max-w-[130px]" title={lagna.signification}>
+                          {lagna.signification.split(",")[0]}
+                        </td>
+                        <td className="py-2 px-3 text-slate-400 font-mono text-[10px]">Direct</td>
+                        <td className="py-2 px-3 text-right">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInspectorEntityId(lagna.id);
+                            }}
+                            title={`Open ${lagna.name} Dossier`}
+                            className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-teal-500 hover:text-slate-950 text-slate-300 font-bold text-[10px] transition-all border border-slate-700 hover:border-teal-400 cursor-pointer"
+                          >
+                            🔍 Info
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+
+                {/* Planets */}
               {planetList.map((p) => {
                 const isSelected = selectedEntityId === p.id;
                 const pm = panchadaReport.planets[p.id];
@@ -263,9 +376,138 @@ export default function PositionsTable() {
             </tbody>
           </table>
         </div>
+      </div>
+    )}
+
+      {/* Tab 2: Classical 15 Lagnas Dedicated Table */}
+      {activeTab === "lagnas" && (
+        <div className="space-y-4">
+          {/* System Filter Pills */}
+          <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+            <div className="flex flex-wrap gap-1.5 text-xs">
+              {(["ALL", "Parashari Core", "Jaimini Sutras", "BPHS Special", "Wealth & Kala", "Divisional D9"] as const).map(
+                (sys) => {
+                  const count = sys === "ALL" ? allLagnas.length : allLagnas.filter((l) => l.system === sys).length;
+                  const isSelected = lagnaSystemFilter === sys;
+                  return (
+                    <button
+                      key={sys}
+                      onClick={() => setLagnaSystemFilter(sys)}
+                      className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+                        isSelected
+                          ? "bg-teal-500 text-slate-950 shadow"
+                          : "text-slate-400 hover:text-slate-200 bg-slate-950/60 border border-slate-800"
+                      }`}
+                    >
+                      {sys} ({count})
+                    </button>
+                  );
+                }
+              )}
+            </div>
+            <div className="text-[11px] text-teal-400 font-medium">
+              Unified 15 Classical Ascendant Matrix
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-slate-200">
+              <thead className="bg-teal-950/40 text-teal-300 font-semibold border-b border-slate-800">
+                <tr>
+                  <th className="py-2.5 px-3">Lagna / Code</th>
+                  <th className="py-2.5 px-3">Sanskrit Name</th>
+                  <th className="py-2.5 px-3">Classical System</th>
+                  <th className="py-2.5 px-3">Sidereal Longitude</th>
+                  <th className="py-2.5 px-3">Rashi</th>
+                  <th className="py-2.5 px-3">Nakshatra & Pada</th>
+                  <th className="py-2.5 px-3 text-center">House</th>
+                  <th className="py-2.5 px-3">Classical Shastric Signification</th>
+                  <th className="py-2.5 px-3 text-right">Inspect</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {filteredLagnas.map((lagna) => {
+                  const isSelected = selectedEntityId === lagna.id;
+                  return (
+                    <tr
+                      key={lagna.id}
+                      onClick={() => setSelectedEntityId(lagna.id)}
+                      className={`cursor-pointer transition-colors ${
+                        isSelected ? "bg-teal-950/40" : "hover:bg-slate-900/40"
+                      }`}
+                    >
+                      <td className="py-2.5 px-3 font-bold flex items-center gap-2">
+                        <span
+                          style={{
+                            color: lagna.color,
+                            backgroundColor: `${lagna.color}15`,
+                            borderColor: `${lagna.color}40`,
+                          }}
+                          className="px-1.5 py-0.5 rounded text-[10px] font-mono border font-extrabold"
+                        >
+                          {lagna.code}
+                        </span>
+                        <span className="text-slate-100 font-bold">{lagna.name}</span>
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-400 font-medium">{lagna.sanskritName}</td>
+                      <td className="py-2.5 px-3">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 border border-slate-700 text-teal-300">
+                          {lagna.system}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 font-mono font-bold" style={{ color: lagna.color }}>
+                        {lagna.formattedLongitude}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <div className="flex items-center gap-1">
+                          <span className="text-amber-400 font-semibold">{lagna.rashi.symbol}</span>
+                          <span className="font-semibold text-slate-100">{lagna.rashi.sanskritName}</span>
+                          <span className="text-slate-400 text-[11px]">({formatDMS(lagna.rashi.degreesInSign)})</span>
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-mono">Lord: {lagna.rashi.lord}</div>
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <div className="flex items-center gap-1.5">
+                          <span>{lagna.nakshatra.animalSymbol}</span>
+                          <span className="font-semibold text-slate-200">{lagna.nakshatra.sanskritName}</span>
+                          <span className="font-bold text-[11px]" style={{ color: lagna.color }}>
+                            P{lagna.nakshatra.pada}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-mono">
+                          {lagna.nakshatra.animal} • {lagna.nakshatra.deity}
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 font-bold text-center">
+                        <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/60 font-mono text-xs">
+                          H{lagna.house}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-300 text-xs max-w-sm">
+                        <p className="line-clamp-2 leading-relaxed">{lagna.signification}</p>
+                      </td>
+                      <td className="py-2.5 px-3 text-right">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setInspectorEntityId(lagna.id);
+                          }}
+                          title={`Open ${lagna.name} Dossier`}
+                          className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-teal-500 hover:text-slate-950 text-slate-200 font-bold text-[10px] transition-all border border-slate-700 hover:border-teal-400 cursor-pointer"
+                        >
+                          🔍 Info
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
-      {/* Tab 2: Upagrahas Table */}
+      {/* Tab 3: Upagrahas Table */}
       {activeTab === "upagrahas" && (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-200">

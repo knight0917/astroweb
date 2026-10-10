@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useAstroStore } from "../store/useAstroStore";
 import { formatDMS } from "../engine/rashiNakshatra";
+import { calculateAllLagnas, getLagnaById } from "../engine/allLagnas";
 
 export default function EntityDetailModal() {
   const { inspectorEntityId, setInspectorEntityId, ephemeris } = useAstroStore();
@@ -15,12 +16,33 @@ export default function EntityDetailModal() {
 
   if (!inspectorEntityId || !mounted) return null;
 
-  // Check if it's Ascendant, Midheaven, a Planet, or an Upagraha
+  // Check if it's Ascendant, Midheaven, a Planet, an Upagraha, or one of 15 Classical Lagnas
   let data: any = null;
   let isLagna = false;
   let isUpagraha = false;
+  let lagnaInfo: any = null;
 
-  if (inspectorEntityId === "Ascendant") {
+  const allLagnas = calculateAllLagnas(ephemeris);
+  const matchedLagna = getLagnaById(allLagnas, inspectorEntityId);
+
+  if (matchedLagna) {
+    data = {
+      name: matchedLagna.name,
+      sanskritName: matchedLagna.sanskritName,
+      symbol: matchedLagna.symbol,
+      color: matchedLagna.color,
+      siderealLongitude: matchedLagna.siderealLongitude,
+      rashi: matchedLagna.rashi,
+      nakshatra: matchedLagna.nakshatra,
+      house: matchedLagna.house,
+      isRetrograde: false,
+      signification: matchedLagna.signification,
+      system: matchedLagna.system,
+      dossierDescription: matchedLagna.dossierDescription,
+    };
+    isLagna = true;
+    lagnaInfo = matchedLagna;
+  } else if (inspectorEntityId === "Ascendant") {
     data = ephemeris.ascendant;
     isLagna = true;
   } else if (inspectorEntityId === "Midheaven") {
@@ -126,6 +148,26 @@ export default function EntityDetailModal() {
                 {data.altitude?.toFixed(1)}° / {data.azimuth?.toFixed(1)}°
               </span>
             </div>
+          </div>
+        )}
+
+        {/* Classical Ascendant Matrix Dossier Card */}
+        {lagnaInfo && (
+          <div className="bg-gradient-to-r from-teal-950/50 via-slate-900/60 to-teal-950/50 p-4 rounded-xl border border-teal-500/40 mb-4 space-y-2">
+            <div className="flex items-center justify-between text-xs border-b border-teal-500/20 pb-2">
+              <span className="font-extrabold text-teal-300 uppercase tracking-wider">
+                Classical Tradition: {lagnaInfo.system}
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-teal-950 text-teal-300 border border-teal-700 font-mono font-bold">
+                CODE: {lagnaInfo.code}
+              </span>
+            </div>
+            <p className="text-xs text-slate-100 leading-relaxed font-semibold">
+              {lagnaInfo.signification}
+            </p>
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              {lagnaInfo.dossierDescription}
+            </p>
           </div>
         )}
 

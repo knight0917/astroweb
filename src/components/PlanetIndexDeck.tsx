@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { formatDMS } from "../engine/rashiNakshatra";
+import { calculateAllLagnas } from "../engine/allLagnas";
 
 export default function PlanetIndexDeck() {
   const {
@@ -14,7 +15,7 @@ export default function PlanetIndexDeck() {
   } = useAstroStore();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [filterTab, setFilterTab] = useState<"all" | "navagraha" | "upagraha">("all");
+  const [filterTab, setFilterTab] = useState<"all" | "navagraha" | "lagnas" | "upagraha">("all");
 
   if (!ephemeris) return null;
 
@@ -24,35 +25,27 @@ export default function PlanetIndexDeck() {
   });
 
   const upagrahas = Object.values(ephemeris.upagrahas);
+  const allLagnas = useMemo(() => calculateAllLagnas(ephemeris), [ephemeris]);
 
-  const lagnaItems = [
-    {
-      id: "Ascendant",
-      name: "Lagna",
-      sanskritName: "Rising Sign",
-      symbol: "ASC",
-      color: "#10b981",
-      siderealLongitude: ephemeris.ascendant.siderealLongitude,
-      rashi: ephemeris.ascendant.rashi,
-      nakshatra: ephemeris.ascendant.nakshatra,
-      house: 1,
-      isRetrograde: false,
-      aspects: "7th",
-    },
-    {
-      id: "Midheaven",
-      name: "MC",
-      sanskritName: "Madhya Lagna",
-      symbol: "MC",
-      color: "#f59e0b",
-      siderealLongitude: ephemeris.midheaven.siderealLongitude,
-      rashi: ephemeris.midheaven.rashi,
-      nakshatra: ephemeris.midheaven.nakshatra,
-      house: 10,
-      isRetrograde: false,
-      aspects: "7th",
-    },
-  ];
+  const lagnaItems = allLagnas.map((l) => ({
+    id: l.id,
+    name: l.name,
+    sanskritName: l.sanskritName,
+    symbol: l.symbol,
+    color: l.color,
+    siderealLongitude: l.siderealLongitude,
+    rashi: l.rashi,
+    nakshatra: l.nakshatra,
+    house: l.house,
+    isRetrograde: false,
+    aspects: "7th",
+    system: l.system,
+    code: l.code,
+  }));
+
+  const visibleLagnas = filterTab === "navagraha" 
+    ? lagnaItems.filter((item) => item.id === "Lagna_Janma" || item.id === "Lagna_MC")
+    : lagnaItems;
 
   return (
     <div className="flex items-start pointer-events-auto">
@@ -69,7 +62,7 @@ export default function PlanetIndexDeck() {
           </svg>
           <span className="text-xs font-bold">Celestial Index</span>
           <span className="text-[10px] bg-amber-500/20 px-1.5 py-0.2 rounded-full text-amber-300 font-mono font-bold">
-            {planets.length + 2 + (showUpagrahas ? upagrahas.length : 0)}
+            {planets.length + visibleLagnas.length + (showUpagrahas ? upagrahas.length : 0)}
           </span>
         </button>
       )}
@@ -92,7 +85,7 @@ export default function PlanetIndexDeck() {
                 <h3 className="font-bold text-xs text-slate-100 uppercase tracking-wider">
                   Celestial Index
                 </h3>
-                <p className="text-[9px] text-amber-400 font-medium">Click planet to rotate 3D view</p>
+                <p className="text-[9px] text-amber-400 font-medium">Click planet or lagna to view</p>
               </div>
             </div>
 
@@ -125,7 +118,17 @@ export default function PlanetIndexDeck() {
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              Navagrahas
+              Grahas
+            </button>
+            <button
+              onClick={() => setFilterTab("lagnas")}
+              className={`flex-1 py-1 rounded font-bold transition-colors cursor-pointer ${
+                filterTab === "lagnas"
+                  ? "bg-teal-500 text-slate-950 shadow"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Lagnas ({allLagnas.length})
             </button>
             {showUpagrahas && (
               <button
@@ -147,13 +150,13 @@ export default function PlanetIndexDeck() {
             onTouchMove={(e) => e.stopPropagation()}
             className="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar deck-scrollable divide-y divide-slate-800/40"
           >
-            {/* 1. Lagna & MC */}
-            {(filterTab === "all" || filterTab === "navagraha") && (
+            {/* 1. Classical Lagnas Matrix */}
+            {(filterTab === "all" || filterTab === "lagnas" || filterTab === "navagraha") && (
               <div className="space-y-1 pt-1 first:pt-0">
-                <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider px-1">
-                  Cardinal Points
+                <span className="text-[9px] font-extrabold text-teal-400 uppercase tracking-wider px-1">
+                  {filterTab === "navagraha" ? "Cardinal Points (Lagna & MC)" : `Classical Lagnas (${visibleLagnas.length})`}
                 </span>
-                {lagnaItems.map((item) => {
+                {visibleLagnas.map((item) => {
                   const isSelected = selectedEntityId === item.id;
                   return (
                     <div
@@ -174,7 +177,7 @@ export default function PlanetIndexDeck() {
                             backgroundColor: `${item.color}20`,
                             borderColor: `${item.color}40`,
                           }}
-                          className="w-7 h-7 rounded-lg border flex items-center justify-center font-bold text-xs shadow-inner"
+                          className="w-7 h-7 rounded-lg border flex items-center justify-center font-bold text-xs shadow-inner font-mono"
                         >
                           {item.symbol}
                         </div>
@@ -184,7 +187,7 @@ export default function PlanetIndexDeck() {
                               {item.name}
                             </span>
                             <span className="text-[10px] text-slate-400 font-normal">
-                              ({item.sanskritName})
+                              ({item.sanskritName.split(" (")[0]})
                             </span>
                           </div>
                           <div className="text-[10px] text-slate-300 flex items-center gap-1 font-mono">
