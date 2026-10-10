@@ -9341,6 +9341,34 @@ test("Phase 52: Interactive Lagna-Driven Chart Rotation, Navagrahas Isolation & 
   assert.strictEqual(resetState.chartReferenceLagna, null, "Reset chartReferenceLagna to null");
 });
 
+test("Phase 53: BTR Interceptor Anti-Collision & Precision Routing Verification", async () => {
+  const { tryInstantEngineAnswer } = await import("../src/components/AstroChatbot.tsx");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(new Date("1998-05-25T00:14:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date("2026-10-10T12:00:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Spousal/relational query with 'first time' MUST NOT trigger BTR interceptor
+  const meetingQuery = "where will i meet her first time, in india or abroad, do i know her already or not.";
+  const meetingAns = tryInstantEngineAnswer(meetingQuery, natalEphem, transitEphem, new Date(), new Date("1998-05-25T00:14:00Z"), "male");
+  assert.strictEqual(meetingAns, null, "Relational question containing 'first time' must not be hijacked by BTR interceptor");
+
+  // 2. Generic 'yes' in conversation MUST NOT trigger BTR interceptor
+  const yesAns = tryInstantEngineAnswer("yes", natalEphem, transitEphem, new Date(), new Date("1998-05-25T00:14:00Z"), "male");
+  assert.strictEqual(yesAns, null, "Simple 'yes' must not trigger BTR interceptor");
+
+  // 3. True BTR verification request MUST trigger BTR interceptor
+  const btrQuery = "Yes, I am here for the first time. Please verify my birth time first.";
+  const btrAns = tryInstantEngineAnswer(btrQuery, natalEphem, transitEphem, new Date(), new Date("1998-05-25T00:14:00Z"), "male");
+  assert.ok(btrAns, "Welcome BTR button query must trigger BTR interceptor");
+  assert.ok(btrAns.includes("Step 1: Classical Birth Time Rectification"), "BTR response must contain Step 1 title");
+
+  // 4. Direct BTR query MUST trigger BTR interceptor
+  const directBtrAns = tryInstantEngineAnswer("verify my birth time", natalEphem, transitEphem, new Date(), new Date("1998-05-25T00:14:00Z"), "male");
+  assert.ok(directBtrAns, "Direct 'verify my birth time' must trigger BTR interceptor");
+});
+
 
 
 

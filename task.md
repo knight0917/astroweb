@@ -1420,3 +1420,27 @@
 - [x] **Phase 52.2: PositionsTable Navagrahas Isolation & Lagnas Column Removal (`src/components/PositionsTable.tsx`)**
 - [x] **Phase 52.3: PlanetIndexDeck Filter & Rotation Calibration (`src/components/PlanetIndexDeck.tsx`)**
 - [x] **Phase 52.4: Automated Test Suite & Production Build Verification (`npm test` & `npm run build`)**
+
+---
+
+# Phase 53: BTR Interceptor Anti-Collision & Precision Routing Hardening
+
+## Status: Completed & Verified (149/149 Tests Passed)
+- **Keywords:** `btr-interceptor-anti-collision`, `first-time-false-positive-fix`, `shastric-zero-name-btr-titles`
+- **Scope:**
+  1. Fix False-Positive BTR Trigger (`src/components/AstroChatbot.tsx`):
+     - Remove global `q.includes("first time")`, `q === "yes"`, and `q.includes("btr")` from `tryInstantEngineAnswer`.
+     - Introduce precision pattern matching so normal conversational queries containing "first time" (e.g. spousal meetings, travel, purchases) pass directly to the LLM.
+     - Constrain "first time" BTR routing strictly to explicit welcome verification intents (`/^(yes,?\s*)?(i am\s+)?(here for the\s+)?first time.*(?:verify|check)/i`).
+  2. Shastric Zero-Name Purification:
+     - Replaced modern living guru references in newborn and childhood BTR diagnostic headers with classical Vedic descriptors.
+  3. Automated Verification:
+     - Added Subtest 149 in `tests/engine.test.mjs` verifying spousal inquiries with "first time" return `null` from instant interceptor while genuine BTR queries correctly trigger.
+     - `npx tsc --noEmit` passed with 0 errors.
+     - `npm test` passing 149/149 tests.
+     - Next.js production build `npm run build` compiled successfully.
+
+## Phases & Milestones
+
+- [x] **Phase 53.1: Interceptor Regex Hardening & False-Positive Elimination (`src/components/AstroChatbot.tsx`)**
+- [x] **Phase 53.2: Automated Regression Suite Subtest 149 & Next.js Build Verification (`tests/engine.test.mjs`)**

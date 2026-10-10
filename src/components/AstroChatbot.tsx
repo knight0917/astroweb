@@ -1431,11 +1431,11 @@ ${gochar.obstructedCount} transit(s) obstructed by Vedha, ${gochar.shieldedCount
       const isCSection = /c-section|caesarean/i.test(q);
       const isSensitive = /sensitive|special care/i.test(q);
 
-      return `### 🎯 **Newborn Multi-Divisional & Navneet Chitkara Birth Calibration (Bala Jataka — बाल जातक)**
+      return `### 🎯 **Newborn Multi-Divisional & Classical Birth Calibration (Bala Jataka — बाल जातक)**
 
 - 📍 **Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${cityName}, ${countryName}**
 - ⏱️ **Calibrated Birth Moment (*Bhūpatana Lagna*):** **${candidate && candidate.deltaSeconds !== 0 ? candidate.rectifiedLocalTime : timeStr}** (Delta: **${candidate && candidate.deltaSeconds !== 0 ? candidate.deltaFormatted : "0s (Exact)"}**)
-- 🌟 **Verification Status:** **✅ 100% Precision Alignment (Navneet Chitkara Triad, Classical Shodhanas & Delivery Matrices Locked)**
+- 🌟 **Verification Status:** **✅ 100% Precision Alignment (Classical BTR Triad, Classical Shodhanas & Delivery Matrices Locked)**
 - 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
 - 👶 **Native Status:** **Newborn / Infant (${nativeAge < 1 ? "< 1 Year Old" : `${Math.floor(nativeAge)} Year(s) Old`})**
 
@@ -1477,11 +1477,11 @@ What would you like to explore for the child?
 
     // CHILD / MINOR VERIFICATION RESPONSE
     if (isMinor) {
-      return `### 🎯 **Childhood Multi-Divisional & Navneet Chitkara Birth Calibration (Kishora Jataka — किशोर जातक)**
+      return `### 🎯 **Childhood Multi-Divisional & Classical Birth Calibration (Kishora Jataka — किशोर जातक)**
 
 - 📍 **Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${cityName}, ${countryName}**
 - ⏱️ **Calibrated Birth Moment (*Bhūpatana Lagna*):** **${candidate && candidate.deltaSeconds !== 0 ? candidate.rectifiedLocalTime : timeStr}** (Delta: **${candidate && candidate.deltaSeconds !== 0 ? candidate.deltaFormatted : "0s (Exact)"}**)
-- 🌟 **Verification Status:** **✅ 100% Precision Alignment (Navneet Chitkara Triad, Classical Shodhanas & Childhood Cusps Locked)**
+- 🌟 **Verification Status:** **✅ 100% Precision Alignment (Classical BTR Triad, Classical Shodhanas & Childhood Cusps Locked)**
 - 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
 - 🎒 **Native Status:** **Child / Minor (Age ${Math.floor(nativeAge)})**
 
@@ -1588,14 +1588,14 @@ What would you like to explore first?
 
   // 15. Unified Classical Birth Time Rectification (BTR) & 3-Point Tri-Epoch Diagnostic Interceptor
   if (
-    /\b(exact moment of birth|moment of birth|when is birth moment|cord cut|umbilical|first breath|first cry|bhupatana|shirodarshana|adhana lagna|is my birth time accurate|is my birth time correct|check my birth time accuracy|chitkara|btr|birth time rectification)\b/i.test(q) ||
+    /\b(exact moment of birth|moment of birth|when is birth moment|cord cut|umbilical|first breath|first cry|bhupatana|shirodarshana|adhana lagna|is my birth time accurate|is my birth time correct|check my birth time accuracy|birth time rectification)\b/i.test(q) ||
+    /\b(btr|rectification)\b/i.test(q) ||
     q.includes("verify my birth time") ||
     q.includes("check my birth time") ||
     q.includes("is my chart accurate") ||
     q.includes("doubtful about my birth time") ||
-    q.includes("first time") ||
-    q === "yes" ||
-    q.includes("btr")
+    /\b(verify|check)\s+(my\s+)?(birth\s*time|clock)\b/i.test(q) ||
+    /^(yes,?\s*)?(i am\s+)?(here for the\s+)?first time.*(?:verify|check)/i.test(q)
   ) {
     const { timeStr, dateStr } = getLocalCivilDateTime(natalEphem);
     const ascRashi = natalEphem.ascendant.rashi.englishName;
