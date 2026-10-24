@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import AstroDatePicker from "./AstroDatePicker";
 import {
   calculateAstroMarketSignal,
   MarketSymbol,
@@ -37,6 +38,31 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
   const [sessionFilter, setSessionFilter] = useState<string>("ALL");
   const [loading, setLoading] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
+  const [timezoneMode, setTimezoneMode] = useState<"ROME" | "UTC">("ROME");
+  const [romeTimeDisplay, setRomeTimeDisplay] = useState<string>("");
+
+  // Live Rome / Italy clock ticker
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      const formatted = now.toLocaleTimeString("en-GB", {
+        timeZone: "Europe/Rome",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      });
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Europe/Rome",
+        timeZoneName: "short",
+      }).formatToParts(now);
+      const tz = parts.find((p) => p.type === "timeZoneName")?.value || "CEST";
+      setRomeTimeDisplay(`${formatted} ${tz}`);
+    };
+    updateClock();
+    const interval = setInterval(updateClock, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Parse current target date object
   const targetDate = useMemo(() => {
@@ -47,6 +73,21 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
     }
     return new Date();
   }, [selectedDate]);
+
+  // Compute Rome local time representation for any UTC hour slice
+  const getRomeTimeForUtc = useCallback(
+    (utcHour: number) => {
+      const d = new Date(targetDate);
+      d.setUTCHours(utcHour, 0, 0, 0);
+      return d.toLocaleTimeString("en-GB", {
+        timeZone: "Europe/Rome",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+    },
+    [targetDate]
+  );
 
   // Compute signal directly client-side using the same deterministic engine
   const signal: AstroMarketSignal = useMemo(() => {
@@ -188,13 +229,19 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
       {/* Top Header Card */}
       <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30">
               व्यापार ज्योतिष • Financial Astrology Engine v2.0
             </span>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">
               MT5 Bridge Active
             </span>
+            {romeTimeDisplay && (
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>🇮🇹 Rome Time: {romeTimeDisplay}</span>
+              </span>
+            )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
             <span>Market Opening Daily Bias & Backtest Studio</span>
@@ -206,26 +253,58 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
           </p>
         </div>
 
-        {/* Quick Date Travel Navigation */}
+        {/* Quick Date Travel & Timezone Navigation */}
         <div className="flex flex-col sm:flex-row items-center gap-3 bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5 shadow-inner">
-          <div className="flex items-center gap-1 w-full sm:w-auto justify-between">
+          {/* Timezone Switcher */}
+          <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-bold w-full sm:w-auto justify-center">
             <button
+              type="button"
+              onClick={() => setTimezoneMode("ROME")}
+              className={`px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+                timezoneMode === "ROME"
+                  ? "bg-amber-500 text-slate-950 shadow-sm font-black"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+              title="Switch to Italian / European Local Time (Rome)"
+            >
+              <span>🇮🇹</span>
+              <span>Rome (Italy)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimezoneMode("UTC")}
+              className={`px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+                timezoneMode === "UTC"
+                  ? "bg-amber-500 text-slate-950 shadow-sm font-black"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+              title="Switch to Universal Coordinated Time (Exchange UTC)"
+            >
+              <span>🌐</span>
+              <span>UTC</span>
+            </button>
+          </div>
+
+          {/* Interactive Date Picker with Step Buttons */}
+          <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-start">
+            <button
+              type="button"
               onClick={handlePrevDay}
               title="Previous Day"
-              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold"
+              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold cursor-pointer"
             >
               ◀
             </button>
-            <input
-              type="date"
+            <AstroDatePicker
               value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-sm font-mono text-amber-300 focus:outline-none focus:border-amber-400"
+              onChange={setSelectedDate}
+              timezoneLabel={timezoneMode === "ROME" ? "🇮🇹 Rome (CET/CEST)" : "🌐 UTC (Exchange)"}
             />
             <button
+              type="button"
               onClick={handleNextDay}
               title="Next Day"
-              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold"
+              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold cursor-pointer"
             >
               ▶
             </button>
@@ -233,8 +312,9 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
 
           <div className="flex items-center gap-1.5 flex-wrap">
             <button
+              type="button"
               onClick={handleSetToday}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
                 isToday
                   ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
                   : "bg-slate-800 hover:bg-slate-700 text-slate-300"
@@ -243,20 +323,23 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
               Today
             </button>
             <button
+              type="button"
               onClick={() => handleQuickPreset(1)}
-              className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition"
+              className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition cursor-pointer"
             >
               -1D
             </button>
             <button
+              type="button"
               onClick={() => handleQuickPreset(7)}
-              className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition"
+              className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition cursor-pointer"
             >
               -7D
             </button>
             <button
+              type="button"
               onClick={() => handleQuickPreset(30)}
-              className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition"
+              className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition cursor-pointer"
             >
               -30D
             </button>
@@ -497,10 +580,22 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
           <div className="flex items-center gap-1.5 flex-wrap">
             {[
               { id: "ALL", label: "All 24 Hrs" },
-              { id: "London Open & Core", label: "London (07-12)" },
-              { id: "London / NY Overlap", label: "NY Overlap (12-17)" },
-              { id: "Tokyo / Asian", label: "Tokyo (00-07)" },
-              { id: "NY Afternoon / Close", label: "NY Close (17-24)" },
+              {
+                id: "London Open & Core",
+                label: timezoneMode === "ROME" ? "🏛️ Milan & London (09-14)" : "London (07-12 UTC)",
+              },
+              {
+                id: "London / NY Overlap",
+                label: timezoneMode === "ROME" ? "🔥 NY & EU Overlap (14-19)" : "NY Overlap (12-17 UTC)",
+              },
+              {
+                id: "Tokyo / Asian",
+                label: timezoneMode === "ROME" ? "⛩️ Tokyo/Asian (02-09)" : "Tokyo (00-07 UTC)",
+              },
+              {
+                id: "NY Afternoon / Close",
+                label: timezoneMode === "ROME" ? "🗽 NY Close (19-02)" : "NY Close (17-24 UTC)",
+              },
             ].map((f) => (
               <button
                 key={f.id}
@@ -525,10 +620,17 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
             const isSelected = selectedHour === slice.hourUtc;
             const isPrimary = slice.isPrimaryLordHora;
             const isOpposing = slice.isOpposingLordHora;
+            const romeTime = getRomeTimeForUtc(slice.hourUtc);
+            const isRomeMode = timezoneMode === "ROME";
+
+            // European market session markers
+            const isEuOpen = slice.hourUtc === 7 || slice.hourUtc === 8; // 08:00 - 09:00 CET/CEST Milan/Frankfurt/London
+            const isNyOverlap = slice.hourUtc >= 13 && slice.hourUtc <= 16; // 14:00 - 18:00 CET/CEST
 
             return (
               <button
                 key={slice.hourUtc}
+                type="button"
                 onClick={() => setSelectedHour(slice.hourUtc)}
                 className={`p-2.5 rounded-2xl border flex flex-col justify-between items-center gap-1.5 transition-all cursor-pointer text-center relative ${
                   isSelected
@@ -550,8 +652,23 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                     Enemy
                   </span>
                 )}
-                <div className="text-[10px] font-mono text-slate-400">
-                  {slice.hourUtc.toString().padStart(2, "0")}:00 UTC
+                {isEuOpen && !isPrimary && !isOpposing && (
+                  <span className="absolute -top-1.5 left-1.5 text-[8px] font-bold uppercase tracking-wider bg-blue-500/30 text-blue-300 border border-blue-500/40 px-1 rounded-full">
+                    EU Open
+                  </span>
+                )}
+                {isNyOverlap && !isPrimary && !isOpposing && (
+                  <span className="absolute -top-1.5 left-1.5 text-[8px] font-bold uppercase tracking-wider bg-amber-500/30 text-amber-300 border border-amber-500/40 px-1 rounded-full">
+                    Power Hr
+                  </span>
+                )}
+                <div className="flex flex-col items-center">
+                  <div className="text-[11px] font-mono font-bold text-slate-200">
+                    {isRomeMode ? `${romeTime} Rome` : `${slice.hourUtc.toString().padStart(2, "0")}:00 UTC`}
+                  </div>
+                  <div className="text-[9px] font-mono text-slate-500">
+                    {isRomeMode ? `${slice.hourUtc.toString().padStart(2, "0")}:00 UTC` : `${romeTime} Rome`}
+                  </div>
                 </div>
                 <div className="text-xs font-bold text-white flex items-center gap-1">
                   <span>{slice.horaLord}</span>
@@ -585,8 +702,12 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
           <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-mono uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                  {activeHourDetail.timeUtcLabel}
+                <span className="text-xs font-mono font-bold text-amber-300 bg-amber-500/15 px-2.5 py-0.5 rounded-lg border border-amber-500/30 flex items-center gap-1">
+                  <span>🇮🇹 Rome:</span>
+                  <span>{getRomeTimeForUtc(activeHourDetail.hourUtc)} - {getRomeTimeForUtc((activeHourDetail.hourUtc + 1) % 24)}</span>
+                </span>
+                <span className="text-xs font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-800">
+                  Exchange: {activeHourDetail.timeUtcLabel}
                 </span>
                 <span className="text-xs font-bold text-slate-300">
                   {activeHourDetail.sessionName} Session
