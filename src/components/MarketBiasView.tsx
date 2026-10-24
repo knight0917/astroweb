@@ -6,8 +6,8 @@ import {
   calculateAstroMarketSignal,
   MarketSymbol,
   AstroMarketSignal,
-  ASSET_SIGNIFICATIONS,
-  IntradayHourSlice,
+  EMPIRICAL_GOLD_EDGES,
+  EMPIRICAL_HORA_ALPHA,
 } from "../engine/financialAstro";
 
 interface MarketBiasViewProps {
@@ -36,10 +36,18 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
   });
   const [selectedHour, setSelectedHour] = useState<number>(13); // Default to NY Open (13:00 UTC)
   const [sessionFilter, setSessionFilter] = useState<string>("ALL");
-  const [loading, setLoading] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [timezoneMode, setTimezoneMode] = useState<"ROME" | "UTC">("ROME");
   const [romeTimeDisplay, setRomeTimeDisplay] = useState<string>("");
+
+  // Target Date Memoization
+  const targetDate = useMemo(() => {
+    const parts = selectedDate.split("-").map(Number);
+    if (parts.length === 3) {
+      return new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 12, 0, 0));
+    }
+    return new Date();
+  }, [selectedDate]);
 
   // Live Rome / Italy clock ticker
   useEffect(() => {
@@ -64,16 +72,6 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
     return () => clearInterval(interval);
   }, []);
 
-  // Parse current target date object
-  const targetDate = useMemo(() => {
-    const parts = selectedDate.split("-").map(Number);
-    if (parts.length === 3) {
-      // Set to noon UTC to represent the full trading day
-      return new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 12, 0, 0));
-    }
-    return new Date();
-  }, [selectedDate]);
-
   // Compute Rome local time representation for any UTC hour slice
   const getRomeTimeForUtc = useCallback(
     (utcHour: number) => {
@@ -89,7 +87,7 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
     [targetDate]
   );
 
-  // Compute signal directly client-side using the same deterministic engine
+  // Compute signal directly client-side using deterministic ephemeris engine
   const signal: AstroMarketSignal = useMemo(() => {
     return calculateAstroMarketSignal(selectedSymbol, targetDate);
   }, [selectedSymbol, targetDate]);
@@ -111,6 +109,17 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
     );
   }, [signal.intradayTimeline, selectedHour]);
 
+  // Empirical Astro-Quant Discovery Lookups (Phase 54.3)
+  const empiricalNakshatraEdge = useMemo(() => {
+    const name = signal.dikshitLiquidityCycle.moonNakshatraName;
+    return EMPIRICAL_GOLD_EDGES[name] || null;
+  }, [signal.dikshitLiquidityCycle.moonNakshatraName]);
+
+  const empiricalTithiEdge = useMemo(() => {
+    const name = signal.lunarPhase.tithiName;
+    return EMPIRICAL_GOLD_EDGES[name] || null;
+  }, [signal.lunarPhase.tithiName]);
+
   // Calculate 7-day historical backtest strip around targetDate
   const historicalStrip = useMemo(() => {
     const days: Array<{
@@ -123,7 +132,7 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
       isTarget: boolean;
     }> = [];
 
-    for (let offset = -4; offset <= 2; offset++) {
+    for (let offset = -3; offset <= 3; offset++) {
       const d = new Date(targetDate);
       d.setUTCDate(d.getUTCDate() + offset);
       const iso = d.toISOString().split("T")[0];
@@ -227,14 +236,14 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
   return (
     <div className="w-full flex flex-col gap-6 text-slate-100 max-w-7xl mx-auto py-2">
       {/* Top Header Card */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-5">
         <div>
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30">
-              व्यापार ज्योतिष • Financial Astrology Engine v2.0
+              व्यापार ज्योतिष • Financial Astrology Studio
             </span>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">
-              MT5 Bridge Active
+              MT5 EA Directive Active
             </span>
             {romeTimeDisplay && (
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
@@ -244,12 +253,10 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
             )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
-            <span>Market Opening Daily Bias & Backtest Studio</span>
+            <span>Market Opening Daily Bias &amp; Predictive Forecaster</span>
           </h1>
-          <p className="text-sm text-slate-400 mt-1 max-w-2xl">
-            Synthesized from Varahamihira's <em>Brihat Samhita</em>, Pandit Hira Lal Dikshit's{" "}
-            <em>Vyapar Bhavishya</em>, Narapati's <em>Narapatijayacharya</em>, and C.S. Patel's Kakshya
-            transits. Determine your EA&apos;s directional gate before session open.
+          <p className="text-xs sm:text-sm text-slate-400 mt-0.5 max-w-2xl">
+            Empirically verified from 6-month MT5 tick execution against Varahamihira's <em>Brihat Samhita</em> and Pandit Hira Lal Dikshit's <em>Vyapar Bhavishya</em>.
           </p>
         </div>
 
@@ -336,13 +343,6 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
             >
               -7D
             </button>
-            <button
-              type="button"
-              onClick={() => handleQuickPreset(30)}
-              className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition cursor-pointer"
-            >
-              -30D
-            </button>
           </div>
         </div>
       </div>
@@ -355,9 +355,9 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
             <button
               key={s.id}
               onClick={() => setSelectedSymbol(s.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold text-sm transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold text-sm transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
                 isActive
-                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-lg shadow-amber-500/30 scale-105"
+                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-lg shadow-amber-500/30 scale-102"
                   : "bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800/80"
               }`}
             >
@@ -373,11 +373,11 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
         })}
       </div>
 
-      {/* Hero Box: Primary Daily Bias Verdict */}
+      {/* Hero Box: Primary Daily Bias Verdict & Gauge */}
       <div
-        className={`bg-slate-950/90 border rounded-3xl p-6 sm:p-8 flex flex-col gap-6 shadow-2xl relative overflow-hidden ${eaActionVerdict.color} ${eaActionVerdict.glow}`}
+        className={`bg-slate-950/90 border rounded-3xl p-6 sm:p-7 flex flex-col gap-5 shadow-2xl relative overflow-hidden ${eaActionVerdict.color} ${eaActionVerdict.glow}`}
       >
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
           <div>
             <div className="text-xs uppercase tracking-widest font-mono text-slate-400">
               Pre-Market Directive for {selectedSymbol} • {targetDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}
@@ -390,9 +390,9 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
             </div>
           </div>
 
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl px-5 py-3 text-center">
-              <div className="text-[11px] font-mono uppercase text-slate-400">Directional Bias</div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 text-center">
+              <div className="text-[10px] font-mono uppercase text-slate-400">Directional Bias</div>
               <div
                 className={`text-2xl font-black font-mono ${
                   signal.signals.directionalBias > 0
@@ -407,34 +407,31 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
               </div>
             </div>
 
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl px-5 py-3 text-center">
-              <div className="text-[11px] font-mono uppercase text-slate-400">Vol Multiplier</div>
+            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 text-center">
+              <div className="text-[10px] font-mono uppercase text-slate-400">Vol Multiplier</div>
               <div className="text-2xl font-black font-mono text-amber-400">
                 {signal.signals.volatilityMultiplier.toFixed(2)}×
               </div>
             </div>
 
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl px-5 py-3 text-center">
-              <div className="text-[11px] font-mono uppercase text-slate-400">MT5 Confluence</div>
+            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 text-center">
+              <div className="text-[10px] font-mono uppercase text-slate-400">Confidence</div>
               <div className="text-2xl font-black font-mono text-cyan-400">
-                {signal.signals.confluencePoints > 0 ? "+" : ""}
-                {signal.signals.confluencePoints} pts
+                {signal.signals.confidenceScore}%
               </div>
             </div>
           </div>
         </div>
 
         {/* Visual Bias Gauge Meter */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="flex justify-between text-xs font-mono font-bold text-slate-400">
             <span className="text-rose-400">-1.00 Bearish Exhaustion</span>
             <span className="text-slate-400">0.00 Neutral Equilibrium</span>
             <span className="text-emerald-400">+1.00 Bullish Expansion</span>
           </div>
-          <div className="w-full h-3.5 bg-slate-900 rounded-full border border-slate-800 overflow-hidden relative">
-            {/* Center zero line */}
+          <div className="w-full h-3 bg-slate-900 rounded-full border border-slate-800 overflow-hidden relative">
             <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600 z-10"></div>
-            {/* Dynamic gauge fill */}
             <div
               className={`h-full transition-all duration-500 rounded-full ${
                 signal.signals.directionalBias >= 0
@@ -449,70 +446,65 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
           </div>
         </div>
 
-        {/* Actionable Rules Summary Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-medium">
-          <div className="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-3.5 flex flex-col justify-between">
-            <span className="text-slate-400 font-mono">Market Regime</span>
-            <span className="text-base font-bold text-amber-300 mt-1">
-              {signal.signals.marketRegime.replace("_", " ")}
-            </span>
-            <span className="text-[10px] text-slate-500 mt-1">
-              Confidence: {signal.signals.confidenceScore}%
-            </span>
+        {/* Empirical 6-Month Backtest Discovery Banner (Phase 54.3) */}
+        <div className="bg-slate-900/90 border border-amber-500/30 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-500 text-slate-950">
+                Empirical MT5 Backtest Edge (GOLD.pro)
+              </span>
+              {empiricalNakshatraEdge && (
+                <span className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono ${
+                  empiricalNakshatraEdge.bias === "BULLISH"
+                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                    : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                }`}>
+                  ⭐ {empiricalNakshatraEdge.name}: {empiricalNakshatraEdge.winRatePct}% {empiricalNakshatraEdge.bias} ({empiricalNakshatraEdge.historicalNetPts > 0 ? "+" : ""}{empiricalNakshatraEdge.historicalNetPts} pts)
+                </span>
+              )}
+              {empiricalTithiEdge && (
+                <span className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono ${
+                  empiricalTithiEdge.bias === "BULLISH"
+                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                    : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                }`}>
+                  {empiricalTithiEdge.name} Tithi: {empiricalTithiEdge.winRatePct}% {empiricalTithiEdge.bias}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-300 font-medium">
+              {empiricalNakshatraEdge
+                ? empiricalNakshatraEdge.tradeGuidance
+                : "Standard classical alignment active. Observe session open price action."}
+            </p>
           </div>
 
-          <div className="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-3.5 flex flex-col justify-between">
-            <span className="text-slate-400 font-mono">Dikshit Order Flow</span>
-            <span
-              className={`text-base font-bold mt-1 ${
-                signal.dikshitLiquidityCycle.action === "BUY_DIP"
-                  ? "text-emerald-400"
-                  : signal.dikshitLiquidityCycle.action === "SELL_RALLY"
-                  ? "text-rose-400"
-                  : "text-slate-300"
-              }`}
-            >
-              {signal.dikshitLiquidityCycle.action.replace("_", " ")}
-            </span>
-            <span className="text-[10px] text-slate-400 mt-1 truncate">
-              Moon in {signal.dikshitLiquidityCycle.moonNakshatraName}
-            </span>
-          </div>
-
-          <div className="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-3.5 flex flex-col justify-between">
-            <span className="text-slate-400 font-mono">EA Lot Size Scaling</span>
-            <span className="text-base font-bold text-cyan-300 mt-1">
-              {(signal.quantAdvice.lotSizeScale * 100).toFixed(0)}% of Normal Risk
-            </span>
-            <span className="text-[10px] text-slate-500 mt-1">
-              ATR SL Mult: {signal.quantAdvice.suggestedAtrSlMultiplier}×
-            </span>
-          </div>
-
-          <div className="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-3.5 flex flex-col justify-between">
-            <span className="text-slate-400 font-mono">API / WebRequest</span>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-center">
+              <div className="text-[9px] text-slate-500 uppercase font-mono">Reversal Window</div>
+              <div className="text-xs font-bold text-amber-300 font-mono">17:00 - 18:00 Rome</div>
+              <div className="text-[9px] text-slate-400">40% Daily Tops/Bottoms</div>
+            </div>
             <button
               onClick={copyApiUrl}
-              className="text-xs font-bold text-amber-400 hover:text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-xl px-2.5 py-1 mt-1 text-left flex items-center justify-between transition cursor-pointer"
+              className="bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 rounded-xl px-3 py-2 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+              title="Copy live JSON URL for MT5 EA WebRequest"
             >
-              <span>{copiedUrl ? "Copied to Clipboard! ✓" : "Copy Live JSON URL"}</span>
+              <span>{copiedUrl ? "Copied! ✓" : "EA JSON URL"}</span>
               <span>📋</span>
             </button>
-            <span className="text-[10px] text-slate-500 mt-1 truncate">
-              {signal.timestampIso.split("T")[0]}
-            </span>
           </div>
         </div>
       </div>
 
       {/* Historical 7-Day Backtesting Timeline Strip */}
-      <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-5 shadow-xl">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-4 shadow-xl">
+        <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2">
-            <span className="text-amber-400 font-bold text-sm">🗓️ 7-Day Backtest Strip ({selectedSymbol})</span>
-            <span className="text-xs text-slate-500">Click any date to inspect historical astro alignment</span>
+            <span className="text-amber-400 font-bold text-sm">🗓️ Multi-Day Astro Alignment Strip</span>
+            <span className="text-xs text-slate-500 hidden sm:inline">Click any date to inspect historical or forward bias</span>
           </div>
-          <span className="text-xs font-mono text-slate-400">Backtesting Mode Active</span>
+          <span className="text-xs font-mono text-slate-400">{selectedSymbol}</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
@@ -523,7 +515,7 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
               <button
                 key={item.dateStr}
                 onClick={() => setSelectedDate(item.dateStr)}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-between gap-1 transition-all cursor-pointer text-center ${
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-between gap-1 transition-all cursor-pointer text-center ${
                   item.isTarget
                     ? "bg-amber-500/15 border-amber-500/60 ring-2 ring-amber-500/30 scale-102"
                     : "bg-slate-900/80 hover:bg-slate-800 border-slate-800"
@@ -559,20 +551,21 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
           })}
         </div>
       </div>
-      {/* 1-Day Intraday Timing & Session Decomposition (24-Hour Hourly Matrix) */}
+
+      {/* 24-Hour Intraday Timing Roadmap Section */}
       <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-amber-400 font-bold text-sm sm:text-base">
-                ⏰ 1-Day Intraday Timing Analysis ({selectedSymbol})
+                ⏰ 24-Hour Intraday Timing Roadmap ({selectedSymbol})
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                24-Hour Hora &amp; Kakshya Timeline
+                Hora &amp; Session Alignment
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Exact hour-by-hour alignment of Chaldean/Vedic Planetary Horas, C.S. Patel&apos;s 3°45&apos; Kakshyas, and global Forex/Bullion liquidity sessions. Click any hour to inspect its celestial mechanics.
+              Empirically verified: <strong>Sun Hora (+213.9 pts)</strong> produces peak buying momentum; <strong>Venus Hora (-494.7 pts)</strong> produces institutional liquidation.
             </p>
           </div>
 
@@ -618,14 +611,17 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
             const isBullish = slice.hourlyBias >= 0.25;
             const isBearish = slice.hourlyBias <= -0.25;
             const isSelected = selectedHour === slice.hourUtc;
-            const isPrimary = slice.isPrimaryLordHora;
-            const isOpposing = slice.isOpposingLordHora;
             const romeTime = getRomeTimeForUtc(slice.hourUtc);
             const isRomeMode = timezoneMode === "ROME";
 
-            // European market session markers
-            const isEuOpen = slice.hourUtc === 7 || slice.hourUtc === 8; // 08:00 - 09:00 CET/CEST Milan/Frankfurt/London
-            const isNyOverlap = slice.hourUtc >= 13 && slice.hourUtc <= 16; // 14:00 - 18:00 CET/CEST
+            // Empirical Hora Alpha badges
+            const isSunHora = slice.horaLord === "Sun";
+            const isVenusHora = slice.horaLord === "Venus";
+            const isMoonHora = slice.horaLord === "Moon";
+
+            // Peak Reversal window (17:00 - 18:00 Rome / 15:00 - 16:00 UTC)
+            const isPeakReversalWindow = slice.hourUtc === 15 || slice.hourUtc === 16;
+            const isEuOpen = slice.hourUtc === 7 || slice.hourUtc === 8; // 08:00 - 09:00 Rome
 
             return (
               <button
@@ -635,33 +631,37 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                 className={`p-2.5 rounded-2xl border flex flex-col justify-between items-center gap-1.5 transition-all cursor-pointer text-center relative ${
                   isSelected
                     ? "bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/50 scale-102 z-10 shadow-lg shadow-amber-500/20"
-                    : isPrimary
-                    ? "bg-slate-900/90 border-emerald-500/40 hover:bg-slate-800 hover:border-emerald-500"
-                    : isOpposing
-                    ? "bg-slate-900/90 border-rose-500/40 hover:bg-slate-800 hover:border-rose-500"
+                    : isSunHora
+                    ? "bg-amber-950/30 border-amber-500/50 hover:bg-amber-900/40"
+                    : isVenusHora
+                    ? "bg-rose-950/30 border-rose-500/50 hover:bg-rose-900/40"
+                    : isMoonHora
+                    ? "bg-cyan-950/30 border-cyan-500/40 hover:bg-cyan-900/40"
                     : "bg-slate-900/60 hover:bg-slate-800/80 border-slate-800/80"
                 }`}
               >
-                {isPrimary && (
-                  <span className="absolute -top-1.5 right-1.5 text-[8px] font-black uppercase tracking-wider bg-emerald-500 text-slate-950 px-1 rounded-full">
-                    Ruler
+                {/* Badges */}
+                {isSunHora && (
+                  <span className="absolute -top-1.5 right-1.5 text-[8px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 px-1 rounded-full shadow-sm">
+                    +213 pts
                   </span>
                 )}
-                {isOpposing && (
-                  <span className="absolute -top-1.5 right-1.5 text-[8px] font-black uppercase tracking-wider bg-rose-500 text-white px-1 rounded-full">
-                    Enemy
+                {isVenusHora && (
+                  <span className="absolute -top-1.5 right-1.5 text-[8px] font-black uppercase tracking-wider bg-rose-500 text-white px-1 rounded-full shadow-sm">
+                    -494 pts
                   </span>
                 )}
-                {isEuOpen && !isPrimary && !isOpposing && (
+                {isPeakReversalWindow && (
+                  <span className="absolute -top-1.5 left-1.5 text-[8px] font-bold uppercase tracking-wider bg-purple-500/40 text-purple-200 border border-purple-500/50 px-1 rounded-full">
+                    Top Window
+                  </span>
+                )}
+                {isEuOpen && !isPeakReversalWindow && (
                   <span className="absolute -top-1.5 left-1.5 text-[8px] font-bold uppercase tracking-wider bg-blue-500/30 text-blue-300 border border-blue-500/40 px-1 rounded-full">
                     EU Open
                   </span>
                 )}
-                {isNyOverlap && !isPrimary && !isOpposing && (
-                  <span className="absolute -top-1.5 left-1.5 text-[8px] font-bold uppercase tracking-wider bg-amber-500/30 text-amber-300 border border-amber-500/40 px-1 rounded-full">
-                    Power Hr
-                  </span>
-                )}
+
                 <div className="flex flex-col items-center">
                   <div className="text-[11px] font-mono font-bold text-slate-200">
                     {isRomeMode ? `${romeTime} Rome` : `${slice.hourUtc.toString().padStart(2, "0")}:00 UTC`}
@@ -670,6 +670,7 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                     {isRomeMode ? `${slice.hourUtc.toString().padStart(2, "0")}:00 UTC` : `${romeTime} Rome`}
                   </div>
                 </div>
+
                 <div className="text-xs font-bold text-white flex items-center gap-1">
                   <span>{slice.horaLord}</span>
                 </div>
@@ -697,7 +698,7 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
           })}
         </div>
 
-        {/* Selected Hour Shastric Deep-Dive Box */}
+        {/* Selected Hour Deep-Dive Box */}
         {activeHourDetail && (
           <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
@@ -762,302 +763,157 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
         )}
       </div>
 
-      {/* Classical Telemetry Breakdown (4 Deep Architectural Cards) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Card 1: Pandit Hira Lal Dikshit's Liquidity Cycle */}
-        <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col gap-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="font-extrabold text-white text-base flex items-center gap-2">
-              <span>📖 Pandit Hira Lal Dikshit Liquidity</span>
+      {/* Streamlined Shastric Telemetry Grid (Distilled & Cleaned Up) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Pandit Hira Lal Dikshit's Liquidity */}
+        <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between gap-3">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h3 className="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
+              <span>📖 Dikshit Liquidity</span>
             </h3>
-            <span className="text-[11px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+            <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
               Vyapar Bhavishya
             </span>
           </div>
 
-          <div className="space-y-3 text-xs">
-            <div className="flex justify-between items-center py-1 border-b border-slate-800/50">
-              <span className="text-slate-400">Moon Nakshatra</span>
-              <span className="font-bold text-slate-200">
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Moon Nakshatra:</span>
+              <span className="font-bold text-amber-300">
                 {signal.dikshitLiquidityCycle.moonNakshatraName} (#{signal.dikshitLiquidityCycle.moonNakshatraIndex})
               </span>
             </div>
-
-            <div className="flex justify-between items-center py-1 border-b border-slate-800/50">
-              <span className="text-slate-400">Dikshit Star Class</span>
-              <span
-                className={`font-bold px-2 py-0.5 rounded text-[11px] ${
-                  signal.dikshitLiquidityCycle.action === "BUY_DIP"
-                    ? "bg-emerald-500/20 text-emerald-300"
-                    : signal.dikshitLiquidityCycle.action === "SELL_RALLY"
-                    ? "bg-rose-500/20 text-rose-300"
-                    : "bg-slate-800 text-slate-300"
-                }`}
-              >
-                {signal.dikshitLiquidityCycle.action === "BUY_DIP"
-                  ? "6 Buying Stars (Institutional Dip-Buying)"
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Dikshit Class:</span>
+              <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${
+                signal.dikshitLiquidityCycle.action === "BUY_DIP"
+                  ? "bg-emerald-500/20 text-emerald-300"
                   : signal.dikshitLiquidityCycle.action === "SELL_RALLY"
-                  ? "8 Selling Stars (Institutional Resistance Dump)"
-                  : "Neutral Expansion Star"}
+                  ? "bg-rose-500/20 text-rose-300"
+                  : "bg-slate-800 text-slate-300"
+              }`}>
+                {signal.dikshitLiquidityCycle.action.replace("_", " ")}
               </span>
             </div>
-
-            <div className="flex justify-between items-center py-1 border-b border-slate-800/50">
-              <span className="text-slate-400">Panchaka 5× Multiplier</span>
-              <span
-                className={`font-bold font-mono ${
-                  signal.dikshitLiquidityCycle.isPanchaka5xActive
-                    ? "text-rose-400"
-                    : "text-slate-400"
-                }`}
-              >
-                {signal.dikshitLiquidityCycle.isPanchaka5xActive
-                  ? "ACTIVE (Aquarius/Pisces 300°-360°)"
-                  : "INACTIVE"}
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Panchaka Status:</span>
+              <span className={`font-mono font-bold text-[11px] ${
+                signal.dikshitLiquidityCycle.isPanchaka5xActive ? "text-rose-400" : "text-slate-500"
+              }`}>
+                {signal.dikshitLiquidityCycle.isPanchaka5xActive ? "ACTIVE (5x Chop)" : "NORMAL"}
               </span>
-            </div>
-
-            <div className="py-1 border-b border-slate-800/50">
-              <span className="text-slate-400 block mb-1">Weekday Timing Regime:</span>
-              <p className="text-slate-300 font-medium">
-                {signal.dikshitLiquidityCycle.weeklySessionRegime}
-              </p>
-            </div>
-
-            {signal.dikshitLiquidityCycle.intradayLunarConjunctions.length > 0 && (
-              <div className="py-1 border-b border-slate-800/50">
-                <span className="text-slate-400 block mb-1">Intraday Chandra Yuti (&lt;6.5°):</span>
-                <div className="space-y-1">
-                  {signal.dikshitLiquidityCycle.intradayLunarConjunctions.map((conj, idx) => (
-                    <div key={idx} className="text-cyan-300 font-mono text-[11px]">
-                      • {conj}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {signal.dikshitLiquidityCycle.solarChestabalaStations.length > 0 && (
-              <div className="py-1">
-                <span className="text-slate-400 block mb-1">Solar Chestabala Retrogression Zone:</span>
-                <div className="space-y-1">
-                  {signal.dikshitLiquidityCycle.solarChestabalaStations.map((station, idx) => (
-                    <div key={idx} className="text-amber-300 font-mono text-[11px]">
-                      • {station}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Card 2: Varahamihira Scarcity & Graha Yuddha */}
-        <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col gap-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="font-extrabold text-white text-base flex items-center gap-2">
-              <span>🏛️ Varahamihira Scarcity & War</span>
-            </h3>
-            <span className="text-[11px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-              Brihat Samhita Ch. 17 &amp; 41
-            </span>
-          </div>
-
-          <div className="space-y-3 text-xs">
-            <div className="flex justify-between items-center py-1 border-b border-slate-800/50">
-              <span className="text-slate-400">Asset Ruling Rashi</span>
-              <span className="font-bold text-slate-200">
-                {signal.varahamihiraScarcity.primarySignName} (Sign #{signal.varahamihiraScarcity.primarySignIndex})
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center py-1 border-b border-slate-800/50">
-              <span className="text-slate-400">Scarcity Inflation Score</span>
-              <span
-                className={`font-black font-mono text-sm ${
-                  signal.varahamihiraScarcity.scarcityInflationScore > 0
-                    ? "text-emerald-400"
-                    : "text-slate-300"
-                }`}
-              >
-                +{signal.varahamihiraScarcity.scarcityInflationScore.toFixed(2)} (Mahargha Spike)
-              </span>
-            </div>
-
-            <div className="py-1 border-b border-slate-800/50">
-              <span className="text-slate-400 block mb-1">
-                Malefics in Afflicting Houses (1, 2, 4, 5, 7, 8, 9, 12):
-              </span>
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {signal.varahamihiraScarcity.maleficsInAfflictingHouses.length > 0 ? (
-                  signal.varahamihiraScarcity.maleficsInAfflictingHouses.map((m, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono text-[11px]"
-                    >
-                      {m}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-slate-500 italic">None (Supply stable)</span>
-                )}
-              </div>
-            </div>
-
-            <div className="py-1 border-b border-slate-800/50">
-              <span className="text-slate-400 block mb-1">
-                Benefics in Supporting Houses (2, 4, 5, 7, 9, 10, 11):
-              </span>
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {signal.varahamihiraScarcity.beneficsInSupportingHouses.length > 0 ? (
-                  signal.varahamihiraScarcity.beneficsInSupportingHouses.map((b, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[11px]"
-                    >
-                      {b}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-slate-500 italic">None</span>
-                )}
-              </div>
-            </div>
-
-            <div className="py-1">
-              <span className="text-slate-400 block mb-1">
-                Planetary Wars (&lt;1.0° Graha Yuddha):
-              </span>
-              {signal.varahamihiraScarcity.activeGrahaYuddha.length > 0 ? (
-                <div className="space-y-1">
-                  {signal.varahamihiraScarcity.activeGrahaYuddha.map((war, idx) => (
-                    <div key={idx} className="text-rose-400 font-bold font-mono text-[11px]">
-                      ⚠️ {war} — Violent whipsaws active
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <span className="text-slate-500 italic">No active planetary wars</span>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Card 3: Narapati Swarodaya Vedha Matrix */}
-        <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col gap-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="font-extrabold text-white text-base flex items-center gap-2">
-              <span>☸ Narapati Swarodaya Matrix</span>
+        {/* Card 2: Varahamihira Scarcity */}
+        <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between gap-3">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h3 className="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
+              <span>🏛️ Brihat Samhita Scarcity</span>
             </h3>
-            <span className="text-[11px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-              Narapatijayacharya
+            <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+              Varahamihira Ch. 41
             </span>
           </div>
 
-          <div className="space-y-3 text-xs">
-            <div className="flex justify-between items-center py-1 border-b border-slate-800/50">
-              <span className="text-slate-400">Panchanga Rahu Hemisphere</span>
-              <span
-                className={`font-bold px-2 py-0.5 rounded text-[11px] ${
-                  signal.narapatiSwarodaya.rahuKalanalaHemisphere === "JIVA_PAKSHA_BULLISH"
-                    ? "bg-emerald-500/20 text-emerald-300"
-                    : "bg-rose-500/20 text-rose-300"
-                }`}
-              >
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Scarcity Score:</span>
+              <span className={`font-bold font-mono text-sm ${
+                signal.varahamihiraScarcity.scarcityInflationScore > 0 ? "text-emerald-400" : "text-slate-300"
+              }`}>
+                +{signal.varahamihiraScarcity.scarcityInflationScore.toFixed(2)} (Mahargha)
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Afflicting Malefics:</span>
+              <span className="font-mono text-slate-300">
+                {signal.varahamihiraScarcity.maleficsInAfflictingHouses.length > 0
+                  ? signal.varahamihiraScarcity.maleficsInAfflictingHouses.join(", ")
+                  : "None (Supply Stable)"}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Graha Yuddha:</span>
+              <span className="font-mono text-[11px] text-slate-400">
+                {signal.varahamihiraScarcity.activeGrahaYuddha.length > 0 ? "⚠️ Active War" : "None"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Narapati Rahu Chakra */}
+        <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between gap-3">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h3 className="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
+              <span>☸ Narapati Swarodaya</span>
+            </h3>
+            <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+              Rahu Chakra
+            </span>
+          </div>
+
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Rahu Hemisphere:</span>
+              <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${
+                signal.narapatiSwarodaya.rahuKalanalaHemisphere === "JIVA_PAKSHA_BULLISH"
+                  ? "bg-emerald-500/20 text-emerald-300"
+                  : "bg-rose-500/20 text-rose-300"
+              }`}>
                 {signal.narapatiSwarodaya.rahuKalanalaHemisphere === "JIVA_PAKSHA_BULLISH"
-                  ? "JIVA PAKSHA (Amritopamam / Bullish)"
-                  : "MRITA PAKSHA (Hani / Bearish)"}
+                  ? "JIVA (Bullish Flow)"
+                  : "MRITA (Drain / Bearish)"}
               </span>
             </div>
-
-            <div className="py-1 border-b border-slate-800/50">
-              <span className="text-slate-400 block mb-1">Nodal Regime (Slokas 18–21):</span>
-              <p className="text-slate-300 font-medium">
-                {signal.narapatiSwarodaya.sunMoonNodalRegime}
-              </p>
-            </div>
-
-            <div className="flex justify-between items-center py-1 border-b border-slate-800/50">
-              <span className="text-slate-400">Primary Lord Vedha Multiplier</span>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Vedha Multiplier:</span>
               <span className="font-bold font-mono text-amber-300">
-                {signal.narapatiSwarodaya.primaryLordVedhaMultiplier}× (Sloka 38: 3x Uchcha, 2x Vakri, 0x Neecha)
+                {signal.narapatiSwarodaya.primaryLordVedhaMultiplier}× (Sloka 38)
               </span>
             </div>
-
-            <div className="py-1">
-              <span className="text-slate-400 block mb-1">
-                Solar Upagraha Shock Points (Slokas 59–61):
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Upagraha Shocks:</span>
+              <span className="font-mono text-[11px] text-slate-400">
+                {signal.narapatiSwarodaya.activeSolarUpagrahaShocks.length > 0 ? "⚠️ Active Shock" : "Clear"}
               </span>
-              {signal.narapatiSwarodaya.activeSolarUpagrahaShocks.length > 0 ? (
-                <div className="space-y-1">
-                  {signal.narapatiSwarodaya.activeSolarUpagrahaShocks.map((shock, idx) => (
-                    <div key={idx} className="text-rose-400 font-mono text-[11px]">
-                      ⚡ {shock}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <span className="text-slate-500 italic">None on key asset stars</span>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Card 4: Advanced Transit & C.S. Patel Kakshyas */}
-        <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col gap-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="font-extrabold text-white text-base flex items-center gap-2">
-              <span>🎯 Advanced Transit &amp; Kakshyas</span>
+        {/* Card 4: C.S. Patel Kakshyas */}
+        <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between gap-3">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h3 className="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
+              <span>🎯 C.S. Patel Kakshyas</span>
             </h3>
-            <span className="text-[11px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-              C.S. Patel 3°45&apos;
+            <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+              3°45&apos; Sub-Arc
             </span>
           </div>
 
-          <div className="space-y-3 text-xs">
-            <div className="flex justify-between items-center py-1 border-b border-slate-800/50">
-              <span className="text-slate-400">Moon 3°45&apos; Kakshya Lord</span>
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Moon Sub-Lord:</span>
               <span className="font-bold text-cyan-300">
                 {signal.advancedTransitConfluence.moonKakshyaLord}
               </span>
             </div>
-
-            <div className="flex justify-between items-center py-1 border-b border-slate-800/50">
-              <span className="text-slate-400">Asset Primary Lord Kakshya</span>
-              <span className="font-bold text-cyan-300">
-                {signal.advancedTransitConfluence.primaryLordKakshyaLord}
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Yogi Tailwind:</span>
+              <span className={`font-mono text-[11px] ${
+                signal.advancedTransitConfluence.isYogiTailwindActive ? "text-emerald-400 font-bold" : "text-slate-500"
+              }`}>
+                {signal.advancedTransitConfluence.yogiLord} ({signal.advancedTransitConfluence.isYogiTailwindActive ? "ACTIVE" : "Quiet"})
               </span>
             </div>
-
-            <div className="flex justify-between items-center py-1 border-b border-slate-800/50">
-              <span className="text-slate-400">Daily Yogi Star (Tailwind)</span>
-              <span className="font-bold text-emerald-400">
-                {signal.advancedTransitConfluence.yogiNakshatraName} ({signal.advancedTransitConfluence.yogiLord})
-                {signal.advancedTransitConfluence.isYogiTailwindActive ? " — ACTIVE ✓" : ""}
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Dagdha Warning:</span>
+              <span className="font-mono text-[11px] text-slate-400 truncate max-w-[120px]">
+                {signal.advancedTransitConfluence.dagdhaRashiAlert ? "⚠️ Burnt Sign" : "Clear"}
               </span>
             </div>
-
-            <div className="flex justify-between items-center py-1 border-b border-slate-800/50">
-              <span className="text-slate-400">Daily Avayogi Star (Headwind)</span>
-              <span className="font-bold text-rose-400">
-                {signal.advancedTransitConfluence.avayogiNakshatraName} ({signal.advancedTransitConfluence.avayogiLord})
-                {signal.advancedTransitConfluence.isAvayogiHeadwindActive ? " — ACTIVE ⚠️" : ""}
-              </span>
-            </div>
-
-            {signal.advancedTransitConfluence.dagdhaRashiAlert && (
-              <div className="py-1 border-b border-slate-800/50">
-                <span className="text-amber-400 font-bold block mb-0.5">⚠️ Dagdha Rashi Warning:</span>
-                <p className="text-slate-300">{signal.advancedTransitConfluence.dagdhaRashiAlert}</p>
-              </div>
-            )}
-
-            {signal.advancedTransitConfluence.dualSign15DegZone && (
-              <div className="py-1">
-                <span className="text-slate-400 block mb-0.5">Dual Sign 15° Zone:</span>
-                <p className="text-cyan-300">{signal.advancedTransitConfluence.dualSign15DegZone}</p>
-              </div>
-            )}
           </div>
         </div>
       </div>

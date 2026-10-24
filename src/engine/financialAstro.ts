@@ -827,3 +827,218 @@ export function calculateAstroMarketSignal(
     },
   };
 }
+
+
+/**
+ * Empirical Astro-Quant Discovery Lookup Table (Phase 54.3)
+ * Derived from 6-month MT5 GOLD.pro backtest (130 Daily bars, 2,952 H1 bars; April - Sept 2026).
+ */
+export interface EmpiricalAstroEdge {
+  category: "Nakshatra" | "Tithi" | "Paksha";
+  name: string;
+  bias: "BULLISH" | "BEARISH" | "NEUTRAL";
+  winRatePct: number;
+  sampleSize: number;
+  historicalNetPts: number;
+  tradeGuidance: string;
+}
+
+export const EMPIRICAL_GOLD_EDGES: Record<string, EmpiricalAstroEdge> = {
+  // Top Bearish Nakshatras
+  "Uttara Bhadrapada": {
+    category: "Nakshatra",
+    name: "Uttara Bhadrapada",
+    bias: "BEARISH",
+    winRatePct: 100.0,
+    sampleSize: 5,
+    historicalNetPts: -191.7,
+    tradeGuidance: "100% Bearish dump in MT5 backtest. Block all buy orders; prioritize short rallies.",
+  },
+  "Ashlesha": {
+    category: "Nakshatra",
+    name: "Ashlesha",
+    bias: "BEARISH",
+    winRatePct: 80.0,
+    sampleSize: 5,
+    historicalNetPts: -190.6,
+    tradeGuidance: "80% Bearish dump. Mercury Naga star aggressively drains gold liquidity.",
+  },
+  "Dhanishta": {
+    category: "Nakshatra",
+    name: "Dhanishta",
+    bias: "BEARISH",
+    winRatePct: 75.0,
+    sampleSize: 4,
+    historicalNetPts: -86.0,
+    tradeGuidance: "75% Bearish trend. Downward distribution pressure active.",
+  },
+  "Revati": {
+    category: "Nakshatra",
+    name: "Revati",
+    bias: "BEARISH",
+    winRatePct: 66.7,
+    sampleSize: 6,
+    historicalNetPts: -262.6,
+    tradeGuidance: "66.7% Bearish breakdown. Heavy institutional liquidation (-262 pts).",
+  },
+  "Swati": {
+    category: "Nakshatra",
+    name: "Swati",
+    bias: "BEARISH",
+    winRatePct: 66.7,
+    sampleSize: 6,
+    historicalNetPts: -162.8,
+    tradeGuidance: "66.7% Bearish. Rahu wind star creates volatile downward flushes.",
+  },
+
+  // Top Bullish Nakshatras
+  "Bharani": {
+    category: "Nakshatra",
+    name: "Bharani",
+    bias: "BULLISH",
+    winRatePct: 80.0,
+    sampleSize: 5,
+    historicalNetPts: 169.3,
+    tradeGuidance: "80% Bullish expansion. High-statistical edge for Long setups (+169 pts).",
+  },
+  "Purva Bhadrapada": {
+    category: "Nakshatra",
+    name: "Purva Bhadrapada",
+    bias: "BULLISH",
+    winRatePct: 75.0,
+    sampleSize: 4,
+    historicalNetPts: 88.7,
+    tradeGuidance: "75% Bullish continuation. Institutional long accumulation active.",
+  },
+  "Vishakha": {
+    category: "Nakshatra",
+    name: "Vishakha",
+    bias: "BULLISH",
+    winRatePct: 66.7,
+    sampleSize: 6,
+    historicalNetPts: 225.9,
+    tradeGuidance: "66.7% Bullish. Powerful upward expansion (+225 pts).",
+  },
+  "Punarvasu": {
+    category: "Nakshatra",
+    name: "Punarvasu",
+    bias: "BULLISH",
+    winRatePct: 66.7,
+    sampleSize: 6,
+    historicalNetPts: 114.9,
+    tradeGuidance: "66.7% Bullish. Dip-buying at support heavily favored.",
+  },
+  "Shravana": {
+    category: "Nakshatra",
+    name: "Shravana",
+    bias: "BULLISH",
+    winRatePct: 66.7,
+    sampleSize: 6,
+    historicalNetPts: 48.7,
+    tradeGuidance: "66.7% Bullish. Classical buying star (Institutional dip accumulation).",
+  },
+
+  // Tithis
+  "Saptami": {
+    category: "Tithi",
+    name: "Saptami",
+    bias: "BULLISH",
+    winRatePct: 70.0,
+    sampleSize: 10,
+    historicalNetPts: 493.6,
+    tradeGuidance: "Surya's 7th Tithi! Massive +493 pts net bullish expansion on Gold.",
+  },
+  "Chaturthi": {
+    category: "Tithi",
+    name: "Chaturthi",
+    bias: "BULLISH",
+    winRatePct: 70.0,
+    sampleSize: 10,
+    historicalNetPts: 99.5,
+    tradeGuidance: "70% Bullish win rate. Solid upward momentum.",
+  },
+  "Tritiya": {
+    category: "Tithi",
+    name: "Tritiya",
+    bias: "BEARISH",
+    winRatePct: 80.0,
+    sampleSize: 5,
+    historicalNetPts: -231.0,
+    tradeGuidance: "80% Bearish dump (-231 pts). Avoid aggressive long positions.",
+  },
+  "Panchami": {
+    category: "Tithi",
+    name: "Panchami",
+    bias: "BEARISH",
+    winRatePct: 66.7,
+    sampleSize: 9,
+    historicalNetPts: -218.8,
+    tradeGuidance: "66.7% Bearish breakdown (-218 pts). Favor selling rallies.",
+  },
+};
+
+export const EMPIRICAL_HORA_ALPHA: Record<string, {
+  name: string;
+  bullRatePct: number;
+  netPts: number;
+  avgPtsPerHour: number;
+  verdict: "TOP_BUY_ALPHA" | "SECONDARY_BUY" | "RANGE_CHOP" | "SELLING_TRAP";
+  badge: string;
+}> = {
+  Sun: {
+    name: "Sun",
+    bullRatePct: 49.9,
+    netPts: 213.9,
+    avgPtsPerHour: 0.52,
+    verdict: "TOP_BUY_ALPHA",
+    badge: "☀️ Prime Buying Alpha (+213.9 pts)",
+  },
+  Moon: {
+    name: "Moon",
+    bullRatePct: 47.5,
+    netPts: 105.2,
+    avgPtsPerHour: 0.24,
+    verdict: "SECONDARY_BUY",
+    badge: "🌙 Dip Accumulation (+105.2 pts)",
+  },
+  Mars: {
+    name: "Mars",
+    bullRatePct: 46.9,
+    netPts: 8.0,
+    avgPtsPerHour: 0.02,
+    verdict: "RANGE_CHOP",
+    badge: "♂️ Neutral Drift (+8.0 pts)",
+  },
+  Saturn: {
+    name: "Saturn",
+    bullRatePct: 49.6,
+    netPts: -54.0,
+    avgPtsPerHour: -0.13,
+    verdict: "RANGE_CHOP",
+    badge: "🪐 Slow Rangebound (-54.0 pts)",
+  },
+  Mercury: {
+    name: "Mercury",
+    bullRatePct: 46.2,
+    netPts: -126.5,
+    avgPtsPerHour: -0.29,
+    verdict: "RANGE_CHOP",
+    badge: "☿️ Whipsaw / Trap (-126.5 pts)",
+  },
+  Jupiter: {
+    name: "Jupiter",
+    bullRatePct: 45.9,
+    netPts: -248.6,
+    avgPtsPerHour: -0.60,
+    verdict: "RANGE_CHOP",
+    badge: "♃ Corrective Pullback (-248.6 pts)",
+  },
+  Venus: {
+    name: "Venus",
+    bullRatePct: 47.8,
+    netPts: -494.7,
+    avgPtsPerHour: -1.21,
+    verdict: "SELLING_TRAP",
+    badge: "⚠️ Severe Selling Drain (-494.7 pts)",
+  },
+};

@@ -1444,3 +1444,40 @@
 
 - [x] **Phase 53.1: Interceptor Regex Hardening & False-Positive Elimination (`src/components/AstroChatbot.tsx`)**
 - [x] **Phase 53.2: Automated Regression Suite Subtest 149 & Next.js Build Verification (`tests/engine.test.mjs`)**
+
+
+---
+
+# Phase 54: Empirical Astro-Quant Gold (GOLD.pro) Pattern Discovery & Trend Prediction Engine
+
+## Status: Planning & Architecture Phase
+- **Keywords:** `astro-quant-data-ingestion`, `gold-h1-daily-analysis`, `tithi-nakshatra-hora-correlation`, `empirical-win-rate-matrix`, `trend-prediction-engine`
+- **Scope:**
+  1. Data Ingestion & Harmonization (`scripts/astroQuantAnalysis.py`):
+     - Ingest 6 months of MT5 `GOLD.pro` Daily (130 bars) and H1 (2,952 bars) data (April 1 to September 30, 2026).
+     - Standardize timestamps into UTC and Italy Local Time (`Europe/Rome` CEST/CET).
+     - Calculate Daily ATR, Daily Open-to-Close returns, HOD/LOD timings, and session ranges (Asian, London, NY Overlap).
+  2. Complete Astrological Feature Extraction:
+     - Compute high-precision astronomical coordinates for every bar: Tithi, Vaar, Nakshatra & Pada, Yoga, Karana.
+     - Compute Vyapar Bhavishya 8 Selling vs 6 Buying stars (*Pandit Hira Lal Dikshit*).
+     - Compute Hourly Hora Lords (Chaldean sequence) and C.S. Patel $3^\circ 45'$ Kakshya sub-lords.
+     - Compute Brihat Samhita Ch. 41 Mahargha (Scarcity) vs Arghavriddhi (Abundance) houses for Gold/Sun/Mars/Jupiter.
+     - Compute Graha Yuddha, Retrogrades, Combustions, and special Vedic Drishtis.
+  3. Empirical Cross-Correlation & Pattern Discovery:
+     - Generate Win-Rate and Expectancy Matrix for Bullish Days vs Bearish Days vs Ranging Days.
+     - Identify high-probability turning-point Horas for HOD/LOD formation.
+     - Eliminate statistical noise ($N \ge 5$, Confidence $> 75\%$).
+  4. Web UI & EA Strategy Integration:
+     - Integrate historical discovered rules into `src/engine/financialAstro.ts` and `src/components/MarketBiasView.tsx`.
+     - Build dedicated "Empirical Trend Forecast" view predicting upcoming day direction and turning hours.
+     - Export MT5 EA config parameters for `GOLD.pro`.
+  5. Automated Verification & Testing:
+     - Validate calculations with automated tests in `tests/engine.test.mjs`.
+     - Run `npm test` and `npm run build`.
+
+## Phases & Milestones
+
+- [x] **Phase 54.1: Unified Timeseries Ingestion & Astro-Quant Feature Extractor (`scripts/astroQuantAnalysis.ts`)**
+- [x] **Phase 54.2: Empirical Correlation Matrix & High-Confidence Pattern Mining (`scripts/extractPatterns.ts`)**
+- [x] **Phase 54.3: Quantitative Trend Prediction Engine & Web Dashboard Integration (`src/components/MarketBiasView.tsx`)**
+- [ ] **Phase 54.4: MT5 EA Parameter Bridge & Automated Test Verification (`npm test` & `npm run build`)**
