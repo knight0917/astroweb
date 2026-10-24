@@ -72,6 +72,11 @@ const GocharView = dynamic(() => import("../components/GocharView"), {
   loading: () => <ModuleLoadingSkeleton title="Planetary Transits & Sade Sati (Gochar)" />,
 });
 
+const MarketBiasView = dynamic(() => import("../components/MarketBiasView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Financial Astrology & Daily Market Bias" />,
+});
+
 const ChoghadiyaHoraView = dynamic(() => import("../components/ChoghadiyaHoraView"), {
   ssr: false,
   loading: () => <ModuleLoadingSkeleton title="Real-Time Choghadiya & Planetary Horas" />,
@@ -170,6 +175,12 @@ export default function HomePage() {
         {viewMode === "gochar" && (
           <div className="w-full">
             <GocharView />
+          </div>
+        )}
+
+        {viewMode === "market-bias" && (
+          <div className="w-full">
+            <MarketBiasView />
           </div>
         )}
 
