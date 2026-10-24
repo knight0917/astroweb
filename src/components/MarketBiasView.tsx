@@ -6,6 +6,7 @@ import {
   MarketSymbol,
   AstroMarketSignal,
   ASSET_SIGNIFICATIONS,
+  IntradayHourSlice,
 } from "../engine/financialAstro";
 
 interface MarketBiasViewProps {
@@ -32,6 +33,8 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     return new Date().toISOString().split("T")[0];
   });
+  const [selectedHour, setSelectedHour] = useState<number>(13); // Default to NY Open (13:00 UTC)
+  const [sessionFilter, setSessionFilter] = useState<string>("ALL");
   const [loading, setLoading] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
 
@@ -49,6 +52,23 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
   const signal: AstroMarketSignal = useMemo(() => {
     return calculateAstroMarketSignal(selectedSymbol, targetDate);
   }, [selectedSymbol, targetDate]);
+
+  // Filter 24-hour intraday timeline by selected session tab
+  const filteredIntradayTimeline = useMemo(() => {
+    if (!signal.intradayTimeline) return [];
+    if (sessionFilter === "ALL") return signal.intradayTimeline;
+    return signal.intradayTimeline.filter((s) => s.sessionName === sessionFilter);
+  }, [signal.intradayTimeline, sessionFilter]);
+
+  // Currently inspected hour slice
+  const activeHourDetail = useMemo(() => {
+    if (!signal.intradayTimeline) return null;
+    return (
+      signal.intradayTimeline.find((s) => s.hourUtc === selectedHour) ||
+      signal.intradayTimeline[13] ||
+      signal.intradayTimeline[0]
+    );
+  }, [signal.intradayTimeline, selectedHour]);
 
   // Calculate 7-day historical backtest strip around targetDate
   const historicalStrip = useMemo(() => {
@@ -455,6 +475,170 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
             );
           })}
         </div>
+      </div>
+      {/* 1-Day Intraday Timing & Session Decomposition (24-Hour Hourly Matrix) */}
+      <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-amber-400 font-bold text-sm sm:text-base">
+                ⏰ 1-Day Intraday Timing Analysis ({selectedSymbol})
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                24-Hour Hora &amp; Kakshya Timeline
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Exact hour-by-hour alignment of Chaldean/Vedic Planetary Horas, C.S. Patel&apos;s 3°45&apos; Kakshyas, and global Forex/Bullion liquidity sessions. Click any hour to inspect its celestial mechanics.
+            </p>
+          </div>
+
+          {/* Session filter tabs */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {[
+              { id: "ALL", label: "All 24 Hrs" },
+              { id: "London Open & Core", label: "London (07-12)" },
+              { id: "London / NY Overlap", label: "NY Overlap (12-17)" },
+              { id: "Tokyo / Asian", label: "Tokyo (00-07)" },
+              { id: "NY Afternoon / Close", label: "NY Close (17-24)" },
+            ].map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setSessionFilter(f.id)}
+                className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                  sessionFilter === f.id
+                    ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
+                    : "bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 24-Hour Timeline Grid Strip */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+          {filteredIntradayTimeline.map((slice) => {
+            const isBullish = slice.hourlyBias >= 0.25;
+            const isBearish = slice.hourlyBias <= -0.25;
+            const isSelected = selectedHour === slice.hourUtc;
+            const isPrimary = slice.isPrimaryLordHora;
+            const isOpposing = slice.isOpposingLordHora;
+
+            return (
+              <button
+                key={slice.hourUtc}
+                onClick={() => setSelectedHour(slice.hourUtc)}
+                className={`p-2.5 rounded-2xl border flex flex-col justify-between items-center gap-1.5 transition-all cursor-pointer text-center relative ${
+                  isSelected
+                    ? "bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/50 scale-102 z-10 shadow-lg shadow-amber-500/20"
+                    : isPrimary
+                    ? "bg-slate-900/90 border-emerald-500/40 hover:bg-slate-800 hover:border-emerald-500"
+                    : isOpposing
+                    ? "bg-slate-900/90 border-rose-500/40 hover:bg-slate-800 hover:border-rose-500"
+                    : "bg-slate-900/60 hover:bg-slate-800/80 border-slate-800/80"
+                }`}
+              >
+                {isPrimary && (
+                  <span className="absolute -top-1.5 right-1.5 text-[8px] font-black uppercase tracking-wider bg-emerald-500 text-slate-950 px-1 rounded-full">
+                    Ruler
+                  </span>
+                )}
+                {isOpposing && (
+                  <span className="absolute -top-1.5 right-1.5 text-[8px] font-black uppercase tracking-wider bg-rose-500 text-white px-1 rounded-full">
+                    Enemy
+                  </span>
+                )}
+                <div className="text-[10px] font-mono text-slate-400">
+                  {slice.hourUtc.toString().padStart(2, "0")}:00 UTC
+                </div>
+                <div className="text-xs font-bold text-white flex items-center gap-1">
+                  <span>{slice.horaLord}</span>
+                </div>
+                <div
+                  className={`text-xs font-black font-mono ${
+                    isBullish ? "text-emerald-400" : isBearish ? "text-rose-400" : "text-slate-300"
+                  }`}
+                >
+                  {slice.hourlyBias > 0 ? "+" : ""}
+                  {slice.hourlyBias.toFixed(2)}
+                </div>
+                <div
+                  className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+                    isBullish
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : isBearish
+                      ? "bg-rose-500/20 text-rose-300"
+                      : "bg-slate-800 text-slate-400"
+                  }`}
+                >
+                  {isBullish ? "Buy Only" : isBearish ? "Sell Only" : "Two-Way"}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Selected Hour Shastric Deep-Dive Box */}
+        {activeHourDetail && (
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-mono uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                  {activeHourDetail.timeUtcLabel}
+                </span>
+                <span className="text-xs font-bold text-slate-300">
+                  {activeHourDetail.sessionName} Session
+                </span>
+                <span
+                  className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    activeHourDetail.hourlyBias >= 0.25
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : activeHourDetail.hourlyBias <= -0.25
+                      ? "bg-rose-500/20 text-rose-300"
+                      : "bg-slate-800 text-slate-300"
+                  }`}
+                >
+                  {activeHourDetail.hourlyBias >= 0.25
+                    ? "🟢 LONGS ONLY"
+                    : activeHourDetail.hourlyBias <= -0.25
+                    ? "🔴 SHORTS ONLY"
+                    : "⚪ TWO-WAY CHOP"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 font-medium">
+                {activeHourDetail.shastricReason}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 text-xs font-mono flex-shrink-0">
+              <div className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-center">
+                <div className="text-[10px] text-slate-500">Hora Lord</div>
+                <div className="font-bold text-amber-300">{activeHourDetail.horaLord}</div>
+              </div>
+              <div className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-center">
+                <div className="text-[10px] text-slate-500">Moon Kakshya</div>
+                <div className="font-bold text-cyan-300">{activeHourDetail.moonKakshyaLord}</div>
+              </div>
+              <div className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-center">
+                <div className="text-[10px] text-slate-500">Hourly Bias</div>
+                <div
+                  className={`font-black ${
+                    activeHourDetail.hourlyBias > 0
+                      ? "text-emerald-400"
+                      : activeHourDetail.hourlyBias < 0
+                      ? "text-rose-400"
+                      : "text-slate-300"
+                  }`}
+                >
+                  {activeHourDetail.hourlyBias > 0 ? "+" : ""}
+                  {activeHourDetail.hourlyBias.toFixed(2)}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Classical Telemetry Breakdown (4 Deep Architectural Cards) */}

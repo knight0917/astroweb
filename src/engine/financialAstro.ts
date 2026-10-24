@@ -173,6 +173,19 @@ export const BUYING_NAKSHATRAS = new Set<number>([0, 13, 14, 21, 23, 26]);
 
 export type NakshatraAction = "SELL_RALLY" | "BUY_DIP" | "NEUTRAL_EXPANSION";
 
+export interface IntradayHourSlice {
+  hourUtc: number;           // 0..23
+  timeUtcLabel: string;      // "08:00 - 09:00 UTC"
+  sessionName: "Tokyo / Asian" | "London Open & Core" | "London / NY Overlap" | "NY Afternoon / Close";
+  horaLord: string;
+  moonKakshyaLord: string;
+  hourlyBias: number;        // -1.0 to +1.0
+  hourlyAction: "BUY_DIP" | "SELL_RALLY" | "NEUTRAL";
+  isPrimaryLordHora: boolean;
+  isOpposingLordHora: boolean;
+  shastricReason: string;
+}
+
 export interface AstroMarketSignal {
   symbol: MarketSymbol;
   timestampIso: string;
@@ -183,6 +196,7 @@ export interface AstroMarketSignal {
     marketRegime: "EXPANSION_BULLISH" | "EXPANSION_BEARISH" | "HIGH_VOL_CHOP" | "STABLE_TREND" | "CONSOLIDATION";
     confidenceScore: number;         // 0 to 100%
   };
+  intradayTimeline: IntradayHourSlice[];
   dikshitLiquidityCycle: {
     moonNakshatraIndex: number;
     moonNakshatraName: string;
@@ -278,6 +292,102 @@ export function getKakshyaLord(degreeInRashi: number): string {
 function angularDistance(lon1: number, lon2: number): number {
   const diff = Math.abs(lon1 - lon2) % 360;
   return diff > 180 ? 360 - diff : diff;
+}
+
+/**
+ * Calculates the exact 24-hour hour-by-hour intraday timing breakdown for a trading day.
+ * Combines:
+ * 1. The day's macro celestial momentum (65% baseline)
+ * 2. Hourly Chaldean/Vedic Planetary Horas (Sun/Jup/Mars/Sat hours)
+ * 3. C.S. Patel's 3°45' Kakshya Sub-Lord shifts as the Moon transits across the day
+ * 4. Classical Global Session Windows (Tokyo, London Open, London/NY Overlap, NY Close)
+ */
+export function calculateIntradayTimeline(
+  symbol: MarketSymbol,
+  baseDate: Date,
+  dailyBias: number
+): IntradayHourSlice[] {
+  const asset = ASSET_SIGNIFICATIONS[symbol] || ASSET_SIGNIFICATIONS.XAUUSD;
+  const year = baseDate.getUTCFullYear();
+  const month = baseDate.getUTCMonth();
+  const day = baseDate.getUTCDate();
+
+  const slices: IntradayHourSlice[] = [];
+
+  for (let h = 0; h < 24; h++) {
+    const hourDate = new Date(Date.UTC(year, month, day, h, 30, 0));
+    const horaLord = getPlanetaryHora(hourDate);
+
+    // Compute ephemeris for that hour to get Moon's exact longitude & Kakshya sub-lord
+    const hourEphem = calculateVedicEphemeris(hourDate, {
+      latitude: 51.5074,
+      longitude: 0.1278,
+      cityName: "London GMT",
+      timezoneOffsetHours: 0,
+    });
+
+    const moonDegInSign = hourEphem.planets.Moon ? hourEphem.planets.Moon.rashi.degreesInSign : 0;
+    const moonKakshyaLord = getKakshyaLord(moonDegInSign);
+
+    const isPrimaryLordHora = horaLord === asset.primaryLord;
+    const isSecondaryLordHora = horaLord === asset.secondaryLord;
+    const isOpposingLordHora = horaLord === asset.opposingLord;
+
+    // Hourly bias modifier: 65% macro daily trend + 35% intraday Hora & Kakshya alignment
+    let hBias = dailyBias * 0.65;
+    let shastricReason = "";
+
+    if (isPrimaryLordHora) {
+      hBias += 0.28;
+      shastricReason = `${horaLord} Hora (Primary Ruler): Maximum institutional liquidity & directional thrust.`;
+    } else if (isSecondaryLordHora) {
+      hBias += 0.18;
+      shastricReason = `${horaLord} Hora (Secondary Ruler): Steady expansion & trend continuation.`;
+    } else if (isOpposingLordHora) {
+      hBias -= 0.28;
+      shastricReason = `${horaLord} Hora (Opposing Ruler): Heavy counter-trend pressure & profit-taking sweeps.`;
+    } else {
+      shastricReason = `${horaLord} Hora: Standard background liquidity.`;
+    }
+
+    if (moonKakshyaLord === asset.primaryLord || moonKakshyaLord === asset.secondaryLord) {
+      hBias += 0.10;
+      shastricReason += ` Moon in ${moonKakshyaLord} Kakshya (supportive).`;
+    } else if (moonKakshyaLord === asset.opposingLord) {
+      hBias -= 0.10;
+      shastricReason += ` Moon in ${moonKakshyaLord} Kakshya (resistance).`;
+    }
+
+    const hourlyBias = Number(Math.max(-1.0, Math.min(1.0, hBias)).toFixed(2));
+
+    let hourlyAction: "BUY_DIP" | "SELL_RALLY" | "NEUTRAL" = "NEUTRAL";
+    if (hourlyBias >= 0.25) hourlyAction = "BUY_DIP";
+    else if (hourlyBias <= -0.25) hourlyAction = "SELL_RALLY";
+
+    // Session classification
+    let sessionName: IntradayHourSlice["sessionName"] = "Tokyo / Asian";
+    if (h >= 7 && h <= 11) sessionName = "London Open & Core";
+    else if (h >= 12 && h <= 16) sessionName = "London / NY Overlap";
+    else if (h >= 17) sessionName = "NY Afternoon / Close";
+
+    const startH = h.toString().padStart(2, "0");
+    const endH = ((h + 1) % 24).toString().padStart(2, "0");
+
+    slices.push({
+      hourUtc: h,
+      timeUtcLabel: `${startH}:00 - ${endH}:00 UTC`,
+      sessionName,
+      horaLord,
+      moonKakshyaLord,
+      hourlyBias,
+      hourlyAction,
+      isPrimaryLordHora,
+      isOpposingLordHora,
+      shastricReason,
+    });
+  }
+
+  return slices;
 }
 
 /**
@@ -659,6 +769,7 @@ export function calculateAstroMarketSignal(
       marketRegime,
       confidenceScore: Math.min(95, Math.max(50, Math.round(65 + Math.abs(directionalBias) * 30))),
     },
+    intradayTimeline: calculateIntradayTimeline(symbol, date, directionalBias),
     dikshitLiquidityCycle: {
       moonNakshatraIndex: moonNak,
       moonNakshatraName: ephemeris.panchanga.nakshatra.sanskritName,
