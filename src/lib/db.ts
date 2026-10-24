@@ -41,7 +41,10 @@ const DATA_DIR = path.join(process.cwd(), "data");
 const DB_FILE = path.join(DATA_DIR, "charts_db.json");
 const REVIEWS_DB_FILE = path.join(DATA_DIR, "reviews_db.json");
 
+const IS_VERCEL = Boolean(process.env.VERCEL);
+
 function ensureDbFile(): void {
+  if (IS_VERCEL) return;
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -55,6 +58,7 @@ function ensureDbFile(): void {
 }
 
 function readAllChartsLocal(): StoredBirthChart[] {
+  if (IS_VERCEL) return [];
   ensureDbFile();
   try {
     const raw = fs.readFileSync(DB_FILE, "utf-8");
@@ -66,6 +70,10 @@ function readAllChartsLocal(): StoredBirthChart[] {
 }
 
 function writeAllChartsLocal(charts: StoredBirthChart[]): void {
+  if (IS_VERCEL) {
+    console.warn("[DB] Local JSON write skipped on Vercel ephemeral filesystem.");
+    return;
+  }
   ensureDbFile();
   try {
     const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
@@ -376,6 +384,7 @@ export async function deleteChart(id: string, email: string): Promise<boolean> {
  * Read all reviews from local JSON file
  */
 function readAllReviewsLocal(): StoredReview[] {
+  if (IS_VERCEL) return [];
   ensureDbFile();
   try {
     if (!fs.existsSync(REVIEWS_DB_FILE)) {
@@ -393,6 +402,10 @@ function readAllReviewsLocal(): StoredReview[] {
  * Write all reviews to local JSON file
  */
 function writeAllReviewsLocal(reviews: StoredReview[]): void {
+  if (IS_VERCEL) {
+    console.warn("[DB] Local reviews JSON write skipped on Vercel ephemeral filesystem.");
+    return;
+  }
   ensureDbFile();
   try {
     const tempFile = `${REVIEWS_DB_FILE}.tmp.${Date.now()}`;

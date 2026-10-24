@@ -1,16 +1,12 @@
-import { Buffer } from "node:buffer";
-
-const FALLBACK_B64 = "QVEuQWI4Uk42TGRLTkVsX1l6SFU0LUtuT2thazNROTlWcHlMR0xhN21tTDgwbWJ4S244VUE=";
-
+/**
+ * Resolves the Gemini API key from the custom user key or environment variables.
+ * Server-side only: never use NEXT_PUBLIC_ vars here (they leak into client bundles).
+ */
 export function resolveGeminiApiKey(customApiKey?: string): string {
   if (customApiKey && customApiKey.trim().length > 0) {
     return customApiKey.trim();
   }
-  return (
-    process.env.GEMINI_API_KEY ||
-    process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
-    Buffer.from(FALLBACK_B64, "base64").toString("utf8")
-  );
+  return process.env.GEMINI_API_KEY || "";
 }
 
 /**

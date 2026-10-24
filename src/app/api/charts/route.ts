@@ -1,8 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getChartsByEmail, saveChart, deleteChart, normalizeEmail, findExistingChartByEmailAndData } from "@/lib/db";
+import { verifyEmailToken } from "@/lib/emailToken";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+/**
+ * Resolves and verifies the caller's identity from the request.
+ * Accepts token via x-chart-token header or ?token= query param.
+ * Returns the verified normalized email, or null if unauthorized.
+ */
+function resolveVerifiedEmail(req: NextRequest, claimedEmail: string): string | null {
+  const token =
+    req.headers.get("x-chart-token") ||
+    new URL(req.url).searchParams.get("token");
+  if (!token) return null;
+  const verifiedEmail = verifyEmailToken(token);
+  if (!verifiedEmail) return null;
+  // Ensure the token email matches the claimed email in the request
+  if (verifiedEmail !== normalizeEmail(claimedEmail)) return null;
+  return verifiedEmail;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,7 +34,16 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const charts = await getChartsByEmail(email);
+    // Verify caller identity via HMAC-signed token
+    const verifiedEmail = resolveVerifiedEmail(req, email);
+    if (!verifiedEmail) {
+      return NextResponse.json(
+        { error: "Unauthorized. A valid identity token is required to access charts." },
+        { status: 401 }
+      );
+    }
+
+    const charts = await getChartsByEmail(verifiedEmail);
     return NextResponse.json(
       { success: true, charts, count: charts.length },
       {
@@ -43,6 +70,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "A valid email address is required." },
         { status: 400 }
+      );
+    }
+
+    // Verify caller identity via HMAC-signed token
+    const verifiedEmail = resolveVerifiedEmail(req, userEmail);
+    if (!verifiedEmail) {
+      return NextResponse.json(
+        { error: "Unauthorized. A valid identity token is required to save charts." },
+        { status: 401 }
       );
     }
 
@@ -153,6 +189,15 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json(
         { error: "Both 'id' and 'email' parameters are required to delete a chart." },
         { status: 400 }
+      );
+    }
+
+    // Verify caller identity via HMAC-signed token
+    const verifiedEmail = resolveVerifiedEmail(req, email);
+    if (!verifiedEmail) {
+      return NextResponse.json(
+        { error: "Unauthorized. A valid identity token is required to delete charts." },
+        { status: 401 }
       );
     }
 

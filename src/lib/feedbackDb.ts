@@ -23,7 +23,10 @@ export interface ChatFeedbackRecord {
 const DATA_DIR = path.join(process.cwd(), "data");
 const FEEDBACK_DB_FILE = path.join(DATA_DIR, "chat_feedback_db.json");
 
+const IS_VERCEL = Boolean(process.env.VERCEL);
+
 function ensureFeedbackFile(): void {
+  if (IS_VERCEL) return;
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -37,6 +40,7 @@ function ensureFeedbackFile(): void {
 }
 
 function readAllFeedbackLocal(): ChatFeedbackRecord[] {
+  if (IS_VERCEL) return [];
   ensureFeedbackFile();
   try {
     const raw = fs.readFileSync(FEEDBACK_DB_FILE, "utf-8");
@@ -48,6 +52,10 @@ function readAllFeedbackLocal(): ChatFeedbackRecord[] {
 }
 
 function writeAllFeedbackLocal(records: ChatFeedbackRecord[]): void {
+  if (IS_VERCEL) {
+    console.warn("[FeedbackDB] Local feedback write skipped on Vercel ephemeral filesystem.");
+    return;
+  }
   ensureFeedbackFile();
   try {
     const tempFile = `${FEEDBACK_DB_FILE}.tmp.${Date.now()}`;

@@ -4,9 +4,31 @@ import { retrieveGroundedAstroKnowledge } from "@/lib/ragRetriever";
 import { arbitratePredictiveQuery } from "@/engine/predictiveArbitrator";
 import { buildConsultationState, formatConsultationStateBlock } from "@/engine/consultationState";
 import { formatClientMemoryPromptContext } from "@/engine/clientMemoryVault";
+import { checkRateLimit } from "@/lib/rateLimiter";
+import { detectPromptInjection, sanitizeUserMessage } from "@/lib/promptGuard";
 
 export async function POST(req: NextRequest) {
   try {
+    // ── Rate Limiting ─────────────────────────────────────────────────────────
+    const clientIp =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const rateLimit = checkRateLimit(clientIp, 12, 60_000); // 12 msgs/min per IP
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: "TOO_MANY_REQUESTS",
+          message: "You are sending messages too quickly. Please wait a moment before continuing.",
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimit.retryAfterSec),
+            "X-RateLimit-Remaining": "0",
+          },
+        }
+      );
+    }
+
     const body = await req.json();
     const { messages, astroDossier, userApiKey, natalEphemeris, transitEphemeris, runningDasha, activeCorrections, clientMemory } = body;
 
@@ -17,12 +39,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const FALLBACK_B64 = "QVEuQWI4Uk42TGRLTkVsX1l6SFU0LUtuT2thazNROTlWcHlMR0xhN21tTDgwbWJ4S244VUE=";
+    // ── Resolve API key: user-supplied → server env (never hardcoded fallback) ─
     const apiKey =
       userApiKey?.trim() ||
       process.env.GEMINI_API_KEY ||
-      process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
-      Buffer.from(FALLBACK_B64, "base64").toString("utf8");
+      "";
 
     if (!apiKey) {
       return NextResponse.json(
@@ -39,7 +60,19 @@ export async function POST(req: NextRequest) {
     const userConfirmedFacts = extractUserConfirmedFacts(messages);
 
     // Find the latest user query to perform grounded vector retrieval
-    const lastUserMessage = [...messages].reverse().find((m: any) => m.role === "user" || m.sender === "user")?.content || "";
+    // Sanitize content and enforce max length before any further processing
+    const lastUserMessage = sanitizeUserMessage(
+      ([...messages].reverse().find((m: any) => m.role === "user" || m.sender === "user")?.content || "")
+    );
+
+    // ── Prompt Injection Guard ────────────────────────────────────────────────
+    if (lastUserMessage && detectPromptInjection(lastUserMessage)) {
+      return NextResponse.json({
+        reply: "I can only provide Vedic astrological guidance based on your birth chart. Please ask an astrology-related question.",
+        model: "guard",
+        provider: "local",
+      });
+    }
     
     // 1. Retrieve grounded Shastric & Nadi rules from Neon pgvector using Astrological HyDE
     let groundingCitations = "";
@@ -264,10 +297,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. GOOGLE GEMINI ROUTE (DEFAULT / FALLBACK)
+    // If a SiliconFlow sk- key was used but failed, switch to the server-side Gemini key
     const geminiApiKey = apiKey.startsWith("sk-")
-      ? process.env.GEMINI_API_KEY ||
-        process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
-        Buffer.from(FALLBACK_B64, "base64").toString("utf8")
+      ? process.env.GEMINI_API_KEY || ""
       : apiKey;
 
     const contents: any[] = mapHistoryWithAnchors(filteredHistory, true);
