@@ -438,6 +438,57 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
     return days;
   }, [selectedSymbol, targetDate]);
 
+  // Dynamic Timing Interval for each of the 6 Chop Pillars (Phase 58.4)
+  const getPillarTiming = useCallback(
+    (pillarId: string) => {
+      const isRome = timezoneMode === "ROME";
+
+      if (pillarId.toLowerCase() === "rahu_kaal") {
+        if (!dynamicReversalWindows.rahuKaal) return "No Rahu Kaal detected";
+        return isRome
+          ? `${dynamicReversalWindows.rahuKaal.startRome} - ${dynamicReversalWindows.rahuKaal.endRome} Rome (${dynamicReversalWindows.rahuKaal.durationMin}m)`
+          : `${dynamicReversalWindows.rahuKaal.startUtc} - ${dynamicReversalWindows.rahuKaal.endUtc} UTC (${dynamicReversalWindows.rahuKaal.durationMin}m)`;
+      }
+
+      if (pillarId.toLowerCase() === "mercury_duality") {
+        const mercuryHoras = enrichedVedicHoras.filter((h) => h.lord === "Mercury");
+        if (!mercuryHoras.length) return "Clear (No Mercury Horas)";
+        return isRome
+          ? mercuryHoras.map((h) => `${h.romeStartFormatted}-${h.romeEndFormatted}`).join(" & ") + " Rome"
+          : mercuryHoras.map((h) => `${h.utcStartFormatted}-${h.utcEndFormatted}`).join(" & ") + " UTC";
+      }
+
+      if (pillarId.toLowerCase() === "panchaka") {
+        if (signal.dikshitLiquidityCycle.isPanchaka5xActive) {
+          return signal.dikshitLiquidityCycle.panchakaTiming?.activeWindow || "Active 24h continuous";
+        }
+        return "Standby (Moon in non-Panchaka Star)";
+      }
+
+      if (pillarId.toLowerCase() === "gandanta_sandhi") {
+        if (signal.chopRadar.gandantaDetails?.isGandanta) {
+          return `Active Now • ${signal.chopRadar.gandantaDetails.junctionName || "Sandhi Vortex"}`;
+        }
+        return "Standby (Moon centered safely in sign)";
+      }
+
+      if (pillarId.toLowerCase() === "rikta_tithi") {
+        if (signal.chopRadar.riktaTithiDetails?.isRikta) {
+          return `Active all day (${signal.chopRadar.riktaTithiDetails.tithiName} ${signal.chopRadar.riktaTithiDetails.paksha})`;
+        }
+        return `Standby (${signal.chopRadar.riktaTithiDetails?.tithiName || "Healthy Tithi"})`;
+      }
+
+      if (pillarId.toLowerCase() === "graha_yuddha") {
+        const warPillar = signal.chopRadar.pillars.find((p) => p.id.toLowerCase() === "graha_yuddha");
+        return warPillar?.isActive ? "Active during current planetary conjunction (<1°)" : "Standby (No active planetary war)";
+      }
+
+      return "Session Dependent";
+    },
+    [timezoneMode, dynamicReversalWindows.rahuKaal, enrichedVedicHoras, signal]
+  );
+
   const handlePrevDay = () => {
     const d = new Date(targetDate);
     d.setUTCDate(d.getUTCDate() - 1);
@@ -1015,6 +1066,25 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                         : "bg-slate-950/60 text-slate-300 border border-slate-800/80"
                     }`}>
                       {pillar.description}
+                    </div>
+
+                    {/* Active Timing Interval (Phase 58.4) */}
+                    <div className={`px-2.5 py-1.5 rounded-xl text-[11px] font-mono border flex items-center justify-between gap-1 shadow-inner ${
+                      pillar.isActive
+                        ? isCrit
+                          ? "bg-rose-950/70 border-rose-500/60 text-rose-200"
+                          : isHigh
+                          ? "bg-amber-950/70 border-amber-500/50 text-amber-200"
+                          : "bg-yellow-950/60 border-yellow-500/40 text-yellow-200"
+                        : "bg-slate-950/80 border-slate-800 text-slate-400"
+                    }`}>
+                      <span className="font-bold flex items-center gap-1 text-[10px] uppercase tracking-wider text-slate-400">
+                        <span>⏰</span>
+                        <span>{pillar.isActive ? "Active Hours:" : "Status:"}</span>
+                      </span>
+                      <span className="font-black text-amber-300 text-[11px] truncate">
+                        {getPillarTiming(pillar.id)}
+                      </span>
                     </div>
 
                     <div className={`p-2 rounded-xl text-[11px] border ${
