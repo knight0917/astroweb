@@ -224,6 +224,26 @@ export interface ChopRadarAssessment {
   };
 }
 
+export interface MasterExecutionMatrix {
+  marketCondition: "TRENDING_EXPANSION" | "SIDEWAYS_RANGE" | "CHOPPY_WHIPSAW" | "CRITICAL_VOID";
+  conditionLabel: string;
+  conditionDetail: string;
+  conditionColor: "emerald" | "amber" | "rose";
+  tradePermittedVerdict: "TRADE_APPROVED" | "CAUTION_REDUCED_SIZE" | "DO_NOT_TRADE";
+  verdictBadge: string;
+  verdictColor: "emerald" | "amber" | "rose";
+  verdictDetail: string;
+  recommendedTimeframe: "M5_M15" | "M15_H1" | "H1_H4" | "H4_D1_ONLY";
+  timeframeLabel: string;
+  timeframeDetail: string;
+  slProfile: "TIGHT_STRUCTURAL" | "STANDARD_ATR" | "WIDE_BUFFER";
+  slLabel: string;
+  slDetail: string;
+  tpExpectancy: "QUICK_SCALP_1_2" | "STANDARD_SWING_1_3" | "FULL_EXPANSION_1_5_PLUS" | "ZERO_TARGET";
+  tpLabel: string;
+  tpDetail: string;
+}
+
 export interface AstroMarketSignal {
   symbol: MarketSymbol;
   timestampIso: string;
@@ -235,6 +255,7 @@ export interface AstroMarketSignal {
     confidenceScore: number;         // 0 to 100%
   };
   chopRadar: ChopRadarAssessment;
+  masterExecutionMatrix: MasterExecutionMatrix;
   intradayTimeline: IntradayHourSlice[];
   dikshitLiquidityCycle: {
     moonNakshatraIndex: number;
@@ -1089,6 +1110,148 @@ export function calculateAstroMarketSignal(
     },
   };
 
+  // --- Phase 58: Pre-Market Master Execution Matrix ---
+  let matCondition: MasterExecutionMatrix["marketCondition"] = "TRENDING_EXPANSION";
+  let conditionLabel = "🟢 CLEAN TRENDING EXPANSION";
+  let conditionDetail = "Clean institutional order flow expansion. Trend continuation setups favored.";
+  let conditionColor: MasterExecutionMatrix["conditionColor"] = "emerald";
+
+  let matTradeVerdict: MasterExecutionMatrix["tradePermittedVerdict"] = "TRADE_APPROVED";
+  let verdictBadge = "✅ TRADE APPROVED (NORMAL 1.0×)";
+  let verdictColor: MasterExecutionMatrix["verdictColor"] = "emerald";
+  let verdictDetail = "Astronomical friction is low. Standard execution with full 1.0x position sizing permitted.";
+
+  let matTimeframe: MasterExecutionMatrix["recommendedTimeframe"] = "M5_M15";
+  let timeframeLabel = "⚡ M5 / M15 (Scalp & Trend)";
+  let timeframeDetail = "Clean flow allows tighter precision entries on M5 pullbacks and M15 structure.";
+
+  let matSl: MasterExecutionMatrix["slProfile"] = "TIGHT_STRUCTURAL";
+  let slLabel = "🎯 Tight Structural (1.2× ATR)";
+  let slDetail = "Set stop loss behind nearest M15 swing high/low. Low risk of rogue wicks.";
+
+  let matTp: MasterExecutionMatrix["tpExpectancy"] = "FULL_EXPANSION_1_5_PLUS";
+  let tpLabel = "🚀 TP Target: 1:3 - 1:5+ R:R (Ride Trend)";
+  let tpDetail = "Trail stops behind H1 swing pivots. Let profits run through institutional expansion.";
+
+  // Tier 1: Critical Stand Aside / Void
+  if (recommendedLotScale === 0.0 || (circuitBreakerActive && isWaterFireJunction)) {
+    matCondition = "CRITICAL_VOID";
+    conditionLabel = "🛑 CRITICAL LIQUIDITY VOID";
+    conditionDetail = "Moon in Water-Fire Gandanta boundary. Severe order-book manipulation and zero-liquidity air pockets.";
+    conditionColor = "rose";
+
+    matTradeVerdict = "DO_NOT_TRADE";
+    verdictBadge = "🛑 DO NOT TRADE (STAND ASIDE)";
+    verdictColor = "rose";
+    verdictDetail = "Mandatory capital preservation rule active. Stand down completely; zero trade entries advised (0.0x size).";
+
+    matTimeframe = "H4_D1_ONLY";
+    timeframeLabel = "🛑 H4 / D1 Macro Only";
+    timeframeDetail = "Intraday execution disabled. Observe daily/H4 macro closes only; avoid intraday whipsaws.";
+
+    matSl = "WIDE_BUFFER";
+    slLabel = "⛔ N/A (Trading Prohibited)";
+    slDetail = "No orders permitted. Spreads and slippage are abnormal.";
+
+    matTp = "ZERO_TARGET";
+    tpLabel = "⛔ 0.0 R:R (Stand Down)";
+    tpDetail = "Preserve account equity. The best trade today is no trade.";
+  }
+  // Tier 2: Severe Whipsaw / Circuit Breaker Active
+  else if (circuitBreakerActive || chopScore >= 65) {
+    matCondition = "CHOPPY_WHIPSAW";
+    conditionLabel = "🔴 CHOPPY / SEVERE WHIPSAW";
+    conditionDetail = "Extreme multi-pillar astronomical friction. High probability of two-way stop hunting and aggressive false breakouts.";
+    conditionColor = "rose";
+
+    matTradeVerdict = "CAUTION_REDUCED_SIZE";
+    verdictBadge = "⚠️ CAUTION (0.25× SIZE ONLY)";
+    verdictColor = "rose";
+    verdictDetail = "Hard circuit-breaker active. Cut lot size to 0.25x or stand aside. Expect erratic volatility spikes.";
+
+    matTimeframe = "H1_H4";
+    timeframeLabel = "📊 H1 / H4 High-Timeframe Only";
+    timeframeDetail = "Lower timeframes (M1 to M15) will suffer violent whipsaws. Only trade confirmed H1 rejections.";
+
+    matSl = "WIDE_BUFFER";
+    slLabel = "🛡️ Ultra-Wide Buffer (3.0× ATR)";
+    slDetail = "Widen stops to 3.0x ATR to survive stop-hunting spikes; tighten position size accordingly.";
+
+    matTp = "QUICK_SCALP_1_2";
+    tpLabel = "🎯 TP Target: 1:1 - 1:1.5 R:R Max";
+    tpDetail = "Take immediate partials at first support/resistance test. Do not attempt trend holding.";
+  }
+  // Tier 3: Structured Range / Sideways / Panchaka Friction
+  else if (chopScore >= 35 || isPanchaka5xActive || Math.abs(directionalBias) < 0.25) {
+    matCondition = "SIDEWAYS_RANGE";
+    conditionLabel = "🟡 SIDEWAYS / STRUCTURED RANGE";
+    conditionDetail = isPanchaka5xActive
+      ? "Panchaka 5x Active: Market will compress into range boxes with repeating 5-fold breakout fakeouts."
+      : "Balanced planetary opposing forces. Range-bound oscillations between session high and low expected.";
+    conditionColor = "amber";
+
+    matTradeVerdict = "CAUTION_REDUCED_SIZE";
+    verdictBadge = "⚠️ CAUTION (0.50× SIZE ONLY)";
+    verdictColor = "amber";
+    verdictDetail = "Market lacks full directional thrust. Scale down exposure to 0.50x and trade edges only.";
+
+    matTimeframe = "M15_H1";
+    timeframeLabel = "📊 M15 / H1 Execution";
+    timeframeDetail = "Filter M1/M5 noise. Only take entries when M15 candles close with clear rejection at range boundaries.";
+
+    matSl = "WIDE_BUFFER";
+    slLabel = "🛡️ Wide Buffer (2.5× ATR)";
+    slDetail = "Give price room to breathe (2.5x ATR). Narrow stops will get hunted by Panchaka wicks.";
+
+    matTp = "QUICK_SCALP_1_2";
+    tpLabel = "🎯 TP Target: 1:1.5 - 1:2 R:R (Quick Scalp)";
+    tpDetail = "Take profits swiftly at nearest support/resistance. Rallies quickly exhaust into mean-reversion.";
+  }
+  // Tier 4: Clean Trending Expansion
+  else {
+    matCondition = "TRENDING_EXPANSION";
+    conditionLabel = directionalBias > 0 ? "🟢 CLEAN BULLISH EXPANSION" : "🔴 CLEAN BEARISH EXPANSION";
+    conditionDetail = `Low astronomical friction (${chopScore}% risk). Institutional order flow aligns ${directionalBias > 0 ? "Bullish" : "Bearish"}.`;
+    conditionColor = "emerald";
+
+    matTradeVerdict = "TRADE_APPROVED";
+    verdictBadge = "✅ TRADE APPROVED (NORMAL 1.0×)";
+    verdictColor = "emerald";
+    verdictDetail = "Full statistical edge active. Normal 1.0x position sizing permitted.";
+
+    matTimeframe = "M5_M15";
+    timeframeLabel = "⚡ M5 / M15 (Scalp & Continuation)";
+    timeframeDetail = "Clean flow allows surgical pullback entries on M5 aligned with M15 market structure.";
+
+    matSl = "STANDARD_ATR";
+    slLabel = "🎯 Standard Structural (1.5× ATR)";
+    slDetail = "Place SL behind key swing structure. High edge allows disciplined risk parameters.";
+
+    matTp = "FULL_EXPANSION_1_5_PLUS";
+    tpLabel = "🚀 TP Target: 1:3 - 1:5+ R:R (Ride Trend)";
+    tpDetail = "High conviction trend expansion. Trail stops behind H1 candles to capture maximum daily range.";
+  }
+
+  const masterExecutionMatrix: MasterExecutionMatrix = {
+    marketCondition: matCondition,
+    conditionLabel,
+    conditionDetail,
+    conditionColor,
+    tradePermittedVerdict: matTradeVerdict,
+    verdictBadge,
+    verdictColor,
+    verdictDetail,
+    recommendedTimeframe: matTimeframe,
+    timeframeLabel,
+    timeframeDetail,
+    slProfile: matSl,
+    slLabel,
+    slDetail,
+    tpExpectancy: matTp,
+    tpLabel,
+    tpDetail,
+  };
+
   // Quant execution advice
   const baseLotSizeScale = volatilityMultiplier > 1.4 ? 0.75 : 1.0;
   const finalLotSizeScale = Math.min(baseLotSizeScale, recommendedLotScale);
@@ -1106,6 +1269,7 @@ export function calculateAstroMarketSignal(
       confidenceScore: Math.min(95, Math.max(50, Math.round(65 + Math.abs(directionalBias) * 30))),
     },
     chopRadar,
+    masterExecutionMatrix,
     intradayTimeline: calculateIntradayTimeline(symbol, date, directionalBias, {
       isPanchakaActive: isPanchaka5xActive,
       isGandantaActive: isGandanta,

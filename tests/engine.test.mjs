@@ -9486,3 +9486,34 @@ test("Phase 57: Astrological Chop & Whipsaw Avoidance Circuit-Breaker System Ver
     assert.ok(mercuryHour.chopReason?.includes("Mercury"), "Reason must mention Mercury");
   }
 });
+
+test("Phase 58: Pre-Market Master Execution Matrix Verification", async () => {
+  const { calculateAstroMarketSignal } = await import("../src/engine/financialAstro.ts");
+
+  // 1. Verify existence and schema on standard date
+  const signal = calculateAstroMarketSignal("XAUUSD", new Date("2026-04-15T12:00:00Z"));
+  assert.ok(signal.masterExecutionMatrix, "Signal must include masterExecutionMatrix");
+  assert.ok(["TRENDING_EXPANSION", "SIDEWAYS_RANGE", "CHOPPY_WHIPSAW", "CRITICAL_VOID"].includes(signal.masterExecutionMatrix.marketCondition));
+  assert.ok(["TRADE_APPROVED", "CAUTION_REDUCED_SIZE", "DO_NOT_TRADE"].includes(signal.masterExecutionMatrix.tradePermittedVerdict));
+  assert.ok(["M5_M15", "M15_H1", "H1_H4", "H4_D1_ONLY"].includes(signal.masterExecutionMatrix.recommendedTimeframe));
+  assert.ok(["TIGHT_STRUCTURAL", "STANDARD_ATR", "WIDE_BUFFER"].includes(signal.masterExecutionMatrix.slProfile));
+  assert.ok(["QUICK_SCALP_1_2", "STANDARD_SWING_1_3", "FULL_EXPANSION_1_5_PLUS", "ZERO_TARGET"].includes(signal.masterExecutionMatrix.tpExpectancy));
+
+  // 2. Test Oct 23, 2026 (Panchaka 5x Active -> Sideways Range, Caution, M15/H1, Wide SL, 1:2 R:R)
+  const oct23 = calculateAstroMarketSignal("XAUUSD", new Date("2026-10-23T12:00:00Z"));
+  assert.strictEqual(oct23.masterExecutionMatrix.marketCondition, "SIDEWAYS_RANGE", "Oct 23 2026 must be categorized as Sideways Range");
+  assert.strictEqual(oct23.masterExecutionMatrix.tradePermittedVerdict, "CAUTION_REDUCED_SIZE", "Oct 23 2026 trade status must be Caution");
+  assert.strictEqual(oct23.masterExecutionMatrix.recommendedTimeframe, "M15_H1", "Oct 23 2026 optimal timeframe must be M15/H1");
+  assert.strictEqual(oct23.masterExecutionMatrix.slProfile, "WIDE_BUFFER", "Oct 23 2026 SL profile must be Wide Buffer");
+  assert.strictEqual(oct23.masterExecutionMatrix.tpExpectancy, "QUICK_SCALP_1_2", "Oct 23 2026 TP expectancy must be 1:1.5 to 1:2 R:R");
+  assert.ok(oct23.masterExecutionMatrix.conditionLabel.includes("SIDEWAYS"), "Condition label must state Sideways");
+  assert.ok(oct23.masterExecutionMatrix.timeframeLabel.includes("M15 / H1"), "Timeframe label must state M15 / H1");
+
+  // 3. Test Dec 28, 2025 (Panchaka + High Chop -> Choppy Whipsaw, Caution 0.25x, H1/H4)
+  const dec28 = calculateAstroMarketSignal("XAUUSD", new Date("2025-12-28T12:00:00Z"));
+  assert.strictEqual(dec28.masterExecutionMatrix.marketCondition, "CHOPPY_WHIPSAW", "Dec 28 2025 must be categorized as Choppy Whipsaw");
+  assert.strictEqual(dec28.masterExecutionMatrix.tradePermittedVerdict, "CAUTION_REDUCED_SIZE", "Dec 28 2025 must caution with reduced size");
+  assert.strictEqual(dec28.masterExecutionMatrix.recommendedTimeframe, "H1_H4", "Dec 28 2025 optimal timeframe must be H1/H4 only");
+  assert.strictEqual(dec28.masterExecutionMatrix.slProfile, "WIDE_BUFFER", "Dec 28 2025 must require Wide Buffer SL");
+  assert.ok(dec28.masterExecutionMatrix.verdictBadge.includes("0.25×"), "Badge must mandate 0.25x size");
+});

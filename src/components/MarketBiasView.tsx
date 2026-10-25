@@ -727,6 +727,108 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
           </div>
         </div>
 
+        {/* Pre-Market Master Execution Matrix (Phase 58.2) */}
+        <div className="pt-2 border-t border-slate-800/80">
+          <div className="flex items-center justify-between gap-2 mb-2.5">
+            <span className="text-[11px] font-mono font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+              <span>🎯</span>
+              <span>Pre-Market Master Execution Matrix • 4 Directives</span>
+            </span>
+            <span className="text-[10px] font-mono text-slate-400 hidden sm:inline">
+              Deterministic Daily Rulebook
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* 1. Market Condition */}
+            <div className={`rounded-2xl p-3 border flex flex-col justify-between gap-2 shadow-sm ${
+              signal.masterExecutionMatrix.conditionColor === "rose"
+                ? "bg-rose-950/40 border-rose-500/50"
+                : signal.masterExecutionMatrix.conditionColor === "amber"
+                ? "bg-amber-950/30 border-amber-500/40"
+                : "bg-emerald-950/30 border-emerald-500/40"
+            }`}>
+              <div>
+                <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                  1. Market Condition
+                </div>
+                <div className={`text-xs font-black mt-1 ${
+                  signal.masterExecutionMatrix.conditionColor === "rose"
+                    ? "text-rose-300"
+                    : signal.masterExecutionMatrix.conditionColor === "amber"
+                    ? "text-amber-300"
+                    : "text-emerald-300"
+                }`}>
+                  {signal.masterExecutionMatrix.conditionLabel}
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-snug">
+                {signal.masterExecutionMatrix.conditionDetail}
+              </p>
+            </div>
+
+            {/* 2. Trade Permitted Status */}
+            <div className={`rounded-2xl p-3 border flex flex-col justify-between gap-2 shadow-sm ${
+              signal.masterExecutionMatrix.verdictColor === "rose"
+                ? "bg-rose-950/40 border-rose-500/50"
+                : signal.masterExecutionMatrix.verdictColor === "amber"
+                ? "bg-amber-950/30 border-amber-500/40"
+                : "bg-emerald-950/30 border-emerald-500/40"
+            }`}>
+              <div>
+                <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                  2. Trade Today?
+                </div>
+                <div className={`text-xs font-black mt-1 ${
+                  signal.masterExecutionMatrix.verdictColor === "rose"
+                    ? "text-rose-300"
+                    : signal.masterExecutionMatrix.verdictColor === "amber"
+                    ? "text-amber-300"
+                    : "text-emerald-300"
+                }`}>
+                  {signal.masterExecutionMatrix.verdictBadge}
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-snug">
+                {signal.masterExecutionMatrix.verdictDetail}
+              </p>
+            </div>
+
+            {/* 3. Recommended Chart Timeframe */}
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex flex-col justify-between gap-2 shadow-sm">
+              <div>
+                <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                  3. Optimal Timeframe
+                </div>
+                <div className="text-xs font-black text-cyan-300 mt-1">
+                  {signal.masterExecutionMatrix.timeframeLabel}
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-snug">
+                {signal.masterExecutionMatrix.timeframeDetail}
+              </p>
+            </div>
+
+            {/* 4. SL & TP Strategy Profile */}
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex flex-col justify-between gap-2 shadow-sm">
+              <div>
+                <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                  4. SL &amp; TP Strategy
+                </div>
+                <div className="text-xs font-black text-amber-200 mt-1">
+                  {signal.masterExecutionMatrix.slLabel}
+                </div>
+                <div className="text-[11px] font-bold text-amber-400 font-mono mt-0.5">
+                  {signal.masterExecutionMatrix.tpLabel}
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-snug">
+                {signal.masterExecutionMatrix.tpDetail}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Hero Circuit-Breaker Warning Banner (Phase 57.2) */}
         {signal.chopRadar.circuitBreakerActive && (
           <div className="bg-rose-950/90 border-2 border-rose-500/90 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl shadow-rose-950/60 animate-pulse">

@@ -1561,3 +1561,27 @@
   - [x] Run `npm test` (all 152 tests passing).
   - [x] Run `npm run build` (clean Next.js 15 build).
 
+---
+
+# Phase 58: Pre-Market Master Execution Matrix (Condition, Trade Verdict, Timeframe, SL/TP Expectancy)
+
+## Status: Completed (Phases 58.1 to 58.3 fully verified)
+- **Trigger Keywords**: `master-execution-matrix`, `market-condition`, `trading-timeframe`, `sl-tp-profile`, `trade-permitted-verdict`, `/mathematical-calculation`, `/astrological-calculation`, `/audit-code-review`, `/systematic-debugging`
+- **Scope**: Explicitly compute and render the 4 Core Execution Answers (Market Condition, Should We Trade, Chart Timeframe, SL & TP Strategy) directly inside the Pre-Market Directive Hero Card and `AstroMarketSignal`.
+
+## Phases & Milestones
+
+- [x] **Phase 58.1: Master Execution Matrix Interfaces & Generator (`src/engine/financialAstro.ts`)**
+  - [x] Define `MasterExecutionMatrix` interface.
+  - [x] Add `masterExecutionMatrix` to `AstroMarketSignal`.
+  - [x] Implement `evaluateMasterExecutionMatrix(...)` deriving Market Condition, Trade Status, Timeframe, and SL/TP Profile.
+- [x] **Phase 58.2: Hero 4-Pillar Glassmorphic Execution Grid (`src/components/MarketBiasView.tsx`)**
+  - [x] Render 4-pillar execution strip directly below the Visual Bias Gauge.
+  - [x] Display high-contrast badges for Market Condition, Day Trade Status, Recommended Timeframe, and SL/TP Expectancy.
+- [x] **Phase 58.3: Automated Tests, Audit & Production Build**
+  - [x] Add Subtest 153 to `tests/engine.test.mjs` verifying all 4 execution answers across trending, sideways, and critical days.
+  - [x] Run `npx tsc --noEmit` (0 errors).
+  - [x] Run `npm test` (all 153 tests pass).
+  - [x] Run `npm run build` (clean Next.js 15 production build).
+  - [x] Git commit and push to remote.
+
