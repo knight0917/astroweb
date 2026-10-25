@@ -14,6 +14,7 @@ import { eclipticToCartesian } from "../../engine/skyCoordinates";
 import { RASHIS, NAKSHATRAS } from "../../engine/constants";
 import { getGlowTexture, getNebulaSkyTexture, getPlanetTexture, getRaysTexture, getTextTexture } from "./textures";
 import { SD_FONT_MONO, SD_FONT_SERIF } from "./devanagari";
+import { NAKSHATRA_COLORS, getNakshatraColor } from "./nakshatraColors";
 
 export const SD_COLORS = Object.freeze({
   background: "#140818",
@@ -186,14 +187,74 @@ export function ZodiacDegreeRing() {
 }
 
 // ---------------------------------------------------------------------------
-// Nakshatra star ring (dotted ring + glowing yogatara points, labels visible all the time)
+// 27 Nakshatras: Annular Sector Geometry Builder for Colored Shading Ribbon
+// ---------------------------------------------------------------------------
+
+function buildAnnularSectorGeometry(
+  startLonDeg: number,
+  endLonDeg: number,
+  rInner: number,
+  rOuter: number,
+  subdivisions = 16,
+  y = -0.04
+): THREE.BufferGeometry {
+  const geom = new THREE.BufferGeometry();
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+
+  const startRad = (startLonDeg * Math.PI) / 180;
+  const endRad = (endLonDeg * Math.PI) / 180;
+  const step = (endRad - startRad) / subdivisions;
+
+  for (let s = 0; s <= subdivisions; s++) {
+    const angle = startRad + s * step;
+    const cosA = Math.cos(angle);
+    const sinA = Math.sin(angle);
+
+    // Inner vertex
+    positions.push(rInner * cosA, y, rInner * sinA);
+    uvs.push(s / subdivisions, 0);
+
+    // Outer vertex
+    positions.push(rOuter * cosA, y, rOuter * sinA);
+    uvs.push(s / subdivisions, 1);
+  }
+
+  for (let s = 0; s < subdivisions; s++) {
+    const i0 = 2 * s;
+    const i1 = 2 * s + 1;
+    const i2 = 2 * (s + 1);
+    const i3 = 2 * (s + 1) + 1;
+    indices.push(i0, i1, i2);
+    indices.push(i2, i1, i3);
+  }
+
+  geom.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geom.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geom.setIndex(indices);
+  geom.computeVertexNormals();
+  return geom;
+}
+
+// ---------------------------------------------------------------------------
+// Nakshatra star ring (colored shaded sector areas + yogatara points + labels)
 // ---------------------------------------------------------------------------
 
 export function NakshatraStarRing() {
-  const R = ZODIAC_RADIUS - 2.4;
+  const R = ZODIAC_RADIUS - 2.4; // 37.6
+  const R_IN = 34.6;
+  const R_OUT = 39.75;
   const glow = useMemo(() => getGlowTexture(), []);
   const [hovered, setHovered] = useState<number | null>(null);
   const step = 360 / 27;
+
+  // Precompute 27 annular shaded sector geometries
+  const sectorGeometries = useMemo(() => {
+    return NAKSHATRA_COLORS.map((nak) =>
+      buildAnnularSectorGeometry(nak.startDeg, nak.endDeg, R_IN, R_OUT, 16, -0.04)
+    );
+  }, []);
 
   const dots = useMemo(() => {
     const g = new THREE.BufferGeometry();
@@ -211,8 +272,70 @@ export function NakshatraStarRing() {
     return new Float32Array(segs);
   }, [R, step]);
 
+  // Radial divider ticks separating adjacent Nakshatra sectors
+  const boundaryDividers = useMemo(() => {
+    const segs: number[] = [];
+    for (let i = 0; i < 27; i++) {
+      const a = eclipticToCartesian(i * step, 0, R_IN);
+      const b = eclipticToCartesian(i * step, 0, R_OUT);
+      segs.push(a[0], -0.03, a[2], b[0], -0.03, b[2]);
+    }
+    return new Float32Array(segs);
+  }, [step]);
+
+  const innerPoints = useMemo(() => circlePoints(R_IN, 240, -0.03), []);
+  const outerPoints = useMemo(() => circlePoints(R_OUT, 240, -0.03), []);
+
   return (
     <group>
+      {/* 1. Translucent Shaded Sectors for All 27 Nakshatras (e.g. Revati in #A5D6A7) */}
+      {NAKSHATRA_COLORS.map((nak, i) => {
+        const isHover = hovered === i;
+        return (
+          <mesh
+            key={`sector-${nak.index}`}
+            geometry={sectorGeometries[i]}
+            onPointerOver={(e: ThreeEvent<PointerEvent>) => {
+              e.stopPropagation();
+              setHovered(i);
+            }}
+            onPointerOut={() => setHovered((h) => (h === i ? null : h))}
+          >
+            <meshBasicMaterial
+              color={nak.color}
+              side={THREE.DoubleSide}
+              transparent
+              opacity={isHover ? 0.44 : 0.20}
+              depthWrite={false}
+              toneMapped={false}
+            />
+          </mesh>
+        );
+      })}
+
+      {/* 2. Inner and Outer Concentric Boundary Guide Lines */}
+      <lineLoop>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[innerPoints, 3]} />
+        </bufferGeometry>
+        <lineBasicMaterial color={SD_COLORS.ringDim} transparent opacity={0.35} depthWrite={false} />
+      </lineLoop>
+      <lineLoop>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[outerPoints, 3]} />
+        </bufferGeometry>
+        <lineBasicMaterial color={SD_COLORS.ringDim} transparent opacity={0.45} depthWrite={false} />
+      </lineLoop>
+
+      {/* 3. Radial Boundary Dividers between Nakshatra Sectors */}
+      <lineSegments>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[boundaryDividers, 3]} />
+        </bufferGeometry>
+        <lineBasicMaterial color="#ffffff" transparent opacity={0.28} depthWrite={false} />
+      </lineSegments>
+
+      {/* 4. Dotted Star Guide Line & Degree Ticks */}
       <points geometry={dots}>
         <pointsMaterial color={SD_COLORS.ringDim} size={1.6} sizeAttenuation={false} transparent opacity={0.55} depthWrite={false} />
       </points>
@@ -223,23 +346,31 @@ export function NakshatraStarRing() {
         <lineBasicMaterial color={SD_COLORS.ringDim} transparent opacity={0.45} />
       </lineSegments>
 
-      {NAKSHATRAS.map((nak, i) => {
+      {/* 5. Glowing Yogatara Star Points & Always-Visible Labels in Exact Nakshatra Shade */}
+      {NAKSHATRA_COLORS.map((nak, i) => {
         const pos = eclipticToCartesian((i + 0.5) * step, 0, R + 0.9);
         const isHover = hovered === i;
         return (
           <group key={nak.index} position={pos}>
             <sprite
-              scale={isHover ? [2.8, 2.8, 1] : [1.9, 1.9, 1]}
+              scale={isHover ? [3.0, 3.0, 1] : [2.0, 2.0, 1]}
               onPointerOver={(e: ThreeEvent<PointerEvent>) => {
                 e.stopPropagation();
                 setHovered(i);
               }}
               onPointerOut={() => setHovered((h) => (h === i ? null : h))}
             >
-              <spriteMaterial map={glow} color={isHover ? "#f59e0b" : SD_COLORS.starCore} transparent opacity={isHover ? 1 : 0.85} depthWrite={false} blending={THREE.AdditiveBlending} />
+              <spriteMaterial
+                map={glow}
+                color={isHover ? "#ffffff" : nak.color}
+                transparent
+                opacity={isHover ? 1.0 : 0.88}
+                depthWrite={false}
+                blending={THREE.AdditiveBlending}
+              />
             </sprite>
 
-            {/* Always-Visible Nakshatra Label in English */}
+            {/* Always-Visible Nakshatra Label with Colored Pill Indicator */}
             <Html center distanceFactor={40} position={[0, -1.2, 0]} zIndexRange={[0, 20]}>
               <div
                 className="select-none whitespace-nowrap text-center transition-all cursor-pointer pointer-events-auto group"
@@ -251,29 +382,37 @@ export function NakshatraStarRing() {
                     fontFamily: SD_FONT_MONO,
                     textShadow: "0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.9)",
                   }}
-                  className={`text-[8.5px] font-semibold tracking-tight transition-all ${
+                  className={`text-[8.5px] font-semibold tracking-tight transition-all flex items-center justify-center gap-1 ${
                     isHover
-                      ? "text-amber-300 scale-110 font-bold"
-                      : "text-amber-100/80 hover:text-amber-300"
+                      ? "text-white scale-110 font-bold"
+                      : "text-amber-100/85 hover:text-white"
                   }`}
                 >
-                  {nak.sanskritName}
+                  <span
+                    className="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0 shadow-sm"
+                    style={{ backgroundColor: nak.color }}
+                  />
+                  <span>{nak.name}</span>
                 </div>
 
                 {/* Rich Detail Tooltip on Hover */}
                 {isHover && (
                   <div
                     style={{ fontFamily: SD_FONT_MONO }}
-                    className="pointer-events-none absolute left-1/2 bottom-full mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-lg border border-[#4a2a44] bg-[#1a0c1d]/95 px-2.5 py-1.5 text-center shadow-2xl z-40 backdrop-blur-md"
+                    className="pointer-events-none absolute left-1/2 bottom-full mb-2 -translate-x-1/2 whitespace-nowrap rounded-xl border border-white/20 bg-[#16081a]/95 px-3 py-2 text-center shadow-2xl z-40 backdrop-blur-md"
                   >
-                    <div style={{ fontFamily: SD_FONT_SERIF }} className="text-[12px] text-[#f1e4dc] font-bold">
-                      {nak.sanskritName} (#{nak.index})
+                    <div style={{ fontFamily: SD_FONT_SERIF }} className="text-[13px] text-white font-bold flex items-center justify-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full inline-block border border-white/40" style={{ backgroundColor: nak.color }} />
+                      <span>{nak.name} · {nak.nameDevanagari} (#{nak.index + 1})</span>
                     </div>
-                    <div className="mt-0.5 text-[8.5px] text-[#d9b46a]">
-                      {nak.animalSymbol} {nak.animal} · Lord: {nak.lord} · Deity: {nak.deity}
+                    <div className="mt-1 text-[9px] text-[#f6d896]">
+                      Lord: <strong className="text-white">{nak.lord}</strong> · Deity: <strong className="text-white">{nak.deity}</strong>
                     </div>
-                    <div className="text-[7.5px] text-slate-400 font-mono mt-0.5">
-                      {(i * step).toFixed(1)}° – {((i + 1) * step).toFixed(1)}°
+                    <div className="text-[8px] text-slate-300 font-mono mt-0.5">
+                      Span: {nak.startDeg.toFixed(1)}° – {nak.endDeg.toFixed(1)}°
+                    </div>
+                    <div className="text-[8px] font-mono mt-1 px-1.5 py-0.5 rounded-md bg-white/10 text-white/90 inline-block">
+                      Shade Color: <span className="font-bold" style={{ color: nak.color }}>{nak.color}</span>
                     </div>
                   </div>
                 )}

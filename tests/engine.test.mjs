@@ -9418,3 +9418,34 @@ test("Phase 23: SkyDome Geocentric Trail Engine & Distance Mapping Verification"
   assert.ok(advanced.length >= samples.length - 1, "Advanced trail must preserve window capacity");
   assert.strictEqual(advanced[advanced.length - 1].t, head.t, "Latest sample must be head");
 });
+
+test("Phase 56: SkyDome 27-Nakshatra Colored Sector Shading Verification", async () => {
+  const { NAKSHATRA_COLORS, getNakshatraColor } = await import("../src/components/skydome/nakshatraColors.ts");
+
+  // 1. Array length and index completeness
+  assert.strictEqual(NAKSHATRA_COLORS.length, 27, "Must define exactly 27 Nakshatras");
+  NAKSHATRA_COLORS.forEach((nak, idx) => {
+    assert.strictEqual(nak.index, idx, `Nakshatra index must match array index ${idx}`);
+    assert.ok(nak.name && nak.name.length > 2, `Nakshatra ${idx} must have a valid English name`);
+    assert.ok(nak.nameDevanagari && nak.nameDevanagari.length > 0, `Nakshatra ${idx} must have Devanagari script`);
+    assert.ok(/^#[0-9A-Fa-f]{6}$/.test(nak.color), `Nakshatra ${idx} color must be valid 6-char hex (${nak.color})`);
+  });
+
+  // 2. Verified specific color verification (Revati #A5D6A7, Ardra #00E676, Pushya #FFCA28, Krittika #FFB300)
+  assert.strictEqual(getNakshatraColor(26), "#A5D6A7", "Revati index 26 must return #A5D6A7");
+  assert.strictEqual(getNakshatraColor("Revati"), "#A5D6A7", "Revati by name must return #A5D6A7");
+  assert.strictEqual(getNakshatraColor("Ardra"), "#00E676", "Ardra by name must return #00E676");
+  assert.strictEqual(getNakshatraColor("Pushya"), "#FFCA28", "Pushya by name must return #FFCA28");
+  assert.strictEqual(getNakshatraColor("Ashwini"), "#D32F2F", "Ashwini by name must return #D32F2F");
+
+  // 3. Ecliptic arc coverage: exactly 13°20' per Nakshatra and continuous 0 to 360°
+  assert.strictEqual(NAKSHATRA_COLORS[0].startDeg, 0, "Ashwini must start at 0.0°");
+  assert.strictEqual(NAKSHATRA_COLORS[26].endDeg, 360, "Revati must terminate at 360.0°");
+  for (let i = 0; i < 27; i++) {
+    const span = NAKSHATRA_COLORS[i].endDeg - NAKSHATRA_COLORS[i].startDeg;
+    assert.ok(Math.abs(span - 360 / 27) < 0.001, `Nakshatra ${i} span must be 13°20'`);
+    if (i > 0) {
+      assert.ok(Math.abs(NAKSHATRA_COLORS[i].startDeg - NAKSHATRA_COLORS[i-1].endDeg) < 0.001, `Nakshatra ${i} must seamlessly connect with ${i-1}`);
+    }
+  }
+});

@@ -695,54 +695,6 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
             ></div>
           </div>
         </div>
-
-        {/* Empirical 6-Month Backtest Discovery Banner */}
-        <div className="bg-slate-900/90 border border-amber-500/30 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-500 text-slate-950">
-                Empirical MT5 Backtest Edge (GOLD.pro)
-              </span>
-              {empiricalNakshatraEdge && (
-                <span className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono ${
-                  empiricalNakshatraEdge.bias === "BULLISH"
-                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                    : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
-                }`}>
-                  ⭐ {empiricalNakshatraEdge.name}: {empiricalNakshatraEdge.winRatePct}% {empiricalNakshatraEdge.bias} ({empiricalNakshatraEdge.historicalNetPts > 0 ? "+" : ""}{empiricalNakshatraEdge.historicalNetPts} pts)
-                </span>
-              )}
-              {empiricalTithiEdge && (
-                <span className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono ${
-                  empiricalTithiEdge.bias === "BULLISH"
-                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                    : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
-                }`}>
-                  {empiricalTithiEdge.name} Tithi: {empiricalTithiEdge.winRatePct}% {empiricalTithiEdge.bias}
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-slate-300 font-medium">
-              {empiricalNakshatraEdge
-                ? empiricalNakshatraEdge.tradeGuidance
-                : "Standard classical alignment active. Observe session open price action."}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="bg-slate-950 border border-amber-500/40 rounded-xl px-3 py-1.5 text-center shadow-md">
-              <div className="text-[9px] text-amber-400 uppercase font-mono font-bold flex items-center justify-center gap-1">
-                <span>🎯 Day Turning Window</span>
-              </div>
-              <div className="text-xs font-bold text-amber-300 font-mono">
-                {dynamicReversalWindows.primary.romeTime}
-              </div>
-              <div className="text-[9px] text-slate-400">
-                {dynamicReversalWindows.primary.probabilityPct}% Win Expectancy
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* 24-Hour Intraday Timing Roadmap Section with Variable Vedic Horas vs MT5 H1 Switch */}
@@ -841,6 +793,50 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                   {f.label}
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Empirical MT5 Backtest Edge (Shifted from Hero: Daily Moon Nakshatra & Tithi Edge) */}
+        <div className="bg-slate-900/90 border border-amber-500/30 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-md">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-500 text-slate-950">
+                Empirical MT5 Backtest Edge (GOLD.pro)
+              </span>
+              {empiricalNakshatraEdge ? (
+                <span className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono ${
+                  empiricalNakshatraEdge.bias === "BULLISH"
+                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                    : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                }`}>
+                  ⭐ {empiricalNakshatraEdge.name}: {empiricalNakshatraEdge.winRatePct}% {empiricalNakshatraEdge.bias} ({empiricalNakshatraEdge.historicalNetPts > 0 ? "+" : ""}{empiricalNakshatraEdge.historicalNetPts} pts)
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded text-[11px] font-bold font-mono bg-slate-800 text-slate-300 border border-slate-700">
+                  ⭐ Moon in {signal.dikshitLiquidityCycle.moonNakshatraName || "Active Star"} (Neutral Alignment)
+                </span>
+              )}
+              {empiricalTithiEdge && (
+                <span className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono ${
+                  empiricalTithiEdge.bias === "BULLISH"
+                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                    : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                }`}>
+                  {empiricalTithiEdge.name} Tithi: {empiricalTithiEdge.winRatePct}% {empiricalTithiEdge.bias}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-300 font-medium">
+              {empiricalNakshatraEdge
+                ? empiricalNakshatraEdge.tradeGuidance
+                : "Standard classical alignment active. Observe session open price action."}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="text-[11px] font-mono text-slate-400 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 whitespace-nowrap">
+              🌙 Transit Star: <span className="text-amber-300 font-bold">{signal.dikshitLiquidityCycle.moonNakshatraName || "Active"}</span>
             </div>
           </div>
         </div>

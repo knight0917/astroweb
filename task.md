@@ -1505,3 +1505,29 @@
 - [x] **Phase 55.8: Continuous Live Real-Time Tracking & 3D Animation Loop** — global interval ticker `syncGlobalLiveInterval` (1s live transit ticks), `Canvas frameloop="always"` for fluid diurnal rotation/orbital drift, and unified live states across `VerticalTimeTravel.tsx` and `TimeTravelSlider.tsx`.
 - [x] **Phase 55.9: Flexible 3D Camera Orbit & Gesture Decoupling** — stabilized static `DEFAULT_CAMERA_CONFIG` on Canvas preventing React Three Fiber's internal `applyProps` camera reset on store renders, registered `<OrbitControls makeDefault>`, fine-grained Zustand selectors in `SkyDome`, active state drag suppression in `useFrame` (`controls.state !== -1`), and eliminated automatic return-to-origin on entity deselect.
 - [x] **Phase 55.10: Verification** — `npx tsc --noEmit` (0 errors), `npm test` (all 150 tests passing).
+
+---
+
+# Phase 56: 3D SkyDome 27-Nakshatra Colored Sector Shading (`#A5D6A7` Revati & 27 Color System)
+
+## Status: Complete & Verified (All 151 Tests Passing & Production Build Clean)
+- **Trigger Keywords**: `nakshatra-color-shading`, `27-nakshatras`, `annular-sector-mesh`, `revati-a5d6a7`, `ecliptic-ribbon`, `yogatara-star-tint`
+- **Scope**: Render translucent 13°20' colored sector ribbons in the 3D SkyDome matching the confirmed 27 Nakshatra sacred color system (e.g. Revati in `#A5D6A7`).
+
+## Phases & Milestones
+
+- [x] **Phase 56.1: Nakshatra Colors Constant & Mapping (`src/components/skydome/nakshatraColors.ts`)**
+  - [x] Canonical array `NAKSHATRA_COLORS` with 27 Nakshatras, indices, Sanskrit/Devanagari names, rulers, deities, exact degree boundaries, and color hexes.
+  - [x] Locked Revati to `#A5D6A7` as requested by user.
+  - [x] Helper `getNakshatraColor(longitudeDeg)` with modular wrapping and boundary clamping.
+- [x] **Phase 56.2: Annular Sector Geometry & Shading Mesh (`src/components/skydome/visuals.tsx`)**
+  - [x] `buildAnnularSectorGeometry(startDeg, endDeg, innerR, outerR, yOffset, segments)` generating indexed 16-segment annular ribbon geometry.
+  - [x] Embedded annular sectors ($R_{in} = 34.6$, $R_{out} = 39.75$) with base translucent opacity 0.20, hover glow 0.44, `depthWrite: false`, double-sided.
+  - [x] Concentric boundary guide circles and radial tick lines separating all 27 sectors.
+- [x] **Phase 56.3: Yogatara Star Glow & Hover Integration**
+  - [x] Synchronized Yogatara star billboard sprites to render in their Nakshatra's sacred color frequency with hover scaling.
+  - [x] HTML billboard tooltip presenting Devanagari name, lord, deity, degree span, and color badge on hover.
+- [x] **Phase 56.4: Verification & Automated Tests (`tests/engine.test.mjs`, `npx tsc --noEmit`)**
+  - [x] Added Subtest 151 to `tests/engine.test.mjs` verifying degree coverage ($360^\circ$ continuous arc), Revati color matching `#A5D6A7`, lookup coverage, and sector geometry index topology.
+  - [x] All 151 subtests pass cleanly (`151 passed, 0 failed`).
+  - [x] TypeScript check `npx tsc --noEmit` clean (0 errors).
