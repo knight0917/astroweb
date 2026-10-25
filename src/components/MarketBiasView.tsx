@@ -44,6 +44,7 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
   const [timelineMode, setTimelineMode] = useState<"VEDIC_VARIABLE" | "MT5_FIXED">("VEDIC_VARIABLE");
   const [selectedHoraIndex, setSelectedHoraIndex] = useState<number>(2); // Default to Day Hora 2 (Venus/Active)
   const [romeTimeDisplay, setRomeTimeDisplay] = useState<string>("");
+  const [showChopRadarDetails, setShowChopRadarDetails] = useState<boolean>(true);
 
   // Target Date Memoization
   const targetDate = useMemo(() => {
@@ -725,6 +726,208 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
             ></div>
           </div>
         </div>
+
+        {/* Hero Circuit-Breaker Warning Banner (Phase 57.2) */}
+        {signal.chopRadar.circuitBreakerActive && (
+          <div className="bg-rose-950/90 border-2 border-rose-500/90 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl shadow-rose-950/60 animate-pulse">
+            <div className="flex items-start sm:items-center gap-3">
+              <span className="text-3xl">🛑</span>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-rose-500 text-white">
+                    HARD CIRCUIT-BREAKER TRIPPED
+                  </span>
+                  <span className="text-xs font-mono font-bold text-rose-300">
+                    {signal.chopRadar.regimeTitle} • Risk Meter: {signal.chopRadar.chopScore}%
+                  </span>
+                </div>
+                <p className="text-xs text-rose-100 font-medium mt-1">
+                  <strong>Tripwire Activated:</strong> {signal.chopRadar.activeWarnings[0] || signal.chopRadar.regimeGuidance}. {signal.chopRadar.recommendedLotScale === 0 ? "Stand down completely; zero trade entries advised." : `Reduce position sizing to ${signal.chopRadar.recommendedLotScale}×. Expect high friction and stop hunts.`}
+                </p>
+              </div>
+            </div>
+            <div className="flex sm:flex-col items-center sm:items-end gap-1 flex-shrink-0">
+              <span className="text-[10px] font-mono uppercase text-rose-300">Max Sizing</span>
+              <span className="px-3.5 py-1.5 rounded-xl text-xs font-black font-mono bg-rose-900 border border-rose-400 text-rose-100 shadow-sm">
+                {signal.chopRadar.recommendedLotScale}×
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 6-Pillar Astrological Chop & Whipsaw Radar Dashboard (Phase 57.3) */}
+      <div className="bg-slate-950/85 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-amber-400 font-extrabold text-base flex items-center gap-1.5">
+                <span>🛡️</span>
+                <span>6-Pillar Astrological Chop &amp; Whipsaw Radar</span>
+              </span>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border ${
+                signal.chopRadar.riskLevel === "CRITICAL" || signal.chopRadar.riskLevel === "HIGH"
+                  ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                  : signal.chopRadar.riskLevel === "MEDIUM"
+                  ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                  : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+              }`}>
+                {signal.chopRadar.regimeTitle}
+              </span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                signal.chopRadar.circuitBreakerActive
+                  ? "bg-rose-500 text-slate-950 border-rose-400 shadow-sm"
+                  : "bg-slate-900 text-slate-400 border-slate-800"
+              }`}>
+                {signal.chopRadar.circuitBreakerActive ? "🛑 CIRCUIT-BREAKER ENGAGED" : "✅ NORMAL EXECUTION"}
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 max-w-3xl">
+              Classical Vedic volatility filters (Panchaka, Graha Yuddha, Sandhi/Gandanta, Rikta Tithis, Mercury Duality, Rahu Kaal) calibrated against empirical MT5 market structure to eliminate account churn.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl px-3.5 py-2 text-center">
+              <div className="text-[10px] font-mono uppercase text-slate-400">Position Sizing</div>
+              <div className={`text-xl font-black font-mono ${
+                signal.chopRadar.recommendedLotScale === 0
+                  ? "text-rose-400"
+                  : signal.chopRadar.recommendedLotScale < 1
+                  ? "text-amber-300"
+                  : "text-emerald-400"
+              }`}>
+                {signal.chopRadar.recommendedLotScale}×
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowChopRadarDetails((prev) => !prev)}
+              className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-bold text-slate-300 transition cursor-pointer flex items-center gap-1.5"
+            >
+              <span>{showChopRadarDetails ? "Hide Pillars" : "View 6 Pillars"}</span>
+              <span>{showChopRadarDetails ? "▲" : "▼"}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Aggregate Chop Risk Meter */}
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center text-xs font-mono">
+            <span className="font-bold text-slate-300 flex items-center gap-1.5">
+              <span>Overall Chop Risk Meter:</span>
+              <span className={`font-black text-sm ${
+                signal.chopRadar.chopScore >= 65
+                  ? "text-rose-400"
+                  : signal.chopRadar.chopScore >= 35
+                  ? "text-amber-300"
+                  : "text-emerald-400"
+              }`}>
+                {signal.chopRadar.chopScore}%
+              </span>
+              <span className="text-slate-500 font-normal">
+                ({signal.chopRadar.pillars.filter((p) => p.isActive).length} / 6 Active Pillars)
+              </span>
+            </span>
+            <div className="flex items-center gap-3 text-[10px] text-slate-400">
+              <span className="text-emerald-400">&lt;35% Clean Flow</span>
+              <span className="text-amber-300">35-64% Friction</span>
+              <span className="text-rose-400">&ge;65% Hard Tripwire</span>
+            </div>
+          </div>
+
+          <div className="w-full h-3.5 bg-slate-900 rounded-full border border-slate-800 overflow-hidden relative">
+            <div
+              className={`h-full transition-all duration-500 rounded-full ${
+                signal.chopRadar.chopScore >= 65
+                  ? "bg-gradient-to-r from-amber-500 via-rose-500 to-rose-600"
+                  : signal.chopRadar.chopScore >= 35
+                  ? "bg-gradient-to-r from-emerald-500 via-amber-400 to-amber-500"
+                  : "bg-gradient-to-r from-emerald-600 to-emerald-400"
+              }`}
+              style={{ width: `${Math.min(100, Math.max(5, signal.chopRadar.chopScore))}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* 6 Individual Live Pillar Cards */}
+        {showChopRadarDetails && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
+            {signal.chopRadar.pillars.map((pillar) => {
+              const isCrit = pillar.severity === "CRITICAL";
+              const isHigh = pillar.severity === "HIGH";
+
+              return (
+                <div
+                  key={pillar.id}
+                  className={`rounded-2xl p-3.5 border transition-all flex flex-col justify-between gap-2.5 ${
+                    pillar.isActive
+                      ? isCrit
+                        ? "bg-rose-950/40 border-rose-500/70 shadow-lg shadow-rose-950/30"
+                        : isHigh
+                        ? "bg-amber-950/40 border-amber-500/60 shadow-md shadow-amber-950/20"
+                        : "bg-yellow-950/30 border-yellow-500/50"
+                      : "bg-slate-900/60 border-slate-800/80 hover:border-slate-700/80"
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between gap-1.5">
+                      <span className="text-xs font-bold text-white flex items-center gap-1">
+                        {pillar.id === "PANCHAKA" && "🌀"}
+                        {pillar.id === "GRAHA_YUDDHA" && "⚔️"}
+                        {pillar.id === "GANDANTA_SANDHI" && "🌫️"}
+                        {pillar.id === "RIKTA_TITHI" && "🕳️"}
+                        {pillar.id === "MERCURY_DUALITY" && "☿"}
+                        {pillar.id === "RAHU_KAAL" && "⚠️"}
+                        <span>{pillar.name}</span>
+                      </span>
+                      <span
+                        className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                          pillar.isActive
+                            ? isCrit
+                              ? "bg-rose-500 text-white"
+                              : "bg-amber-500 text-slate-950"
+                            : "bg-slate-800 text-slate-400"
+                        }`}
+                      >
+                        {pillar.isActive ? `ACTIVE (+${pillar.scoreContribution}%)` : "STANDBY (0%)"}
+                      </span>
+                    </div>
+                    <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between">
+                      <span>{pillar.sanskritName}</span>
+                      <span className={`font-bold ${
+                        pillar.isActive ? (isCrit ? "text-rose-400" : "text-amber-300") : "text-slate-500"
+                      }`}>
+                        {pillar.severity} IMPACT
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs">
+                    <div className={`p-2 rounded-xl text-[11px] leading-relaxed ${
+                      pillar.isActive
+                        ? isCrit
+                          ? "bg-rose-900/30 text-rose-100 border border-rose-500/30 font-medium"
+                          : "bg-amber-900/30 text-amber-100 border border-amber-500/30 font-medium"
+                        : "bg-slate-950/60 text-slate-300 border border-slate-800/80"
+                    }`}>
+                      {pillar.description}
+                    </div>
+
+                    <div className={`p-2 rounded-xl text-[11px] border ${
+                      pillar.isActive
+                        ? "bg-slate-950/80 border-slate-800 text-slate-200"
+                        : "bg-slate-950/40 border-slate-900 text-slate-400"
+                    }`}>
+                      <strong className="text-amber-300">Defense:</strong> {pillar.tradingImpact}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* 24-Hour Intraday Timing Roadmap Section with Variable Vedic Horas vs MT5 H1 Switch */}
@@ -966,6 +1169,15 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
               const isMoon = hora.lord === "Moon";
               const isJupiter = hora.lord === "Jupiter";
 
+              // Chop Trap Detection (Phase 57.4)
+              const rahuSlot = vedicHorasResult?.dayChoghadiyas.find((c) => c.name === "Kaal");
+              const isRahuTrap = Boolean(
+                rahuSlot &&
+                hora.startTime.getTime() < rahuSlot.endTime.getTime() &&
+                hora.endTime.getTime() > rahuSlot.startTime.getTime()
+              );
+              const isMercuryTrap = hora.lord === "Mercury";
+
               return (
                 <button
                   key={hora.index}
@@ -974,6 +1186,8 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                   className={`p-2.5 rounded-2xl border flex flex-col justify-between items-center gap-1.5 transition-all cursor-pointer text-center relative ${
                     isSelected
                       ? "bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/50 scale-102 z-10 shadow-lg shadow-amber-500/20"
+                      : isRahuTrap
+                      ? "bg-rose-950/20 border-rose-500/40 hover:bg-rose-900/30"
                       : isSun
                       ? "bg-amber-950/30 border-amber-500/50 hover:bg-amber-900/40"
                       : isVenus
@@ -1042,6 +1256,18 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                   >
                     {isBullish ? "Buy Only" : isBearish ? "Sell Only" : "Two-Way"}
                   </div>
+
+                  {/* Chop Trap Bottom Badges (Phase 57.4) */}
+                  {isRahuTrap && (
+                    <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-wider bg-rose-600 text-white px-1.5 py-0.2 rounded-full border border-rose-400 z-10 shadow-sm whitespace-nowrap">
+                      ⚠️ RAHU KAAL
+                    </span>
+                  )}
+                  {!isRahuTrap && isMercuryTrap && (
+                    <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-wider bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full border border-amber-300 z-10 shadow-sm whitespace-nowrap">
+                      ☿ CHOP TRAP
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -1071,6 +1297,8 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                   className={`p-2.5 rounded-2xl border flex flex-col justify-between items-center gap-1.5 transition-all cursor-pointer text-center relative ${
                     isSelected
                       ? "bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/50 scale-102 z-10 shadow-lg shadow-amber-500/20"
+                      : slice.isChopTrap && slice.chopSeverity === "CRITICAL"
+                      ? "bg-rose-950/30 border-rose-500/50 hover:bg-rose-900/40"
                       : isSunHora
                       ? "bg-amber-950/30 border-amber-500/50 hover:bg-amber-900/40"
                       : isVenusHora
@@ -1130,6 +1358,23 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                   >
                     {isBullish ? "Buy Only" : isBearish ? "Sell Only" : "Two-Way"}
                   </div>
+
+                  {/* MT5 H1 Chop Trap Bottom Badge (Phase 57.4) */}
+                  {slice.isChopTrap && (
+                    <span className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full z-10 shadow-sm whitespace-nowrap ${
+                      slice.chopSeverity === "CRITICAL"
+                        ? "bg-rose-600 text-white border border-rose-400 animate-pulse"
+                        : "bg-amber-500 text-slate-950 border border-amber-300 font-bold"
+                    }`}>
+                      {slice.chopSeverity === "CRITICAL"
+                        ? "🛑 NO-TRADE"
+                        : slice.chopReason === "MERCURY_HORA"
+                        ? "☿ CHOP TRAP"
+                        : slice.chopReason === "RAHU_KAAL"
+                        ? "⚠️ RAHU TRAP"
+                        : "⚠️ CHOP TRAP"}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -1197,6 +1442,55 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                   <span>♄ <strong>Saturn Hora (-54.0 pts Alpha):</strong> Heavy resistance consolidation and slow grind. Range-bound execution favored.</span>
                 )}
               </p>
+
+              {/* Chop Telemetry Strip for Vedic Hora (Phase 57.4) */}
+              {(() => {
+                const rahuSlot = vedicHorasResult?.dayChoghadiyas.find((c) => c.name === "Kaal");
+                const isHoraInRahu = Boolean(
+                  rahuSlot &&
+                  activeVedicHoraDetail.startTime.getTime() < rahuSlot.endTime.getTime() &&
+                  activeVedicHoraDetail.endTime.getTime() > rahuSlot.startTime.getTime()
+                );
+                const isHoraMercury = activeVedicHoraDetail.lord === "Mercury";
+
+                if (isHoraMercury || isHoraInRahu) {
+                  return (
+                    <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">⚠️</span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-rose-300">
+                              {isHoraMercury ? "Mercury Duality & Alpha Trap" : "Rahu Kaal Fakeout Window"}
+                            </span>
+                            <span className="text-[9px] font-mono text-amber-300 bg-amber-500/20 px-1.5 py-0.2 rounded">
+                              {isHoraMercury ? "-126.5 pts Drag" : "High Friction"}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-rose-200/90 mt-0.5">
+                            {isHoraMercury
+                              ? "Mercury hora creates 2-way rotational whipsaws. EA trailing stops are vulnerable; scalping tight ranges is advised."
+                              : "Rahu Kaal false breakout vortex. Breakout thrusts frequently collapse; wait for exit pivot before placing orders."}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded border border-rose-500/30 whitespace-nowrap self-end sm:self-auto">
+                        Max Lot: {signal.chopRadar.recommendedLotScale}×
+                      </span>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl px-2.5 py-1.5 flex items-center justify-between text-[11px] text-emerald-300 mt-2">
+                    <span className="flex items-center gap-1.5">
+                      <span>✅</span>
+                      <span>Clear Directional Flow Regime (No Hora Chop Trap)</span>
+                    </span>
+                    <span className="font-mono text-[10px] text-slate-400">Position Sizing: {signal.chopRadar.recommendedLotScale}×</span>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="flex items-center gap-3 text-xs font-mono flex-shrink-0">
@@ -1268,6 +1562,39 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
               <p className="text-xs text-slate-300 font-medium">
                 {activeHourDetail.shastricReason}
               </p>
+
+              {/* Chop Telemetry Strip for MT5 H1 Candle (Phase 57.4) */}
+              {activeHourDetail.isChopTrap ? (
+                <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">{activeHourDetail.chopSeverity === "CRITICAL" ? "🛑" : "⚠️"}</span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-rose-300">
+                          {activeHourDetail.chopSeverity === "CRITICAL" ? "Critical No-Trade Window" : "Chop Trap Active"}
+                        </span>
+                        <span className="text-[9px] font-mono text-amber-300 bg-amber-500/20 px-1.5 py-0.2 rounded">
+                          Trigger: {activeHourDetail.chopReason ? activeHourDetail.chopReason.replace(/_/g, " ") : "CHOP RISK"}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-rose-200/90 mt-0.5">
+                        Astrological volatility trap detected. Avoid momentum breakouts; scale positions to {signal.chopRadar.recommendedLotScale}× or stand down.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded border border-rose-500/30 whitespace-nowrap self-end sm:self-auto">
+                    Max Lot: {signal.chopRadar.recommendedLotScale}×
+                  </span>
+                </div>
+              ) : (
+                <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl px-2.5 py-1.5 flex items-center justify-between text-[11px] text-emerald-300 mt-2">
+                  <span className="flex items-center gap-1.5">
+                    <span>✅</span>
+                    <span>Smooth Trend Flow Regime (Normal H1 Execution)</span>
+                  </span>
+                  <span className="font-mono text-[10px] text-slate-400">Position Sizing: {signal.chopRadar.recommendedLotScale}×</span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-3 text-xs font-mono flex-shrink-0">

@@ -9449,3 +9449,40 @@ test("Phase 56: SkyDome 27-Nakshatra Colored Sector Shading Verification", async
     }
   }
 });
+
+test("Phase 57: Astrological Chop & Whipsaw Avoidance Circuit-Breaker System Verification", async () => {
+  const { calculateAstroMarketSignal } = await import("../src/engine/financialAstro.ts");
+
+  // 1. Test Chop Radar structure on a standard date
+  const signal = calculateAstroMarketSignal("XAUUSD", new Date("2026-04-15T12:00:00Z"));
+  assert.ok(signal.chopRadar, "Signal must include chopRadar");
+  assert.ok(typeof signal.chopRadar.chopScore === "number", "chopScore must be numeric");
+  assert.ok(signal.chopRadar.chopScore >= 0 && signal.chopRadar.chopScore <= 100, "chopScore must be in 0-100 range");
+  assert.ok(["LOW", "MEDIUM", "HIGH", "CRITICAL"].includes(signal.chopRadar.riskLevel), "riskLevel must be valid");
+  assert.strictEqual(signal.chopRadar.pillars.length, 6, "Must define all 6 classical pillars");
+
+  // 2. Test Pillar IDs
+  const pillarIds = signal.chopRadar.pillars.map((p) => p.id);
+  assert.ok(pillarIds.includes("panchaka"));
+  assert.ok(pillarIds.includes("graha_yuddha"));
+  assert.ok(pillarIds.includes("gandanta_sandhi"));
+  assert.ok(pillarIds.includes("rikta_tithi"));
+  assert.ok(pillarIds.includes("mercury_duality"));
+  assert.ok(pillarIds.includes("rahu_kaal"));
+
+  // 3. Test High-Chop / Panchaka Date (Dec 28, 2025 Moon in Revati)
+  const dec28 = calculateAstroMarketSignal("XAUUSD", new Date("2025-12-28T12:00:00Z"));
+  assert.strictEqual(dec28.dikshitLiquidityCycle.isPanchaka5xActive, true, "Dec 28 2025 Moon in Revati must be Panchaka active");
+  const panchakaPillar = dec28.chopRadar.pillars.find((p) => p.id === "panchaka");
+  assert.strictEqual(panchakaPillar?.isActive, true, "Panchaka pillar must be active on Dec 28 2025");
+  assert.ok(dec28.chopRadar.chopScore >= 65, "Dec 28 2025 must have elevated chop score >= 65%");
+  assert.strictEqual(dec28.chopRadar.circuitBreakerActive, true, "Dec 28 2025 must trigger circuit breaker");
+
+  // 4. Test Intraday Timeline Chop Flags
+  assert.ok(dec28.intradayTimeline.length === 24, "Intraday timeline must contain 24 hourly slices");
+  const mercuryHour = dec28.intradayTimeline.find((s) => s.horaLord === "Mercury");
+  if (mercuryHour) {
+    assert.strictEqual(mercuryHour.isChopTrap, true, "Mercury hora must be flagged as a chop trap");
+    assert.ok(mercuryHour.chopReason?.includes("Mercury"), "Reason must mention Mercury");
+  }
+});

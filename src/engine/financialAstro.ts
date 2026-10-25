@@ -184,6 +184,44 @@ export interface IntradayHourSlice {
   isPrimaryLordHora: boolean;
   isOpposingLordHora: boolean;
   shastricReason: string;
+  isChopTrap?: boolean;
+  chopSeverity?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  chopReason?: string;
+}
+
+export interface ChopPillarDetail {
+  id: string;
+  name: string;
+  sanskritName: string;
+  isActive: boolean;
+  severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  scoreContribution: number;
+  description: string;
+  tradingImpact: string;
+}
+
+export interface ChopRadarAssessment {
+  chopScore: number; // 0 - 100%
+  riskLevel: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  circuitBreakerActive: boolean;
+  marketRegime: "CLEAN_TREND" | "STRUCTURED_RANGE" | "CHOPPY_WHIPSAW" | "CRITICAL_VOID";
+  regimeTitle: string;
+  regimeGuidance: string;
+  recommendedLotScale: number; // 1.0, 0.5, 0.25, or 0.0
+  pillars: ChopPillarDetail[];
+  activeWarnings: string[];
+  gandantaDetails: {
+    isGandanta: boolean;
+    isWaterFireJunction: boolean;
+    junctionName?: string;
+    degreesFromNode?: number;
+  };
+  riktaTithiDetails: {
+    isRikta: boolean;
+    tithiName: string;
+    lunarDay: number;
+    paksha: "Shukla" | "Krishna";
+  };
 }
 
 export interface AstroMarketSignal {
@@ -196,6 +234,7 @@ export interface AstroMarketSignal {
     marketRegime: "EXPANSION_BULLISH" | "EXPANSION_BEARISH" | "HIGH_VOL_CHOP" | "STABLE_TREND" | "CONSOLIDATION";
     confidenceScore: number;         // 0 to 100%
   };
+  chopRadar: ChopRadarAssessment;
   intradayTimeline: IntradayHourSlice[];
   dikshitLiquidityCycle: {
     moonNakshatraIndex: number;
@@ -318,7 +357,12 @@ function angularDistance(lon1: number, lon2: number): number {
 export function calculateIntradayTimeline(
   symbol: MarketSymbol,
   baseDate: Date,
-  dailyBias: number
+  dailyBias: number,
+  options?: {
+    isPanchakaActive?: boolean;
+    isGandantaActive?: boolean;
+    isRiktaTithi?: boolean;
+  }
 ): IntradayHourSlice[] {
   const asset = ASSET_SIGNIFICATIONS[symbol] || ASSET_SIGNIFICATIONS.XAUUSD;
   const year = baseDate.getUTCFullYear();
@@ -383,6 +427,35 @@ export function calculateIntradayTimeline(
     else if (h >= 12 && h <= 16) sessionName = "London / NY Overlap";
     else if (h >= 17) sessionName = "NY Afternoon / Close";
 
+    // Compute hour-specific chop risk
+    let hourlyChopScore = 0;
+    const hourlyChopReasons: string[] = [];
+
+    if (horaLord === "Mercury") {
+      hourlyChopScore += 35;
+      hourlyChopReasons.push("Mercury Hora (-126.5 pts Alpha Drag)");
+    }
+
+    if (options?.isPanchakaActive) {
+      hourlyChopScore += 25;
+      hourlyChopReasons.push("Panchaka 5x Turbulence");
+    }
+
+    if (options?.isGandantaActive) {
+      hourlyChopScore += 45;
+      hourlyChopReasons.push("Moon in Gandanta / Sandhi");
+    }
+
+    if (options?.isRiktaTithi) {
+      hourlyChopScore += 15;
+      hourlyChopReasons.push("Rikta Tithi (Void Day)");
+    }
+
+    const isChopTrap = hourlyChopScore >= 35;
+    const chopSeverity: IntradayHourSlice["chopSeverity"] =
+      hourlyChopScore >= 60 ? "HIGH" : hourlyChopScore >= 35 ? "MEDIUM" : "LOW";
+    const chopReason = hourlyChopReasons.length > 0 ? hourlyChopReasons.join(" • ") : undefined;
+
     const startH = h.toString().padStart(2, "0");
     const endH = ((h + 1) % 24).toString().padStart(2, "0");
 
@@ -397,6 +470,9 @@ export function calculateIntradayTimeline(
       isPrimaryLordHora,
       isOpposingLordHora,
       shastricReason,
+      isChopTrap,
+      chopSeverity,
+      chopReason,
     });
   }
 
@@ -813,10 +889,211 @@ export function calculateAstroMarketSignal(
     marketRegime = "CONSOLIDATION";
   }
 
+  // ============================================================================
+  // 8. Classical 6-Pillar Chop & Whipsaw Radar Engine (Brihat Samhita & Vyapar Bhavishya)
+  // ============================================================================
+  const moonDeg = planets.Moon ? planets.Moon.rashi.degreesInSign : 0;
+  const moonRashiIdx = planets.Moon ? planets.Moon.rashi.index : 0;
+
+  // Water-Fire Gandanta Nodes (Pisces-Aries, Cancer-Leo, Scorpio-Sagittarius)
+  let isWaterFireJunction = false;
+  let isGandanta = false;
+  let gandantaJunctionName: string | undefined = undefined;
+  let degreesFromNode: number | undefined = undefined;
+
+  if (moonRashiIdx === 11 && moonDeg >= 29.0) {
+    isWaterFireJunction = true;
+    isGandanta = true;
+    gandantaJunctionName = "Revati – Ashwini (Abhukta Mula / Pisces-Aries)";
+    degreesFromNode = Number((30.0 - moonDeg).toFixed(2));
+  } else if (moonRashiIdx === 0 && moonDeg <= 1.0) {
+    isWaterFireJunction = true;
+    isGandanta = true;
+    gandantaJunctionName = "Revati – Ashwini (Abhukta Mula / Pisces-Aries)";
+    degreesFromNode = Number(moonDeg.toFixed(2));
+  } else if (moonRashiIdx === 3 && moonDeg >= 29.0) {
+    isWaterFireJunction = true;
+    isGandanta = true;
+    gandantaJunctionName = "Ashlesha – Magha (Cancer-Leo)";
+    degreesFromNode = Number((30.0 - moonDeg).toFixed(2));
+  } else if (moonRashiIdx === 4 && moonDeg <= 1.0) {
+    isWaterFireJunction = true;
+    isGandanta = true;
+    gandantaJunctionName = "Ashlesha – Magha (Cancer-Leo)";
+    degreesFromNode = Number(moonDeg.toFixed(2));
+  } else if (moonRashiIdx === 7 && moonDeg >= 29.0) {
+    isWaterFireJunction = true;
+    isGandanta = true;
+    gandantaJunctionName = "Jyeshtha – Mula (Scorpio-Sagittarius)";
+    degreesFromNode = Number((30.0 - moonDeg).toFixed(2));
+  } else if (moonRashiIdx === 8 && moonDeg <= 1.0) {
+    isWaterFireJunction = true;
+    isGandanta = true;
+    gandantaJunctionName = "Jyeshtha – Mula (Scorpio-Sagittarius)";
+    degreesFromNode = Number(moonDeg.toFixed(2));
+  } else if (moonDeg < 1.0 || moonDeg > 29.0) {
+    isGandanta = true;
+    gandantaJunctionName = "Rashi Sandhi Boundary (<1° or >29°)";
+    degreesFromNode = moonDeg < 1.0 ? Number(moonDeg.toFixed(2)) : Number((30.0 - moonDeg).toFixed(2));
+  }
+
+  // Rikta Tithi Check (Chaturthi, Navami, Chaturdashi in Shukla or Krishna Paksha)
+  const isRikta = [4, 9, 14, 19, 24, 29].includes(tithiIdx);
+  const riktaTithiName = isRikta ? ephemeris.panchanga.tithi.name : "";
+
+  // Mercury condition (active Mercury hora or combust/retrograde)
+  const isMercuryCombust = planets.Mercury && planets.Sun
+    ? angularDistance(planets.Mercury.siderealLongitude, planets.Sun.siderealLongitude) <= 14.0
+    : false;
+  const isMercuryDrag = activeHoraLord === "Mercury" || isMercuryCombust || (planets.Mercury?.isRetrograde ?? false);
+
+  // Six Pillar details
+  const pillars: ChopPillarDetail[] = [
+    {
+      id: "panchaka",
+      name: "Panchaka 5x Turbulence",
+      sanskritName: "पंचक (Panchaka 5x)",
+      isActive: isPanchaka5xActive,
+      severity: "HIGH",
+      scoreContribution: isPanchaka5xActive ? 35 : 0,
+      description: "Moon in final 5 Nakshatras (Dhanishta–Revati). Breakouts false up to 5x; heavy retail whipsaws.",
+      tradingImpact: "Fade range extremes only; disable breakout momentum EAs.",
+    },
+    {
+      id: "graha_yuddha",
+      name: "Graha Yuddha (Planetary War)",
+      sanskritName: "ग्रह युद्ध (Graha Yuddha)",
+      isActive: activeGrahaYuddha.length > 0,
+      severity: "CRITICAL",
+      scoreContribution: activeGrahaYuddha.length > 0 ? 40 : 0,
+      description: activeGrahaYuddha.length > 0
+        ? `Active collision between ${activeGrahaYuddha.join(", ")}. Standoff between institutional market makers.`
+        : "No planetary war (<1° orb) between visible planets.",
+      tradingImpact: "Avoid swing positions; expect sudden slippage and directional deadlock.",
+    },
+    {
+      id: "gandanta_sandhi",
+      name: isWaterFireJunction ? "Water-Fire Gandanta Vortex" : "Rashi Sandhi Transition",
+      sanskritName: isWaterFireJunction ? "गण्डान्त (Gandanta Void)" : "राशि संधि (Rashi Sandhi)",
+      isActive: isGandanta,
+      severity: isWaterFireJunction ? "CRITICAL" : "MEDIUM",
+      scoreContribution: isWaterFireJunction ? 45 : isGandanta ? 20 : 0,
+      description: isWaterFireJunction
+        ? `Moon in sacred ${gandantaJunctionName} vortex (${degreesFromNode}° from exact node). Complete liquidity vacuum.`
+        : isGandanta
+        ? `Moon at sign boundary (${degreesFromNode}° from edge). Weak directional follow-through.`
+        : "Moon well-centered inside sign body (healthy liquidity).",
+      tradingImpact: isWaterFireJunction
+        ? "HALT TRADING: Zero-trade mandate (0.0x risk) during exact node crossing."
+        : "Reduce position sizing to 0.50x; wait for sign establishment.",
+    },
+    {
+      id: "rikta_tithi",
+      name: "Rikta Tithi (Void Day)",
+      sanskritName: "रिक्ता तिथि (Rikta Tithi)",
+      isActive: isRikta,
+      severity: "MEDIUM",
+      scoreContribution: isRikta ? 20 : 0,
+      description: isRikta
+        ? `Active ${riktaTithiName} (4th, 9th, or 14th lunar phase). Ruled by Saturn/Bhadra; volume hollows out.`
+        : "Active lunar day possesses organic trend expansion volume.",
+      tradingImpact: "Expect choppy mean reversion; tighten profit targets to 1:1 Risk/Reward.",
+    },
+    {
+      id: "mercury_duality",
+      name: "Mercury Duality & Alpha Drag",
+      sanskritName: "बुध द्विसद्भाव (Mercury Duality)",
+      isActive: isMercuryDrag,
+      severity: "MEDIUM",
+      scoreContribution: isMercuryDrag ? 15 : 0,
+      description: isMercuryDrag
+        ? "Mercury Hora or combustion active. Historical backtest shows -126.5 pts Alpha drag on Gold."
+        : "Clean planetary hora alignment with asset rulers.",
+      tradingImpact: "Avoid trailing stops; scalping only.",
+    },
+    {
+      id: "rahu_kaal",
+      name: "Rahu Kaal Fakeout Window",
+      sanskritName: "राहु काल (Rahu Kaal Maya)",
+      isActive: true,
+      severity: "HIGH",
+      scoreContribution: 15,
+      description: "Daily 90-minute octant ruled by Rahu. Institutional liquidity sweeps and false breakouts peak.",
+      tradingImpact: "Never buy high or sell low during Rahu Kaal; wait for the post-exit pivot.",
+    },
+  ];
+
+  // Synthesize Chop Risk Score
+  let rawChopScore = pillars.reduce((sum, p) => sum + p.scoreContribution, 0);
+  const isCriticalTripwire = isWaterFireJunction || activeGrahaYuddha.length > 0;
+  if (isCriticalTripwire) {
+    rawChopScore = Math.max(rawChopScore, 75);
+  }
+  const chopScore = Math.min(100, Math.max(5, rawChopScore));
+
+  const activeWarnings: string[] = [];
+  if (isWaterFireJunction) activeWarnings.push(`Critical Gandanta Void: ${gandantaJunctionName}`);
+  if (activeGrahaYuddha.length > 0) activeWarnings.push(`Graha Yuddha: ${activeGrahaYuddha.join(", ")}`);
+  if (isPanchaka5xActive) activeWarnings.push("Panchaka Active: Breakouts fail up to 5x");
+  if (isRikta) activeWarnings.push(`Rikta Tithi: ${riktaTithiName} (Hollow Trend)`);
+  if (isMercuryDrag) activeWarnings.push("Mercury Duality: Negative Alpha Drag");
+
+  let riskLevel: ChopRadarAssessment["riskLevel"] = "LOW";
+  let circuitBreakerActive = false;
+  let chopRegime: ChopRadarAssessment["marketRegime"] = "CLEAN_TREND";
+  let regimeTitle = "🟢 CLEAN TRENDING REGIME";
+  let regimeGuidance = "Low astronomical turbulence. Clean order flow expansion; standard 1.0x lot sizing and trend continuation setups permitted.";
+  let recommendedLotScale = 1.0;
+
+  if (chopScore >= 65 || isCriticalTripwire) {
+    riskLevel = isWaterFireJunction ? "CRITICAL" : "HIGH";
+    circuitBreakerActive = true;
+    chopRegime = isWaterFireJunction ? "CRITICAL_VOID" : "CHOPPY_WHIPSAW";
+    regimeTitle = isWaterFireJunction
+      ? "🛑 CRITICAL GANDANTA VOID: ZERO-TRADE MANDATE"
+      : "🛑 HARD CIRCUIT-BREAKER: Extreme Whipsaw Risk";
+    regimeGuidance = isWaterFireJunction
+      ? "Moon crossing Water-Fire Gandanta vortex. Extreme order book manipulation and liquidity vacuum. Trading strictly prohibited: 0.0x risk."
+      : "Severe multi-pillar chop detected. High probability of false breakouts and two-way stop hunts. Enforce capital preservation: stand aside or reduce lot sizing to 0.25x.";
+    recommendedLotScale = isWaterFireJunction ? 0.0 : 0.25;
+  } else if (chopScore >= 35) {
+    riskLevel = "MEDIUM";
+    circuitBreakerActive = false;
+    chopRegime = "STRUCTURED_RANGE";
+    regimeTitle = "🟡 CAUTION: Range-Bound / Moderate Chop";
+    regimeGuidance = "Market lacks strong directional thrust. Trade verified support/resistance boundaries only; reduce lot sizing to 0.50x.";
+    recommendedLotScale = 0.5;
+  }
+
+  const chopRadar: ChopRadarAssessment = {
+    chopScore,
+    riskLevel,
+    circuitBreakerActive,
+    marketRegime: chopRegime,
+    regimeTitle,
+    regimeGuidance,
+    recommendedLotScale,
+    pillars,
+    activeWarnings,
+    gandantaDetails: {
+      isGandanta,
+      isWaterFireJunction,
+      junctionName: gandantaJunctionName,
+      degreesFromNode,
+    },
+    riktaTithiDetails: {
+      isRikta,
+      tithiName: ephemeris.panchanga.tithi.name,
+      lunarDay: tithiIdx % 15 === 0 ? 15 : tithiIdx % 15,
+      paksha: ephemeris.panchanga.tithi.paksha,
+    },
+  };
+
   // Quant execution advice
-  const allowLongs = directionalBias > -0.40 && nakshatraAction !== "SELL_RALLY";
-  const allowShorts = directionalBias < 0.40 && nakshatraAction !== "BUY_DIP";
-  const lotSizeScale = volatilityMultiplier > 1.4 ? 0.75 : 1.0;
+  const baseLotSizeScale = volatilityMultiplier > 1.4 ? 0.75 : 1.0;
+  const finalLotSizeScale = Math.min(baseLotSizeScale, recommendedLotScale);
+  const allowLongs = recommendedLotScale === 0.0 ? false : directionalBias > -0.40 && nakshatraAction !== "SELL_RALLY";
+  const allowShorts = recommendedLotScale === 0.0 ? false : directionalBias < 0.40 && nakshatraAction !== "BUY_DIP";
 
   return {
     symbol,
@@ -828,7 +1105,12 @@ export function calculateAstroMarketSignal(
       marketRegime,
       confidenceScore: Math.min(95, Math.max(50, Math.round(65 + Math.abs(directionalBias) * 30))),
     },
-    intradayTimeline: calculateIntradayTimeline(symbol, date, directionalBias),
+    chopRadar,
+    intradayTimeline: calculateIntradayTimeline(symbol, date, directionalBias, {
+      isPanchakaActive: isPanchaka5xActive,
+      isGandantaActive: isGandanta,
+      isRiktaTithi: isRikta,
+    }),
     dikshitLiquidityCycle: {
       moonNakshatraIndex: moonNak,
       moonNakshatraName: ephemeris.panchanga.nakshatra.sanskritName,
@@ -885,7 +1167,7 @@ export function calculateAstroMarketSignal(
       allowLongs,
       allowShorts,
       suggestedAtrSlMultiplier: Number((1.5 * volatilityMultiplier).toFixed(2)),
-      lotSizeScale,
+      lotSizeScale: finalLotSizeScale,
     },
   };
 }

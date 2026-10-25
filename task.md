@@ -1531,3 +1531,33 @@
   - [x] Added Subtest 151 to `tests/engine.test.mjs` verifying degree coverage ($360^\circ$ continuous arc), Revati color matching `#A5D6A7`, lookup coverage, and sector geometry index topology.
   - [x] All 151 subtests pass cleanly (`151 passed, 0 failed`).
   - [x] TypeScript check `npx tsc --noEmit` clean (0 errors).
+
+---
+
+# Phase 57: Astrological Chop & Whipsaw Avoidance Circuit-Breaker System
+
+## Status: Completed (Phases 57.1 to 57.5 fully verified)
+- **Trigger Keywords**: `chop-radar`, `circuit-breaker`, `panchaka-turbulence`, `graha-yuddha`, `gandanta-sandhi`, `rikta-tithis`, `mercury-hora-drag`, `rahu-kaal-trap`, `/mathematical-calculation`, `/astrological-calculation`, `/audit-code-review`, `/systematic-debugging`
+- **Scope**: Build an automated, 6-pillar astronomical turbulence detection engine and hard circuit breaker into `financialAstro.ts` and `MarketBiasView.tsx` with dynamic lot-size scaling and timeline risk badges.
+
+## Phases & Milestones
+
+- [x] **Phase 57.1: Classical 6-Pillar Chop Radar Engine (`src/engine/financialAstro.ts`)**
+  - [x] Implement Gandanta & Rashi Sandhi detection (checking 29°–1° boundaries & water-fire junctions: Meena-Mesha, Karka-Simha, Vrishchika-Dhanu).
+  - [x] Implement Rikta Tithi detection (Tithis 4, 9, 14 of Shukla and Krishna Paksha).
+  - [x] Implement `evaluateChopRadar()` generating `ChopRadarAssessment` (0–100% score, tiered risk level, lot size scale 1.0x -> 0.0x, active pillar breakdowns).
+  - [x] Expose `chopRadar` on `AstroMarketSignal`.
+- [x] **Phase 57.2: Pre-Market Directive Circuit-Breaker Alert (`src/components/MarketBiasView.tsx`)**
+  - [x] Integrate Hard Circuit-Breaker warning banner under the main Pre-Market Directive hero card when Chop Risk > 60% or during critical Gandanta/Graha Yuddha.
+  - [x] Adjust trading advice text to prioritize capital preservation over breakout entries.
+- [x] **Phase 57.3: Interactive 6-Pillar Chop Radar Dashboard (`src/components/MarketBiasView.tsx`)**
+  - [x] Build glassmorphic dashboard panel displaying overall risk meter and live status pills for all 6 pillars (Panchaka, Graha Yuddha, Gandanta, Rikta Tithi, Mercury Hora, Rahu Kaal).
+- [x] **Phase 57.4: 24-Hour Roadmap Hourly Badging & Deep-Dive Telemetry**
+  - [x] Badge hazardous hours (`⚠️ CHOP TRAP` / `🛑 NO-TRADE`) on both Vedic Horas and MT5 H1 cards.
+  - [x] Add specific chop risk telemetry and mitigation instructions in the selected hour inspection card.
+- [x] **Phase 57.5: Automated Testing, Multi-Axis Audit & Production Build**
+  - [x] Add Subtest 152 in `tests/engine.test.mjs` verifying Gandanta, Rikta Tithi, and Chop Radar calculations.
+  - [x] Run `npx tsc --noEmit` (0 errors).
+  - [x] Run `npm test` (all 152 tests passing).
+  - [x] Run `npm run build` (clean Next.js 15 build).
+
