@@ -1426,21 +1426,12 @@ function SkyScene({
   useEffect(() => {
     if (!ephemeris) return;
 
-    // Only initiate camera glide when the selected entity ID actually CHANGED!
-    if (prevSelectedEntityIdRef.current === selectedEntityId) {
+    // Only initiate camera glide when a specific entity is selected and it changed
+    if (!selectedEntityId || prevSelectedEntityIdRef.current === selectedEntityId) {
+      prevSelectedEntityIdRef.current = selectedEntityId;
       return;
     }
-    const prevId = prevSelectedEntityIdRef.current;
     prevSelectedEntityIdRef.current = selectedEntityId;
-
-    if (!selectedEntityId) {
-      // Only glide back to overview if transitioning from an inspected entity
-      if (prevId !== null) {
-        targetCamPos.current = new THREE.Vector3(0, 25, 45);
-        targetLookAt.current = new THREE.Vector3(0, 0, 0);
-      }
-      return;
-    }
 
     const node = planetPositionsMap[selectedEntityId];
     if (node) {
@@ -1454,6 +1445,12 @@ function SkyScene({
 
   // Smooth interpolation loop for camera position & controls target
   useFrame(() => {
+    // If the user is actively manipulating the controls, cancel any programmatic interpolation
+    if (controlsRef.current && controlsRef.current.state !== -1) {
+      targetCamPos.current = null;
+      targetLookAt.current = null;
+    }
+
     if (camera instanceof THREE.PerspectiveCamera) {
       if (Math.abs(camera.fov - fov) > 0.05) {
         camera.fov = THREE.MathUtils.lerp(camera.fov, fov, 0.15);
@@ -1659,29 +1656,38 @@ function SkyScene({
           />
         ))}
 
-      {/* Free 360° Orbit Controls Around Earth */}
+      {/* Free 360° Orbit Controls Around Earth with Zero Drag Conflict */}
       <OrbitControls
+        makeDefault
         ref={controlsRef}
         enableZoom={false}
         minDistance={3}
-        maxDistance={120}
-        rotateSpeed={0.8}
+        maxDistance={150}
+        rotateSpeed={1.0}
         enablePan={true}
-        panSpeed={0.8}
+        panSpeed={1.0}
         screenSpacePanning={true}
         enableDamping={true}
-        dampingFactor={0.06}
+        dampingFactor={0.05}
         minPolarAngle={0.01}
         maxPolarAngle={Math.PI - 0.01}
         onStart={() => {
-          // Immediately cancel programmatic camera interpolation so user manual grab/pull is 100% free
           targetCamPos.current = null;
           targetLookAt.current = null;
+        }}
+        onChange={() => {
+          if (controlsRef.current && controlsRef.current.state !== -1) {
+            targetCamPos.current = null;
+            targetLookAt.current = null;
+          }
         }}
       />
     </>
   );
 }
+
+// Stable initial camera configuration reference (must remain static to avoid Canvas applyProps resets)
+const DEFAULT_CAMERA_CONFIG = { position: [0, 25, 45] as [number, number, number], fov: 65 };
 
 export default function SkyDome() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1754,7 +1760,9 @@ export default function SkyDome() {
     setFov((prev) => Math.min(95, Math.max(5, prev + zoomDelta)));
   };
 
-  const { isPlaying, setSelectedEntityId } = useAstroStore();
+  // Fine-grained Zustand selectors to prevent re-rendering SkyDome on ephemeris clock ticks
+  const isPlaying = useAstroStore((s) => s.isPlaying);
+  const setSelectedEntityId = useAstroStore((s) => s.setSelectedEntityId);
   const zoomFactor = (65 / fov).toFixed(1);
 
   return (
@@ -1767,9 +1775,9 @@ export default function SkyDome() {
           : "w-full h-full min-h-[520px] rounded-2xl border border-[#3b1536]/80 shadow-2xl"
       }`}
     >
-      {/* 3D WebGL Canvas */}
+      {/* 3D WebGL Canvas with Static Camera Configuration */}
       <Canvas
-        camera={{ position: [0, 25, 45], fov: 65 }}
+        camera={DEFAULT_CAMERA_CONFIG}
         dpr={[1, 1.25]}
         frameloop="always"
         performance={{ min: 0.5 }}

@@ -580,61 +580,6 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
         </div>
       </div>
 
-      {/* Historical 7-Day Backtesting Timeline Strip */}
-      <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-4 shadow-xl">
-        <div className="flex items-center justify-between mb-2.5">
-          <div className="flex items-center gap-2">
-            <span className="text-amber-400 font-bold text-sm">🗓️ Multi-Day Astro Alignment Strip</span>
-            <span className="text-xs text-slate-500 hidden sm:inline">Click any date to inspect historical or forward bias</span>
-          </div>
-          <span className="text-xs font-mono text-slate-400">{selectedSymbol}</span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
-          {historicalStrip.map((item) => {
-            const isBullish = item.bias > 0.25;
-            const isBearish = item.bias < -0.25;
-            return (
-              <button
-                key={item.dateStr}
-                onClick={() => setSelectedDate(item.dateStr)}
-                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-between gap-1 transition-all cursor-pointer text-center ${
-                  item.isTarget
-                    ? "bg-amber-500/15 border-amber-500/60 ring-2 ring-amber-500/30 scale-102"
-                    : "bg-slate-900/80 hover:bg-slate-800 border-slate-800"
-                }`}
-              >
-                <div className="text-[10px] font-mono text-slate-400 uppercase">
-                  {item.dayOfWeek}
-                </div>
-                <div className="text-xs font-bold text-white font-mono">
-                  {item.dateStr.slice(5)}
-                </div>
-                <div
-                  className={`text-sm font-black font-mono my-0.5 ${
-                    isBullish ? "text-emerald-400" : isBearish ? "text-rose-400" : "text-slate-300"
-                  }`}
-                >
-                  {item.bias > 0 ? "+" : ""}
-                  {item.bias.toFixed(2)}
-                </div>
-                <div
-                  className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
-                    isBullish
-                      ? "bg-emerald-500/20 text-emerald-300"
-                      : isBearish
-                      ? "bg-rose-500/20 text-rose-300"
-                      : "bg-slate-800 text-slate-400"
-                  }`}
-                >
-                  {isBullish ? "Buy Only" : isBearish ? "Sell Only" : "Two-Way"}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       {/* 24-Hour Intraday Timing Roadmap Section with Variable Vedic Horas vs MT5 H1 Switch */}
       <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col gap-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800 pb-4">
@@ -1075,6 +1020,61 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
             </div>
           </div>
         )}
+      </div>
+
+      {/* Historical 7-Day Backtesting Timeline Strip */}
+      <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-4 shadow-xl">
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-amber-400 font-bold text-sm">🗓️ Multi-Day Astro Alignment Strip</span>
+            <span className="text-xs text-slate-500 hidden sm:inline">Click any date to inspect historical or forward bias</span>
+          </div>
+          <span className="text-xs font-mono text-slate-400">{selectedSymbol}</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+          {historicalStrip.map((item) => {
+            const isBullish = item.bias > 0.25;
+            const isBearish = item.bias < -0.25;
+            return (
+              <button
+                key={item.dateStr}
+                onClick={() => setSelectedDate(item.dateStr)}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-between gap-1 transition-all cursor-pointer text-center ${
+                  item.isTarget
+                    ? "bg-amber-500/15 border-amber-500/60 ring-2 ring-amber-500/30 scale-102"
+                    : "bg-slate-900/80 hover:bg-slate-800 border-slate-800"
+                }`}
+              >
+                <div className="text-[10px] font-mono text-slate-400 uppercase">
+                  {item.dayOfWeek}
+                </div>
+                <div className="text-xs font-bold text-white font-mono">
+                  {item.dateStr.slice(5)}
+                </div>
+                <div
+                  className={`text-sm font-black font-mono my-0.5 ${
+                    isBullish ? "text-emerald-400" : isBearish ? "text-rose-400" : "text-slate-300"
+                  }`}
+                >
+                  {item.bias > 0 ? "+" : ""}
+                  {item.bias.toFixed(2)}
+                </div>
+                <div
+                  className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+                    isBullish
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : isBearish
+                      ? "bg-rose-500/20 text-rose-300"
+                      : "bg-slate-800 text-slate-400"
+                  }`}
+                >
+                  {isBullish ? "Buy Only" : isBearish ? "Sell Only" : "Two-Way"}
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Streamlined & Transparent Shastric Telemetry Grid (Distilled & Explicit) */}
