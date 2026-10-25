@@ -1254,7 +1254,15 @@ function PlanetMesh({
 }
 
 // Main Inside-the-Dome Celestial Scene with Cinematic Smooth Fly-In Camera
-function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolean }) {
+function SkyScene({
+  fov,
+  showAspectRays,
+  resetCounter,
+}: {
+  fov: number;
+  showAspectRays: boolean;
+  resetCounter?: number;
+}) {
   const {
     ephemeris,
     location,
@@ -1403,14 +1411,34 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
     };
   };
 
+  const prevSelectedEntityIdRef = useRef<string | null>(null);
+
+  // Manual reset camera signal from top bar
+  useEffect(() => {
+    if (resetCounter && resetCounter > 0) {
+      targetCamPos.current = new THREE.Vector3(0, 25, 45);
+      targetLookAt.current = new THREE.Vector3(0, 0, 0);
+      prevSelectedEntityIdRef.current = null;
+    }
+  }, [resetCounter]);
+
   // Cinematic Fly-In Camera Glide into Close Orbit (~6.8 units) around selected planet
   useEffect(() => {
     if (!ephemeris) return;
 
+    // Only initiate camera glide when the selected entity ID actually CHANGED!
+    if (prevSelectedEntityIdRef.current === selectedEntityId) {
+      return;
+    }
+    const prevId = prevSelectedEntityIdRef.current;
+    prevSelectedEntityIdRef.current = selectedEntityId;
+
     if (!selectedEntityId) {
-      // Smoothly glide camera back up to geocentric Bhu-Mandala overview
-      targetCamPos.current = new THREE.Vector3(0, 25, 45);
-      targetLookAt.current = new THREE.Vector3(0, 0, 0);
+      // Only glide back to overview if transitioning from an inspected entity
+      if (prevId !== null) {
+        targetCamPos.current = new THREE.Vector3(0, 25, 45);
+        targetLookAt.current = new THREE.Vector3(0, 0, 0);
+      }
       return;
     }
 
@@ -1442,10 +1470,14 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
 
     if (targetLookAt.current && controlsRef.current) {
       controlsRef.current.target.lerp(targetLookAt.current, 0.07);
-      controlsRef.current.update();
       if (controlsRef.current.target.distanceTo(targetLookAt.current) < 0.08) {
         targetLookAt.current = null;
       }
+    }
+
+    // Always update OrbitControls every frame to guarantee silky damping and free rotational momentum
+    if (controlsRef.current) {
+      controlsRef.current.update();
     }
   });
 
@@ -1633,9 +1665,19 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
         enableZoom={false}
         minDistance={3}
         maxDistance={120}
-        rotateSpeed={0.5}
+        rotateSpeed={0.8}
         enablePan={true}
-        dampingFactor={0.08}
+        panSpeed={0.8}
+        screenSpacePanning={true}
+        enableDamping={true}
+        dampingFactor={0.06}
+        minPolarAngle={0.01}
+        maxPolarAngle={Math.PI - 0.01}
+        onStart={() => {
+          // Immediately cancel programmatic camera interpolation so user manual grab/pull is 100% free
+          targetCamPos.current = null;
+          targetLookAt.current = null;
+        }}
       />
     </>
   );
@@ -1646,6 +1688,7 @@ export default function SkyDome() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fov, setFov] = useState(65);
   const [showAspectRays, setShowAspectRays] = useState(true);
+  const [cameraResetCounter, setCameraResetCounter] = useState(0);
 
   const toggleFullscreen = async () => {
     if (!containerRef.current) return;
@@ -1718,7 +1761,7 @@ export default function SkyDome() {
     <div
       ref={containerRef}
       onWheel={handleWheel}
-      className={`relative bg-[#140818] overflow-hidden transition-all duration-300 ${
+      className={`relative bg-[#140818] overflow-hidden transition-all duration-300 touch-none select-none ${
         isFullscreen
           ? "fixed inset-0 z-[100] w-screen h-screen rounded-none"
           : "w-full h-full min-h-[520px] rounded-2xl border border-[#3b1536]/80 shadow-2xl"
@@ -1739,9 +1782,9 @@ export default function SkyDome() {
           stencil: false,
           precision: "mediump",
         }}
-        className="w-full h-full cursor-grab active:cursor-grabbing"
+        className="w-full h-full cursor-grab active:cursor-grabbing touch-none select-none"
       >
-        <SkyScene fov={fov} showAspectRays={showAspectRays} />
+        <SkyScene fov={fov} showAspectRays={showAspectRays} resetCounter={cameraResetCounter} />
       </Canvas>
 
       {/* Top Header Overlay Bar (Unified Responsive Container) */}
@@ -1804,6 +1847,20 @@ export default function SkyDome() {
               1x
             </button>
           </div>
+
+          {/* Reset Camera Angle Button */}
+          <button
+            onClick={() => {
+              setCameraResetCounter((c) => c + 1);
+              setSelectedEntityId(null);
+              setFov(65);
+            }}
+            title="Reset Camera Angle to Geocentric Bhu-Mandala Overview"
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-medium text-[#d6c0cf] hover:text-[#f6d896] bg-[#1d0b21]/85 border border-[#4a1c43]/60 hover:border-[#e3b75f]/50 flex items-center gap-1.5 transition-all shadow-lg active:scale-95 cursor-pointer backdrop-blur-md"
+          >
+            <span className="text-xs">↺</span>
+            <span className="hidden sm:inline">Reset View</span>
+          </button>
 
           {/* Fullscreen Button */}
           <button

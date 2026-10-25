@@ -1503,4 +1503,5 @@
 - [x] **Phase 55.6: Rings** — thin zodiac ring with degree ticks, nakshatra star points (hover detail), house cusp lines + cyan numbers (hover detail).
 - [x] **Phase 55.7: Overlay Chrome Restyle** — plum frosted glass + gold accents, same controls.
 - [x] **Phase 55.8: Continuous Live Real-Time Tracking & 3D Animation Loop** — global interval ticker `syncGlobalLiveInterval` (1s live transit ticks), `Canvas frameloop="always"` for fluid diurnal rotation/orbital drift, and unified live states across `VerticalTimeTravel.tsx` and `TimeTravelSlider.tsx`.
-- [x] **Phase 55.9: Verification** — `npx tsc --noEmit` (0 errors), `npm test` (all 150 tests passing), `npm run build` (clean Next.js production build).
+- [x] **Phase 55.9: Flexible 3D Camera Orbit & Gesture Decoupling** — decoupled programmatic camera glide from periodic ephemeris updates using `prevSelectedEntityIdRef`, enabled `onStart` cancel of lerp targets, integrated continuous `controlsRef.current.update()` with silky inertial damping, clamped polar angles `[0.01, π-0.01]` preventing gimbal locks, added `touch-none` gesture protection, and introduced a 1-click header "↺ Reset View" button.
+- [x] **Phase 55.10: Verification** — `npx tsc --noEmit` (0 errors), `npm test` (all 150 tests passing).

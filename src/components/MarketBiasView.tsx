@@ -40,7 +40,6 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
   });
   const [selectedHour, setSelectedHour] = useState<number>(13); // Default to NY Open (13:00 UTC)
   const [sessionFilter, setSessionFilter] = useState<string>("ALL");
-  const [copiedUrl, setCopiedUrl] = useState(false);
   const [timezoneMode, setTimezoneMode] = useState<"ROME" | "UTC">("ROME");
   const [timelineMode, setTimelineMode] = useState<"VEDIC_VARIABLE" | "MT5_FIXED">("VEDIC_VARIABLE");
   const [selectedHoraIndex, setSelectedHoraIndex] = useState<number>(2); // Default to Day Hora 2 (Venus/Active)
@@ -269,13 +268,6 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
     const d = new Date();
     d.setUTCDate(d.getUTCDate() - daysAgo);
     setSelectedDate(d.toISOString().split("T")[0]);
-  };
-
-  const copyApiUrl = () => {
-    const url = `https://astroweb-pi.vercel.app/api/v1/market-astro?symbol=${selectedSymbol}&date=${selectedDate}`;
-    navigator.clipboard.writeText(url);
-    setCopiedUrl(true);
-    setTimeout(() => setCopiedUrl(false), 2000);
   };
 
   const isToday = useMemo(() => {
@@ -584,14 +576,6 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
               <div className="text-xs font-bold text-amber-300 font-mono">17:00 - 18:00 Rome</div>
               <div className="text-[9px] text-slate-400">40% Daily Tops/Bottoms</div>
             </div>
-            <button
-              onClick={copyApiUrl}
-              className="bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 rounded-xl px-3 py-2 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-              title="Copy live JSON URL for MT5 EA WebRequest"
-            >
-              <span>{copiedUrl ? "Copied! ✓" : "EA JSON URL"}</span>
-              <span>📋</span>
-            </button>
           </div>
         </div>
       </div>
