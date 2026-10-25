@@ -1484,22 +1484,23 @@
 
 ---
 
-# Phase 23: SkyDome "Graha-Mandalam" Visual Reskin (Reel Reference `Video-19030.mp4`)
+# Phase 55: SkyDome "Graha-Mandalam" Visual Reskin (Reel Reference `Video-19030.mp4`)
 
-## Status: In Progress
+## Status: Complete & Verified (All 150 Tests Passing & Production Build Clean)
 - **Trigger Keywords**: `skydome-reskin`, `graha-mandalam`, `geocentric-trails`, `procedural-planet-textures`, `plum-nebula`, `devanagari-labels`, `zodiac-degree-ring`
 - **Scope Lock**: Design only. Ephemeris, aspect rays, HUD, dasha/lordship, fly-to camera, time travel, Planet Index, zoom/fullscreen behaviour remain unchanged.
 
 ## Phases & Milestones
 
-- [ ] **Phase 23.1: Geocentric Trail Engine (`src/engine/geocentricTrails.ts`)**
-  - [ ] `geocentricDistanceToSceneRadius(distAU)` — power-scaled, clamped orbit radius (Moon outside Earth, outer planets inside zodiac ring).
-  - [ ] `sampleGeocentricTrail(bodyId, endMs, ayanamshaDeg)` — astronomy-engine sampling of sidereal lon/lat/dist over a per-body window.
-  - [ ] Subtest in `tests/engine.test.mjs`.
-- [ ] **Phase 23.2: Scene Atmosphere** — plum nebula sky sphere, sparse starfield, fog, Sun-sourced lighting.
-- [ ] **Phase 23.3: Procedural Planet Bodies** — canvas textures (Sun glow/rays, Saturn ring, banded Jupiter, Mars, Moon craters, Earth).
-- [ ] **Phase 23.4: Trails + Arrowheads** — bounded ring buffer fed by playback, reseed on date jumps.
-- [ ] **Phase 23.5: Minimal Devanagari Labels** — name + rashi DMS · nakshatra pada; hover/select behaviour preserved.
-- [ ] **Phase 23.6: Rings** — thin zodiac ring with degree ticks, nakshatra star points (hover detail), house cusp lines + cyan numbers (hover detail).
-- [ ] **Phase 23.7: Overlay Chrome Restyle** — plum glass + gold accents, same controls.
-- [ ] **Phase 23.8: Verification** — `npx tsc --noEmit`, `npm test`, `npm run build`.
+- [x] **Phase 55.1: Geocentric Trail Engine (`src/engine/geocentricTrails.ts`)**
+  - [x] `geocentricDistanceToSceneRadius(distAU)` — power-scaled, clamped orbit radius (Moon outside Earth, outer planets inside zodiac ring).
+  - [x] `sampleGeocentricTrail(bodyId, endMs, ayanamshaDeg)` — astronomy-engine sampling of sidereal lon/lat/dist over a per-body window.
+  - [x] Automated test in `tests/engine.test.mjs`.
+- [x] **Phase 55.2: Scene Atmosphere (`src/components/skydome/visuals.tsx`)** — plum nebula sky sphere, sparse starfield, fog, Sun-sourced lighting.
+- [x] **Phase 55.3: Procedural Planet Bodies (`src/components/skydome/textures.ts` & `visuals.tsx`)** — canvas textures (Sun glow/rays, Saturn ring, banded Jupiter, Mars, Moon craters, Earth).
+- [x] **Phase 55.4: Trails + Arrowheads** — bounded ring buffer fed by playback, reseed on date jumps, direction arrowheads.
+- [x] **Phase 55.5: Minimal Devanagari Labels (`src/components/skydome/devanagari.ts`)** — name + rashi DMS · nakshatra pada; hover/select behaviour preserved.
+- [x] **Phase 55.6: Rings** — thin zodiac ring with degree ticks, nakshatra star points (hover detail), house cusp lines + cyan numbers (hover detail).
+- [x] **Phase 55.7: Overlay Chrome Restyle** — plum frosted glass + gold accents, same controls.
+- [x] **Phase 55.8: Continuous Live Real-Time Tracking & 3D Animation Loop** — global interval ticker `syncGlobalLiveInterval` (1s live transit ticks), `Canvas frameloop="always"` for fluid diurnal rotation/orbital drift, and unified live states across `VerticalTimeTravel.tsx` and `TimeTravelSlider.tsx`.
+- [x] **Phase 55.9: Verification** — `npx tsc --noEmit` (0 errors), `npm test` (all 150 tests passing), `npm run build` (clean Next.js production build).

@@ -13,7 +13,7 @@ import * as THREE from "three";
 import { eclipticToCartesian } from "../../engine/skyCoordinates";
 import { RASHIS, NAKSHATRAS } from "../../engine/constants";
 import { getGlowTexture, getNebulaSkyTexture, getPlanetTexture, getRaysTexture, getTextTexture } from "./textures";
-import { NAKSHATRA_DEVANAGARI, RASHI_DEVANAGARI, SD_FONT_MONO, SD_FONT_SERIF } from "./devanagari";
+import { SD_FONT_MONO, SD_FONT_SERIF } from "./devanagari";
 
 export const SD_COLORS = Object.freeze({
   background: "#140818",
@@ -165,15 +165,16 @@ export function ZodiacDegreeRing() {
               <div className="group relative select-none whitespace-nowrap text-center">
                 <span
                   style={{ fontFamily: SD_FONT_SERIF, color: SD_COLORS.rashiText }}
-                  className="text-[15px] opacity-80 transition-opacity group-hover:opacity-100 cursor-default"
+                  className="text-[14px] font-bold tracking-wider opacity-90 transition-opacity group-hover:opacity-100 cursor-default flex items-center justify-center gap-1.5"
                 >
-                  {RASHI_DEVANAGARI[i]}
+                  <span className="text-[15px] text-amber-400">{r.symbol}</span>
+                  <span>{r.englishName}</span>
                 </span>
                 <div
                   style={{ fontFamily: SD_FONT_MONO }}
                   className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 rounded-md border border-[#4a2a44] bg-[#1a0c1d]/95 px-2 py-1 text-[9px] text-[#cdb9c4] opacity-0 shadow-xl transition-opacity group-hover:opacity-100"
                 >
-                  {r.symbol} {r.sanskritName} · {r.englishName} · {i * 30}°–{(i + 1) * 30}°
+                  {r.symbol} {r.englishName} ({r.sanskritName}) · {i * 30}°–{(i + 1) * 30}°
                 </div>
               </div>
             </Html>
@@ -185,7 +186,7 @@ export function ZodiacDegreeRing() {
 }
 
 // ---------------------------------------------------------------------------
-// Nakshatra star ring (dotted ring + glowing yogatara points, details on hover)
+// Nakshatra star ring (dotted ring + glowing yogatara points, labels visible all the time)
 // ---------------------------------------------------------------------------
 
 export function NakshatraStarRing() {
@@ -228,30 +229,56 @@ export function NakshatraStarRing() {
         return (
           <group key={nak.index} position={pos}>
             <sprite
-              scale={isHover ? [2.6, 2.6, 1] : [1.8, 1.8, 1]}
+              scale={isHover ? [2.8, 2.8, 1] : [1.9, 1.9, 1]}
               onPointerOver={(e: ThreeEvent<PointerEvent>) => {
                 e.stopPropagation();
                 setHovered(i);
               }}
               onPointerOut={() => setHovered((h) => (h === i ? null : h))}
             >
-              <spriteMaterial map={glow} color={SD_COLORS.starCore} transparent opacity={isHover ? 1 : 0.85} depthWrite={false} blending={THREE.AdditiveBlending} />
+              <spriteMaterial map={glow} color={isHover ? "#f59e0b" : SD_COLORS.starCore} transparent opacity={isHover ? 1 : 0.85} depthWrite={false} blending={THREE.AdditiveBlending} />
             </sprite>
-            {isHover && (
-              <Html center distanceFactor={34} position={[0, 1.6, 0]} zIndexRange={[20, 40]}>
+
+            {/* Always-Visible Nakshatra Label in English */}
+            <Html center distanceFactor={40} position={[0, -1.2, 0]} zIndexRange={[0, 20]}>
+              <div
+                className="select-none whitespace-nowrap text-center transition-all cursor-pointer pointer-events-auto group"
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered((h) => (h === i ? null : h))}
+              >
                 <div
-                  style={{ fontFamily: SD_FONT_MONO }}
-                  className="pointer-events-none select-none whitespace-nowrap rounded-lg border border-[#4a2a44] bg-[#1a0c1d]/95 px-2.5 py-1.5 text-center shadow-2xl"
+                  style={{
+                    fontFamily: SD_FONT_MONO,
+                    textShadow: "0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.9)",
+                  }}
+                  className={`text-[8.5px] font-semibold tracking-tight transition-all ${
+                    isHover
+                      ? "text-amber-300 scale-110 font-bold"
+                      : "text-amber-100/80 hover:text-amber-300"
+                  }`}
                 >
-                  <div style={{ fontFamily: SD_FONT_SERIF }} className="text-[13px] text-[#f1e4dc]">
-                    {NAKSHATRA_DEVANAGARI[i]} <span className="text-[10px] text-[#bfa9b6]">{nak.sanskritName}</span>
-                  </div>
-                  <div className="mt-0.5 text-[8.5px] text-[#d9b46a]">
-                    {nak.animalSymbol} {nak.animal} · {nak.lord} · {nak.deity}
-                  </div>
+                  {nak.sanskritName}
                 </div>
-              </Html>
-            )}
+
+                {/* Rich Detail Tooltip on Hover */}
+                {isHover && (
+                  <div
+                    style={{ fontFamily: SD_FONT_MONO }}
+                    className="pointer-events-none absolute left-1/2 bottom-full mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-lg border border-[#4a2a44] bg-[#1a0c1d]/95 px-2.5 py-1.5 text-center shadow-2xl z-40 backdrop-blur-md"
+                  >
+                    <div style={{ fontFamily: SD_FONT_SERIF }} className="text-[12px] text-[#f1e4dc] font-bold">
+                      {nak.sanskritName} (#{nak.index})
+                    </div>
+                    <div className="mt-0.5 text-[8.5px] text-[#d9b46a]">
+                      {nak.animalSymbol} {nak.animal} · Lord: {nak.lord} · Deity: {nak.deity}
+                    </div>
+                    <div className="text-[7.5px] text-slate-400 font-mono mt-0.5">
+                      {(i * step).toFixed(1)}° – {((i + 1) * step).toFixed(1)}°
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Html>
           </group>
         );
       })}

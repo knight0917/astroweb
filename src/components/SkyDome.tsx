@@ -20,9 +20,6 @@ import {
   SD_FONT_MONO,
   SD_FONT_SERIF,
   compactDMS,
-  grahaDevanagari,
-  nakshatraDevanagari,
-  rashiShort,
 } from "./skydome/devanagari";
 import {
   SD_COLORS,
@@ -1152,7 +1149,7 @@ function PlanetMesh({
                 }}
                 className="text-[13px] font-bold tracking-wide"
               >
-                {grahaDevanagari(id, sanskritName || name)}
+                {name || sanskritName}
               </span>
               {isRetrograde && (
                 <span className="text-[11px] font-serif text-red-400 font-bold">℞</span>
@@ -1162,8 +1159,8 @@ function PlanetMesh({
               style={{ fontFamily: SD_FONT_MONO, color: isSelected ? "#e2d5c8" : "#a998a4" }}
               className="text-[8.5px] tracking-tight whitespace-nowrap mt-0.5"
             >
-              {rashi ? rashiShort(rashi.index) : ""} {compactDMS(degreesInSign)}{" "}
-              {nakshatra ? `· ${nakshatraDevanagari(nakshatra.index, nakshatra.sanskritName)} ${nakshatra.pada || 1}` : ""}
+              {rashi ? `${rashi.englishName} ` : ""}{compactDMS(degreesInSign)}{" "}
+              {nakshatra ? `· ${nakshatra.sanskritName} P${nakshatra.pada || 1}` : ""}
             </div>
           </div>
         </Html>
@@ -1727,11 +1724,11 @@ export default function SkyDome() {
           : "w-full h-full min-h-[520px] rounded-2xl border border-[#3b1536]/80 shadow-2xl"
       }`}
     >
-      {/* 3D WebGL Canvas (Optimized on-demand rendering for mobile batteries & GPUs) */}
+      {/* 3D WebGL Canvas */}
       <Canvas
         camera={{ position: [0, 25, 45], fov: 65 }}
         dpr={[1, 1.25]}
-        frameloop={isPlaying ? "always" : "demand"}
+        frameloop="always"
         performance={{ min: 0.5 }}
         onPointerMissed={() => setSelectedEntityId(null)}
         gl={{

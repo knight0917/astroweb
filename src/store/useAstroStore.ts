@@ -161,6 +161,7 @@ function saveActiveChartToStorage(
 
 interface AstroState {
   currentDate: Date;
+  isLive: boolean;
   isPlaying: boolean;
   playSpeed: number; // multiplier
   location: GeoLocation;
@@ -229,6 +230,8 @@ interface AstroState {
   ) => Promise<BirthProfile>;
   loadProfile: (profile: BirthProfile) => void;
   deleteProfile: (profileId: string) => Promise<void>;
+  setIsLive: (isLive: boolean) => void;
+  tickLive: () => void;
   resetToLiveTransit: (customLocation?: GeoLocation) => void;
   initFromStorage: () => void;
 }
@@ -239,8 +242,46 @@ const defaultAyanamsha: AyanamshaType = "Lahiri";
 const defaultHouseSystem: HouseSystem = "WholeSign";
 const defaultNodeType: NodeType = "Mean";
 
+let globalLiveInterval: any = null;
+
+function syncGlobalLiveInterval(get: () => AstroState, set: (partial: any) => void) {
+  if (typeof window === "undefined") return;
+  const state = get();
+  if (state.isLive && !state.isPlaying) {
+    if (!globalLiveInterval) {
+      globalLiveInterval = setInterval(() => {
+        const current = get();
+        if (!current.isLive || current.isPlaying) {
+          if (globalLiveInterval) {
+            clearInterval(globalLiveInterval);
+            globalLiveInterval = null;
+          }
+          return;
+        }
+        const liveNow = new Date();
+        set({
+          currentDate: liveNow,
+          ephemeris: calculateVedicEphemeris(
+            liveNow,
+            current.location,
+            current.ayanamsha,
+            current.houseSystem,
+            current.nodeType
+          ),
+        });
+      }, 1000);
+    }
+  } else {
+    if (globalLiveInterval) {
+      clearInterval(globalLiveInterval);
+      globalLiveInterval = null;
+    }
+  }
+}
+
 export const useAstroStore = create<AstroState>((set, get) => ({
   currentDate: defaultDate,
+  isLive: false,
   isPlaying: false,
   playSpeed: 1, // 1 hour per tick
   location: defaultLocation,
@@ -414,8 +455,37 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     const { location, ayanamsha, houseSystem, nodeType, activeProfileName, gender } = get();
     saveActiveChartToStorage(date, location, ayanamsha, activeProfileName, gender);
     set({
+      isLive: false,
       currentDate: date,
       ephemeris: calculateVedicEphemeris(date, location, ayanamsha, houseSystem, nodeType),
+    });
+    syncGlobalLiveInterval(get, set);
+  },
+
+  setIsLive: (isLive: boolean) => {
+    if (isLive) {
+      const liveNow = new Date();
+      const { location, ayanamsha, houseSystem, nodeType } = get();
+      set({
+        isLive: true,
+        isPlaying: false,
+        currentDate: liveNow,
+        activeProfileName: "🔴 Live Transit (Now)",
+        ephemeris: calculateVedicEphemeris(liveNow, location, ayanamsha, houseSystem, nodeType),
+      });
+    } else {
+      set({ isLive: false });
+    }
+    syncGlobalLiveInterval(get, set);
+  },
+
+  tickLive: () => {
+    const { isLive, isPlaying, location, ayanamsha, houseSystem, nodeType } = get();
+    if (!isLive || isPlaying) return;
+    const liveNow = new Date();
+    set({
+      currentDate: liveNow,
+      ephemeris: calculateVedicEphemeris(liveNow, location, ayanamsha, houseSystem, nodeType),
     });
   },
 
@@ -512,7 +582,14 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     set({ matchmaking: state });
   },
 
-  togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
+  togglePlay: () => {
+    const nextPlaying = !get().isPlaying;
+    set({
+      isPlaying: nextPlaying,
+      isLive: nextPlaying ? false : get().isLive,
+    });
+    syncGlobalLiveInterval(get, set);
+  },
   setPlaySpeed: (playSpeed) => set({ playSpeed }),
   setShowModernPlanets: (showModernPlanets) => set({ showModernPlanets }),
   setShowUpagrahas: (showUpagrahas) => set({ showUpagrahas }),
@@ -631,6 +708,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     saveActiveChartToStorage(date, loc, aya, profile.name, profGender);
 
     set({
+      isLive: false,
       currentDate: date,
       location: loc,
       ayanamsha: aya,
@@ -640,6 +718,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
       chartReferenceLagna: null,
       ephemeris: calculateVedicEphemeris(date, loc, aya, houseSystem, nodeType),
     });
+    syncGlobalLiveInterval(get, set);
   },
 
   deleteProfile: async (profileId) => {
@@ -666,6 +745,8 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     const liveNow = new Date();
     const targetLoc = customLocation || location;
     set({
+      isLive: true,
+      isPlaying: false,
       currentDate: liveNow,
       location: targetLoc,
       activeProfileName: "🔴 Live Transit (Now)",
@@ -673,6 +754,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
       chartReferenceLagna: null,
       ephemeris: calculateVedicEphemeris(liveNow, targetLoc, ayanamsha, houseSystem, nodeType),
     });
+    syncGlobalLiveInterval(get, set);
   },
 
   initFromStorage: () => {
@@ -712,9 +794,11 @@ export const useAstroStore = create<AstroState>((set, get) => ({
         }
       }
 
+      const isTargetLive = targetProfileName === "🔴 Live Transit (Now)";
       const { houseSystem, nodeType } = get();
       set({
         savedProfiles: profiles,
+        isLive: isTargetLive,
         currentDate: targetDate,
         location: targetLoc,
         ayanamsha: targetAya,
@@ -724,6 +808,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
         matchmaking: storedMatchmaking,
         ephemeris: calculateVedicEphemeris(targetDate, targetLoc, targetAya, houseSystem, nodeType),
       });
+      syncGlobalLiveInterval(get, set);
 
       // For first-time users, asynchronously refine to high-precision device GPS if permitted
       if (!rawActive && profiles.length === 0) {

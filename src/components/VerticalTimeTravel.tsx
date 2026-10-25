@@ -10,9 +10,11 @@ export default function VerticalTimeTravel() {
   const {
     currentDate,
     isPlaying,
+    isLive,
     playSpeed,
     location,
     setDate,
+    setIsLive,
     setLocation,
     stepTime,
     togglePlay,
@@ -80,6 +82,7 @@ export default function VerticalTimeTravel() {
           ? new Date(parsedUtcMs - tzOffsetMs)
           : new Date(parsedUtcMs);
 
+      setIsLive(false);
       setDate(finalDate);
       setIsEditingTime(false);
     }
@@ -455,13 +458,18 @@ export default function VerticalTimeTravel() {
                 </button>
                 <button
                   onClick={() => {
-                    setDate(new Date());
+                    setIsLive(true);
                     setIsEditingTime(false);
                   }}
-                  className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition-all shadow cursor-pointer active:scale-95"
-                  title="Reset to Real-Time Now"
+                  className={`px-3 py-1.5 font-extrabold text-xs rounded-lg transition-all shadow cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 ${
+                    isLive
+                      ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 ring-2 ring-emerald-300 shadow-emerald-500/50 shadow-lg"
+                      : "bg-emerald-700/80 hover:bg-emerald-600 text-white"
+                  }`}
+                  title={isLive ? "Tracking Real-Time Live (Active)" : "Reset & Track Real-Time Live"}
                 >
-                  Live
+                  <span className={`w-2 h-2 rounded-full ${isLive ? "bg-slate-950 animate-ping" : "bg-emerald-300"}`} />
+                  <span>{isLive ? "● LIVE" : "Live"}</span>
                 </button>
               </div>
             </div>

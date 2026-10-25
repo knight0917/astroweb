@@ -24,6 +24,8 @@ export default function TimeTravelSlider() {
     loadProfile,
     deleteProfile,
     resetToLiveTransit,
+    isLive,
+    setIsLive,
     gender,
     setGender,
     userEmail,
@@ -195,7 +197,6 @@ export default function TimeTravelSlider() {
 
     // 1. Immediately reset date and active profile
     resetToLiveTransit();
-    setDate(now);
 
     // 2. Resolve user's live location via browser GPS / timezone
     if (typeof navigator !== "undefined" && navigator.geolocation) {
@@ -557,12 +558,16 @@ export default function TimeTravelSlider() {
           {/* Quick "LIVE NOW" button (Snaps to current date, time, and location) */}
           <button
             onClick={handleLiveNow}
-            className="px-2.5 md:px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl shadow transition-transform active:scale-95 cursor-pointer flex items-center gap-1.5"
-            title="Snap to current live moment and your current location"
+            className={`px-2.5 md:px-3 py-1.5 font-bold text-xs rounded-xl shadow transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+              isLive
+                ? "bg-emerald-500 text-slate-950 ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-950 shadow-emerald-500/30"
+                : "bg-emerald-600 hover:bg-emerald-500 text-slate-950"
+            }`}
+            title={isLive ? "Tracking Live Real-Time Ephemeris" : "Snap to current live moment and your current location"}
           >
-            <span className="w-2 h-2 rounded-full bg-slate-950 inline-block animate-pulse" />
-            <span className="hidden sm:inline">LIVE NOW</span>
-            <span className="sm:hidden">NOW</span>
+            <span className={`w-2 h-2 rounded-full inline-block ${isLive ? "bg-slate-950 animate-ping" : "bg-slate-950 animate-pulse"}`} />
+            <span className="hidden sm:inline">{isLive ? "LIVE" : "LIVE NOW"}</span>
+            <span className="sm:hidden">{isLive ? "LIVE" : "NOW"}</span>
           </button>
 
           {/* Formatted Date/Time Banner with Hourglass */}

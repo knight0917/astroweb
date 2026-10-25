@@ -20,6 +20,18 @@ export const GRAHA_DEVANAGARI: Readonly<Record<string, string>> = Object.freeze(
   Midheaven: "मध्यलग्नम्",
 });
 
+/** Full English rashi names, index 0 = Aries. */
+export const RASHI_ENGLISH: readonly string[] = Object.freeze([
+  "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
+]);
+
+/** Short rashi forms in English used in compact planet meta lines. */
+export const RASHI_ENGLISH_SHORT: readonly string[] = Object.freeze([
+  "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
+]);
+
 /** Full rashi names, index 0 = Mesha. */
 export const RASHI_DEVANAGARI: readonly string[] = Object.freeze([
   "मेषः", "वृषभः", "मिथुनम्", "कर्कटः", "सिंहः", "कन्या",
@@ -44,7 +56,7 @@ export function grahaDevanagari(id: string, fallback: string): string {
 }
 
 export function rashiShort(index: number): string {
-  return RASHI_DEVANAGARI_SHORT[((index % 12) + 12) % 12];
+  return RASHI_ENGLISH_SHORT[((index % 12) + 12) % 12];
 }
 
 export function nakshatraDevanagari(index: number | undefined, fallback: string): string {
