@@ -220,19 +220,42 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
 
   // Dynamic Intraday Reversal & Turning Windows per Selected Day
   const dynamicReversalWindows = useMemo(() => {
+    // Helper to calculate exact Rome and UTC formatted strings respecting true seasonal daylight saving time
+    const makeWindow = (sh: number, sm: number, eh: number, em: number) => {
+      const baseYear = targetDate.getUTCFullYear();
+      const baseMonth = targetDate.getUTCMonth();
+      const baseDay = targetDate.getUTCDate();
+      const romeDateStr = targetDate.toLocaleTimeString("en-US", {
+        timeZone: "Europe/Rome",
+        timeZoneName: "shortOffset",
+      });
+      const match = romeDateStr.match(/GMT([+-]\d+)/);
+      const tzOffset = match ? parseInt(match[1], 10) : 1;
+
+      const dStart = new Date(Date.UTC(baseYear, baseMonth, baseDay, sh - tzOffset, sm, 0));
+      const dEnd = new Date(Date.UTC(baseYear, baseMonth, baseDay, eh - tzOffset, em, 0));
+      return {
+        romeTime: `${formatRomeTime(dStart)} - ${formatRomeTime(dEnd)} Rome`,
+        utcTime: `${formatUtcTime(dStart)} - ${formatUtcTime(dEnd)} UTC`,
+      };
+    };
+
+    const defaultPrimary = makeWindow(17, 0, 18, 0);
+    const defaultSecondary = makeWindow(9, 30, 10, 30);
+
     if (!vedicHorasResult || !enrichedVedicHoras.length) {
       return {
         primary: {
           label: "Primary Reversal Window",
-          romeTime: "17:00 - 18:00 Rome",
-          utcTime: "15:00 - 16:00 UTC",
+          romeTime: defaultPrimary.romeTime,
+          utcTime: defaultPrimary.utcTime,
           reason: "London Fix & NY Trend Exhaustion",
           probabilityPct: 40,
         },
         secondary: {
           label: "Secondary London Open Window",
-          romeTime: "09:30 - 10:30 Rome",
-          utcTime: "07:30 - 08:30 UTC",
+          romeTime: defaultSecondary.romeTime,
+          utcTime: defaultSecondary.utcTime,
           reason: "European Opening Liquidity Run",
           probabilityPct: 28,
         },
@@ -266,16 +289,16 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
 
     let primaryWindow = {
       label: "Primary Turning Window",
-      romeTime: "17:00 - 18:00 Rome",
-      utcTime: "15:00 - 16:00 UTC",
+      romeTime: defaultPrimary.romeTime,
+      utcTime: defaultPrimary.utcTime,
       reason: "London Fix & NY Trend Exhaustion",
       probabilityPct: 40,
     };
 
     let secondaryWindow = {
       label: "Secondary Session Pivot",
-      romeTime: "09:30 - 10:30 Rome",
-      utcTime: "07:30 - 08:30 UTC",
+      romeTime: defaultSecondary.romeTime,
+      utcTime: defaultSecondary.utcTime,
       reason: "European Opening Liquidity Run",
       probabilityPct: 28,
     };
@@ -309,18 +332,20 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
           reason: "Wednesday Rahu Kaal Trap Liquidation",
           probabilityPct: 44,
         };
+        const wedSec = makeWindow(17, 0, 18, 0);
         secondaryWindow = {
           label: "Secondary NY Settlement Window",
-          romeTime: "17:00 - 18:00 Rome",
-          utcTime: "15:00 - 16:00 UTC",
+          romeTime: wedSec.romeTime,
+          utcTime: wedSec.utcTime,
           reason: "London Fix & Institutional Settlement",
           probabilityPct: 38,
         };
       } else if (dayName === "Thursday") {
+        const thuPrim = makeWindow(16, 45, 17, 45);
         primaryWindow = {
           label: "Primary NY Fixing Window",
-          romeTime: "16:45 - 17:45 Rome",
-          utcTime: "14:45 - 15:45 UTC",
+          romeTime: thuPrim.romeTime,
+          utcTime: thuPrim.utcTime,
           reason: "Jupiter Day London Fix & US Session High",
           probabilityPct: 45,
         };
@@ -332,25 +357,28 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
           probabilityPct: 32,
         };
       } else if (dayName === "Friday") {
+        const friPrim = makeWindow(16, 30, 17, 30);
+        const friSec = makeWindow(9, 0, 10, 0);
         primaryWindow = {
           label: "Primary Weekly Profit-Taking Pivot",
-          romeTime: "16:30 - 17:30 Rome",
-          utcTime: "14:30 - 15:30 UTC",
+          romeTime: friPrim.romeTime,
+          utcTime: friPrim.utcTime,
           reason: "Venus Day London Fix Liquidation & Weekend De-risking",
           probabilityPct: 48,
         };
         secondaryWindow = {
           label: "Secondary London Open Window",
-          romeTime: "09:00 - 10:00 Rome",
-          utcTime: "07:00 - 08:00 UTC",
+          romeTime: friSec.romeTime,
+          utcTime: friSec.utcTime,
           reason: "European Session Initial High/Low Setting",
           probabilityPct: 30,
         };
       } else {
+        const monPrim = makeWindow(17, 0, 18, 0);
         primaryWindow = {
           label: "Primary NY Overlap Window",
-          romeTime: "17:00 - 18:00 Rome",
-          utcTime: "15:00 - 16:00 UTC",
+          romeTime: monPrim.romeTime,
+          utcTime: monPrim.utcTime,
           reason: "Macro 40% Daily HOD/LOD Reversal Cluster",
           probabilityPct: 40,
         };
