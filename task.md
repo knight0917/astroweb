@@ -1481,3 +1481,25 @@
 - [x] **Phase 54.2: Empirical Correlation Matrix & High-Confidence Pattern Mining (`scripts/extractPatterns.ts`)**
 - [x] **Phase 54.3: Quantitative Trend Prediction Engine & Web Dashboard Integration (`src/components/MarketBiasView.tsx`)**
 - [ ] **Phase 54.4: MT5 EA Parameter Bridge & Automated Test Verification (`npm test` & `npm run build`)**
+
+---
+
+# Phase 23: SkyDome "Graha-Mandalam" Visual Reskin (Reel Reference `Video-19030.mp4`)
+
+## Status: In Progress
+- **Trigger Keywords**: `skydome-reskin`, `graha-mandalam`, `geocentric-trails`, `procedural-planet-textures`, `plum-nebula`, `devanagari-labels`, `zodiac-degree-ring`
+- **Scope Lock**: Design only. Ephemeris, aspect rays, HUD, dasha/lordship, fly-to camera, time travel, Planet Index, zoom/fullscreen behaviour remain unchanged.
+
+## Phases & Milestones
+
+- [ ] **Phase 23.1: Geocentric Trail Engine (`src/engine/geocentricTrails.ts`)**
+  - [ ] `geocentricDistanceToSceneRadius(distAU)` — power-scaled, clamped orbit radius (Moon outside Earth, outer planets inside zodiac ring).
+  - [ ] `sampleGeocentricTrail(bodyId, endMs, ayanamshaDeg)` — astronomy-engine sampling of sidereal lon/lat/dist over a per-body window.
+  - [ ] Subtest in `tests/engine.test.mjs`.
+- [ ] **Phase 23.2: Scene Atmosphere** — plum nebula sky sphere, sparse starfield, fog, Sun-sourced lighting.
+- [ ] **Phase 23.3: Procedural Planet Bodies** — canvas textures (Sun glow/rays, Saturn ring, banded Jupiter, Mars, Moon craters, Earth).
+- [ ] **Phase 23.4: Trails + Arrowheads** — bounded ring buffer fed by playback, reseed on date jumps.
+- [ ] **Phase 23.5: Minimal Devanagari Labels** — name + rashi DMS · nakshatra pada; hover/select behaviour preserved.
+- [ ] **Phase 23.6: Rings** — thin zodiac ring with degree ticks, nakshatra star points (hover detail), house cusp lines + cyan numbers (hover detail).
+- [ ] **Phase 23.7: Overlay Chrome Restyle** — plum glass + gold accents, same controls.
+- [ ] **Phase 23.8: Verification** — `npx tsc --noEmit`, `npm test`, `npm run build`.

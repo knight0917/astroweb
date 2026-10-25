@@ -5,9 +5,36 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Html, Stars } from "@react-three/drei";
 import * as THREE from "three";
 import { useAstroStore } from "../store/useAstroStore";
-import { eclipticToCartesian, horizontalToCartesian } from "../engine/skyCoordinates";
-import { RASHIS, NAKSHATRAS } from "../engine/constants";
+import { eclipticToCartesian } from "../engine/skyCoordinates";
+import { RASHIS } from "../engine/constants";
 import { formatDMS } from "../engine/rashiNakshatra";
+import {
+  SCENE_EARTH_RADIUS,
+  advanceTrail,
+  geocentricDistanceToSceneRadius,
+  getTrailConfig,
+  type TrailSample,
+} from "../engine/geocentricTrails";
+import { getGlowTexture, getPlanetTexture } from "./skydome/textures";
+import {
+  SD_FONT_MONO,
+  SD_FONT_SERIF,
+  compactDMS,
+  grahaDevanagari,
+  nakshatraDevanagari,
+  rashiShort,
+} from "./skydome/devanagari";
+import {
+  SD_COLORS,
+  ZODIAC_RADIUS,
+  SceneAtmosphere,
+  ZodiacDegreeRing,
+  NakshatraStarRing,
+  HouseCuspLines,
+  PlanetBody,
+  OrbitTrail,
+  type HouseVisualData,
+} from "./skydome/visuals";
 import VerticalTimeTravel from "./VerticalTimeTravel";
 import PlanetIndexDeck from "./PlanetIndexDeck";
 import {
@@ -18,23 +45,7 @@ import {
 } from "../engine/omniAspectEngine";
 import { evaluateJatakaChandrika } from "../engine/jatakaChandrika";
 import { calculateVimshottariDasha } from "../engine/dasha";
-import { JatakaChandrikaGrahaRole } from "../engine/types";
-
-// Rashi Sector Vibrant Theme Colors
-const RASHI_COLORS = [
-  "#ef4444", // 0 Mesha (Aries) - Fire Red
-  "#d97706", // 1 Vrishabha (Taurus) - Earthy Amber
-  "#10b981", // 2 Mithuna (Gemini) - Bright Emerald
-  "#38bdf8", // 3 Karka (Cancer) - Moon Silver/Cyan
-  "#f59e0b", // 4 Simha (Leo) - Solar Gold
-  "#059669", // 5 Kanya (Virgo) - Forest Green
-  "#f43f5e", // 6 Tula (Libra) - Rose Pink
-  "#991b1b", // 7 Vrischika (Scorpio) - Deep Crimson
-  "#ea580c", // 8 Dhanu (Sagittarius) - Sacred Saffron
-  "#64748b", // 9 Makara (Capricorn) - Slate Earth
-  "#06b6d4", // 10 Kumbha (Aquarius) - Electric Cyan
-  "#6366f1", // 11 Meena (Pisces) - Deep Mystic Indigo
-];
+import { CelestialBodyPosition, JatakaChandrikaGrahaRole } from "../engine/types";
 
 // Calculate Vedic Graha Drishti (Planetary Aspect Offsets in Degrees & House Offsets)
 function getVedicAspects(planetName: string): { houseOffset: number; degOffset: number; label: string }[] {
@@ -71,7 +82,7 @@ function getVedicAspects(planetName: string): { houseOffset: number; degOffset: 
   }
 }
 
-// Realistic 3D Central Earth Globe with Continents, Atmospheric Glow & Location Pin
+// Geocentric Earth Globe (procedural texture, Sun-lit) with Observer Location Pin
 function CentralEarth({
   observerLat,
   observerLon,
@@ -81,272 +92,70 @@ function CentralEarth({
   observerLon: number;
   cityName: string;
 }) {
-  const earthRef = useRef<THREE.Group>(null);
-  const cloudsRef = useRef<THREE.Mesh>(null);
+  const globeRef = useRef<THREE.Mesh>(null);
+  const earthMap = useMemo(() => getPlanetTexture("Earth"), []);
+  const glowMap = useMemo(() => getGlowTexture(), []);
 
   // Slow diurnal rotation
   useFrame((_, delta) => {
-    if (cloudsRef.current) {
-      cloudsRef.current.rotation.y += delta * 0.03;
+    if (globeRef.current) {
+      globeRef.current.rotation.y += delta * 0.03;
     }
   });
 
-  const earthRadius = 5.0;
+  const earthRadius = SCENE_EARTH_RADIUS;
 
   // Compute 3D position of observer pin on Earth's surface
   const pinPos = useMemo(() => {
     const latRad = (observerLat * Math.PI) / 180;
     const lonRad = (observerLon * Math.PI) / 180;
-    const r = earthRadius + 0.1;
+    const r = earthRadius + 0.05;
     const x = r * Math.cos(latRad) * Math.sin(lonRad);
     const y = r * Math.sin(latRad);
     const z = r * Math.cos(latRad) * Math.cos(lonRad);
     return [x, y, z] as [number, number, number];
-  }, [observerLat, observerLon]);
+  }, [observerLat, observerLon, earthRadius]);
 
   return (
-    <group ref={earthRef} rotation={[0.41, 0, 0]}>
-      {/* Ocean Core Sphere */}
-      <mesh>
-        <sphereGeometry args={[earthRadius, 48, 48]} />
-        <meshStandardMaterial
-          color="#0f3460"
-          roughness={0.4}
-          metalness={0.2}
-          emissive="#081c3b"
-          emissiveIntensity={0.6}
-        />
+    <group rotation={[0.41, 0, 0]}>
+      {/* Textured Globe */}
+      <mesh ref={globeRef}>
+        <sphereGeometry args={[earthRadius, 48, 32]} />
+        <meshStandardMaterial map={earthMap} roughness={0.85} metalness={0} emissive="#0b2a5c" emissiveIntensity={0.12} />
       </mesh>
 
-      {/* Atmospheric Glowing Rim */}
-      <mesh>
-        <sphereGeometry args={[earthRadius + 0.35, 32, 32]} />
-        <meshBasicMaterial
-          color="#38bdf8"
-          transparent
-          opacity={0.18}
-          side={THREE.BackSide}
-        />
-      </mesh>
-
-      {/* Cloud & Continent Shell */}
-      <mesh ref={cloudsRef}>
-        <sphereGeometry args={[earthRadius + 0.05, 32, 32]} />
-        <meshStandardMaterial
-          color="#22c55e"
-          wireframe={false}
-          transparent
-          opacity={0.35}
-          roughness={0.8}
-        />
-      </mesh>
-
-      {/* Equator & Meridian Reference Rings on Earth */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[earthRadius + 0.02, earthRadius + 0.08, 64]} />
-        <meshBasicMaterial color="#3b82f6" transparent opacity={0.4} side={THREE.DoubleSide} />
-      </mesh>
+      {/* Atmospheric Halo */}
+      <sprite scale={[earthRadius * 3.4, earthRadius * 3.4, 1]}>
+        <spriteMaterial map={glowMap} color="#6fb6ff" transparent opacity={0.22} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </sprite>
 
       {/* Observer Location Pin */}
       <group position={pinPos}>
-        <mesh position={[0, 0.4, 0]}>
-          <coneGeometry args={[0.2, 0.8, 16]} />
-          <meshStandardMaterial color="#f59e0b" emissive="#f59e0b" emissiveIntensity={1.5} />
+        <mesh>
+          <sphereGeometry args={[0.12, 12, 12]} />
+          <meshBasicMaterial color={SD_COLORS.gold} toneMapped={false} />
         </mesh>
-        <mesh position={[0, 0.8, 0]}>
-          <sphereGeometry args={[0.25, 16, 16]} />
-          <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={1.8} />
-        </mesh>
-        <Html distanceFactor={24} position={[0, 1.4, 0]} center zIndexRange={[0, 10]}>
-          <div className="bg-slate-950/90 border border-amber-500/80 px-2 py-0.5 rounded text-[10px] font-bold text-amber-300 shadow-xl whitespace-nowrap select-none pointer-events-none">
-            📍 {cityName}
+        <Html distanceFactor={24} position={[0, 0.55, 0]} center zIndexRange={[0, 10]}>
+          <div
+            style={{ fontFamily: SD_FONT_MONO }}
+            className="select-none pointer-events-none whitespace-nowrap text-[9px] text-[#e3b75f] drop-shadow"
+          >
+            ◉ {cityName}
           </div>
         </Html>
       </group>
 
       {/* Earth Center Title */}
-      <Html distanceFactor={35} position={[0, -earthRadius - 1.2, 0]} center zIndexRange={[0, 10]}>
-        <div className="text-center select-none pointer-events-none">
-          <span className="text-xs font-extrabold text-cyan-300 tracking-wider block drop-shadow-md">
-            🌍 BHU-MANDALA (EARTH)
+      <Html distanceFactor={35} position={[0, -earthRadius - 0.9, 0]} center zIndexRange={[0, 10]}>
+        <div className="text-center select-none pointer-events-none whitespace-nowrap">
+          <span style={{ fontFamily: SD_FONT_SERIF }} className="block text-[12px] text-[#bcd7ee] opacity-80">
+            भू-मण्डलम्
           </span>
-          <span className="text-[9px] text-slate-400 font-mono">Geocentric Center</span>
+          <span style={{ fontFamily: SD_FONT_MONO }} className="text-[8px] text-[#8f7a86] tracking-widest uppercase">
+            Bhu-Mandala · Geocentric
+          </span>
         </div>
       </Html>
-    </group>
-  );
-}
-
-// 3D Upper Arc Ribbon for Each Rashi (Zodiac Sector)
-function RashiArcSector({
-  index,
-  name,
-  sanskritName,
-  symbol,
-  color,
-  startLon,
-  endLon,
-  radius,
-  yOffset,
-}: {
-  index: number;
-  name: string;
-  sanskritName: string;
-  symbol: string;
-  color: string;
-  startLon: number;
-  endLon: number;
-  radius: number;
-  yOffset: number;
-}) {
-  const points = useMemo(() => {
-    const pts: [number, number, number][] = [];
-    const step = 1;
-    for (let deg = startLon; deg <= endLon; deg += step) {
-      const pos = eclipticToCartesian(deg, 0, radius);
-      pts.push([pos[0], pos[1] + yOffset, pos[2]]);
-    }
-    return pts;
-  }, [startLon, endLon, radius, yOffset]);
-
-  const midLon = (startLon + endLon) / 2;
-  const midPos = useMemo(() => {
-    const p = eclipticToCartesian(midLon, 0, radius + 1.5);
-    return [p[0], p[1] + yOffset, p[2]] as [number, number, number];
-  }, [midLon, radius, yOffset]);
-
-  const lineArray = useMemo(() => {
-    const arr = new Float32Array(points.length * 3);
-    for (let i = 0; i < points.length; i++) {
-      arr[i * 3] = points[i][0];
-      arr[i * 3 + 1] = points[i][1];
-      arr[i * 3 + 2] = points[i][2];
-    }
-    return arr;
-  }, [points]);
-
-  return (
-    <group>
-      {/* 3D Arc Ribbon */}
-      <line>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" args={[lineArray, 3]} />
-        </bufferGeometry>
-        <lineBasicMaterial color={color} linewidth={3} transparent opacity={0.9} />
-      </line>
-
-      {/* Sector Boundary Divider Marker */}
-      {points[0] && (
-        <mesh position={points[0]}>
-          <sphereGeometry args={[0.3, 12, 12]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.7} />
-        </mesh>
-      )}
-
-      {/* Floating Rashi Header Badge */}
-      <group position={midPos}>
-        <Html distanceFactor={40} center zIndexRange={[0, 10]}>
-          <div
-            style={{ borderColor: color }}
-            className="px-2 py-0.5 rounded-md bg-slate-950/85 border shadow-xl text-center select-none pointer-events-none whitespace-nowrap backdrop-blur-sm"
-          >
-            <div style={{ color: color }} className="font-extrabold text-xs">
-              {symbol} {sanskritName}
-            </div>
-            <div className="text-[8px] text-slate-300 font-mono tracking-wider uppercase">
-              {name} ({index * 30}° - {(index + 1) * 30}°)
-            </div>
-          </div>
-        </Html>
-      </group>
-    </group>
-  );
-}
-
-// 12 Rashi Zodiac Belt (Upper Ring: Y = +4.5, Radius = 40)
-function UpperZodiacBelt3D() {
-  const radius = 40;
-  const yOffset = 4.5;
-
-  return (
-    <group>
-      {RASHIS.map((r, i) => (
-        <RashiArcSector
-          key={r.index}
-          index={r.index}
-          name={r.englishName}
-          sanskritName={r.sanskritName}
-          symbol={r.symbol}
-          color={RASHI_COLORS[i % RASHI_COLORS.length]}
-          startLon={i * 30}
-          endLon={(i + 1) * 30}
-          radius={radius}
-          yOffset={yOffset}
-        />
-      ))}
-    </group>
-  );
-}
-
-// 27 Nakshatra Belt (Lower Ring: Y = -4.5, Radius = 40)
-function LowerNakshatraBelt3D() {
-  const radius = 40;
-  const yOffset = -4.5;
-  const nakStep = 360 / 27;
-
-  return (
-    <group>
-      {/* Main Nakshatra Base Ring */}
-      <mesh position={[0, yOffset, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[radius, 0.12, 16, 128]} />
-        <meshBasicMaterial color="#9333ea" transparent opacity={0.6} />
-      </mesh>
-
-      {/* 27 Nakshatra Sectors & Labels */}
-      {NAKSHATRAS.map((nak, i) => {
-        const midLon = (i + 0.5) * nakStep;
-        const pos = eclipticToCartesian(midLon, 0, radius);
-        const startPos = eclipticToCartesian(i * nakStep, 0, radius - 1.2);
-        const endPos = eclipticToCartesian(i * nakStep, 0, radius + 1.2);
-
-        const tickLine = new Float32Array([
-          startPos[0],
-          startPos[1] + yOffset,
-          startPos[2],
-          endPos[0],
-          endPos[1] + yOffset,
-          endPos[2],
-        ]);
-
-        return (
-          <group key={nak.index}>
-            {/* Nakshatra Divider Tick */}
-            <line>
-              <bufferGeometry>
-                <bufferAttribute attach="attributes-position" args={[tickLine, 3]} />
-              </bufferGeometry>
-              <lineBasicMaterial color="#c084fc" transparent opacity={0.8} />
-            </line>
-
-            {/* Nakshatra Label with Sacred Yoni Animal */}
-            <group position={[pos[0], pos[1] + yOffset, pos[2]]}>
-              <Html distanceFactor={44} center zIndexRange={[0, 10]}>
-                <div className="select-none text-center pointer-events-none px-2 py-1 rounded-lg bg-purple-950/85 border border-purple-700/70 shadow-2xl text-[9px] text-purple-200 whitespace-nowrap backdrop-blur-sm transition-transform hover:scale-110">
-                  <div className="flex items-center justify-center gap-1">
-                    <span className="text-xs">{nak.animalSymbol}</span>
-                    <span className="font-bold text-[9.5px] text-purple-200">{nak.sanskritName}</span>
-                  </div>
-                  <div className="text-[7.5px] text-amber-300 font-mono flex items-center justify-center gap-1 mt-0.5">
-                    <span>{nak.animal}</span>
-                    <span className="text-purple-400">•</span>
-                    <span className="text-purple-300">{nak.lord}</span>
-                  </div>
-                </div>
-              </Html>
-            </group>
-          </group>
-        );
-      })}
     </group>
   );
 }
@@ -462,96 +271,78 @@ const VEDIC_HOUSES_DATA = [
   },
 ];
 
-// 12 Vedic Houses (Bhava Chakra) Belt (Lower Ring Tier 2: Y = -9.0, Radius = 40)
-// 1st House starts at Ascendant (Lagna) and all 12 houses rotate dynamically with Asc. point
-function LowerVedicHousesBelt3D({
-  ascendantLongitude,
-  cusps,
-}: {
-  ascendantLongitude: number;
-  cusps?: number[];
-}) {
-  const radius = 40;
-  const yOffset = -9.0;
+// ---------------------------------------------------------------------------
+// Geocentric scene layout (planets at power-scaled true distance; points on the zodiac ring)
+// ---------------------------------------------------------------------------
 
-  return (
-    <group>
-      {/* Main Vedic Houses Base Ring */}
-      <mesh position={[0, yOffset, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[radius, 0.12, 16, 128]} />
-        <meshBasicMaterial color="#38bdf8" transparent opacity={0.65} />
-      </mesh>
+/** Scene position for a body. Physical bodies pass `distAU`; Lagna/MC/Upagrahas sit on the zodiac ring. */
+function scenePosition(lon: number, lat: number, distAU?: number): [number, number, number] {
+  const r = distAU === undefined ? ZODIAC_RADIUS : geocentricDistanceToSceneRadius(distAU);
+  return eclipticToCartesian(lon, lat, r);
+}
 
-      {/* 12 House Sectors rotating dynamically with Ascendant */}
-      {VEDIC_HOUSES_DATA.map((hData, i) => {
-        const startLon =
-          cusps && cusps[i] !== undefined
-            ? cusps[i]
-            : (ascendantLongitude + i * 30) % 360;
-        const endLon =
-          cusps && cusps[(i + 1) % 12] !== undefined
-            ? cusps[(i + 1) % 12]
-            : (startLon + 30) % 360;
+const PLANET_BODY_RADIUS: Readonly<Record<string, number>> = {
+  Sun: 1.45,
+  Moon: 0.5,
+  Mercury: 0.36,
+  Venus: 0.5,
+  Mars: 0.44,
+  Jupiter: 0.85,
+  Saturn: 0.72,
+  Rahu: 0.42,
+  Ketu: 0.42,
+  Uranus: 0.46,
+  Neptune: 0.46,
+  Pluto: 0.3,
+};
 
-        let span = (endLon - startLon + 360) % 360;
-        if (span === 0) span = 30;
-        const midLon = (startLon + span / 2) % 360;
+const TRAIL_COLORS: Readonly<Record<string, string>> = {
+  Sun: "#f3e3c0",
+  Moon: "#d9dde6",
+  Mercury: "#e8e1d4",
+  Venus: "#f5ecd9",
+  Mars: "#ef6b55",
+  Jupiter: "#e9d9b8",
+  Saturn: "#d9c9a8",
+  Uranus: "#a8c4d8",
+  Neptune: "#a8b4d8",
+  Pluto: "#b8a8a0",
+};
 
-        const pos = eclipticToCartesian(midLon, 0, radius);
-        const startPos = eclipticToCartesian(startLon, 0, radius - 1.2);
-        const endPos = eclipticToCartesian(startLon, 0, radius + 1.2);
+/**
+ * Maintains bounded geocentric trail buffers per planet across ephemeris updates.
+ * Small playback steps append/trim; date jumps or ayanamsha changes reseed from astronomy-engine.
+ */
+function useGeocentricTrails(
+  planets: CelestialBodyPosition[],
+  timeMs: number,
+  ayanamshaDeg: number
+): Record<string, [number, number, number][]> {
+  const buffers = useRef(new Map<string, TrailSample[]>());
+  const lastAyanamsha = useRef<number | null>(null);
 
-        const tickLine = new Float32Array([
-          startPos[0],
-          startPos[1] + yOffset,
-          startPos[2],
-          endPos[0],
-          endPos[1] + yOffset,
-          endPos[2],
-        ]);
+  return useMemo(() => {
+    if (lastAyanamsha.current === null || Math.abs(ayanamshaDeg - lastAyanamsha.current) > 0.05) {
+      buffers.current.clear();
+      lastAyanamsha.current = ayanamshaDeg;
+    }
 
-        return (
-          <group key={hData.house}>
-            {/* Cusp Divider Line */}
-            <line>
-              <bufferGeometry>
-                <bufferAttribute attach="attributes-position" args={[tickLine, 3]} />
-              </bufferGeometry>
-              <lineBasicMaterial color={hData.color} transparent opacity={0.85} />
-            </line>
+    const out: Record<string, [number, number, number][]> = {};
+    for (const p of planets) {
+      if (!getTrailConfig(p.id)) continue;
+      const head: TrailSample = { t: timeMs, lon: p.siderealLongitude, lat: p.latitude, distAU: p.distanceAU };
+      const buf = advanceTrail(p.id, buffers.current.get(p.id), head, ayanamshaDeg);
+      buffers.current.set(p.id, buf);
 
-            {/* 12 House Dynamic Label Badge */}
-            <group position={[pos[0], pos[1] + yOffset, pos[2]]}>
-              <Html distanceFactor={44} center zIndexRange={[0, 10]}>
-                <div
-                  style={{ borderColor: `${hData.color}90` }}
-                  className="select-none text-center pointer-events-none px-2 py-1 rounded-xl bg-slate-950/90 border shadow-2xl backdrop-blur-md transition-transform hover:scale-110 whitespace-nowrap min-w-[90px]"
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    <span
-                      style={{ color: hData.color }}
-                      className="font-extrabold text-[10.5px] font-mono"
-                    >
-                      H{hData.house}
-                    </span>
-                    <span className="font-bold text-[9.5px] text-slate-100">
-                      {hData.sanskritName.split(" ")[0]}
-                    </span>
-                  </div>
-                  <div className="text-[7.5px] text-slate-300 font-mono mt-0.5">
-                    {hData.significance}
-                  </div>
-                  <div className="text-[7px] text-amber-400 font-mono flex items-center justify-center gap-1 mt-0.5">
-                    <span>{startLon.toFixed(1)}° - {endLon.toFixed(1)}°</span>
-                  </div>
-                </div>
-              </Html>
-            </group>
-          </group>
-        );
-      })}
-    </group>
-  );
+      const pts: [number, number, number][] = [];
+      for (const s of buf) {
+        if (s.t < head.t) pts.push(scenePosition(s.lon, s.lat, s.distAU));
+      }
+      pts.push(scenePosition(head.lon, head.lat, head.distAU));
+      out[p.id] = pts;
+    }
+    return out;
+  }, [planets, timeMs, ayanamshaDeg]);
 }
 
 export interface Planet3DNode {
@@ -1083,7 +874,7 @@ function PlanetMesh({
   color,
   longitude,
   degreesInSign,
-  orbitRadius,
+  position,
   rashi,
   nakshatra,
   isRetrograde,
@@ -1110,9 +901,9 @@ function PlanetMesh({
   color: string;
   longitude: number;
   degreesInSign: number;
-  orbitRadius: number;
+  position: [number, number, number];
   rashi: { sanskritName: string; symbol: string; englishName: string; index: number };
-  nakshatra: { sanskritName: string; pada: number; lord?: string; deity?: string; animal?: string; animalSymbol?: string };
+  nakshatra: { index?: number; sanskritName: string; pada: number; lord?: string; deity?: string; animal?: string; animalSymbol?: string };
   isRetrograde?: boolean;
   speed?: number;
   house?: number;
@@ -1138,16 +929,12 @@ function PlanetMesh({
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
-  // Position between Central Earth (r=5) and Outer Ring (r=37-42)
-  const position = useMemo(() => {
-    return eclipticToCartesian(longitude, 0, orbitRadius);
-  }, [longitude, orbitRadius]);
-
-  const radius = isLagna ? 1.0 : isUpagraha ? 0.55 : 0.85;
+  // Body radius: physical grahas use per-planet sizes; Lagna/MC and Upagrahas are small ring markers
+  const radius = isLagna ? 0.45 : isUpagraha ? 0.28 : PLANET_BODY_RADIUS[id] ?? 0.45;
 
   useFrame((state) => {
     if (meshRef.current && (hovered || isSelected)) {
-      meshRef.current.scale.setScalar(1.5 + Math.sin(state.clock.elapsedTime * 5) * 0.2);
+      meshRef.current.scale.setScalar(1.25 + Math.sin(state.clock.elapsedTime * 5) * 0.1);
     } else if (meshRef.current) {
       meshRef.current.scale.setScalar(1.0);
     }
@@ -1327,9 +1114,13 @@ function PlanetMesh({
           />
         )}
 
-        {/* Planet Sphere */}
-        <mesh
-          ref={meshRef}
+        {/* Textured Planet Body with Sun rays, Saturn rings, Rahu/Ketu aura */}
+        <PlanetBody
+          bodyId={id}
+          radius={radius}
+          color={color}
+          highlight={isSelected ? 2 : hovered ? 1 : 0}
+          meshRef={meshRef}
           onClick={(e) => {
             e.stopPropagation();
             onSelect();
@@ -1339,27 +1130,10 @@ function PlanetMesh({
             setHovered(true);
           }}
           onPointerOut={() => setHovered(false)}
-        >
-          <sphereGeometry args={[radius, 32, 32]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={isSelected ? 2.2 : hovered ? 1.5 : 0.8}
-            roughness={0.2}
-            metalness={0.8}
-          />
-        </mesh>
+        />
 
-        {/* Selection Glow Ring */}
-        {isSelected && (
-          <mesh>
-            <ringGeometry args={[radius * 1.6, radius * 2.1, 32]} />
-            <meshBasicMaterial color="#ffffff" side={THREE.DoubleSide} transparent opacity={0.9} />
-          </mesh>
-        )}
-
-        {/* Primary Planet Label */}
-        <Html distanceFactor={30} center position={[0, radius + 1.1, 0]} zIndexRange={[0, 15]}>
+        {/* Reel-style Minimal Floating Devanagari Label */}
+        <Html distanceFactor={32} center position={[0, radius + 0.9, 0]} zIndexRange={[0, 15]}>
           <div
             onClick={(e) => {
               e.stopPropagation();
@@ -1367,28 +1141,30 @@ function PlanetMesh({
             }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            className={`cursor-pointer select-none transition-all px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5 ${
-              isSelected
-                ? "bg-amber-500 text-slate-950 ring-2 ring-white scale-110"
-                : hovered
-                ? "bg-slate-800 text-amber-300 ring-2 ring-amber-400 scale-110 z-50"
-                : isLagna
-                ? "bg-emerald-950/90 text-emerald-300 border border-emerald-500/60"
-                : isUpagraha
-                ? "bg-purple-950/80 text-purple-200 border border-purple-700/60"
-                : "bg-slate-950/90 text-slate-100 border border-slate-700/80 backdrop-blur-md"
-            }`}
+            className="cursor-pointer select-none text-left transition-all"
+            style={{ textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}
           >
-            <span className="text-sm">{symbol}</span>
-            <span className="font-bold">{name}</span>
-            <span className="text-[10px] text-amber-300 font-mono">
-              {formatDMS(degreesInSign)}
-            </span>
-            {isRetrograde && (
-              <span className="px-1 bg-red-950 text-red-300 text-[10px] rounded font-bold">
-                R
+            <div className="flex items-center gap-1 leading-tight">
+              <span
+                style={{
+                  fontFamily: SD_FONT_SERIF,
+                  color: isSelected ? "#f59e0b" : hovered ? "#ffd27a" : "#f1e8e2",
+                }}
+                className="text-[13px] font-bold tracking-wide"
+              >
+                {grahaDevanagari(id, sanskritName || name)}
               </span>
-            )}
+              {isRetrograde && (
+                <span className="text-[11px] font-serif text-red-400 font-bold">℞</span>
+              )}
+            </div>
+            <div
+              style={{ fontFamily: SD_FONT_MONO, color: isSelected ? "#e2d5c8" : "#a998a4" }}
+              className="text-[8.5px] tracking-tight whitespace-nowrap mt-0.5"
+            >
+              {rashi ? rashiShort(rashi.index) : ""} {compactDMS(degreesInSign)}{" "}
+              {nakshatra ? `· ${nakshatraDevanagari(nakshatra.index, nakshatra.sanskritName)} ${nakshatra.pada || 1}` : ""}
+            </div>
           </div>
         </Html>
 
@@ -1512,7 +1288,7 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
       longitude: ephemeris.ascendant.siderealLongitude,
       signIndex: ephemeris.ascendant.rashi.index,
       house: 1,
-      position: eclipticToCartesian(ephemeris.ascendant.siderealLongitude, 0, 40),
+      position: scenePosition(ephemeris.ascendant.siderealLongitude, 0),
       isLagna: true,
     };
 
@@ -1525,11 +1301,11 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
       longitude: ephemeris.midheaven.siderealLongitude,
       signIndex: ephemeris.midheaven.rashi.index,
       house: 10,
-      position: eclipticToCartesian(ephemeris.midheaven.siderealLongitude, 0, 40),
+      position: scenePosition(ephemeris.midheaven.siderealLongitude, 0),
       isLagna: true,
     };
 
-    // Navagrahas & Modern Planets
+    // Navagrahas & Modern Planets with Geocentric True Distances
     Object.values(ephemeris.planets).forEach((p) => {
       map[p.id] = {
         id: p.id,
@@ -1540,7 +1316,7 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
         longitude: p.siderealLongitude,
         signIndex: p.rashi.index,
         house: p.house,
-        position: eclipticToCartesian(p.siderealLongitude, 0, 40),
+        position: scenePosition(p.siderealLongitude, p.latitude, p.distanceAU),
         isRetrograde: p.isRetrograde,
         speed: p.speed,
       };
@@ -1558,7 +1334,7 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
           longitude: u.siderealLongitude,
           signIndex: u.rashi.index,
           house: u.house,
-          position: eclipticToCartesian(u.siderealLongitude, 0, 40),
+          position: scenePosition(u.siderealLongitude, 0),
           isUpagraha: true,
         };
       });
@@ -1689,42 +1465,57 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
     return Object.values(ephemeris.upagrahas);
   }, [ephemeris, showUpagrahas]);
 
+  const housesVisualData: HouseVisualData[] = useMemo(() => {
+    const ascLon = ephemeris?.ascendant?.siderealLongitude || 0;
+    const cusps = ephemeris?.houses?.cusps;
+    return VEDIC_HOUSES_DATA.map((hData, i) => {
+      const startLon = cusps && cusps[i] !== undefined ? cusps[i] : (ascLon + i * 30) % 360;
+      const endLon = cusps && cusps[(i + 1) % 12] !== undefined ? cusps[(i + 1) % 12] : (ascLon + (i + 1) * 30) % 360;
+      return {
+        house: hData.house,
+        sanskritName: hData.sanskritName,
+        significance: hData.significance,
+        type: hData.type,
+        startLon,
+        endLon,
+      };
+    });
+  }, [ephemeris]);
+
+  const trails = useGeocentricTrails(planetList, currentDate.getTime(), ephemeris.ayanamshaValue);
+
   if (!ephemeris) return null;
 
   return (
     <>
-      <ambientLight intensity={0.9} />
-      <pointLight position={[0, 0, 0]} intensity={2.0} distance={120} />
+      {/* 1. Atmospheric Sky & Directional Lighting */}
+      <SceneAtmosphere />
+      <ambientLight intensity={0.55} color="#d8c8d8" />
+      <directionalLight position={sunPos || [15, 8, 15]} intensity={2.2} color="#fff6e8" />
+      {sunPos && <pointLight position={sunPos} intensity={3.0} distance={100} color="#ffeed0" />}
 
-      {/* Star Field Background (Optimized for mobile GPUs) */}
-      <Stars radius={150} depth={60} count={1200} factor={3} saturation={0} fade speed={0.5} />
-
-      {/* 1. Central Earth Globe with Location Marker */}
+      {/* 2. Geocentric Earth Globe at Origin */}
       <CentralEarth
         observerLat={location.latitude}
         observerLon={location.longitude}
         cityName={location.cityName}
       />
 
-      {/* 2. Upper Ring: 12 Rashi Zodiac Belt (Y = +4.5, Radius = 40) */}
-      <UpperZodiacBelt3D />
+      {/* 3. Geocentric Orbit Trails with Direction Arrowheads */}
+      {Object.entries(trails).map(([pId, pts]) => (
+        <OrbitTrail key={pId} points={pts} color={TRAIL_COLORS[pId] || SD_COLORS.trailDefault} />
+      ))}
 
-      {/* Middle Planetary Ecliptic Reference Ring (Y = 0, Radius = 40) */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[40, 0.08, 16, 128]} />
-        <meshBasicMaterial color="#eab308" transparent opacity={0.35} />
-      </mesh>
+      {/* 4. Thin Zodiac Degree Ring with 1°/5°/30° Ticks & Devanagari Rashi Names */}
+      <ZodiacDegreeRing />
 
-      {/* 3. Lower Ring 1: 27 Nakshatras with Pada ticks (Y = -4.5, Radius = 40) */}
-      <LowerNakshatraBelt3D />
+      {/* 5. Nakshatra Star Ring with Dotted Line & Glowing Yogatara Points */}
+      <NakshatraStarRing />
 
-      {/* 4. Lower Ring 2: 12 Vedic Houses (Bhava Chakra) rotating with Ascendant (Y = -9.0, Radius = 40) */}
-      <LowerVedicHousesBelt3D
-        ascendantLongitude={ephemeris.ascendant.siderealLongitude}
-        cusps={ephemeris.houses?.cusps}
-      />
+      {/* 6. House Cusp Lines & Cyan House Numerals */}
+      <HouseCuspLines houses={housesVisualData} />
 
-      {/* 5. Ascendant (Lagna) East Rising Vector Marker (Middle Belt) */}
+      {/* 7. Ascendant (Lagna) East Rising Vector Marker */}
       <PlanetMesh
         id="Ascendant"
         name="Lagna"
@@ -1733,7 +1524,7 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
         color="#10b981"
         longitude={ephemeris.ascendant.siderealLongitude}
         degreesInSign={ephemeris.ascendant.rashi.degreesInSign}
-        orbitRadius={40}
+        position={planetPositionsMap["Ascendant"]?.position || [40, 0, 0]}
         rashi={ephemeris.ascendant.rashi}
         nakshatra={ephemeris.ascendant.nakshatra}
         house={1}
@@ -1748,7 +1539,7 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
         onResetView={() => setSelectedEntityId(null)}
       />
 
-      {/* Midheaven (MC) Marker (Middle Belt) */}
+      {/* Midheaven (MC) Marker */}
       <PlanetMesh
         id="Midheaven"
         name="MC"
@@ -1757,7 +1548,7 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
         color="#f59e0b"
         longitude={ephemeris.midheaven.siderealLongitude}
         degreesInSign={ephemeris.midheaven.rashi.degreesInSign}
-        orbitRadius={40}
+        position={planetPositionsMap["Midheaven"]?.position || [0, 0, 40]}
         rashi={ephemeris.midheaven.rashi}
         nakshatra={ephemeris.midheaven.nakshatra}
         house={10}
@@ -1772,12 +1563,13 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
         onResetView={() => setSelectedEntityId(null)}
       />
 
-      {/* 5. Navagrahas & Modern Planets placed between Zodiac & Nakshatra (Middle Belt) */}
+      {/* 8. Navagrahas & Modern Planets placed at True Geocentric Distances */}
       {planetList.map((p) => {
         const nvInfo = neechaVakriList.find((n) => n.name === p.name);
         const combInfo = combustionList.find((c) => c.name === p.name);
         const lordInfo = jatakaChandrikaAnalysis?.grahaRoles.find((r) => r.grahaName === p.name);
         const dInfo = getDashaInfoForPlanet(p.name);
+        const pos = planetPositionsMap[p.id]?.position || [40, 0, 0];
 
         return (
           <PlanetMesh
@@ -1789,7 +1581,7 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
             color={p.color}
             longitude={p.siderealLongitude}
             degreesInSign={p.rashi.degreesInSign}
-            orbitRadius={40}
+            position={pos}
             rashi={p.rashi}
             nakshatra={p.nakshatra}
             isRetrograde={p.isRetrograde}
@@ -1810,7 +1602,7 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
         );
       })}
 
-      {/* 6. Upagrahas (Sub-planets) in Middle Belt */}
+      {/* 9. Upagrahas (Sub-planets) */}
       {showUpagrahas &&
         upagrahaList.map((u) => (
           <PlanetMesh
@@ -1822,7 +1614,7 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
             color="#c084fc"
             longitude={u.siderealLongitude}
             degreesInSign={u.rashi.degreesInSign}
-            orbitRadius={40}
+            position={planetPositionsMap[u.id]?.position || [40, 0, 0]}
             rashi={u.rashi}
             nakshatra={u.nakshatra}
             house={u.house}
@@ -1843,7 +1635,7 @@ function SkyScene({ fov, showAspectRays }: { fov: number; showAspectRays: boolea
         ref={controlsRef}
         enableZoom={false}
         minDistance={3}
-        maxDistance={100}
+        maxDistance={120}
         rotateSpeed={0.5}
         enablePan={true}
         dampingFactor={0.08}
@@ -1929,10 +1721,10 @@ export default function SkyDome() {
     <div
       ref={containerRef}
       onWheel={handleWheel}
-      className={`relative bg-slate-950 overflow-hidden transition-all duration-300 ${
+      className={`relative bg-[#140818] overflow-hidden transition-all duration-300 ${
         isFullscreen
           ? "fixed inset-0 z-[100] w-screen h-screen rounded-none"
-          : "w-full h-full min-h-[520px] rounded-2xl border border-slate-800 shadow-2xl"
+          : "w-full h-full min-h-[520px] rounded-2xl border border-[#3b1536]/80 shadow-2xl"
       }`}
     >
       {/* 3D WebGL Canvas (Optimized on-demand rendering for mobile batteries & GPUs) */}
@@ -1958,10 +1750,14 @@ export default function SkyDome() {
       {/* Top Header Overlay Bar (Unified Responsive Container) */}
       <div className="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
         {/* Left: Geocentric Bhu-Mandala Indicator */}
-        <div className="pointer-events-auto glass-panel px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 sm:gap-2 text-xs shadow-md bg-slate-950/90">
-          <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse flex-shrink-0"></span>
-          <span className="font-extrabold text-slate-100 text-[11px] sm:text-xs">Bhu-Mandala</span>
-          <span className="text-slate-400 text-[10px] hidden md:inline">| Earth Center • Graha Drishti</span>
+        <div className="pointer-events-auto px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs shadow-lg bg-[#1d0b21]/85 border border-[#4a1c43]/70 backdrop-blur-md">
+          <span className="w-2 h-2 rounded-full bg-[#e3b75f] animate-pulse flex-shrink-0"></span>
+          <span style={{ fontFamily: SD_FONT_SERIF }} className="font-bold text-[#f5ebd7] text-xs">
+            ग्रह-मण्डलम्
+          </span>
+          <span style={{ fontFamily: SD_FONT_MONO }} className="text-[#a5899c] text-[10px] hidden md:inline">
+            | Bhu-Mandala · Geocentric Orbit
+          </span>
         </div>
 
         {/* Right: Aspect Toggle, Zoom & Fullscreen */}
@@ -1969,28 +1765,28 @@ export default function SkyDome() {
           {/* Toggle Aspect Rays */}
           <button
             onClick={() => setShowAspectRays(!showAspectRays)}
-            className={`glass-panel px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-md flex items-center gap-1 cursor-pointer bg-slate-950/90 ${
+            className={`px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-medium transition-all shadow-md flex items-center gap-1.5 cursor-pointer backdrop-blur-md ${
               showAspectRays
-                ? "bg-amber-500/20 border-amber-500 text-amber-300"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-[#3d1838]/90 border border-[#e3b75f]/80 text-[#f6d896]"
+                : "bg-[#1d0b21]/85 border border-[#4a1c43]/60 text-[#bba1b2] hover:text-[#f5ebd7]"
             }`}
             title="Toggle Vedic Planetary Aspect Rays (Graha Drishti)"
           >
-            <span>✨</span>
+            <span className="text-[#e3b75f]">✨</span>
             <span className="hidden sm:inline">{showAspectRays ? "Aspect Rays: ON" : "Aspect Rays: OFF"}</span>
             <span className="sm:hidden">{showAspectRays ? "Rays: ON" : "Rays: OFF"}</span>
           </button>
 
           {/* Telescope Zoom Controls */}
-          <div className="glass-panel p-1 rounded-xl flex items-center gap-1 text-xs shadow-lg bg-slate-950/90">
-            <span className="text-[10px] text-amber-400 font-bold px-1 font-mono">
+          <div className="p-1 rounded-xl flex items-center gap-1 text-xs shadow-lg bg-[#1d0b21]/85 border border-[#4a1c43]/60 backdrop-blur-md">
+            <span style={{ fontFamily: SD_FONT_MONO }} className="text-[10px] text-[#e3b75f] font-bold px-1.5">
               🔭 {zoomFactor}x
             </span>
 
             <button
               onClick={() => setFov((prev) => Math.max(5, prev - 12))}
               title="Zoom In"
-              className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-900 hover:bg-slate-800 text-amber-300 font-extrabold text-sm flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
+              className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#2e1333] hover:bg-[#3d1838] text-[#f6d896] font-bold text-sm flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
             >
               +
             </button>
@@ -1998,7 +1794,7 @@ export default function SkyDome() {
             <button
               onClick={() => setFov((prev) => Math.min(95, prev + 12))}
               title="Zoom Out"
-              className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 font-extrabold text-sm flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
+              className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#2e1333] hover:bg-[#3d1838] text-[#d6c0cf] font-bold text-sm flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
             >
               -
             </button>
@@ -2006,7 +1802,7 @@ export default function SkyDome() {
             <button
               onClick={() => setFov(65)}
               title="Reset Zoom to 1x"
-              className="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-[9px] sm:text-[10px] text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="px-2 py-0.5 rounded bg-[#2e1333] hover:bg-[#3d1838] text-[9px] sm:text-[10px] text-[#bba1b2] hover:text-[#f5ebd7] transition-colors cursor-pointer"
             >
               1x
             </button>
@@ -2016,7 +1812,7 @@ export default function SkyDome() {
           <button
             onClick={toggleFullscreen}
             title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-            className="glass-panel px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold text-slate-200 hover:text-amber-400 hover:border-amber-500/50 flex items-center gap-1 transition-all shadow-lg active:scale-95 cursor-pointer bg-slate-950/90"
+            className="px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-medium text-[#d6c0cf] hover:text-[#f6d896] bg-[#1d0b21]/85 border border-[#4a1c43]/60 hover:border-[#e3b75f]/50 flex items-center gap-1 transition-all shadow-lg active:scale-95 cursor-pointer backdrop-blur-md"
           >
             <span className="text-xs">{isFullscreen ? "⤓" : "⛶"}</span>
             <span className="hidden sm:inline">{isFullscreen ? "Exit" : "Full"}</span>
@@ -2036,8 +1832,11 @@ export default function SkyDome() {
 
       {/* Bottom Hint Banner */}
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none hidden md:block">
-        <div className="text-[10.5px] text-slate-400 glass-panel px-3 py-1 rounded-full shadow-lg border border-slate-800/80 backdrop-blur-md">
-          Left: Time Controller • Right: Planet Index (Click to Rotate 3D View) • Center: Bhu-Mandala
+        <div
+          style={{ fontFamily: SD_FONT_MONO }}
+          className="text-[10px] text-[#bba1b2] px-3.5 py-1 rounded-full shadow-lg border border-[#4a1c43]/60 bg-[#1d0b21]/85 backdrop-blur-md"
+        >
+          Left: Time Travel • Right: Planet Focus • Center: Bhu-Mandala • Drag: Orbit
         </div>
       </div>
     </div>

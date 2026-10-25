@@ -207,6 +207,13 @@ export interface AstroMarketSignal {
     isPanchaka5xActive: boolean;
     intradayLunarConjunctions: string[];
     solarChestabalaStations: string[];
+    panchakaTiming?: {
+      isActive: boolean;
+      activeWindow: string;
+      endsWhen: string;
+      tradingImpact: string;
+    };
+    isEmpiricalOverridden?: boolean;
   };
   varahamihiraScarcity: {
     primarySignIndex: number;
@@ -221,6 +228,12 @@ export interface AstroMarketSignal {
     sunMoonNodalRegime: string;
     primaryLordVedhaMultiplier: number; // 3x Exalted, 2x Retrograde, 0x Debilitated, 1x Normal
     activeSolarUpagrahaShocks: string[];
+    upagrahaShockDetails?: Array<{
+      title: string;
+      rulingPlanet: string;
+      whenDoesItStrike: string;
+      tradingAdvice: string;
+    }>;
   };
   advancedTransitConfluence: {
     moonKakshyaLord: string;         // C.S. Patel 3°45' Kakshya sub-lord of Moon
@@ -550,6 +563,10 @@ export function calculateAstroMarketSignal(
   // ============================================================================
   let nakshatraAction: NakshatraAction = "NEUTRAL_EXPANSION";
   let ruleDesc = "Moon is in a neutral expansion star. Standard order flow applies.";
+  let isEmpiricalOverridden = false;
+
+  const currentNakName = NAKSHATRA_NAMES[moonNak];
+  const empiricalEdge = EMPIRICAL_GOLD_EDGES[currentNakName];
 
   if (SELLING_NAKSHATRAS.has(moonNak)) {
     nakshatraAction = "SELL_RALLY";
@@ -559,9 +576,51 @@ export function calculateAstroMarketSignal(
     ruleDesc = `Moon in ${ephemeris.panchanga.nakshatra.sanskritName} (Dikshit 6 Buying Stars). Institutional accumulation at bottoms; favor buying pullbacks at key support.`;
   }
 
+  // Harmonize Classical vs. Modern MT5 6-Month Backtest Conflict
+  if (empiricalEdge && empiricalEdge.bias === "BEARISH" && nakshatraAction === "BUY_DIP") {
+    nakshatraAction = "SELL_RALLY";
+    isEmpiricalOverridden = true;
+    ruleDesc = `Moon in ${ephemeris.panchanga.nakshatra.sanskritName}. ⚠️ OVERRULED BY MT5 DATA: While classical texts classify as Buy-Dip, empirical 6-month MT5 backtest shows ${empiricalEdge.winRatePct}% Bearish Breakdown (${empiricalEdge.historicalNetPts} pts). EA Directive: SHORT RALLIES.`;
+  }
+
   // Dikshit Page 198: Panchaka 5x Rule (Moon in Aquarius or Pisces, ~300° to 360°)
   const moonLon = planets.Moon ? planets.Moon.siderealLongitude : 0;
   const isPanchaka5xActive = moonLon >= 300.0 && moonLon < 360.0;
+
+  const degreesRemainingInPanchaka = isPanchaka5xActive ? 360.0 - moonLon : 0;
+  const hoursRemainingInPanchaka = (degreesRemainingInPanchaka / 0.55).toFixed(0);
+
+  const panchakaTiming = {
+    isActive: isPanchaka5xActive,
+    activeWindow: isPanchaka5xActive
+      ? `Active All Day (24h continuous) • Moon at ${(moonLon % 30).toFixed(1)}° in ${RASHI_NAMES[Math.floor(moonLon / 30)]} (${currentNakName})`
+      : "Inactive (Moon outside 300°-360° Aquarius/Pisces)",
+    endsWhen: isPanchaka5xActive
+      ? `Ends when Moon crosses into Aries (~${hoursRemainingInPanchaka} hours remaining)`
+      : "Normal market flow",
+    tradingImpact: isPanchaka5xActive
+      ? "Causes repeating 5-fold whipsaws & false breakout traps. Scalp support/resistance; avoid chasing trends."
+      : "Standard trend structures intact.",
+  };
+
+  const upagrahaShockDetails = activeSolarUpagrahaShocks.map((shockStr) => {
+    let rulingPlanet = "Jupiter";
+    if (shockStr.startsWith("Vidyutmukha")) rulingPlanet = "Sun";
+    else if (shockStr.startsWith("Shula")) rulingPlanet = "Moon";
+    else if (shockStr.startsWith("Sannipata")) rulingPlanet = "Mars";
+    else if (shockStr.startsWith("Ketu-Upagraha") || shockStr.startsWith("Upaketu")) rulingPlanet = "Mercury";
+    else if (shockStr.startsWith("Ulka")) rulingPlanet = "Jupiter";
+    else if (shockStr.startsWith("Kampa")) rulingPlanet = "Saturn";
+    else if (shockStr.startsWith("Vajraka") || shockStr.startsWith("Indrachapa")) rulingPlanet = "Venus";
+    else if (shockStr.startsWith("Nirghata") || shockStr.startsWith("Vyatipata")) rulingPlanet = "Rahu";
+
+    return {
+      title: shockStr,
+      rulingPlanet,
+      whenDoesItStrike: `Active during ${rulingPlanet} Horas & NY Overlap (16:00 - 18:00 Rome)`,
+      tradingAdvice: "Expect sharp liquidity wicks & stop-loss sweeps. Widen stops by 1.5x.",
+    };
+  });
 
   // Dikshit Intraday Lunar Conjunctions (Chandra Yuti within 6.5° orb, Pages 44-164)
   const intradayLunarConjunctions: string[] = [];
@@ -780,6 +839,8 @@ export function calculateAstroMarketSignal(
       isPanchaka5xActive,
       intradayLunarConjunctions,
       solarChestabalaStations,
+      panchakaTiming,
+      isEmpiricalOverridden,
     },
     varahamihiraScarcity: {
       primarySignIndex: primaryRashi,
@@ -794,6 +855,7 @@ export function calculateAstroMarketSignal(
       sunMoonNodalRegime,
       primaryLordVedhaMultiplier,
       activeSolarUpagrahaShocks,
+      upagrahaShockDetails,
     },
     advancedTransitConfluence: {
       moonKakshyaLord,

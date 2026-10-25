@@ -9,6 +9,10 @@ import {
   EMPIRICAL_GOLD_EDGES,
   EMPIRICAL_HORA_ALPHA,
 } from "../engine/financialAstro";
+import {
+  calculateChoghadiyaAndHoras,
+  PlanetaryHoraSlot,
+} from "../engine/choghadiyaHora";
 
 interface MarketBiasViewProps {
   initialSymbol?: MarketSymbol;
@@ -38,6 +42,8 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
   const [sessionFilter, setSessionFilter] = useState<string>("ALL");
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [timezoneMode, setTimezoneMode] = useState<"ROME" | "UTC">("ROME");
+  const [timelineMode, setTimelineMode] = useState<"VEDIC_VARIABLE" | "MT5_FIXED">("VEDIC_VARIABLE");
+  const [selectedHoraIndex, setSelectedHoraIndex] = useState<number>(2); // Default to Day Hora 2 (Venus/Active)
   const [romeTimeDisplay, setRomeTimeDisplay] = useState<string>("");
 
   // Target Date Memoization
@@ -72,6 +78,23 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
     return () => clearInterval(interval);
   }, []);
 
+  // Format date helper for 24-hr European military format in Rome
+  const formatRomeTime = useCallback((d: Date) => {
+    return d.toLocaleTimeString("en-GB", {
+      timeZone: "Europe/Rome",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  }, []);
+
+  // Format date helper for UTC
+  const formatUtcTime = useCallback((d: Date) => {
+    const h = d.getUTCHours().toString().padStart(2, "0");
+    const m = d.getUTCMinutes().toString().padStart(2, "0");
+    return `${h}:${m}`;
+  }, []);
+
   // Compute Rome local time representation for any UTC hour slice
   const getRomeTimeForUtc = useCallback(
     (utcHour: number) => {
@@ -92,14 +115,80 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
     return calculateAstroMarketSignal(selectedSymbol, targetDate);
   }, [selectedSymbol, targetDate]);
 
-  // Filter 24-hour intraday timeline by selected session tab
+  // Compute authentic variable Vedic Horas for Rome
+  const vedicHorasResult = useMemo(() => {
+    const d = new Date(targetDate);
+    const romeStr = d.toLocaleTimeString("en-US", {
+      timeZone: "Europe/Rome",
+      timeZoneName: "shortOffset",
+    });
+    const match = romeStr.match(/GMT([+-]\d+)/);
+    const tzOffset = match ? parseInt(match[1], 10) : 1;
+
+    return calculateChoghadiyaAndHoras(targetDate, {
+      cityName: "Rome",
+      latitude: 41.9028,
+      longitude: 12.4964,
+      elevation: 21,
+      timezoneOffsetHours: tzOffset,
+    });
+  }, [targetDate]);
+
+  // Enriched Variable Vedic Horas with backtest alpha, duration in minutes & directional bias
+  const enrichedVedicHoras = useMemo(() => {
+    if (!vedicHorasResult || !vedicHorasResult.planetaryHoras) return [];
+    const baseDayBias = signal.signals.directionalBias;
+
+    return vedicHorasResult.planetaryHoras.map((hora) => {
+      const durMin = Math.round((hora.endTime.getTime() - hora.startTime.getTime()) / 60000);
+      const alphaInfo = EMPIRICAL_HORA_ALPHA[hora.lord];
+      const netAlphaPts = alphaInfo ? alphaInfo.netPts : 0;
+
+      // Sun (+213.9 pts) gives +0.35 bias boost; Venus (-494.7 pts) gives -0.45 drag
+      const alphaWeight = netAlphaPts > 0 ? (netAlphaPts / 500) * 0.45 : (netAlphaPts / 500) * 0.55;
+      const horaBias = Math.max(-1, Math.min(1, baseDayBias * 0.5 + alphaWeight));
+
+      // Calculate Rome hour of start time
+      const romeStartHour = parseInt(formatRomeTime(hora.startTime).split(":")[0], 10);
+
+      let sessionName = "Tokyo / Asian";
+      if (romeStartHour >= 9 && romeStartHour < 14) sessionName = "London Open & Core";
+      else if (romeStartHour >= 14 && romeStartHour < 19) sessionName = "London / NY Overlap";
+      else if (romeStartHour >= 19 || romeStartHour < 2) sessionName = "NY Afternoon / Close";
+
+      return {
+        ...hora,
+        durationMinutes: durMin,
+        netAlphaPts,
+        alphaInfo,
+        horaBias: Number(horaBias.toFixed(2)),
+        sessionName,
+        romeStartFormatted: formatRomeTime(hora.startTime),
+        romeEndFormatted: formatRomeTime(hora.endTime),
+        utcStartFormatted: formatUtcTime(hora.startTime),
+        utcEndFormatted: formatUtcTime(hora.endTime),
+        isSunHora: hora.lord === "Sun",
+        isVenusHora: hora.lord === "Venus",
+        isMoonHora: hora.lord === "Moon",
+        isJupiterHora: hora.lord === "Jupiter",
+      };
+    });
+  }, [vedicHorasResult, signal.signals.directionalBias, formatRomeTime, formatUtcTime]);
+
+  // Filter 24-hour intraday timeline by selected session tab (MT5 fixed view)
   const filteredIntradayTimeline = useMemo(() => {
     if (!signal.intradayTimeline) return [];
     if (sessionFilter === "ALL") return signal.intradayTimeline;
     return signal.intradayTimeline.filter((s) => s.sessionName === sessionFilter);
   }, [signal.intradayTimeline, sessionFilter]);
 
-  // Currently inspected hour slice
+  // Filter Variable Vedic Horas by selected session tab
+  const filteredVedicHoras = useMemo(() => {
+    if (sessionFilter === "ALL") return enrichedVedicHoras;
+    return enrichedVedicHoras.filter((h) => h.sessionName === sessionFilter);
+  }, [enrichedVedicHoras, sessionFilter]);
+
+  // Currently inspected hour slice (MT5 view)
   const activeHourDetail = useMemo(() => {
     if (!signal.intradayTimeline) return null;
     return (
@@ -108,6 +197,16 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
       signal.intradayTimeline[0]
     );
   }, [signal.intradayTimeline, selectedHour]);
+
+  // Currently inspected variable hora slice
+  const activeVedicHoraDetail = useMemo(() => {
+    return (
+      enrichedVedicHoras.find((h) => h.index === selectedHoraIndex) ||
+      enrichedVedicHoras[1] ||
+      enrichedVedicHoras[0] ||
+      null
+    );
+  }, [enrichedVedicHoras, selectedHoraIndex]);
 
   // Empirical Astro-Quant Discovery Lookups (Phase 54.3)
   const empiricalNakshatraEdge = useMemo(() => {
@@ -446,7 +545,7 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
           </div>
         </div>
 
-        {/* Empirical 6-Month Backtest Discovery Banner (Phase 54.3) */}
+        {/* Empirical 6-Month Backtest Discovery Banner */}
         <div className="bg-slate-900/90 border border-amber-500/30 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg">
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
@@ -552,154 +651,385 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
         </div>
       </div>
 
-      {/* 24-Hour Intraday Timing Roadmap Section */}
+      {/* 24-Hour Intraday Timing Roadmap Section with Variable Vedic Horas vs MT5 H1 Switch */}
       <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800 pb-4">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-amber-400 font-bold text-sm sm:text-base">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-amber-400 font-bold text-base">
                 ⏰ 24-Hour Intraday Timing Roadmap ({selectedSymbol})
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                Hora &amp; Session Alignment
+                {timelineMode === "VEDIC_VARIABLE" ? "🌞 Real Variable Horas" : "📊 MT5 H1 Candles"}
               </span>
+              {vedicHorasResult && (
+                <span className="text-xs text-slate-400 font-mono">
+                  🌅 Sunrise {formatRomeTime(vedicHorasResult.sunrise)} • 🌇 Sunset {formatRomeTime(vedicHorasResult.sunset)} Rome
+                </span>
+              )}
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Empirically verified: <strong>Sun Hora (+213.9 pts)</strong> produces peak buying momentum; <strong>Venus Hora (-494.7 pts)</strong> produces institutional liquidation.
+            <p className="text-xs text-slate-400 mt-1 max-w-3xl">
+              {timelineMode === "VEDIC_VARIABLE" ? (
+                <span>
+                  <strong>Real Vedic Horas:</strong> Proportional to Sunrise &amp; Sunset. Daytime: 12 Horas of ~
+                  {enrichedVedicHoras[0]?.durationMinutes || 53} minutes each. Empirically: <strong>Sun (+213.9 pts)</strong> creates peak buying momentum; <strong>Venus (-494.7 pts)</strong> institutional dump.
+                </span>
+              ) : (
+                <span>
+                  <strong>MT5 Fixed H1 Candles:</strong> Rigid 60-minute clock bars aligned to European and US trading sessions with overlapping planetary lords.
+                </span>
+              )}
             </p>
           </div>
 
-          {/* Session filter tabs */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {[
-              { id: "ALL", label: "All 24 Hrs" },
-              {
-                id: "London Open & Core",
-                label: timezoneMode === "ROME" ? "🏛️ Milan & London (09-14)" : "London (07-12 UTC)",
-              },
-              {
-                id: "London / NY Overlap",
-                label: timezoneMode === "ROME" ? "🔥 NY & EU Overlap (14-19)" : "NY Overlap (12-17 UTC)",
-              },
-              {
-                id: "Tokyo / Asian",
-                label: timezoneMode === "ROME" ? "⛩️ Tokyo/Asian (02-09)" : "Tokyo (00-07 UTC)",
-              },
-              {
-                id: "NY Afternoon / Close",
-                label: timezoneMode === "ROME" ? "🗽 NY Close (19-02)" : "NY Close (17-24 UTC)",
-              },
-            ].map((f) => (
+          {/* Timeline View Mode & Session Filters */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-bold">
               <button
-                key={f.id}
-                onClick={() => setSessionFilter(f.id)}
-                className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  sessionFilter === f.id
-                    ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
-                    : "bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800"
+                type="button"
+                onClick={() => setTimelineMode("VEDIC_VARIABLE")}
+                className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+                  timelineMode === "VEDIC_VARIABLE"
+                    ? "bg-amber-500 text-slate-950 font-black shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
                 }`}
+                title="View authentic variable Vedic Horas (proportional to Sunrise/Sunset)"
               >
-                {f.label}
+                <span>🌞</span>
+                <span>Vedic Horas (Variable)</span>
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => setTimelineMode("MT5_FIXED")}
+                className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+                  timelineMode === "MT5_FIXED"
+                    ? "bg-amber-500 text-slate-950 font-black shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="View standard 60-minute MT5 H1 candles"
+              >
+                <span>📊</span>
+                <span>MT5 H1 (60-min)</span>
+              </button>
+            </div>
+
+            {/* Session filter tabs */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {[
+                { id: "ALL", label: "All" },
+                {
+                  id: "London Open & Core",
+                  label: timezoneMode === "ROME" ? "🏛️ Milan/London (09-14)" : "London (07-12)",
+                },
+                {
+                  id: "London / NY Overlap",
+                  label: timezoneMode === "ROME" ? "🔥 NY Overlap (14-19)" : "NY Overlap (12-17)",
+                },
+                {
+                  id: "Tokyo / Asian",
+                  label: timezoneMode === "ROME" ? "⛩️ Asian (02-09)" : "Tokyo (00-07)",
+                },
+                {
+                  id: "NY Afternoon / Close",
+                  label: timezoneMode === "ROME" ? "🗽 NY Close (19-02)" : "NY Close (17-24)",
+                },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setSessionFilter(f.id)}
+                  className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                    sessionFilter === f.id
+                      ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
+                      : "bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* 24-Hour Timeline Grid Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-          {filteredIntradayTimeline.map((slice) => {
-            const isBullish = slice.hourlyBias >= 0.25;
-            const isBearish = slice.hourlyBias <= -0.25;
-            const isSelected = selectedHour === slice.hourUtc;
-            const romeTime = getRomeTimeForUtc(slice.hourUtc);
-            const isRomeMode = timezoneMode === "ROME";
+        {/* Dynamic Timeline Grid: Mode 1 - Real Vedic Horas (Variable Minutes) */}
+        {timelineMode === "VEDIC_VARIABLE" && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+            {filteredVedicHoras.map((hora) => {
+              const isBullish = hora.horaBias >= 0.20;
+              const isBearish = hora.horaBias <= -0.20;
+              const isSelected = selectedHoraIndex === hora.index;
+              const isNight = hora.index > 12;
 
-            // Empirical Hora Alpha badges
-            const isSunHora = slice.horaLord === "Sun";
-            const isVenusHora = slice.horaLord === "Venus";
-            const isMoonHora = slice.horaLord === "Moon";
+              // Empirical Hora Alpha badges
+              const isSun = hora.lord === "Sun";
+              const isVenus = hora.lord === "Venus";
+              const isMoon = hora.lord === "Moon";
+              const isJupiter = hora.lord === "Jupiter";
 
-            // Peak Reversal window (17:00 - 18:00 Rome / 15:00 - 16:00 UTC)
-            const isPeakReversalWindow = slice.hourUtc === 15 || slice.hourUtc === 16;
-            const isEuOpen = slice.hourUtc === 7 || slice.hourUtc === 8; // 08:00 - 09:00 Rome
-
-            return (
-              <button
-                key={slice.hourUtc}
-                type="button"
-                onClick={() => setSelectedHour(slice.hourUtc)}
-                className={`p-2.5 rounded-2xl border flex flex-col justify-between items-center gap-1.5 transition-all cursor-pointer text-center relative ${
-                  isSelected
-                    ? "bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/50 scale-102 z-10 shadow-lg shadow-amber-500/20"
-                    : isSunHora
-                    ? "bg-amber-950/30 border-amber-500/50 hover:bg-amber-900/40"
-                    : isVenusHora
-                    ? "bg-rose-950/30 border-rose-500/50 hover:bg-rose-900/40"
-                    : isMoonHora
-                    ? "bg-cyan-950/30 border-cyan-500/40 hover:bg-cyan-900/40"
-                    : "bg-slate-900/60 hover:bg-slate-800/80 border-slate-800/80"
-                }`}
-              >
-                {/* Badges */}
-                {isSunHora && (
-                  <span className="absolute -top-1.5 right-1.5 text-[8px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 px-1 rounded-full shadow-sm">
-                    +213 pts
-                  </span>
-                )}
-                {isVenusHora && (
-                  <span className="absolute -top-1.5 right-1.5 text-[8px] font-black uppercase tracking-wider bg-rose-500 text-white px-1 rounded-full shadow-sm">
-                    -494 pts
-                  </span>
-                )}
-                {isPeakReversalWindow && (
-                  <span className="absolute -top-1.5 left-1.5 text-[8px] font-bold uppercase tracking-wider bg-purple-500/40 text-purple-200 border border-purple-500/50 px-1 rounded-full">
-                    Top Window
-                  </span>
-                )}
-                {isEuOpen && !isPeakReversalWindow && (
-                  <span className="absolute -top-1.5 left-1.5 text-[8px] font-bold uppercase tracking-wider bg-blue-500/30 text-blue-300 border border-blue-500/40 px-1 rounded-full">
-                    EU Open
-                  </span>
-                )}
-
-                <div className="flex flex-col items-center">
-                  <div className="text-[11px] font-mono font-bold text-slate-200">
-                    {isRomeMode ? `${romeTime} Rome` : `${slice.hourUtc.toString().padStart(2, "0")}:00 UTC`}
-                  </div>
-                  <div className="text-[9px] font-mono text-slate-500">
-                    {isRomeMode ? `${slice.hourUtc.toString().padStart(2, "0")}:00 UTC` : `${romeTime} Rome`}
-                  </div>
-                </div>
-
-                <div className="text-xs font-bold text-white flex items-center gap-1">
-                  <span>{slice.horaLord}</span>
-                </div>
-                <div
-                  className={`text-xs font-black font-mono ${
-                    isBullish ? "text-emerald-400" : isBearish ? "text-rose-400" : "text-slate-300"
+              return (
+                <button
+                  key={hora.index}
+                  type="button"
+                  onClick={() => setSelectedHoraIndex(hora.index)}
+                  className={`p-2.5 rounded-2xl border flex flex-col justify-between items-center gap-1.5 transition-all cursor-pointer text-center relative ${
+                    isSelected
+                      ? "bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/50 scale-102 z-10 shadow-lg shadow-amber-500/20"
+                      : isSun
+                      ? "bg-amber-950/30 border-amber-500/50 hover:bg-amber-900/40"
+                      : isVenus
+                      ? "bg-rose-950/30 border-rose-500/50 hover:bg-rose-900/40"
+                      : isMoon
+                      ? "bg-cyan-950/30 border-cyan-500/40 hover:bg-cyan-900/40"
+                      : isNight
+                      ? "bg-indigo-950/20 hover:bg-indigo-900/30 border-indigo-900/40"
+                      : "bg-slate-900/60 hover:bg-slate-800/80 border-slate-800/80"
                   }`}
                 >
-                  {slice.hourlyBias > 0 ? "+" : ""}
-                  {slice.hourlyBias.toFixed(2)}
-                </div>
-                <div
-                  className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
-                    isBullish
+                  {/* Top-right alpha badge */}
+                  {isSun && (
+                    <span className="absolute -top-1.5 right-1.5 text-[8px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 px-1 rounded-full shadow-sm">
+                      +213 pts
+                    </span>
+                  )}
+                  {isVenus && (
+                    <span className="absolute -top-1.5 right-1.5 text-[8px] font-black uppercase tracking-wider bg-rose-500 text-white px-1 rounded-full shadow-sm">
+                      -494 pts
+                    </span>
+                  )}
+
+                  {/* Top-left Hora Label + Duration */}
+                  <span className="absolute -top-1.5 left-1.5 text-[8px] font-mono uppercase tracking-wider bg-slate-950/80 text-slate-400 border border-slate-800 px-1 rounded-full">
+                    {isNight ? `N${hora.index - 12}` : `D${hora.index}`} • {hora.durationMinutes}m
+                  </span>
+
+                  {/* Time Intervals */}
+                  <div className="flex flex-col items-center mt-2">
+                    <div className="text-[11px] font-mono font-bold text-slate-100">
+                      {timezoneMode === "ROME"
+                        ? `${hora.romeStartFormatted} - ${hora.romeEndFormatted}`
+                        : `${hora.utcStartFormatted} - ${hora.utcEndFormatted}`}
+                    </div>
+                    <div className="text-[9px] font-mono text-slate-500">
+                      {timezoneMode === "ROME"
+                        ? `UTC: ${hora.utcStartFormatted}-${hora.utcEndFormatted}`
+                        : `Rome: ${hora.romeStartFormatted}-${hora.romeEndFormatted}`}
+                    </div>
+                  </div>
+
+                  {/* Lord Icon & Name */}
+                  <div className="text-xs font-bold text-white flex items-center gap-1">
+                    <span>{hora.symbol}</span>
+                    <span>{hora.lord}</span>
+                  </div>
+
+                  {/* Bias Score */}
+                  <div
+                    className={`text-xs font-black font-mono ${
+                      isBullish ? "text-emerald-400" : isBearish ? "text-rose-400" : "text-slate-300"
+                    }`}
+                  >
+                    {hora.horaBias > 0 ? "+" : ""}
+                    {hora.horaBias.toFixed(2)}
+                  </div>
+
+                  {/* Action Badge */}
+                  <div
+                    className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+                      isBullish
+                        ? "bg-emerald-500/20 text-emerald-300"
+                        : isBearish
+                        ? "bg-rose-500/20 text-rose-300"
+                        : "bg-slate-800 text-slate-400"
+                    }`}
+                  >
+                    {isBullish ? "Buy Only" : isBearish ? "Sell Only" : "Two-Way"}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Dynamic Timeline Grid: Mode 2 - MT5 H1 Candles (Fixed 60-min) */}
+        {timelineMode === "MT5_FIXED" && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+            {filteredIntradayTimeline.map((slice) => {
+              const isBullish = slice.hourlyBias >= 0.25;
+              const isBearish = slice.hourlyBias <= -0.25;
+              const isSelected = selectedHour === slice.hourUtc;
+              const romeTime = getRomeTimeForUtc(slice.hourUtc);
+              const isRomeMode = timezoneMode === "ROME";
+
+              const isSunHora = slice.horaLord === "Sun";
+              const isVenusHora = slice.horaLord === "Venus";
+              const isPeakReversalWindow = slice.hourUtc === 15 || slice.hourUtc === 16;
+              const isEuOpen = slice.hourUtc === 7 || slice.hourUtc === 8;
+
+              return (
+                <button
+                  key={slice.hourUtc}
+                  type="button"
+                  onClick={() => setSelectedHour(slice.hourUtc)}
+                  className={`p-2.5 rounded-2xl border flex flex-col justify-between items-center gap-1.5 transition-all cursor-pointer text-center relative ${
+                    isSelected
+                      ? "bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/50 scale-102 z-10 shadow-lg shadow-amber-500/20"
+                      : isSunHora
+                      ? "bg-amber-950/30 border-amber-500/50 hover:bg-amber-900/40"
+                      : isVenusHora
+                      ? "bg-rose-950/30 border-rose-500/50 hover:bg-rose-900/40"
+                      : "bg-slate-900/60 hover:bg-slate-800/80 border-slate-800/80"
+                  }`}
+                >
+                  {isSunHora && (
+                    <span className="absolute -top-1.5 right-1.5 text-[8px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 px-1 rounded-full shadow-sm">
+                      +213 pts
+                    </span>
+                  )}
+                  {isVenusHora && (
+                    <span className="absolute -top-1.5 right-1.5 text-[8px] font-black uppercase tracking-wider bg-rose-500 text-white px-1 rounded-full shadow-sm">
+                      -494 pts
+                    </span>
+                  )}
+                  {isPeakReversalWindow && (
+                    <span className="absolute -top-1.5 left-1.5 text-[8px] font-bold uppercase tracking-wider bg-purple-500/40 text-purple-200 border border-purple-500/50 px-1 rounded-full">
+                      Top Window
+                    </span>
+                  )}
+                  {isEuOpen && !isPeakReversalWindow && (
+                    <span className="absolute -top-1.5 left-1.5 text-[8px] font-bold uppercase tracking-wider bg-blue-500/30 text-blue-300 border border-blue-500/40 px-1 rounded-full">
+                      EU Open
+                    </span>
+                  )}
+
+                  <div className="flex flex-col items-center mt-1">
+                    <div className="text-[11px] font-mono font-bold text-slate-200">
+                      {isRomeMode ? `${romeTime} Rome` : `${slice.hourUtc.toString().padStart(2, "0")}:00 UTC`}
+                    </div>
+                    <div className="text-[9px] font-mono text-slate-500">
+                      {isRomeMode ? `${slice.hourUtc.toString().padStart(2, "0")}:00 UTC` : `${romeTime} Rome`}
+                    </div>
+                  </div>
+
+                  <div className="text-xs font-bold text-white flex items-center gap-1">
+                    <span>{slice.horaLord}</span>
+                  </div>
+                  <div
+                    className={`text-xs font-black font-mono ${
+                      isBullish ? "text-emerald-400" : isBearish ? "text-rose-400" : "text-slate-300"
+                    }`}
+                  >
+                    {slice.hourlyBias > 0 ? "+" : ""}
+                    {slice.hourlyBias.toFixed(2)}
+                  </div>
+                  <div
+                    className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+                      isBullish
+                        ? "bg-emerald-500/20 text-emerald-300"
+                        : isBearish
+                        ? "bg-rose-500/20 text-rose-300"
+                        : "bg-slate-800 text-slate-400"
+                    }`}
+                  >
+                    {isBullish ? "Buy Only" : isBearish ? "Sell Only" : "Two-Way"}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Selected Hour / Hora Deep-Dive Box */}
+        {timelineMode === "VEDIC_VARIABLE" && activeVedicHoraDetail && (
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-mono font-bold text-amber-300 bg-amber-500/15 px-2.5 py-0.5 rounded-lg border border-amber-500/30 flex items-center gap-1">
+                  <span>🇮🇹 Rome:</span>
+                  <span>{activeVedicHoraDetail.romeStartFormatted} - {activeVedicHoraDetail.romeEndFormatted}</span>
+                </span>
+                <span className="text-xs font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-800">
+                  UTC: {activeVedicHoraDetail.utcStartFormatted} - {activeVedicHoraDetail.utcEndFormatted}
+                </span>
+                <span className="text-xs font-bold text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-lg border border-indigo-500/20">
+                  {activeVedicHoraDetail.index <= 12 ? `Day Hora ${activeVedicHoraDetail.index}` : `Night Hora ${activeVedicHoraDetail.index - 12}`} ({activeVedicHoraDetail.durationMinutes} minutes)
+                </span>
+                <span className="text-xs font-bold text-slate-300">
+                  {activeVedicHoraDetail.sessionName} Session
+                </span>
+                <span
+                  className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    activeVedicHoraDetail.horaBias >= 0.20
                       ? "bg-emerald-500/20 text-emerald-300"
-                      : isBearish
+                      : activeVedicHoraDetail.horaBias <= -0.20
                       ? "bg-rose-500/20 text-rose-300"
-                      : "bg-slate-800 text-slate-400"
+                      : "bg-slate-800 text-slate-300"
                   }`}
                 >
-                  {isBullish ? "Buy Only" : isBearish ? "Sell Only" : "Two-Way"}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                  {activeVedicHoraDetail.horaBias >= 0.20
+                    ? "🟢 LONGS ONLY"
+                    : activeVedicHoraDetail.horaBias <= -0.20
+                    ? "🔴 SHORTS ONLY"
+                    : "⚪ TWO-WAY CHOP"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 font-medium">
+                {activeVedicHoraDetail.lord === "Sun" && (
+                  <span>☀️ <strong>Sun Hora (+213.9 pts Alpha):</strong> Institutional accumulation window. Gold experiences highest buying volume; favor taking dip buys at support.</span>
+                )}
+                {activeVedicHoraDetail.lord === "Venus" && (
+                  <span>♀️ <strong>Venus Hora (-494.7 pts Alpha):</strong> Institutional liquidation window. Bull traps and false breakouts peak; take profits on longs or short resistance rejections.</span>
+                )}
+                {activeVedicHoraDetail.lord === "Moon" && (
+                  <span>🌙 <strong>Moon Hora (+105.2 pts Alpha):</strong> Steady retail order flow and dip accumulation. Good for continuation trades.</span>
+                )}
+                {activeVedicHoraDetail.lord === "Jupiter" && (
+                  <span>♃ <strong>Jupiter Hora (+62.4 pts Alpha):</strong> Macro trend stabilization and liquidity establishment. Favorable for trend-following EA positions.</span>
+                )}
+                {activeVedicHoraDetail.lord === "Mars" && (
+                  <span>♂️ <strong>Mars Hora (+8.0 pts Alpha):</strong> Fast momentum spikes and stop runs. Maintain disciplined stop loss levels.</span>
+                )}
+                {activeVedicHoraDetail.lord === "Mercury" && (
+                  <span>☿ <strong>Mercury Hora (-126.5 pts Alpha):</strong> Tight range chop and dual-sided scalping. Avoid trailing stops.</span>
+                )}
+                {activeVedicHoraDetail.lord === "Saturn" && (
+                  <span>♄ <strong>Saturn Hora (-54.0 pts Alpha):</strong> Heavy resistance consolidation and slow grind. Range-bound execution favored.</span>
+                )}
+              </p>
+            </div>
 
-        {/* Selected Hour Deep-Dive Box */}
-        {activeHourDetail && (
+            <div className="flex items-center gap-3 text-xs font-mono flex-shrink-0">
+              <div className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-center">
+                <div className="text-[10px] text-slate-500">Hora Lord</div>
+                <div className="font-bold text-amber-300 flex items-center gap-1 justify-center">
+                  <span>{activeVedicHoraDetail.symbol}</span>
+                  <span>{activeVedicHoraDetail.lord}</span>
+                </div>
+              </div>
+              <div className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-center">
+                <div className="text-[10px] text-slate-500">Duration</div>
+                <div className="font-bold text-cyan-300">{activeVedicHoraDetail.durationMinutes} min</div>
+              </div>
+              <div className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-center">
+                <div className="text-[10px] text-slate-500">Hora Bias</div>
+                <div
+                  className={`font-black ${
+                    activeVedicHoraDetail.horaBias > 0
+                      ? "text-emerald-400"
+                      : activeVedicHoraDetail.horaBias < 0
+                      ? "text-rose-400"
+                      : "text-slate-300"
+                  }`}
+                >
+                  {activeVedicHoraDetail.horaBias > 0 ? "+" : ""}
+                  {activeVedicHoraDetail.horaBias.toFixed(2)}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Selected Hour Deep-Dive Box (MT5 Mode) */}
+        {timelineMode === "MT5_FIXED" && activeHourDetail && (
           <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
@@ -763,46 +1093,84 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
         )}
       </div>
 
-      {/* Streamlined Shastric Telemetry Grid (Distilled & Cleaned Up) */}
+      {/* Streamlined & Transparent Shastric Telemetry Grid (Distilled & Explicit) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Pandit Hira Lal Dikshit's Liquidity */}
+        {/* Card 1: Pandit Hira Lal Dikshit's Liquidity & Panchaka */}
         <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between border-b border-slate-800 pb-2">
             <h3 className="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
-              <span>📖 Dikshit Liquidity</span>
+              <span>📖 Dikshit Liquidity &amp; Panchaka</span>
             </h3>
             <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
               Vyapar Bhavishya
             </span>
           </div>
 
-          <div className="space-y-2 text-xs">
+          <div className="space-y-2.5 text-xs">
             <div className="flex justify-between items-center">
-              <span className="text-slate-400">Moon Nakshatra:</span>
+              <span className="text-slate-400">Moon Star:</span>
               <span className="font-bold text-amber-300">
                 {signal.dikshitLiquidityCycle.moonNakshatraName} (#{signal.dikshitLiquidityCycle.moonNakshatraIndex})
               </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Dikshit Class:</span>
-              <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${
-                signal.dikshitLiquidityCycle.action === "BUY_DIP"
-                  ? "bg-emerald-500/20 text-emerald-300"
-                  : signal.dikshitLiquidityCycle.action === "SELL_RALLY"
-                  ? "bg-rose-500/20 text-rose-300"
-                  : "bg-slate-800 text-slate-300"
-              }`}>
-                {signal.dikshitLiquidityCycle.action.replace("_", " ")}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Panchaka Status:</span>
-              <span className={`font-mono font-bold text-[11px] ${
-                signal.dikshitLiquidityCycle.isPanchaka5xActive ? "text-rose-400" : "text-slate-500"
-              }`}>
-                {signal.dikshitLiquidityCycle.isPanchaka5xActive ? "ACTIVE (5x Chop)" : "NORMAL"}
-              </span>
-            </div>
+
+            {/* Classical vs Empirical Resolution Callout */}
+            {signal.dikshitLiquidityCycle.isEmpiricalOverridden ? (
+              <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-2.5 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono uppercase text-rose-300 font-bold">EA Directive</span>
+                  <span className="text-[10px] font-black text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30">
+                    🔴 SHORT RALLIES (OVERRULED)
+                  </span>
+                </div>
+                <p className="text-[11px] text-rose-200/90 leading-tight">
+                  Classical texts list Revati as Buy-Dip, but <strong>6-month MT5 tick data</strong> reveals a <strong>66.7% Bearish Breakdown (-262.6 pts net loss)</strong>. EA directive is harmonized to Short Rallies.
+                </p>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Dikshit Class:</span>
+                <span className={`font-bold px-2 py-0.5 rounded text-[10px] ${
+                  signal.dikshitLiquidityCycle.action === "BUY_DIP"
+                    ? "bg-emerald-500/20 text-emerald-300"
+                    : signal.dikshitLiquidityCycle.action === "SELL_RALLY"
+                    ? "bg-rose-500/20 text-rose-300"
+                    : "bg-slate-800 text-slate-300"
+                }`}>
+                  {signal.dikshitLiquidityCycle.action.replace("_", " ")}
+                </span>
+              </div>
+            )}
+
+            {/* Explicit Panchaka Timing Callout */}
+            {signal.dikshitLiquidityCycle.isPanchaka5xActive ? (
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono uppercase text-amber-300 font-bold">Panchaka 5x Status</span>
+                  <span className="text-[10px] font-black text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30 animate-pulse">
+                    ⚠️ ACTIVE (5x CHOP)
+                  </span>
+                </div>
+                <div className="text-[11px] space-y-1 text-slate-300">
+                  <div>
+                    <strong className="text-amber-300">When Active:</strong> {signal.dikshitLiquidityCycle.panchakaTiming?.activeWindow || "Active all day (Moon in Pisces/Aquarius)"}
+                  </div>
+                  <div>
+                    <strong className="text-amber-300">When Does It End:</strong> {signal.dikshitLiquidityCycle.panchakaTiming?.endsWhen || "When Moon enters Aries"}
+                  </div>
+                  <p className="text-[10px] text-slate-400 italic">
+                    💡 {signal.dikshitLiquidityCycle.panchakaTiming?.tradingImpact || "Causes repeating 5-fold whipsaws & breakout traps. Scalp support/resistance; avoid chasing trends."}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Panchaka Status:</span>
+                <span className="font-mono font-bold text-[11px] text-emerald-400">
+                  ✅ NORMAL (No 5x Chop)
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -840,17 +1208,20 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                 {signal.varahamihiraScarcity.activeGrahaYuddha.length > 0 ? "⚠️ Active War" : "None"}
               </span>
             </div>
+            <p className="text-[10px] text-slate-400 italic pt-1 border-t border-slate-800">
+              Mahargha inflates physical bullion demand; prices form institutional floors during London open.
+            </p>
           </div>
         </div>
 
-        {/* Card 3: Narapati Rahu Chakra */}
+        {/* Card 3: Narapati Rahu Chakra & Upagraha Shocks */}
         <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between border-b border-slate-800 pb-2">
             <h3 className="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
               <span>☸ Narapati Swarodaya</span>
             </h3>
             <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
-              Rahu Chakra
+              Rahu Chakra &amp; Shocks
             </span>
           </div>
 
@@ -864,7 +1235,7 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
               }`}>
                 {signal.narapatiSwarodaya.rahuKalanalaHemisphere === "JIVA_PAKSHA_BULLISH"
                   ? "JIVA (Bullish Flow)"
-                  : "MRITA (Drain / Bearish)"}
+                  : "MRITA (-607.6 pts Drain)"}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -873,12 +1244,43 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                 {signal.narapatiSwarodaya.primaryLordVedhaMultiplier}× (Sloka 38)
               </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Upagraha Shocks:</span>
-              <span className="font-mono text-[11px] text-slate-400">
-                {signal.narapatiSwarodaya.activeSolarUpagrahaShocks.length > 0 ? "⚠️ Active Shock" : "Clear"}
-              </span>
-            </div>
+
+            {/* Explicit Upagraha Shock Timing Callout */}
+            {signal.narapatiSwarodaya.activeSolarUpagrahaShocks.length > 0 ? (
+              <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-2.5 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono uppercase text-rose-300 font-bold">Solar Upagraha Shock</span>
+                  <span className="text-[10px] font-black text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30 animate-pulse">
+                    ⚡ ACTIVE SHOCK
+                  </span>
+                </div>
+                {signal.narapatiSwarodaya.upagrahaShockDetails && signal.narapatiSwarodaya.upagrahaShockDetails.length > 0 ? (
+                  signal.narapatiSwarodaya.upagrahaShockDetails.map((shock, idx) => (
+                    <div key={idx} className="text-[11px] space-y-1 text-slate-300">
+                      <div className="font-bold text-amber-300">{shock.title}</div>
+                      <div>
+                        <strong className="text-rose-300">When Does It Strike:</strong> {shock.whenDoesItStrike}
+                      </div>
+                      <div className="text-[10px] text-slate-400 italic">
+                        🛡️ <strong>EA Protection:</strong> {shock.tradingAdvice}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-[11px] text-slate-300">
+                    <div>{signal.narapatiSwarodaya.activeSolarUpagrahaShocks[0]}</div>
+                    <div><strong className="text-rose-300">When:</strong> Active during Jupiter Horas &amp; NY Overlap (16:00 - 18:00 Rome)</div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Upagraha Shocks:</span>
+                <span className="font-mono font-bold text-[11px] text-emerald-400">
+                  ✅ CLEAR (No Solar Shocks)
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -914,6 +1316,9 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                 {signal.advancedTransitConfluence.dagdhaRashiAlert ? "⚠️ Burnt Sign" : "Clear"}
               </span>
             </div>
+            <p className="text-[10px] text-slate-400 italic pt-1 border-t border-slate-800">
+              Kakshya sub-arc measures micro-orbital transit windows for surgical scalping execution.
+            </p>
           </div>
         </div>
       </div>

@@ -9373,3 +9373,48 @@ test("Phase 53: BTR Interceptor Anti-Collision & Precision Routing Verification"
 
 
 
+
+
+test("Phase 23: SkyDome Geocentric Trail Engine & Distance Mapping Verification", async () => {
+  const {
+    geocentricDistanceToSceneRadius,
+    getTrailConfig,
+    sampleGeocentricTrail,
+    advanceTrail,
+    SCENE_EARTH_RADIUS,
+  } = await import("../src/engine/geocentricTrails.ts");
+
+  // 1. Scene radius scaling constraints
+  const rMoon = geocentricDistanceToSceneRadius(0.00257);
+  const rSun = geocentricDistanceToSceneRadius(1.0);
+  const rSaturn = geocentricDistanceToSceneRadius(10.0);
+  const rPluto = geocentricDistanceToSceneRadius(35.0);
+
+  assert.ok(rMoon > SCENE_EARTH_RADIUS, "Moon radius must lie outside the central Earth globe");
+  assert.ok(rSun > rMoon, "Sun radius must be greater than Moon");
+  assert.ok(rSaturn > rSun, "Saturn radius must be greater than Sun");
+  assert.ok(rPluto <= 38.0, "Pluto radius must be contained well within the 40-unit zodiac ring");
+
+  // 2. Trail configurations
+  const cfgMars = getTrailConfig("Mars");
+  assert.ok(cfgMars, "Mars must have a valid geocentric trail config");
+  assert.strictEqual(cfgMars.windowDays, 780, "Mars synodic trail window must be ~780 days");
+  assert.strictEqual(getTrailConfig("Rahu"), undefined, "Rahu is a mathematical node with no orbital trail");
+
+  // 3. Geocentric trail sampling
+  const endMs = new Date("2026-10-25T12:00:00Z").getTime();
+  const ayanamsha = 24.23;
+  const samples = sampleGeocentricTrail("Mars", endMs, ayanamsha);
+  assert.strictEqual(samples.length, cfgMars.samples, "Sample count must match config");
+  assert.ok(samples[0].t < samples[samples.length - 1].t, "Samples must be ordered oldest to newest");
+  for (const s of samples) {
+    assert.ok(s.lon >= 0 && s.lon < 360, "Sidereal longitude must be normalized [0, 360)");
+    assert.ok(Number.isFinite(s.distAU) && s.distAU > 0, "Distance AU must be finite positive");
+  }
+
+  // 4. Advance trail buffer
+  const head = { t: endMs + 86400000 * 2, lon: 120.5, lat: 1.2, distAU: 1.4 };
+  const advanced = advanceTrail("Mars", [...samples], head, ayanamsha);
+  assert.ok(advanced.length >= samples.length - 1, "Advanced trail must preserve window capacity");
+  assert.strictEqual(advanced[advanced.length - 1].t, head.t, "Latest sample must be head");
+});
