@@ -371,6 +371,8 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
         ? {
             startRome: rahuKaalStart,
             endRome: rahuKaalEnd,
+            startUtc: formatUtcTime(rahuSlot.startTime),
+            endUtc: formatUtcTime(rahuSlot.endTime),
             durationMin: Math.round((rahuSlot.endTime.getTime() - rahuSlot.startTime.getTime()) / 60000),
           }
         : null,
@@ -710,7 +712,9 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
               </span>
               {vedicHorasResult && (
                 <span className="text-xs text-slate-400 font-mono">
-                  🌅 Sunrise {formatRomeTime(vedicHorasResult.sunrise)} • 🌇 Sunset {formatRomeTime(vedicHorasResult.sunset)} Rome
+                  {timezoneMode === "ROME"
+                    ? `🌅 Sunrise ${formatRomeTime(vedicHorasResult.sunrise)} • 🌇 Sunset ${formatRomeTime(vedicHorasResult.sunset)} Rome`
+                    : `🌅 Sunrise ${formatUtcTime(vedicHorasResult.sunrise)} • 🌇 Sunset ${formatUtcTime(vedicHorasResult.sunset)} UTC`}
                 </span>
               )}
             </div>
@@ -850,7 +854,7 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                 <span>Dynamic Intraday Reversal &amp; Turning Windows</span>
               </span>
               <span className="text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-bold">
-                {vedicHorasResult?.dayOfWeekName || "Today"} (Rome CET/CEST)
+                {vedicHorasResult?.dayOfWeekName || "Today"} ({timezoneMode === "ROME" ? "Rome CET/CEST" : "UTC Exchange"})
               </span>
             </div>
             <p className="text-xs text-slate-400 max-w-2xl">
@@ -907,7 +911,9 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                   </span>
                 </div>
                 <div className="text-sm font-black text-rose-200 font-mono mt-1">
-                  {dynamicReversalWindows.rahuKaal.startRome} - {dynamicReversalWindows.rahuKaal.endRome} Rome
+                  {timezoneMode === "ROME"
+                    ? `${dynamicReversalWindows.rahuKaal.startRome} - ${dynamicReversalWindows.rahuKaal.endRome} Rome`
+                    : `${dynamicReversalWindows.rahuKaal.startUtc} - ${dynamicReversalWindows.rahuKaal.endUtc} UTC`}
                 </div>
                 <div className="text-[10px] text-rose-300/80 mt-1 line-clamp-1" title="Avoid chasing breakout momentum during Rahu Kaal. Expect sharp mean reversion.">
                   Avoid breakouts; wait for exit pivot
@@ -975,10 +981,8 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                         ? `${hora.romeStartFormatted} - ${hora.romeEndFormatted}`
                         : `${hora.utcStartFormatted} - ${hora.utcEndFormatted}`}
                     </div>
-                    <div className="text-[9px] font-mono text-slate-500">
-                      {timezoneMode === "ROME"
-                        ? `UTC: ${hora.utcStartFormatted}-${hora.utcEndFormatted}`
-                        : `Rome: ${hora.romeStartFormatted}-${hora.romeEndFormatted}`}
+                    <div className="text-[9px] font-mono text-slate-400">
+                      {timezoneMode === "ROME" ? "🇮🇹 Rome Time" : "🌐 UTC Time"}
                     </div>
                   </div>
 
@@ -1071,8 +1075,8 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
                     <div className="text-[11px] font-mono font-bold text-slate-200">
                       {isRomeMode ? `${romeTime} Rome` : `${slice.hourUtc.toString().padStart(2, "0")}:00 UTC`}
                     </div>
-                    <div className="text-[9px] font-mono text-slate-500">
-                      {isRomeMode ? `${slice.hourUtc.toString().padStart(2, "0")}:00 UTC` : `${romeTime} Rome`}
+                    <div className="text-[9px] font-mono text-slate-400">
+                      {isRomeMode ? "🇮🇹 Rome Time" : "🌐 UTC Time"}
                     </div>
                   </div>
 
@@ -1109,13 +1113,17 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
           <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-mono font-bold text-amber-300 bg-amber-500/15 px-2.5 py-0.5 rounded-lg border border-amber-500/30 flex items-center gap-1">
-                  <span>🇮🇹 Rome:</span>
-                  <span>{activeVedicHoraDetail.romeStartFormatted} - {activeVedicHoraDetail.romeEndFormatted}</span>
-                </span>
-                <span className="text-xs font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-800">
-                  UTC: {activeVedicHoraDetail.utcStartFormatted} - {activeVedicHoraDetail.utcEndFormatted}
-                </span>
+                {timezoneMode === "ROME" ? (
+                  <span className="text-xs font-mono font-bold text-amber-300 bg-amber-500/15 px-2.5 py-0.5 rounded-lg border border-amber-500/30 flex items-center gap-1">
+                    <span>🇮🇹 Rome Time:</span>
+                    <span>{activeVedicHoraDetail.romeStartFormatted} - {activeVedicHoraDetail.romeEndFormatted}</span>
+                  </span>
+                ) : (
+                  <span className="text-xs font-mono font-bold text-amber-300 bg-amber-500/15 px-2.5 py-0.5 rounded-lg border border-amber-500/30 flex items-center gap-1">
+                    <span>🌐 UTC Time:</span>
+                    <span>{activeVedicHoraDetail.utcStartFormatted} - {activeVedicHoraDetail.utcEndFormatted}</span>
+                  </span>
+                )}
                 <span className="text-xs font-bold text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-lg border border-indigo-500/20">
                   {activeVedicHoraDetail.index <= 12 ? `Day Hora ${activeVedicHoraDetail.index}` : `Night Hora ${activeVedicHoraDetail.index - 12}`} ({activeVedicHoraDetail.durationMinutes} minutes)
                 </span>
@@ -1199,13 +1207,17 @@ export default function MarketBiasView({ initialSymbol = "XAUUSD" }: MarketBiasV
           <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-mono font-bold text-amber-300 bg-amber-500/15 px-2.5 py-0.5 rounded-lg border border-amber-500/30 flex items-center gap-1">
-                  <span>🇮🇹 Rome:</span>
-                  <span>{getRomeTimeForUtc(activeHourDetail.hourUtc)} - {getRomeTimeForUtc((activeHourDetail.hourUtc + 1) % 24)}</span>
-                </span>
-                <span className="text-xs font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-800">
-                  Exchange: {activeHourDetail.timeUtcLabel}
-                </span>
+                {timezoneMode === "ROME" ? (
+                  <span className="text-xs font-mono font-bold text-amber-300 bg-amber-500/15 px-2.5 py-0.5 rounded-lg border border-amber-500/30 flex items-center gap-1">
+                    <span>🇮🇹 Rome Time:</span>
+                    <span>{getRomeTimeForUtc(activeHourDetail.hourUtc)} - {getRomeTimeForUtc((activeHourDetail.hourUtc + 1) % 24)}</span>
+                  </span>
+                ) : (
+                  <span className="text-xs font-mono font-bold text-amber-300 bg-amber-500/15 px-2.5 py-0.5 rounded-lg border border-amber-500/30 flex items-center gap-1">
+                    <span>🌐 UTC Time:</span>
+                    <span>{activeHourDetail.timeUtcLabel}</span>
+                  </span>
+                )}
                 <span className="text-xs font-bold text-slate-300">
                   {activeHourDetail.sessionName} Session
                 </span>
