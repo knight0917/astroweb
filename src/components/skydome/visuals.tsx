@@ -550,11 +550,11 @@ export function PlanetBody({ bodyId, radius, color, highlight, meshRef, onClick,
 
       {isSun && (
         <>
-          <sprite scale={[radius * 7.5, radius * 7.5, 1]}>
-            <spriteMaterial map={glow} color="#ffb24a" transparent opacity={0.6} depthWrite={false} blending={THREE.AdditiveBlending} />
+          <sprite scale={[radius * 4.6, radius * 4.6, 1]}>
+            <spriteMaterial map={glow} color="#ffb24a" transparent opacity={0.55} depthWrite={false} blending={THREE.AdditiveBlending} />
           </sprite>
-          <sprite ref={raysRef} scale={[radius * 6, radius * 6, 1]}>
-            <spriteMaterial map={rays} color="#ffd27a" transparent opacity={0.4} depthWrite={false} blending={THREE.AdditiveBlending} />
+          <sprite ref={raysRef} scale={[radius * 3.8, radius * 3.8, 1]}>
+            <spriteMaterial map={rays} color="#ffd27a" transparent opacity={0.35} depthWrite={false} blending={THREE.AdditiveBlending} />
           </sprite>
         </>
       )}
@@ -632,5 +632,29 @@ export function OrbitTrail({ points, color }: { points: [number, number, number]
         </mesh>
       ))}
     </group>
+  );
+}
+
+/**
+ * Subtle guide ring marking the Rahu-Ketu nodal axis sphere at Kaksha radius R = 8.2.
+ */
+export function NodalGuideRing() {
+  const points = useMemo(() => {
+    const pts: number[] = [];
+    const segments = 64;
+    for (let i = 0; i <= segments; i++) {
+      const th = (i / segments) * Math.PI * 2;
+      pts.push(8.2 * Math.cos(th), 0, 8.2 * Math.sin(th));
+    }
+    return new Float32Array(pts);
+  }, []);
+
+  return (
+    <line>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[points, 3]} />
+      </bufferGeometry>
+      <lineBasicMaterial color="#90a4ae" transparent opacity={0.25} linewidth={1} />
+    </line>
   );
 }

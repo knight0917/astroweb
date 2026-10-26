@@ -30,6 +30,7 @@ import {
   HouseCuspLines,
   PlanetBody,
   OrbitTrail,
+  NodalGuideRing,
   type HouseVisualData,
 } from "./skydome/visuals";
 import VerticalTimeTravel from "./VerticalTimeTravel";
@@ -272,9 +273,9 @@ const VEDIC_HOUSES_DATA = [
 // Geocentric scene layout (planets at power-scaled true distance; points on the zodiac ring)
 // ---------------------------------------------------------------------------
 
-/** Scene position for a body. Physical bodies pass `distAU`; Lagna/MC/Upagrahas sit on the zodiac ring. */
-function scenePosition(lon: number, lat: number, distAU?: number): [number, number, number] {
-  const r = distAU === undefined ? ZODIAC_RADIUS : geocentricDistanceToSceneRadius(distAU);
+/** Scene position for a body. Physical bodies pass `distAU` & `bodyId`; Lagna/MC/Upagrahas sit on the zodiac ring. */
+function scenePosition(lon: number, lat: number, distAU?: number, bodyId?: string): [number, number, number] {
+  const r = distAU === undefined ? ZODIAC_RADIUS : geocentricDistanceToSceneRadius(distAU, bodyId);
   return eclipticToCartesian(lon, lat, r);
 }
 
@@ -333,9 +334,9 @@ function useGeocentricTrails(
 
       const pts: [number, number, number][] = [];
       for (const s of buf) {
-        if (s.t < head.t) pts.push(scenePosition(s.lon, s.lat, s.distAU));
+        if (s.t < head.t) pts.push(scenePosition(s.lon, s.lat, s.distAU, p.id));
       }
-      pts.push(scenePosition(head.lon, head.lat, head.distAU));
+      pts.push(scenePosition(head.lon, head.lat, head.distAU, p.id));
       out[p.id] = pts;
     }
     return out;
@@ -1321,7 +1322,7 @@ function SkyScene({
         longitude: p.siderealLongitude,
         signIndex: p.rashi.index,
         house: p.house,
-        position: scenePosition(p.siderealLongitude, p.latitude, p.distanceAU),
+        position: scenePosition(p.siderealLongitude, p.latitude, p.distanceAU, p.id),
         isRetrograde: p.isRetrograde,
         speed: p.speed,
       };
@@ -1531,6 +1532,9 @@ function SkyScene({
       {Object.entries(trails).map(([pId, pts]) => (
         <OrbitTrail key={pId} points={pts} color={TRAIL_COLORS[pId] || SD_COLORS.trailDefault} />
       ))}
+
+      {/* 3b. Dedicated Subtle Nodal Axis Guide Ring for Rahu & Ketu (Kaksha Radius R = 8.2) */}
+      <NodalGuideRing />
 
       {/* 4. Thin Zodiac Degree Ring with 1°/5°/30° Ticks & Devanagari Rashi Names */}
       <ZodiacDegreeRing />

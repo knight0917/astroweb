@@ -9517,3 +9517,70 @@ test("Phase 58: Pre-Market Master Execution Matrix Verification", async () => {
   assert.strictEqual(dec28.masterExecutionMatrix.slProfile, "WIDE_BUFFER", "Dec 28 2025 must require Wide Buffer SL");
   assert.ok(dec28.masterExecutionMatrix.verdictBadge.includes("0.25×"), "Badge must mandate 0.25x size");
 });
+
+test("Phase 59: SkyDome Broadened Planetary Kaksha Radial Spacing & Body-Aware Distance Verification", async () => {
+  const {
+    geocentricDistanceToSceneRadius,
+    KAKSHA_PROFILES,
+    SCENE_EARTH_RADIUS,
+  } = await import("../src/engine/geocentricTrails.ts");
+
+  // 1. Verify existence of Kaksha profiles for all 12 bodies
+  const expectedBodies = ["Moon", "Rahu", "Ketu", "Mercury", "Venus", "Sun", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"];
+  for (const b of expectedBodies) {
+    assert.ok(KAKSHA_PROFILES[b], `Kaksha profile must exist for body ${b}`);
+    assert.ok(Number.isFinite(KAKSHA_PROFILES[b].baseRadius) && KAKSHA_PROFILES[b].baseRadius > 0, `Base radius for ${b} must be positive finite`);
+  }
+
+  // 2. Verify strict classical radial hierarchy
+  assert.ok(KAKSHA_PROFILES.Moon.baseRadius > SCENE_EARTH_RADIUS, "Moon base radius must be outside Earth");
+  assert.ok(KAKSHA_PROFILES.Rahu.baseRadius > KAKSHA_PROFILES.Moon.baseRadius, "Rahu base radius must be outside Moon");
+  assert.strictEqual(KAKSHA_PROFILES.Rahu.baseRadius, KAKSHA_PROFILES.Ketu.baseRadius, "Rahu and Ketu must share the same nodal sphere radius");
+  assert.ok(KAKSHA_PROFILES.Mercury.baseRadius > KAKSHA_PROFILES.Rahu.baseRadius, "Mercury must be outside nodal sphere");
+  assert.ok(KAKSHA_PROFILES.Venus.baseRadius > KAKSHA_PROFILES.Mercury.baseRadius, "Venus must be outside Mercury");
+  assert.ok(KAKSHA_PROFILES.Sun.baseRadius > KAKSHA_PROFILES.Venus.baseRadius, "Sun must be outside Venus");
+  assert.ok(KAKSHA_PROFILES.Mars.baseRadius > KAKSHA_PROFILES.Sun.baseRadius, "Mars must be outside Sun");
+  assert.ok(KAKSHA_PROFILES.Jupiter.baseRadius > KAKSHA_PROFILES.Mars.baseRadius, "Jupiter must be outside Mars");
+  assert.ok(KAKSHA_PROFILES.Saturn.baseRadius > KAKSHA_PROFILES.Jupiter.baseRadius, "Saturn must be outside Jupiter");
+  assert.ok(KAKSHA_PROFILES.Pluto.baseRadius <= 34.5, "Pluto base radius must remain inside the 34.6 Nakshatra belt");
+
+  // 3. Verify generous radial clearances between adjacent planetary base radii (min 2.5 units)
+  const ordered = [
+    { name: "Earth", r: SCENE_EARTH_RADIUS },
+    { name: "Moon", r: KAKSHA_PROFILES.Moon.baseRadius },
+    { name: "Rahu", r: KAKSHA_PROFILES.Rahu.baseRadius },
+    { name: "Mercury", r: KAKSHA_PROFILES.Mercury.baseRadius },
+    { name: "Venus", r: KAKSHA_PROFILES.Venus.baseRadius },
+    { name: "Sun", r: KAKSHA_PROFILES.Sun.baseRadius },
+    { name: "Mars", r: KAKSHA_PROFILES.Mars.baseRadius },
+    { name: "Jupiter", r: KAKSHA_PROFILES.Jupiter.baseRadius },
+    { name: "Saturn", r: KAKSHA_PROFILES.Saturn.baseRadius },
+  ];
+  for (let i = 0; i < ordered.length - 1; i++) {
+    const gap = ordered[i + 1].r - ordered[i].r;
+    assert.ok(gap >= 2.5, `Radial gap between ${ordered[i].name} and ${ordered[i + 1].name} (${gap.toFixed(2)}) must be >= 2.5 units`);
+  }
+
+  // 4. Verify dynamic range bounds for inner planets to prevent visual conjunction collisions
+  const rMercMin = geocentricDistanceToSceneRadius(0.61, "Mercury");
+  const rMercMax = geocentricDistanceToSceneRadius(1.39, "Mercury");
+  const rVenMin = geocentricDistanceToSceneRadius(0.28, "Venus");
+  const rVenMax = geocentricDistanceToSceneRadius(1.72, "Venus");
+  const rSun = geocentricDistanceToSceneRadius(1.0, "Sun");
+
+  assert.ok(rMercMin >= 9.8 && rMercMax <= 13.2, "Mercury dynamic range must be confined to ~9.9-13.1");
+  assert.ok(rVenMin >= 13.1 && rVenMax <= 16.9, "Venus dynamic range must be confined to ~13.2-16.8");
+  assert.ok(rSun >= 18.3 && rSun <= 18.7, "Sun dynamic range must remain steady at ~18.5");
+  assert.ok(rSun - rVenMax >= 1.5, "Sun must maintain at least 1.5 units clearance from maximum Venus elongation");
+
+  // 5. Verify monotonic fallback function when bodyId is omitted
+  const rMoonFallback = geocentricDistanceToSceneRadius(0.00257);
+  const rSunFallback = geocentricDistanceToSceneRadius(1.0);
+  const rSaturnFallback = geocentricDistanceToSceneRadius(10.0);
+  const rPlutoFallback = geocentricDistanceToSceneRadius(35.0);
+
+  assert.ok(rMoonFallback > SCENE_EARTH_RADIUS, "Fallback Moon must be outside Earth");
+  assert.ok(rSunFallback > rMoonFallback, "Fallback Sun must be outside Moon");
+  assert.ok(rSaturnFallback > rSunFallback, "Fallback Saturn must be outside Sun");
+  assert.ok(rPlutoFallback <= 38.0, "Fallback Pluto must be <= 38.0");
+});

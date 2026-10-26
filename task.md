@@ -1585,3 +1585,26 @@
   - [x] Run `npm run build` (clean Next.js 15 production build).
   - [x] Git commit and push to remote.
 
+---
+
+# Phase 59: 3D SkyDome Broadened Planetary Kaksha Radial Spacing & Label Clarity
+
+## Status: Complete & Verified (All 154 Tests Passing & 0 Type Errors)
+- **Trigger Keywords**: `skydome-kaksha-spacing`, `broadened-orbits`, `body-aware-radius`, `nodal-separation`, `zero-label-collision`, `sun-glow-refinement`
+- **Scope**: Re-architect planetary radial distance distribution in the 3D SkyDome to eliminate inner cluster crowding (Moon, Rahu, Ketu, Mercury, Venus, Sun) into distinct classical Kaksha orbital bands while preserving well-spaced outer Jupiter and Saturn retrograde trails.
+
+## Phases & Milestones
+
+- [x] **Phase 59.1: Classical Kaksha Radial Hierarchy & Body-Aware Distance Function (`src/engine/geocentricTrails.ts`)**
+  - [x] Implement `KAKSHA_PROFILES` with base radii and astronomical delta scalings for all 12 bodies (Moon ~5.6, Rahu/Ketu 8.2, Mercury ~11.5, Venus ~15.0, Sun ~18.5, Mars ~22.0, Jupiter ~26.5, Saturn ~31.0, Outer planets 32.8–34.2).
+  - [x] Update `geocentricDistanceToSceneRadius(distAU: number, bodyId?: string): number` with body-specific Kaksha profiles and smooth monotonic fallback.
+- [x] **Phase 59.2: SkyDome Integration & Decoupled Nodal Orbit (`src/components/SkyDome.tsx`)**
+  - [x] Pass `bodyId` to `scenePosition` across planet mesh mapping, trails, and Upagrahas.
+  - [x] Add dedicated nodal guide circle for Rahu and Ketu at $R = 8.2$.
+- [x] **Phase 59.3: Sun Glow Sprite Optimization (`src/components/skydome/visuals.tsx`)**
+  - [x] Refine Sun glow sprite scale ($4.6 \times r$) and rays ($3.8 \times r$) to avoid washing over Mercury and Venus.
+- [x] **Phase 59.4: Automated Test Suite & Engine Verification (`tests/engine.test.mjs`, `npx tsc --noEmit`)**
+  - [x] Add Subtest 154 validating radial monotonicity, minimum 2.5-unit clearance between adjacent planetary bands, and Pluto $\le 38.0$.
+  - [x] Run `npx tsc --noEmit` and `npm test` to verify all 154 tests pass cleanly.
+
+

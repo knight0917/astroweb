@@ -58,27 +58,74 @@ export function getTrailWindowMs(bodyId: string): number {
 
 // Scene-radius mapping constants (Earth globe radius in the scene is 2.6).
 export const SCENE_EARTH_RADIUS = 2.6;
-const RADIUS_BASE = 4.6;
-const RADIUS_SCALE = 9;
-const RADIUS_POWER = 0.45;
-const SATURN_CAP_AU = 11;
-const OUTER_SPAN_AU = 39;
-const OUTER_EXTRA_RADIUS = 5.5;
+
+export interface KakshaProfile {
+  /** Mean baseline orbit radius in 3D units. */
+  baseRadius: number;
+  /** Mean astronomical geocentric distance in AU. */
+  meanDistAU: number;
+  /** Expected astronomical distance oscillation span in AU. */
+  spanDistAU: number;
+  /** Maximum radial variation (+/-) in 3D scene units over the synodic cycle. */
+  radialDelta: number;
+}
+
+/**
+ * Classical Graha-Mandalam Kaksha hierarchy providing generous, uncluttered
+ * radial spacing for all 12 bodies while maintaining pure astronomical epicyclic dynamics.
+ */
+export const KAKSHA_PROFILES: Readonly<Record<string, KakshaProfile>> = Object.freeze({
+  Moon:    { baseRadius: 5.6, meanDistAU: 0.00257, spanDistAU: 0.0003, radialDelta: 0.4 },
+  Rahu:    { baseRadius: 8.2, meanDistAU: 0.00257, spanDistAU: 0.0001, radialDelta: 0.0 },
+  Ketu:    { baseRadius: 8.2, meanDistAU: 0.00257, spanDistAU: 0.0001, radialDelta: 0.0 },
+  Mercury: { baseRadius: 11.5, meanDistAU: 1.0, spanDistAU: 0.39, radialDelta: 1.6 },
+  Venus:   { baseRadius: 15.0, meanDistAU: 1.0, spanDistAU: 0.72, radialDelta: 1.8 },
+  Sun:     { baseRadius: 18.5, meanDistAU: 1.0, spanDistAU: 0.017, radialDelta: 0.15 },
+  Mars:    { baseRadius: 22.0, meanDistAU: 1.52, spanDistAU: 1.15, radialDelta: 2.0 },
+  Jupiter: { baseRadius: 26.5, meanDistAU: 5.2, spanDistAU: 1.25, radialDelta: 1.8 },
+  Saturn:  { baseRadius: 31.0, meanDistAU: 9.58, spanDistAU: 1.5, radialDelta: 1.6 },
+  Uranus:  { baseRadius: 32.8, meanDistAU: 19.2, spanDistAU: 2.0, radialDelta: 0.7 },
+  Neptune: { baseRadius: 33.6, meanDistAU: 30.1, spanDistAU: 2.0, radialDelta: 0.5 },
+  Pluto:   { baseRadius: 34.2, meanDistAU: 39.5, spanDistAU: 5.0, radialDelta: 0.4 },
+});
+
+const FALLBACK_SATURN_CAP = 10.0;
+const FALLBACK_BASE = 5.2;
+const FALLBACK_SCALE = 13.3;
+const FALLBACK_POWER = 0.288;
+const FALLBACK_OUTER_SPAN = 30.0;
+const FALLBACK_OUTER_EXTRA = 3.2;
 
 /**
  * Maps a geocentric distance (AU) to a scene radius.
- * Power-scaled for d ≤ 11 AU (Moon ≈ 5.2 … Saturn ≈ 31), then compressed linearly so that
- * Uranus/Neptune/Pluto remain inside the zodiac ring (≤ 36.6).
+ * When `bodyId` is provided, applies body-specific classical Kaksha radial spacing
+ * so that inner bodies (Moon, Rahu/Ketu, Mercury, Venus, Sun) are broadly spaced
+ * and never collide visually, while outer bodies (Jupiter, Saturn) retain their
+ * expansive, majestic retrograde loops.
+ * 
+ * When `bodyId` is omitted, applies a smooth monotonic power curve satisfying all
+ * mathematical distance constraints (Moon > Earth radius, Sun > Moon, Saturn > Sun, Pluto <= 38.0).
  */
-export function geocentricDistanceToSceneRadius(distAU: number): number {
+export function geocentricDistanceToSceneRadius(distAU: number, bodyId?: string): number {
   if (!Number.isFinite(distAU) || distAU <= 0) {
     throw new RangeError(`distAU must be a finite positive number, received ${distAU}`);
   }
-  const capped = Math.min(distAU, SATURN_CAP_AU);
-  const inner = RADIUS_BASE + RADIUS_SCALE * Math.pow(capped, RADIUS_POWER);
-  if (distAU <= SATURN_CAP_AU) return inner;
-  const outerFraction = Math.min(1, (distAU - SATURN_CAP_AU) / OUTER_SPAN_AU);
-  return inner + outerFraction * OUTER_EXTRA_RADIUS;
+
+  if (bodyId && Object.prototype.hasOwnProperty.call(KAKSHA_PROFILES, bodyId)) {
+    const p = KAKSHA_PROFILES[bodyId];
+    if (p.spanDistAU > 0 && p.radialDelta > 0) {
+      const normDelta = Math.max(-1.0, Math.min(1.0, (distAU - p.meanDistAU) / p.spanDistAU));
+      return p.baseRadius + normDelta * p.radialDelta;
+    }
+    return p.baseRadius;
+  }
+
+  // Smooth monotonic fallback
+  const capped = Math.min(distAU, FALLBACK_SATURN_CAP);
+  const inner = FALLBACK_BASE + FALLBACK_SCALE * Math.pow(capped, FALLBACK_POWER);
+  if (distAU <= FALLBACK_SATURN_CAP) return inner;
+  const outerFraction = Math.min(1.0, (distAU - FALLBACK_SATURN_CAP) / FALLBACK_OUTER_SPAN);
+  return inner + outerFraction * FALLBACK_OUTER_EXTRA;
 }
 
 function sampleAt(cfg: TrailConfig, t: number, ayanamshaDeg: number): TrailSample {
