@@ -232,12 +232,6 @@ export default function HeaderNav() {
           badge: "Live",
         },
         {
-          mode: "market-bias",
-          label: "Financial Astro & Market Bias",
-          desc: "Pre-market daily directional bias & historical backtesting for Gold, EUR, GBP, Oil, US30",
-          badge: "MT5 Algo",
-        },
-        {
           mode: "prashna",
           label: "Tajik Prashna (Horary)",
           desc: "16 Tajika Yogas (Ithasala/Ishrafa), query orbs & instant yes/no verdict",

@@ -15,7 +15,6 @@ export type ViewMode =
   | "kundli-north"
   | "dasha"
   | "gochar"
-  | "market-bias"
   | "choghadiya"
   | "ashtakavarga"
   | "numerology"

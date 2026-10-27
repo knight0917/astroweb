@@ -1607,4 +1607,32 @@
   - [x] Add Subtest 154 validating radial monotonicity, minimum 2.5-unit clearance between adjacent planetary bands, and Pluto $\le 38.0$.
   - [x] Run `npx tsc --noEmit` and `npm test` to verify all 154 tests pass cleanly.
 
+---
+
+# Phase 60: Decommissioning & Complete Removal of Financial Astro & Market Bias
+
+## Status: Complete & Verified (All 152 Tests Passing, 0 Type Errors & Clean Production Build)
+- **Trigger Keywords**: `decommission-financial-astro`, `remove-market-bias`, `clean-bundle-size`, `vercel-optimization`
+- **Scope**: Completely remove UI, Next.js page route, external API, engine calculations, scripts, tests, and navigation links related to Financial Astrology and Market Bias to eliminate Vercel serverless bloat and bundle size.
+
+## Phases & Milestones
+
+- [x] **Phase 60.1: Remove UI Components, Routes, and Engine Files**
+  - [x] Delete `src/components/MarketBiasView.tsx`
+  - [x] Delete `src/app/market-bias/` directory
+  - [x] Delete `src/app/api/v1/market-astro/` directory
+  - [x] Delete `src/engine/financialAstro.ts`
+  - [x] Delete financial scripts (`scripts/astroQuantAnalysis.ts`, `scripts/extractPatterns.ts`, `scripts/forecastDec23.ts`, `scripts/test_financial_astro.ts`, etc.)
+- [x] **Phase 60.2: Clean Up Global Navigation, Pages, and Zustand Store**
+  - [x] Remove `MarketBiasView` from `src/app/page.tsx`
+  - [x] Remove `market-bias` from `src/components/HeaderNav.tsx`
+  - [x] Remove `"market-bias"` from `ViewMode` union in `src/store/useAstroStore.ts`
+- [x] **Phase 60.3: Clean Up Tests & Verification**
+  - [x] Remove obsolete Phase 57 & Phase 58 tests from `tests/engine.test.mjs`
+  - [x] Verify `npx tsc --noEmit` has 0 errors
+  - [x] Verify `npm test` passes cleanly (152/152 tests passed)
+  - [x] Verify `npm run build` succeeds cleanly for Vercel (0 errors)
+  - [x] Commit and push to git
+
+
 
