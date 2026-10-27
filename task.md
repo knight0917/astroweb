@@ -1634,5 +1634,34 @@
   - [x] Verify `npm run build` succeeds cleanly for Vercel (0 errors)
   - [x] Commit and push to git
 
+---
+
+# Phase 61: Cloud Email Vault HMAC Auth Handshake & 15-Day Empty Account Auto-Prune Engine
+
+## Status: Complete & Verified (All 153 Tests Passing, 0 Type Errors)
+- **Trigger Keywords**: `cloud-vault-auth`, `hmac-token-handshake`, `ankitturin-sync`, `15-day-auto-prune`, `empty-vault-cleanup`, `passwordless-restore`
+- **Scope**: Fix the client-server HMAC token authorization handshake so `ankitturin@gmail.com` immediately loads its existing cloud chart ("knight"), and implement a 15-day auto-pruning retention policy that automatically disconnects and cleans up empty or unverified vault email accounts.
+
+## Phases & Milestones
+
+- [x] **Phase 61.1: Client-Side HMAC Auth Token Handshake (`src/store/useAstroStore.ts`)**
+  - [x] Implement `getOrFetchEmailToken(email: string): Promise<string | null>` with 30-day localStorage cache.
+  - [x] Attach `x-chart-token: token` to all `/api/charts` requests (`GET`, `POST`, `DELETE`).
+  - [x] Differentiate 401/500 network errors from genuine empty vaults in UI status reporting.
+- [x] **Phase 61.2: Server-Side Graceful Auth & 15-Day Pruning Policy (`src/app/api/charts/route.ts` & `src/lib/db.ts`)**
+  - [x] Support passwordless query fallback for read-only profile loading (`isReadOnly = true`).
+  - [x] Enforce cryptographic HMAC verification for write operations (`POST`, `DELETE`).
+- [x] **Phase 61.3: Client 15-Day Retention Timer & Empty Vault Auto-Prune (`src/store/useAstroStore.ts` & `src/components/TimeTravelSlider.tsx`)**
+  - [x] Track `vedic_user_email_empty_since` in `localStorage`.
+  - [x] Implement `evaluate15DayEmptyVaultRetention` and `check15DayEmptyVaultPruning`.
+  - [x] Auto-disconnect and delete email connection if 0 charts have been saved for $\ge 15$ days.
+  - [x] Integrate into `run24HourCacheCleanup` and app initialization (`initFromStorage`).
+  - [x] Display transparent feedback in `TimeTravelSlider.tsx` explaining the 15-day policy.
+- [x] **Phase 61.4: Automated Test Suite & Production Build Verification**
+  - [x] Add Subtest 153 verifying token generation, chart sync, and 15-day threshold auto-prune calculation.
+  - [x] Verify `npx tsc --noEmit` has 0 errors.
+  - [x] Verify `npm test` passes (all 153/153 tests pass).
+
+
 
 

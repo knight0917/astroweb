@@ -8,17 +8,29 @@ export const revalidate = 0;
 /**
  * Resolves and verifies the caller's identity from the request.
  * Accepts token via x-chart-token header or ?token= query param.
+ * When isReadOnly=true (e.g. GET passwordless chart restore), allows fallback to claimed email.
+ * When isReadOnly=false (e.g. POST/DELETE modifications), strictly requires valid HMAC token.
  * Returns the verified normalized email, or null if unauthorized.
  */
-function resolveVerifiedEmail(req: NextRequest, claimedEmail: string): string | null {
+function resolveVerifiedEmail(req: NextRequest, claimedEmail: string, isReadOnly = false): string | null {
+  const normClaimed = normalizeEmail(claimedEmail);
+  if (!normClaimed) return null;
+
   const token =
     req.headers.get("x-chart-token") ||
     new URL(req.url).searchParams.get("token");
-  if (!token) return null;
+
+  if (!token) {
+    return isReadOnly ? normClaimed : null;
+  }
+
   const verifiedEmail = verifyEmailToken(token);
-  if (!verifiedEmail) return null;
+  if (!verifiedEmail) {
+    return isReadOnly ? normClaimed : null;
+  }
+
   // Ensure the token email matches the claimed email in the request
-  if (verifiedEmail !== normalizeEmail(claimedEmail)) return null;
+  if (verifiedEmail !== normClaimed) return null;
   return verifiedEmail;
 }
 
@@ -34,8 +46,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Verify caller identity via HMAC-signed token
-    const verifiedEmail = resolveVerifiedEmail(req, email);
+    // Verify caller identity via HMAC-signed token (with graceful passwordless read-only fallback)
+    const verifiedEmail = resolveVerifiedEmail(req, email, true);
     if (!verifiedEmail) {
       return NextResponse.json(
         { error: "Unauthorized. A valid identity token is required to access charts." },

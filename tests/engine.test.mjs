@@ -9516,3 +9516,65 @@ test("Phase 59: SkyDome Broadened Planetary Kaksha Radial Spacing & Body-Aware D
   assert.ok(rSaturnFallback > rSunFallback, "Fallback Saturn must be outside Sun");
   assert.ok(rPlutoFallback <= 38.0, "Fallback Pluto must be <= 38.0");
 });
+
+test("Phase 61: Cloud Email Vault HMAC Auth Handshake & 15-Day Empty Account Auto-Prune Verification", async () => {
+  const {
+    evaluate15DayEmptyVaultRetention,
+    FIFTEEN_DAYS_MS,
+  } = await import("../src/store/useAstroStore.ts");
+  const { signEmailToken, verifyEmailToken } = await import("../src/lib/emailToken.ts");
+  const { getChartsByEmail, normalizeEmail } = await import("../src/lib/db.ts");
+
+  // 1. Verify 15-Day Empty Vault Auto-Pruning Threshold
+  const now = Date.now();
+  const twoDaysOld = now - 2 * 24 * 60 * 60 * 1000;
+  const fourteenDaysOld = now - 14 * 24 * 60 * 60 * 1000;
+  const fifteenDaysOld = now - 15 * 24 * 60 * 60 * 1000;
+  const sixteenDaysOld = now - 16 * 24 * 60 * 60 * 1000;
+
+  // Case A: Vault has active charts -> Never pruned
+  const activeVault = evaluate15DayEmptyVaultRetention(sixteenDaysOld, 3, now);
+  assert.strictEqual(activeVault.isPruned, false, "Vault with active charts must never be pruned");
+  assert.strictEqual(activeVault.daysRemaining, 15);
+
+  // Case B: Vault has 0 charts, 2 days elapsed -> 13 days remaining
+  const twoDayEmpty = evaluate15DayEmptyVaultRetention(twoDaysOld, 0, now);
+  assert.strictEqual(twoDayEmpty.isPruned, false, "Empty vault under 15 days must not be pruned yet");
+  assert.strictEqual(twoDayEmpty.daysRemaining, 13);
+
+  // Case C: Vault has 0 charts, 14 days elapsed -> 1 day remaining
+  const fourteenDayEmpty = evaluate15DayEmptyVaultRetention(fourteenDaysOld, 0, now);
+  assert.strictEqual(fourteenDayEmpty.isPruned, false);
+  assert.strictEqual(fourteenDayEmpty.daysRemaining, 1);
+
+  // Case D: Vault has 0 charts, exactly 15 days elapsed -> Pruned!
+  const fifteenDayEmpty = evaluate15DayEmptyVaultRetention(fifteenDaysOld, 0, now);
+  assert.strictEqual(fifteenDayEmpty.isPruned, true, "Empty vault at 15 days must be pruned");
+  assert.strictEqual(fifteenDayEmpty.daysRemaining, 0);
+
+  // Case E: Vault has 0 charts, 16 days elapsed -> Pruned!
+  const sixteenDayEmpty = evaluate15DayEmptyVaultRetention(sixteenDaysOld, 0, now);
+  assert.strictEqual(sixteenDayEmpty.isPruned, true, "Empty vault past 15 days must be pruned");
+  assert.strictEqual(sixteenDayEmpty.daysRemaining, 0);
+
+  // 2. Verify HMAC Email Token Signature & Cryptographic Handshake
+  const testEmail = "ankitturin@gmail.com";
+  const token = signEmailToken(testEmail, 30);
+  assert.ok(typeof token === "string" && token.length > 20, "Token must be a valid base64url string");
+
+  const verified = verifyEmailToken(token);
+  assert.strictEqual(verified, testEmail, "Token must verify successfully to original email");
+
+  const wrongVerified = verifyEmailToken("invalid.tampered.token");
+  assert.strictEqual(wrongVerified, null, "Tampered token must fail verification");
+
+  // 3. Verify Cloud Database Connection for ankitturin@gmail.com
+  const charts = await getChartsByEmail(testEmail);
+  assert.ok(Array.isArray(charts), "getChartsByEmail must return array");
+  const knightChart = charts.find((c) => c.name.toLowerCase() === "knight");
+  assert.ok(knightChart, "Cloud database must contain the saved 'knight' chart for ankitturin@gmail.com");
+  assert.strictEqual(knightChart.userEmail, testEmail);
+  assert.strictEqual(knightChart.dob, "1999-09-17");
+  assert.strictEqual(knightChart.time, "18:29");
+  assert.ok(knightChart.location.cityName.includes("Allahabad") || knightChart.location.cityName.includes("Prayagraj"));
+});

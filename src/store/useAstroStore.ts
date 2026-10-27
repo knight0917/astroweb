@@ -71,9 +71,62 @@ export interface ReferenceLagnaInfo {
 
 const STORAGE_ACTIVE_KEY = "vedic_active_chart_data";
 const STORAGE_PROFILES_KEY = "vedic_saved_birth_profiles";
-const STORAGE_USER_EMAIL_KEY = "vedic_user_email";
+export const STORAGE_USER_EMAIL_KEY = "vedic_user_email";
+export const STORAGE_USER_EMAIL_LINKED_AT_KEY = "vedic_user_email_linked_at";
+export const STORAGE_USER_EMAIL_EMPTY_SINCE_KEY = "vedic_user_email_empty_since";
+export const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;
 const STORAGE_MATCHMAKING_KEY = "vedic_matchmaking_active_state";
 const STORAGE_LAST_CACHE_CLEANUP_KEY = "vedic_last_cache_cleanup_timestamp";
+
+/**
+ * Pure evaluation function for 15-day empty vault auto-pruning.
+ * If an email vault has 0 saved charts for >= 15 days, it must be pruned.
+ */
+export function evaluate15DayEmptyVaultRetention(
+  emptySinceMs: number | null,
+  chartsCount: number,
+  nowMs: number = Date.now()
+): { isPruned: boolean; daysRemaining: number } {
+  if (chartsCount > 0 || !emptySinceMs) {
+    return { isPruned: false, daysRemaining: 15 };
+  }
+  const elapsed = nowMs - emptySinceMs;
+  if (elapsed >= FIFTEEN_DAYS_MS) {
+    return { isPruned: true, daysRemaining: 0 };
+  }
+  const daysRemaining = Math.max(0, Math.ceil((FIFTEEN_DAYS_MS - elapsed) / (24 * 60 * 60 * 1000)));
+  return { isPruned: false, daysRemaining };
+}
+
+/**
+ * Asynchronously acquires or retrieves a cached HMAC-signed identity token
+ * for client-server chart API operations.
+ */
+export async function getOrFetchEmailToken(email: string): Promise<string | null> {
+  if (!email || typeof window === "undefined") return null;
+  const cleanEmail = email.trim().toLowerCase();
+  const tokenKey = `vedic_chart_token_${cleanEmail}`;
+  const cached = localStorage.getItem(tokenKey);
+  if (cached) return cached;
+
+  try {
+    const res = await fetch("/api/auth/email-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: cleanEmail }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.token) {
+        localStorage.setItem(tokenKey, data.token);
+        return data.token;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not acquire email token:", err);
+  }
+  return null;
+}
 
 const defaultMatchmakingState: MatchmakingStoreState = {
   boy: {
@@ -184,6 +237,7 @@ interface AstroState {
   isSyncingDb: boolean;
   lastCacheCleanupTime: number | null;
   run24HourCacheCleanup: (force?: boolean) => Promise<{ cleaned: boolean; message: string }>;
+  check15DayEmptyVaultPruning: () => { pruned: boolean; message: string };
 
   // Matchmaking State (Groom & Bride)
   matchmaking: MatchmakingStoreState;
@@ -316,8 +370,20 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   setUserEmail: (email) => {
     const clean = email?.trim().toLowerCase() || null;
     if (typeof window !== "undefined") {
-      if (clean) localStorage.setItem(STORAGE_USER_EMAIL_KEY, clean);
-      else localStorage.removeItem(STORAGE_USER_EMAIL_KEY);
+      if (clean) {
+        localStorage.setItem(STORAGE_USER_EMAIL_KEY, clean);
+        if (!localStorage.getItem(STORAGE_USER_EMAIL_LINKED_AT_KEY)) {
+          localStorage.setItem(STORAGE_USER_EMAIL_LINKED_AT_KEY, String(Date.now()));
+        }
+      } else {
+        const oldEmail = localStorage.getItem(STORAGE_USER_EMAIL_KEY);
+        localStorage.removeItem(STORAGE_USER_EMAIL_KEY);
+        localStorage.removeItem(STORAGE_USER_EMAIL_LINKED_AT_KEY);
+        localStorage.removeItem(STORAGE_USER_EMAIL_EMPTY_SINCE_KEY);
+        if (oldEmail) {
+          localStorage.removeItem(`vedic_chart_token_${oldEmail.toLowerCase().trim()}`);
+        }
+      }
     }
     set({ userEmail: clean });
     if (clean) {
@@ -325,9 +391,52 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     }
   },
 
-    run24HourCacheCleanup: async (force = false) => {
+  check15DayEmptyVaultPruning: () => {
+    if (typeof window === "undefined") return { pruned: false, message: "" };
+    const currentEmail = get().userEmail;
+    if (!currentEmail) return { pruned: false, message: "No email linked" };
+
+    const chartsCount = get().savedProfiles.length;
+    if (chartsCount > 0) {
+      localStorage.removeItem(STORAGE_USER_EMAIL_EMPTY_SINCE_KEY);
+      return { pruned: false, message: "Vault active with charts" };
+    }
+
+    const rawEmpty = localStorage.getItem(STORAGE_USER_EMAIL_EMPTY_SINCE_KEY);
+    const emptySince = rawEmpty ? Number(rawEmpty) : Date.now();
+    if (!rawEmpty) {
+      localStorage.setItem(STORAGE_USER_EMAIL_EMPTY_SINCE_KEY, String(emptySince));
+    }
+
+    const { isPruned, daysRemaining } = evaluate15DayEmptyVaultRetention(emptySince, chartsCount);
+    if (isPruned) {
+      localStorage.removeItem(STORAGE_USER_EMAIL_KEY);
+      localStorage.removeItem(STORAGE_USER_EMAIL_LINKED_AT_KEY);
+      localStorage.removeItem(STORAGE_USER_EMAIL_EMPTY_SINCE_KEY);
+      localStorage.removeItem(`vedic_chart_token_${currentEmail.toLowerCase().trim()}`);
+      set({ userEmail: null });
+      console.log(`[Vault 15-Day Retention] Pruned empty email '${currentEmail}' after 15 days of zero saved charts.`);
+      return {
+        pruned: true,
+        message: `Empty vault email '${currentEmail}' was automatically deleted after 15 days of zero saved charts.`,
+      };
+    }
+
+    return {
+      pruned: false,
+      message: `Vault has 0 saved charts. Empty email connections are automatically deleted after 15 days (${daysRemaining} day${daysRemaining === 1 ? "" : "s"} remaining).`,
+    };
+  },
+
+  run24HourCacheCleanup: async (force = false) => {
     if (typeof window === "undefined") {
       return { cleaned: false, message: "Window undefined" };
+    }
+
+    // 15-Day Empty Vault Auto-Pruning Check
+    const pruneResult = get().check15DayEmptyVaultPruning();
+    if (pruneResult.pruned) {
+      console.log("[run24HourCacheCleanup]", pruneResult.message);
     }
 
     const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
@@ -391,7 +500,13 @@ export const useAstroStore = create<AstroState>((set, get) => ({
 
     set({ isSyncingDb: true });
     try {
+      // Acquire HMAC-signed identity token for stateless authorization
+      const token = await getOrFetchEmailToken(targetEmail);
+      const headers: Record<string, string> = {};
+      if (token) headers["x-chart-token"] = token;
+
       const res = await fetch(`/api/charts?email=${encodeURIComponent(targetEmail)}&_t=${Date.now()}`, {
+        headers,
         cache: "no-store",
       });
       if (res.ok) {
@@ -426,6 +541,16 @@ export const useAstroStore = create<AstroState>((set, get) => ({
           saveProfilesToStorage(mergedList);
           set({ savedProfiles: mergedList, isSyncingDb: false });
 
+          // 15-Day Retention Tracking: Reset if charts present; record empty timestamp if 0
+          if (mergedList.length > 0) {
+            localStorage.removeItem(STORAGE_USER_EMAIL_EMPTY_SINCE_KEY);
+          } else {
+            const rawEmpty = localStorage.getItem(STORAGE_USER_EMAIL_EMPTY_SINCE_KEY);
+            if (!rawEmpty) {
+              localStorage.setItem(STORAGE_USER_EMAIL_EMPTY_SINCE_KEY, String(Date.now()));
+            }
+          }
+
           // Auto-load profile into active view if autoLoad is requested and profiles exist
           if (autoLoad && dbProfiles.length > 0) {
             const profileToLoad = dbProfiles.find((p) => p.isDefault) || dbProfiles[0];
@@ -441,6 +566,11 @@ export const useAstroStore = create<AstroState>((set, get) => ({
 
           return mergedList;
         }
+      } else {
+        if (res.status === 401 && token) {
+          localStorage.removeItem(`vedic_chart_token_${targetEmail.toLowerCase().trim()}`);
+        }
+        console.warn(`[syncChartsWithDb] Server returned status ${res.status}`);
       }
     } catch (err) {
       console.warn("Could not sync with DB:", err);
@@ -670,12 +800,16 @@ export const useAstroStore = create<AstroState>((set, get) => ({
 
     if (effectiveEmail && typeof window !== "undefined") {
       localStorage.setItem(STORAGE_USER_EMAIL_KEY, effectiveEmail);
+      localStorage.removeItem(STORAGE_USER_EMAIL_EMPTY_SINCE_KEY);
 
-      // Async post to server-side DB
-      try {
+      // Async post to server-side DB with HMAC auth token
+      getOrFetchEmailToken(effectiveEmail).then((token) => {
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (token) headers["x-chart-token"] = token;
+
         fetch("/api/charts", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({
             id,
             userEmail: effectiveEmail,
@@ -689,9 +823,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
             notes,
           }),
         }).catch((e) => console.warn("Failed to persist chart to server DB:", e));
-      } catch (err) {
-        console.warn("Async save to DB error:", err);
-      }
+      });
     }
 
     return newProfile;
@@ -729,13 +861,15 @@ export const useAstroStore = create<AstroState>((set, get) => ({
 
     const effectiveEmail = target?.userEmail || userEmail;
     if (effectiveEmail && typeof window !== "undefined") {
-      try {
+      getOrFetchEmailToken(effectiveEmail).then((token) => {
+        const headers: Record<string, string> = {};
+        if (token) headers["x-chart-token"] = token;
+
         fetch(`/api/charts?id=${encodeURIComponent(profileId)}&email=${encodeURIComponent(effectiveEmail)}`, {
           method: "DELETE",
+          headers,
         }).catch((e) => console.warn("Failed to delete from DB:", e));
-      } catch (err) {
-        console.warn("Async delete error:", err);
-      }
+      });
     }
   },
 
@@ -838,6 +972,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
       // Background sync from DB if email is available
       if (storedEmail) {
         get().syncChartsWithDb(storedEmail);
+        get().check15DayEmptyVaultPruning();
       }
     } catch (_) {}
   },

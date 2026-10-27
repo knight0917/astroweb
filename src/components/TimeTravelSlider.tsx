@@ -33,6 +33,7 @@ export default function TimeTravelSlider() {
     syncChartsWithDb,
     isSyncingDb,
     run24HourCacheCleanup,
+    check15DayEmptyVaultPruning,
   } = useAstroStore();
 
   const [mounted, setMounted] = useState(false);
@@ -1376,9 +1377,10 @@ export default function TimeTravelSlider() {
                         const profiles = await syncChartsWithDb(userEmail, true);
                         if (profiles && profiles.length > 0) {
                           const loaded = profiles.find((p) => p.isDefault) || profiles[0];
-                          setSyncStatusMsg(`✅ Found ${profiles.length} chart${profiles.length > 1 ? "s" : ""}! Loaded "${loaded.name}" (${loaded.dob || ""} ${loaded.time || ""}, ${loaded.location?.cityName || ""}).`);
+                          setSyncStatusMsg(`✅ Connected & Synced! Loaded "${loaded.name}" (${loaded.dob || ""} ${loaded.time || ""}, ${loaded.location?.cityName || ""}).`);
                         } else {
-                          setSyncStatusMsg("Synced with Cloud DB (no charts found).");
+                          const pruneStatus = check15DayEmptyVaultPruning();
+                          setSyncStatusMsg(`⚠️ Connected to Vault, but 0 charts found under "${userEmail}". Empty email vaults are automatically deleted after 15 days.`);
                         }
                       } catch (err: any) {
                         setSyncStatusMsg(`❌ Sync error: ${err.message}`);
@@ -1423,9 +1425,9 @@ export default function TimeTravelSlider() {
                           const profiles = await syncChartsWithDb(email, true);
                           if (profiles && profiles.length > 0) {
                             const loaded = profiles.find((p) => p.isDefault) || profiles[0];
-                            setSyncStatusMsg(`✅ Found ${profiles.length} chart${profiles.length > 1 ? "s" : ""}! Loaded "${loaded.name}" (${loaded.dob || ""} ${loaded.time || ""}, ${loaded.location?.cityName || ""}).`);
+                            setSyncStatusMsg(`✅ Connected & Synced! Loaded "${loaded.name}" (${loaded.dob || ""} ${loaded.time || ""}, ${loaded.location?.cityName || ""}).`);
                           } else {
-                            setSyncStatusMsg(`⚠️ Connected to vault, but no saved charts were found under "${email}".`);
+                            setSyncStatusMsg(`⚠️ Connected to vault, but 0 charts found under "${email}". Empty email vaults are automatically deleted after 15 days.`);
                           }
                         } catch (err: any) {
                           setSyncStatusMsg(`❌ Sync error: ${err.message}`);
@@ -1446,9 +1448,9 @@ export default function TimeTravelSlider() {
                           const profiles = await syncChartsWithDb(email, true);
                           if (profiles && profiles.length > 0) {
                             const loaded = profiles.find((p) => p.isDefault) || profiles[0];
-                            setSyncStatusMsg(`✅ Found ${profiles.length} chart${profiles.length > 1 ? "s" : ""}! Loaded "${loaded.name}" (${loaded.dob || ""} ${loaded.time || ""}, ${loaded.location?.cityName || ""}).`);
+                            setSyncStatusMsg(`✅ Connected & Synced! Loaded "${loaded.name}" (${loaded.dob || ""} ${loaded.time || ""}, ${loaded.location?.cityName || ""}).`);
                           } else {
-                            setSyncStatusMsg(`⚠️ Connected to vault, but no saved charts were found under "${email}".`);
+                            setSyncStatusMsg(`⚠️ Connected to vault, but 0 charts found under "${email}". Empty email vaults are automatically deleted after 15 days.`);
                           }
                         } catch (err: any) {
                           setSyncStatusMsg(`❌ Sync error: ${err.message}`);
