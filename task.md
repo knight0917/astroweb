@@ -1662,6 +1662,31 @@
   - [x] Verify `npx tsc --noEmit` has 0 errors.
   - [x] Verify `npm test` passes (all 153/153 tests pass).
 
+---
+
+# Phase 62: Ascendant (Lagna) Bhinnashtakavarga & Directional Plot Purchase Engine
+
+## Status: Complete & Verified (All 154 Tests Passing, 0 Type Errors)
+- **Trigger Keywords**: `lagna-bhinnashtakavarga`, `lagnashtakavarga`, `ashtakavarga-plot-direction`, `vastu-plot-purchase`, `bav-ascendant`, `49-bindus-lagna`
+- **Scope**: Integrate the 8th classical Bhinnashtakavarga (Lagna BAV - 49 Bindus) into the Ashtakavarga engine and UI, calculate the directional strength across East (1-5-9), South (2-6-10), West (3-7-11), and North (4-8-12), and identify the highest direction for buying plots/land as per Parashara and Vastu principles.
+
+## Phases & Milestones
+
+- [x] **Phase 62.1: Classical Lagna BAV & Plot Purchase Calculation (`src/engine/ashtakavarga.ts`)**
+  - [x] Add `BAV_RULES.Lagna` with the 49 classical Parashari benefic contributions.
+  - [x] Populate `avResult.bav["Lagna"]` without modifying the 337-Bindu SAV baseline.
+  - [x] Compute `lagnaPlotPurchase` directional telemetry with rankings and Vastu guidance.
+- [x] **Phase 62.2: Ashtakavarga UI Integration (`src/components/AshtakavargaView.tsx`)**
+  - [x] Add `Lagna (Ascendant)` (49 Bindus, `#10b981`) to the Graha navigation tabs.
+  - [x] Render Lagna BAV in the North Indian Kundli chart and 12-Rashi cards.
+  - [x] Design dedicated **🏡 Best Direction to Buy Plot / Land (सर्वश्रेष्ठ प्लॉट/भूमि क्रय दिशा)** card in Directional Strength section.
+  - [x] Include Lagna row in the Master SAV Matrix table.
+- [x] **Phase 62.3: Automated Test Suite & Verification (`tests/engine.test.mjs`)**
+  - [x] Add Subtest 154 verifying Lagna BAV (49 points), 12-sign sum, house sum, and plot purchase direction.
+  - [x] Verify `npx tsc --noEmit` passes with 0 errors.
+  - [x] Verify `npm test` passes (all 154 tests pass).
+
+
 
 
 

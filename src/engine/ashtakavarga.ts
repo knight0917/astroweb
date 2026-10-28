@@ -95,6 +95,16 @@ export const BAV_RULES: Record<string, ContributorRule> = {
     saturn: [3, 5, 6, 11],
     lagna: [1, 3, 4, 6, 10, 11],
   },
+  Lagna: {
+    sun: [3, 4, 6, 10, 11, 12],
+    moon: [3, 6, 10, 11, 12],
+    mars: [1, 3, 6, 10, 11],
+    mercury: [1, 2, 4, 6, 8, 10, 11],
+    jupiter: [1, 2, 4, 5, 6, 7, 9, 10, 11],
+    venus: [1, 2, 3, 4, 5, 8, 9],
+    saturn: [1, 3, 4, 6, 10, 11],
+    lagna: [3, 6, 10, 11],
+  },
 };
 
 export interface GrahaBAVDetail {
@@ -159,6 +169,36 @@ export interface AshtakavargaDirectionAnalysis {
   >;
 }
 
+export interface DirectionalPlotRanking {
+  direction: "East" | "South" | "West" | "North";
+  sanskritName: string;
+  hindiName: string;
+  houses: [number, number, number];
+  trikonaName: string;
+  element: string;
+  bindus: number;
+  percentage: number;
+  rank: number;
+  status: "Highly Auspicious" | "Favorable" | "Moderate" | "Avoid";
+  plotVerdict: string;
+  vastuGuidelines: string[];
+}
+
+export interface LagnaPlotPurchaseAnalysis {
+  bestDirection: "East" | "South" | "West" | "North";
+  bestBindus: number;
+  totalLagnaBindus: number; // 49
+  percentage: number;
+  sanskritName: string;
+  hindiName: string;
+  element: string;
+  trikonaName: string;
+  rashiNames: string[];
+  houseNumbers: [number, number, number];
+  plotPurchaseRecommendation: string;
+  directionalRankings: DirectionalPlotRanking[];
+}
+
 export interface AshtakavargaResult {
   sarvaRashiBindus: number[]; // 12 signs (0=Aries, 11=Pisces)
   sarvaHouseBindus: number[]; // 12 houses (0=1st House, 11=12th House)
@@ -166,6 +206,7 @@ export interface AshtakavargaResult {
   bav: Record<string, GrahaBAVDetail>;
   lagnaRashiIndex: number;
   directionalAnalysis: AshtakavargaDirectionAnalysis;
+  lagnaPlotPurchase: LagnaPlotPurchaseAnalysis;
 }
 
 const PLANET_PURPOSES: Record<string, string> = {
@@ -176,6 +217,7 @@ const PLANET_PURPOSES: Record<string, string> = {
   Jupiter: "Spiritual pilgrimage, Wealth accumulation, Guru blessings, Temple worship, Financial investments",
   Venus: "Marriage, Purchasing vehicles/luxury, Artistic creation, Romantic harmony",
   Saturn: "Long-term factories, Labor, Mining, Deep spiritual discipline, Property foundation",
+  Lagna: "Plot & Land Purchase Direction (वास्तु भूमि क्रय दिशा), Bodily vitality, General physical orientation, Health & Longevity",
 };
 
 export function calculateAshtakavarga(ephemeris: EphemerisResult): AshtakavargaResult {
@@ -204,13 +246,20 @@ export function calculateAshtakavarga(ephemeris: EphemerisResult): AshtakavargaR
     { id: "Saturn", name: "Saturn", sanskrit: "Shani", symbol: "♄", color: "#5C6BC0" },
   ];
 
+  const allEntities = [
+    ...classicalPlanets,
+    { id: "Lagna", name: "Lagna (Ascendant)", sanskrit: "Lagna", symbol: "Asc", color: "#10b981" },
+  ];
+
   const bavResults: Record<string, GrahaBAVDetail> = {};
   const sarvaRashiBindus = new Array(12).fill(0);
   const sarvaHouseBindus = new Array(12).fill(0);
   let totalSAV = 0;
 
-  for (const cp of classicalPlanets) {
+  for (const cp of allEntities) {
     const rules = BAV_RULES[cp.id];
+    if (!rules) continue;
+
     const rashiBindus = new Array(12).fill(0);
     const matrix: Record<string, number[]> = {
       sun: new Array(12).fill(0),
@@ -241,16 +290,20 @@ export function calculateAshtakavarga(ephemeris: EphemerisResult): AshtakavargaR
     for (let h = 0; h < 12; h++) {
       const signIdx = (lagnaRashiIndex + h) % 12;
       houseBindus[h] = rashiBindus[signIdx];
-      sarvaHouseBindus[h] += rashiBindus[signIdx];
+      // Only 7 classical planets accumulate into 337-Bindu Sarvashtakavarga (SAV)
+      if (cp.id !== "Lagna") {
+        sarvaHouseBindus[h] += rashiBindus[signIdx];
+      }
     }
 
-    for (let s = 0; s < 12; s++) {
-      sarvaRashiBindus[s] += rashiBindus[s];
+    if (cp.id !== "Lagna") {
+      for (let s = 0; s < 12; s++) {
+        sarvaRashiBindus[s] += rashiBindus[s];
+      }
+      totalSAV += totalBindus;
     }
 
-    totalSAV += totalBindus;
-
-    // Calculate Directional Strengths for this Graha
+    // Calculate Directional Strengths for this Graha / Lagna
     // East: Houses 1, 5, 9 (indices 0, 4, 8)
     // South: Houses 2, 6, 10 (indices 1, 5, 9)
     // West: Houses 3, 7, 11 (indices 2, 6, 10)
@@ -368,12 +421,13 @@ export function calculateAshtakavarga(ephemeris: EphemerisResult): AshtakavargaR
   const bestDirection = sortedDirections[0];
 
   const planetDirections: AshtakavargaDirectionAnalysis["planetDirections"] = {};
-  for (const cp of classicalPlanets) {
+  for (const cp of allEntities) {
     const b = bavResults[cp.id];
+    if (!b) continue;
     planetDirections[cp.id] = {
       planetId: cp.id,
       planetName: cp.name,
-      sanskritName: cp.sanskrit,
+      sanskritName: cp.sanskritName,
       symbol: cp.symbol,
       color: cp.color,
       east: b.directional.east,
@@ -398,6 +452,125 @@ export function calculateAshtakavarga(ephemeris: EphemerisResult): AshtakavargaR
     planetDirections,
   };
 
+  // 🏡 Ascendant (Lagna) Bhinnashtakavarga Directional Plot / Land Purchase Analysis
+  const lagnaBav = bavResults["Lagna"];
+  const lagnaEast = lagnaBav ? lagnaBav.directional.east : 0;
+  const lagnaSouth = lagnaBav ? lagnaBav.directional.south : 0;
+  const lagnaWest = lagnaBav ? lagnaBav.directional.west : 0;
+  const lagnaNorth = lagnaBav ? lagnaBav.directional.north : 0;
+
+  const rawPlotDirections = [
+    {
+      direction: "East" as const,
+      sanskritName: "Purva (पूर्व)",
+      hindiName: "पूर्व दिशा",
+      houses: [1, 5, 9] as [number, number, number],
+      trikonaName: "Dharma Trikona (धर्म त्रिकोण)",
+      element: "Fire (Agni / अग्नि)",
+      bindus: lagnaEast,
+      percentage: Math.round((lagnaEast / 49) * 100),
+      vastuGuidelines: [
+        "Ideal for residential plots with slope descending towards East or North-East (Ishanya).",
+        "Plot entrance facing East brings Surya's blessings, robust physical health, societal dignity, and lineage vitality.",
+        "Ensure maximum open space in East and minimal heavy obstruction along the eastern boundary.",
+      ],
+    },
+    {
+      direction: "South" as const,
+      sanskritName: "Dakshina (दक्षिण)",
+      hindiName: "दक्षिण दिशा",
+      houses: [2, 6, 10] as [number, number, number],
+      trikonaName: "Artha Trikona (अर्थ त्रिकोण)",
+      element: "Earth (Prithvi / पृथ्वी)",
+      bindus: lagnaSouth,
+      percentage: Math.round((lagnaSouth / 49) * 100),
+      vastuGuidelines: [
+        "Optimal for commercial plots, industrial real estate, corporate offices, or wealth-generating assets.",
+        "Ensure the southern perimeter is elevated, heavy, and solid to ground and preserve financial gains.",
+        "Avoid low-lying or declining slopes towards South; combine with North-facing interior entrance.",
+      ],
+    },
+    {
+      direction: "West" as const,
+      sanskritName: "Pashchima (पश्चिम)",
+      hindiName: "पश्चिम दिशा",
+      houses: [3, 7, 11] as [number, number, number],
+      trikonaName: "Kama Trikona (काम त्रिकोण)",
+      element: "Air (Vayu / वायु)",
+      bindus: lagnaWest,
+      percentage: Math.round((lagnaWest / 49) * 100),
+      vastuGuidelines: [
+        "Highly lucrative for trading centers, retail complexes, rental commercial lands, and partnership hubs.",
+        "Elevated western boundary with heavy perimeter planting safeguards steady profit inflows.",
+        "Facilitates public networking, large client footfall, and fulfillment of material ambitions.",
+      ],
+    },
+    {
+      direction: "North" as const,
+      sanskritName: "Uttara (उत्तर)",
+      hindiName: "उत्तर दिशा",
+      houses: [4, 8, 12] as [number, number, number],
+      trikonaName: "Moksha Trikona (मोक्ष त्रिकोण)",
+      element: "Water (Jala / जल)",
+      bindus: lagnaNorth,
+      percentage: Math.round((lagnaNorth / 49) * 100),
+      vastuGuidelines: [
+        "Supreme direction for tranquil family homes, ancestral sanctums, and perpetual wealth (Kubera Sthana).",
+        "Keep the northern and north-eastern boundary wide, open, and cleanly graded with underground water reserves.",
+        "Bestows mental tranquility, high intellectual accomplishments, domestic bliss, and financial liquidity.",
+      ],
+    },
+  ];
+
+  // Sort descending by bindus to determine rankings
+  const sortedPlotDirections = [...rawPlotDirections].sort((a, b) => b.bindus - a.bindus);
+  const bestPlotDir = sortedPlotDirections[0];
+
+  const directionalRankings: DirectionalPlotRanking[] = sortedPlotDirections.map((d, index) => {
+    const rank = index + 1;
+    let status: "Highly Auspicious" | "Favorable" | "Moderate" | "Avoid";
+    let plotVerdict: string;
+
+    if (rank === 1) {
+      status = "Highly Auspicious";
+      plotVerdict = `Primary & Most Auspicious Direction: Highest bindu concentration (${d.bindus} Bindus / ${d.percentage}%) in Lagna BAV guarantees maximum physical vitality, wealth retention, and structural harmony. Recommended prime sector to purchase land, plots, or construct residences.`;
+    } else if (rank === 2) {
+      status = "Favorable";
+      plotVerdict = `Secondary Favorable Direction: Strong supporting bindu score (${d.bindus} Bindus) suitable for secondary investments, rental estates, or business infrastructure.`;
+    } else if (rank === 3) {
+      status = "Moderate";
+      plotVerdict = `Neutral Direction (${d.bindus} Bindus): Requires Vastu balancing and specific entryway alignment before finalizing plot purchase.`;
+    } else {
+      status = "Avoid";
+      plotVerdict = `Least Supported Direction: Lowest bindu score (${d.bindus} Bindus) in Ascendant BAV. Exercise caution or avoid purchasing major residential plots in this direction without expert Vastu rectifications.`;
+    }
+
+    return {
+      ...d,
+      rank,
+      status,
+      plotVerdict,
+    };
+  });
+
+  const bestRashiIndices = bestPlotDir.houses.map((h) => (lagnaRashiIndex + h - 1) % 12);
+  const rashiNames = bestRashiIndices.map((idx) => RASHIS[idx].sanskritName);
+
+  const lagnaPlotPurchase: LagnaPlotPurchaseAnalysis = {
+    bestDirection: bestPlotDir.direction,
+    bestBindus: bestPlotDir.bindus,
+    totalLagnaBindus: 49,
+    percentage: bestPlotDir.percentage,
+    sanskritName: bestPlotDir.sanskritName,
+    hindiName: bestPlotDir.hindiName,
+    element: bestPlotDir.element,
+    trikonaName: bestPlotDir.trikonaName,
+    rashiNames,
+    houseNumbers: bestPlotDir.houses,
+    plotPurchaseRecommendation: `As per classical Parashari Ashtakavarga and Vastu Shastra principles, your Ascendant (Lagna) Bhinnashtakavarga concentrates its highest directional strength in the ${bestPlotDir.direction} (${bestPlotDir.sanskritName}) with ${bestPlotDir.bindus} Bindus (${bestPlotDir.percentage}%). Purchasing a plot or land in the ${bestPlotDir.direction} sector (relative to your birthplace or city center) provides the strongest karmic alignment for physical vitality, wealth accumulation, and architectural peace.`,
+    directionalRankings,
+  };
+
   return {
     sarvaRashiBindus,
     sarvaHouseBindus,
@@ -405,5 +578,6 @@ export function calculateAshtakavarga(ephemeris: EphemerisResult): AshtakavargaR
     bav: bavResults,
     lagnaRashiIndex,
     directionalAnalysis,
+    lagnaPlotPurchase,
   };
 }

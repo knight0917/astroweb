@@ -28,6 +28,7 @@ export default function AshtakavargaView() {
     { id: "Jupiter", name: "Guru (Jupiter)", symbol: "♃", color: "#FFD54F", total: 56 },
     { id: "Venus", name: "Shukra (Venus)", symbol: "♀", color: "#F06292", total: 52 },
     { id: "Saturn", name: "Shani (Saturn)", symbol: "♄", color: "#5C6BC0", total: 39 },
+    { id: "Lagna", name: "Lagna (Ascendant)", symbol: "Asc", color: "#10b981", total: 49 },
   ];
 
   // Active dataset
@@ -355,12 +356,26 @@ export default function AshtakavargaView() {
               {/* Best Direction Trophy Badge */}
               <div className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-amber-500/20 border border-amber-500/50 shadow-lg text-right">
                 <span className="text-[9px] uppercase font-bold text-amber-400 block tracking-wider">
-                  {activeDetail ? `🏆 ${activeDetail.sanskritName}'s Best Direction` : "🏆 Overall Best Direction (सर्वश्रेष्ठ दिशा)"}
+                  {selectedGraha === "Lagna"
+                    ? "🏡 Best Direction to Buy Plot / Land"
+                    : activeDetail
+                    ? `🏆 ${activeDetail.sanskritName}'s Best Direction`
+                    : "🏆 Overall Best Direction (सर्वश्रेष्ठ दिशा)"}
                 </span>
                 <span className="text-base font-extrabold text-amber-300 font-mono flex items-center justify-end gap-1.5">
-                  <span>{activeDetail ? activeDetail.directional.bestDirection : avResult.directionalAnalysis.overall.bestDirection.direction}</span>
+                  <span>
+                    {selectedGraha === "Lagna"
+                      ? `${avResult.lagnaPlotPurchase.bestDirection} (${avResult.lagnaPlotPurchase.sanskritName.split(" ")[0]})`
+                      : activeDetail
+                      ? activeDetail.directional.bestDirection
+                      : avResult.directionalAnalysis.overall.bestDirection.direction}
+                  </span>
                   <span className="text-xs px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-bold ml-1">
-                    {activeDetail ? activeDetail.directional.bestBindus : avResult.directionalAnalysis.overall.bestDirection.bindus} Bindus
+                    {selectedGraha === "Lagna"
+                      ? `${avResult.lagnaPlotPurchase.bestBindus} Bindus`
+                      : activeDetail
+                      ? `${activeDetail.directional.bestBindus} Bindus`
+                      : `${avResult.directionalAnalysis.overall.bestDirection.bindus} Bindus`}
                   </span>
                 </span>
               </div>
@@ -493,6 +508,98 @@ export default function AshtakavargaView() {
                 );
               })}
             </div>
+
+            {/* 🏡 Auspicious Plot & Land Purchase Direction (वास्तु भूमि क्रय श्रेष्ठ दिशा) */}
+            <div className="p-4 md:p-5 rounded-2xl border border-emerald-500/50 bg-gradient-to-r from-emerald-950/40 via-slate-950/80 to-amber-950/30 shadow-xl space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-500/30 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🏡</span>
+                  <div>
+                    <h4 className="font-extrabold text-sm md:text-base text-emerald-300 uppercase tracking-wide">
+                      Auspicious Plot & Land Purchase Direction (वास्तु भूमि / प्लॉट क्रय श्रेष्ठ दिशा)
+                    </h4>
+                    <p className="text-[11px] text-slate-300">
+                      Based on Ascendant (Lagna) Bhinnashtakavarga (49 Bindus) • Trikona directional telemetry
+                    </p>
+                  </div>
+                </div>
+
+                <div className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/50 text-right">
+                  <span className="text-[9px] uppercase font-bold text-emerald-400 block tracking-wider">
+                    Prime Plot Direction
+                  </span>
+                  <span className="text-base font-extrabold text-emerald-300 font-mono flex items-center justify-end gap-1.5">
+                    <span>{avResult.lagnaPlotPurchase.bestDirection} ({avResult.lagnaPlotPurchase.sanskritName.split(" ")[0]})</span>
+                    <span className="text-xs px-2 py-0.5 rounded bg-emerald-500 text-slate-950 font-bold ml-1">
+                      {avResult.lagnaPlotPurchase.bestBindus} Bindus
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Recommendation Callout */}
+              <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-200 leading-relaxed shadow-inner">
+                <span className="font-bold text-amber-300 block mb-1">
+                  ⭐ Classical Parashari & Vastu Recommendation:
+                </span>
+                {avResult.lagnaPlotPurchase.plotPurchaseRecommendation}
+              </div>
+
+              {/* 4 Direction Ranking Breakdown */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                {avResult.lagnaPlotPurchase.directionalRankings.map((rk) => (
+                  <div
+                    key={rk.direction}
+                    className={`p-3 rounded-xl border text-xs flex flex-col justify-between ${
+                      rk.rank === 1
+                        ? "bg-emerald-950/60 border-emerald-500/70 shadow-lg ring-1 ring-emerald-500/30"
+                        : rk.rank === 2
+                        ? "bg-amber-950/30 border-amber-500/40"
+                        : "bg-slate-900/60 border-slate-800"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-slate-100">
+                          {rk.direction} ({rk.sanskritName.split(" ")[0]})
+                        </span>
+                        <span
+                          className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                            rk.rank === 1
+                              ? "bg-emerald-500 text-slate-950"
+                              : rk.rank === 2
+                              ? "bg-amber-500 text-slate-950"
+                              : "bg-slate-800 text-slate-400"
+                          }`}
+                        >
+                          Rank #{rk.rank} • {rk.status}
+                        </span>
+                      </div>
+
+                      <div className="mt-1.5 flex items-baseline justify-between font-mono">
+                        <span className="text-lg font-bold text-slate-100">{rk.bindus} Bindus</span>
+                        <span className="text-[11px] text-amber-300 font-bold">{rk.percentage}%</span>
+                      </div>
+
+                      <p className="mt-1.5 text-[10.5px] text-slate-300 leading-snug">
+                        {rk.plotVerdict}
+                      </p>
+                    </div>
+
+                    {rk.rank === 1 && rk.vastuGuidelines.length > 0 && (
+                      <div className="mt-2.5 pt-2 border-t border-emerald-500/30 text-[9.5px] text-emerald-200/90 space-y-1">
+                        <span className="font-bold text-emerald-400 block">Vastu Guidelines:</span>
+                        <ul className="list-disc list-inside space-y-0.5">
+                          {rk.vastuGuidelines.map((g, gi) => (
+                            <li key={gi}>{g}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Detailed 8-Contributor Benefic Matrix (For Selected Graha or Full SAV Table) */}
@@ -500,7 +607,7 @@ export default function AshtakavargaView() {
             <div className="flex items-center justify-between">
               <h3 className="font-extrabold text-sm text-slate-100 uppercase tracking-wider">
                 {selectedGraha === "SAV"
-                  ? "7-Graha Sarvashtakavarga Master Matrix"
+                  ? "7-Graha Sarvashtakavarga Master Matrix + Lagna BAV"
                   : `Contributor Matrix for ${activeDetail?.sanskritName} (${activeDetail?.totalBindus} Bindus)`}
               </h3>
             </div>
@@ -511,7 +618,7 @@ export default function AshtakavargaView() {
                 <table className="w-full text-left text-xs border-collapse font-mono">
                   <thead>
                     <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/80">
-                      <th className="p-2 font-bold">Graha</th>
+                      <th className="p-2 font-bold">Graha / Lagna</th>
                       {RASHIS.map((r) => (
                         <th key={r.index} className="p-2 text-center">
                           {r.symbol} {r.sanskritName.slice(0, 3)}
@@ -521,25 +628,27 @@ export default function AshtakavargaView() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
-                    {Object.values(avResult.bav).map((bav) => (
-                      <tr key={bav.planetId} className="hover:bg-slate-900/50">
-                        <td className="p-2 font-bold flex items-center gap-1.5" style={{ color: bav.color }}>
-                          <span>{bav.symbol}</span>
-                          <span>{bav.sanskritName}</span>
-                        </td>
-                        {bav.rashiBindus.map((pts, idx) => (
-                          <td key={idx} className="p-2 text-center text-slate-200">
-                            {pts}
+                    {Object.values(avResult.bav)
+                      .filter((b) => b.planetId !== "Lagna")
+                      .map((bav) => (
+                        <tr key={bav.planetId} className="hover:bg-slate-900/50">
+                          <td className="p-2 font-bold flex items-center gap-1.5" style={{ color: bav.color }}>
+                            <span>{bav.symbol}</span>
+                            <span>{bav.sanskritName}</span>
                           </td>
-                        ))}
-                        <td className="p-2 text-right font-bold text-amber-300">
-                          {bav.totalBindus}
-                        </td>
-                      </tr>
-                    ))}
-                    {/* Grand Total SAV Row */}
+                          {bav.rashiBindus.map((pts, idx) => (
+                            <td key={idx} className="p-2 text-center text-slate-200">
+                              {pts}
+                            </td>
+                          ))}
+                          <td className="p-2 text-right font-bold text-amber-300">
+                            {bav.totalBindus}
+                          </td>
+                        </tr>
+                      ))}
+                    {/* Grand Total SAV Row (Strict 337 Parashari standard) */}
                     <tr className="border-t-2 border-amber-500/50 bg-amber-500/10 font-extrabold">
-                      <td className="p-2 text-amber-400">SAV Total</td>
+                      <td className="p-2 text-amber-400">SAV Total (7 Grahas)</td>
                       {avResult.sarvaRashiBindus.map((pts, idx) => (
                         <td
                           key={idx}
@@ -554,6 +663,23 @@ export default function AshtakavargaView() {
                         337
                       </td>
                     </tr>
+                    {/* Dedicated Lagna BAV Row (49 Bindus for Vitality & Plot Purchase) */}
+                    {avResult.bav["Lagna"] && (
+                      <tr className="border-t border-emerald-500/40 bg-emerald-950/20 font-bold">
+                        <td className="p-2 text-emerald-400 flex items-center gap-1.5">
+                          <span>Asc</span>
+                          <span>Lagna BAV (Ascendant)</span>
+                        </td>
+                        {avResult.bav["Lagna"].rashiBindus.map((pts, idx) => (
+                          <td key={idx} className="p-2 text-center text-emerald-300 font-extrabold">
+                            {pts}
+                          </td>
+                        ))}
+                        <td className="p-2 text-right text-emerald-400 font-extrabold">
+                          49
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               ) : activeDetail ? (

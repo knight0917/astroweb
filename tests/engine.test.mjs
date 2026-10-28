@@ -9578,3 +9578,62 @@ test("Phase 61: Cloud Email Vault HMAC Auth Handshake & 15-Day Empty Account Aut
   assert.strictEqual(knightChart.time, "18:29");
   assert.ok(knightChart.location.cityName.includes("Allahabad") || knightChart.location.cityName.includes("Prayagraj"));
 });
+
+test("Subtest 154: Classical Ascendant (Lagna) Bhinnashtakavarga (49 Bindus) & Directional Plot Purchase Telemetry", async () => {
+  const { calculateAshtakavarga, BAV_RULES } = await import("../src/engine/ashtakavarga.ts");
+  const date = new Date("1999-09-17T18:29:00Z");
+  const city = POPULAR_CITIES[0];
+  const ephem = calculateVedicEphemeris(date, city, "Lahiri", "WholeSign", "Mean");
+
+  const av = calculateAshtakavarga(ephem);
+
+  // 1. Verify Lagna BAV Rules exist and sum to 49
+  assert.ok(BAV_RULES.Lagna, "BAV_RULES must include Lagna");
+  const lagnaRuleSum = Object.values(BAV_RULES.Lagna).reduce((acc, offsets) => acc + offsets.length, 0);
+  assert.strictEqual(lagnaRuleSum, 49, `Lagna BAV rules must sum to 49 bindus, got ${lagnaRuleSum}`);
+
+  // 2. Verify Lagna BAV Details in result
+  assert.ok(av.bav["Lagna"], "av.bav must contain Lagna");
+  const lagnaBav = av.bav["Lagna"];
+  assert.strictEqual(lagnaBav.totalBindus, 49, `Lagna totalBindus must be 49, got ${lagnaBav.totalBindus}`);
+  assert.strictEqual(lagnaBav.rashiBindus.length, 12);
+  assert.strictEqual(lagnaBav.houseBindus.length, 12);
+
+  const rashiSum = lagnaBav.rashiBindus.reduce((a, b) => a + b, 0);
+  assert.strictEqual(rashiSum, 49, `Lagna sum across 12 signs must equal 49, got ${rashiSum}`);
+
+  const houseSum = lagnaBav.houseBindus.reduce((a, b) => a + b, 0);
+  assert.strictEqual(houseSum, 49, `Lagna sum across 12 houses must equal 49, got ${houseSum}`);
+
+  // 3. Directional math verification for Lagna
+  const dir = lagnaBav.directional;
+  const dirSum = dir.east + dir.south + dir.west + dir.north;
+  assert.strictEqual(dirSum, 49, `Lagna directional sum (East+South+West+North) must equal 49, got ${dirSum}`);
+  assert.ok(["East", "South", "West", "North"].includes(dir.bestDirection));
+  assert.ok(dir.bestBindus > 0);
+
+  // 4. Verify 337 SAV invariant is NOT contaminated
+  assert.strictEqual(av.totalSAV, 337, `SAV total must remain strictly 337, got ${av.totalSAV}`);
+  const savSum = av.sarvaHouseBindus.reduce((a, b) => a + b, 0);
+  assert.strictEqual(savSum, 337, `SAV house sum must remain strictly 337, got ${savSum}`);
+
+  // 5. Verify Lagna Plot Purchase Recommendation Engine
+  assert.ok(av.lagnaPlotPurchase, "av.lagnaPlotPurchase must be defined");
+  const plot = av.lagnaPlotPurchase;
+  assert.ok(["East", "South", "West", "North"].includes(plot.bestDirection));
+  assert.strictEqual(plot.totalLagnaBindus, 49);
+  assert.strictEqual(plot.bestBindus, dir.bestBindus);
+  assert.ok(plot.percentage > 0);
+  assert.ok(plot.rashiNames.length === 3);
+  assert.ok(plot.plotPurchaseRecommendation.includes(plot.bestDirection));
+  assert.strictEqual(plot.directionalRankings.length, 4);
+
+  // Rankings must be sorted descending by bindus
+  for (let i = 0; i < 3; i++) {
+    assert.ok(plot.directionalRankings[i].bindus >= plot.directionalRankings[i + 1].bindus);
+    assert.strictEqual(plot.directionalRankings[i].rank, i + 1);
+  }
+  assert.strictEqual(plot.directionalRankings[0].status, "Highly Auspicious");
+  assert.ok(plot.directionalRankings[0].vastuGuidelines.length > 0);
+});
+
