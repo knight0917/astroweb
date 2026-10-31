@@ -112,6 +112,11 @@ const AdhanaKundliView = dynamic(() => import("../components/AdhanaKundliView"),
   loading: () => <ModuleLoadingSkeleton title="Adhana Kundali & Foetal Gestation Engine" />,
 });
 
+const PreMarketTradingView = dynamic(() => import("../components/PreMarketTradingView"), {
+  ssr: false,
+  loading: () => <ModuleLoadingSkeleton title="Pre-Market Trading Terminal (Rome CET / Gold XAU)" />,
+});
+
 const ReviewSection = dynamic(() => import("../components/ReviewSection"), {
   ssr: false,
   loading: () => <ModuleLoadingSkeleton title="Community Reviews & Feedback" />,
@@ -170,6 +175,12 @@ export default function HomePage() {
         {viewMode === "gochar" && (
           <div className="w-full">
             <GocharView />
+          </div>
+        )}
+
+        {viewMode === "pre-market" && (
+          <div className="w-full">
+            <PreMarketTradingView />
           </div>
         )}
 

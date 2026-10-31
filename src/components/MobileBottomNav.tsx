@@ -64,6 +64,7 @@ export default function MobileBottomNav() {
   ];
 
   const MORE_MODULES: { mode: ViewMode; label: string; desc: string }[] = [
+    { mode: "pre-market", label: "Pre-Market Trading", desc: "Rome CET Daily Macro & Horas (Gold XAU)" },
     { mode: "prashna", label: "Tajik Prashna", desc: "16 Tajika Yogas & Horary Yes/No" },
     { mode: "adhana", label: "Adhana Kundali", desc: "Conception Epoch, 10-Month Timeline & Garbha Raksha" },
     { mode: "muhurta", label: "Muhurta Finder", desc: "Abhijit, Brahma & Event Muhurtas" },

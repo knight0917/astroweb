@@ -240,6 +240,17 @@ export default function HeaderNav() {
       ],
     },
     {
+      category: "Financial Astromancy & Trading",
+      items: [
+        {
+          mode: "pre-market",
+          label: "Pre-Market Trading Terminal",
+          desc: "Rome CET/CEST Daily Macro, 24h Dina/Ratri Horas & M15 Microstructure Playbook",
+          badge: "Gold XAU",
+        },
+      ],
+    },
+    {
       category: "Classical Strengths & Analysis",
       items: [
         {

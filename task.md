@@ -1717,3 +1717,8 @@
 - [x] **Phase 63.4: Automated Engine Verification (`tests/engine.test.mjs`)**
   - [x] Add Subtest 155 verifying Rome timezone transitions, hora assignments, and morning brief generation.
   - [x] Verify `npx tsc --noEmit` and production build integrity (all 155 tests pass).
+
+- [x] **Phase 63.5: Web App UI Integration & Vercel Cloud Deployment**
+  - [x] Create interactive React component src/components/PreMarketTradingView.tsx with date picker, quick presets, D1 Macro, H1 24h table, and M15 micro cards.
+  - [x] Integrate module into src/store/useAstroStore.ts, src/components/HeaderNav.tsx, src/app/page.tsx, and src/components/MobileBottomNav.tsx.
+  - [x] Deploy to GitHub remote origin/main to trigger live production Vercel rebuild for stroweb-swart.vercel.app.

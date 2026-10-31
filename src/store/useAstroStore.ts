@@ -13,6 +13,7 @@ import { resolveInitialLiveLocation, detectLiveBrowserLocation } from "../engine
 export type ViewMode =
   | "3d"
   | "kundli-north"
+  | "pre-market"
   | "dasha"
   | "gochar"
   | "choghadiya"
