@@ -427,7 +427,7 @@ export function calculateAshtakavarga(ephemeris: EphemerisResult): AshtakavargaR
     planetDirections[cp.id] = {
       planetId: cp.id,
       planetName: cp.name,
-      sanskritName: cp.sanskritName,
+      sanskritName: (cp as any).sanskrit || (cp as any).sanskritName || cp.name,
       symbol: cp.symbol,
       color: cp.color,
       east: b.directional.east,

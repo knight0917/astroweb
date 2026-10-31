@@ -10,6 +10,7 @@ import {
   decomposeNameVarnaPhonetics,
 } from "../src/engine/lunarAstroNameEnergy.ts";
 import { calculatePlanetaryMaturationTimeline } from "../src/engine/planetaryAgeActivation.ts";
+import { generateMorningTradingBriefing } from "../src/engine/morningTradingBriefing.ts";
 
 test("Ayanamsha Calculation - Lahiri J2000 Epoch", () => {
   // JD 2451545.0 is 2000-01-01 12:00:00 UTC
@@ -9635,5 +9636,46 @@ test("Subtest 154: Classical Ascendant (Lagna) Bhinnashtakavarga (49 Bindus) & D
   }
   assert.strictEqual(plot.directionalRankings[0].status, "Highly Auspicious");
   assert.ok(plot.directionalRankings[0].vastuGuidelines.length > 0);
+});
+
+test("Subtest 155: Italian Morning Pre-Market Trading Terminal & Multi-Timeframe Ephemeris (Rome CET/CEST)", () => {
+  // Test Oct 29, 2026
+  const brief = generateMorningTradingBriefing(2026, 10, 29);
+  assert.strictEqual(brief.targetDateStr, "2026-10-29");
+  assert.strictEqual(brief.romeTimezone, "CET");
+  assert.strictEqual(brief.timezoneOffsetHours, 1);
+  assert.strictEqual(brief.panchanga.vara, "Guruvara");
+  assert.strictEqual(brief.panchanga.varaLord, "Jupiter");
+  assert.strictEqual(brief.panchanga.tithi, "Chaturthi");
+  assert.strictEqual(brief.panchanga.nakshatra, "Mrigashira");
+
+  // Verify astronomical day/night split and horas
+  assert.ok(brief.astronomical.sunriseRome.includes("CET"));
+  assert.ok(brief.astronomical.sunsetRome.includes("CET"));
+  assert.ok(brief.astronomical.dayDurationHours > 10 && brief.astronomical.dayDurationHours < 11);
+  assert.ok(brief.astronomical.dinaHoraDurationMins > 50 && brief.astronomical.dinaHoraDurationMins < 55);
+
+  // Verify 24 hourly bars
+  assert.strictEqual(brief.hourlyRoadmapH1.length, 24);
+  const h19 = brief.hourlyRoadmapH1[19];
+  assert.strictEqual(h19.romeTime, "19:00 CET");
+  assert.strictEqual(h19.vedicHora, "Saturn");
+  assert.strictEqual(h19.isKeyTurningPoint, true);
+
+  const h20 = brief.hourlyRoadmapH1[20];
+  assert.strictEqual(h20.romeTime, "20:00 CET");
+  assert.strictEqual(h20.vedicHora, "Jupiter");
+
+  // Verify Risk Gates & Overrides
+  assert.strictEqual(brief.alerts.gandantaAlert, true);
+  assert.ok(brief.alerts.gandantaDescription?.includes("Cancer"));
+  assert.strictEqual(brief.alerts.dwiNeechaAlert, true);
+  assert.strictEqual(brief.alerts.combustionAlert, true);
+
+  // Verify M15 Microstructure
+  assert.ok(brief.microstructureM15.q1ImpulseStrategy.includes("Q1"));
+  assert.ok(brief.microstructureM15.q2RetracementRule.includes("Q2"));
+  assert.ok(brief.microstructureM15.q3ExpansionTarget.includes("Q3"));
+  assert.ok(brief.microstructureM15.q4DragDefense.includes("Q4"));
 });
 

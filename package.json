@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "tsx --test tests/engine.test.mjs",
+    "morning-brief": "tsx scripts/morningTradingBriefing.ts",
     "eval:chat": "tsx scripts/evaluateChatbotResponses.mjs"
   },
   "dependencies": {

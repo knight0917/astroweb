@@ -1690,3 +1690,30 @@
 
 
 
+
+
+---
+
+# Phase 63: Italian Morning Pre-Market Trading Terminal & Multi-Timeframe Ephemeris Engine (Rome CET/CEST)
+
+## Status: Complete & Verified (All 155 Tests Passing & 0 TS Errors)
+- **Trigger Keywords**: `morning-trading-brief`, `rome-market-terminal`, `multi-timeframe-trading`, `dina-ratri-horas`, `q1-q4-microstructure`, `italian-timeframe-forecast`
+- **Scope**: Build an automated pre-market trading briefing engine and CLI calibrated to Rome, Italy (CET/CEST) that computes Daily Macro Regime, 24-hour H1 session roadmap, and M15 quarterly microstructure execution guides for any active trading morning.
+
+## Phases & Milestones
+
+- [x] **Phase 63.1: Core Morning Briefing Calculation Engine (`src/engine/morningTradingBriefing.ts`)**
+  - [x] Implement automatic Rome daylight saving detection (CET UTC+1 vs CEST UTC+2).
+  - [x] Implement exact astronomical sunrise/sunset calculations for Rome to derive Dina and Ratri hora lengths.
+  - [x] Compute Daily Macro Regime (Vaar, Tithi, Nakshatra, Yoga, Karana, Combustions, Gandanta alerts, Directional Bias, Expected Range).
+  - [x] Compute 24-Hour H1 Timeline (Vedic Horas, Clock Horas, Rome Sidereal Lagna, Kakshya Lords, Actionable Regime).
+  - [x] Compute M15 Microstructure Quarterly Drift (Q1 impulse leader, Q2 pullback, Q3 expansion, Q4 drag).
+- [x] **Phase 63.2: Standalone CLI & NPM Script Integration (`scripts/morningTradingBriefing.ts` & `package.json`)**
+  - [x] Build interactive CLI supporting `--date YYYY-MM-DD` and default to today's date in Rome.
+  - [x] Add `npm run morning-brief` script in `package.json`.
+  - [x] Output formatted terminal dashboard + markdown report saved to disk (`reports/morning_briefing_YYYY-MM-DD.md`).
+- [x] **Phase 63.3: Automation & Scheduled Notification Protocol**
+  - [x] Provide instructions and slash command `/schedule` to trigger daily morning delivery at 07:00 CET before European open.
+- [x] **Phase 63.4: Automated Engine Verification (`tests/engine.test.mjs`)**
+  - [x] Add Subtest 155 verifying Rome timezone transitions, hora assignments, and morning brief generation.
+  - [x] Verify `npx tsc --noEmit` and production build integrity (all 155 tests pass).
