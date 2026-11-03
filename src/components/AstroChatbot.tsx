@@ -48,6 +48,8 @@ import { generateMeenaKalapurushaDrishtiMasterReport } from "../engine/meenaKala
 import { generateUchhaNeechaAwarenessMasterReport } from "../engine/uchhaNeechaAwareness";
 import { generateRishiDrekkanaMasterReport } from "../engine/rishiDrekkanaAwareness";
 import { calculateAllLagnas } from "../engine/allLagnas";
+import { calculateAshtakavarga } from "../engine/ashtakavarga";
+import { arbitratePredictiveQuery, PredictiveArbitrationResult } from "../engine/predictiveArbitrator";
 import { EphemerisResult } from "../engine/types";
 import {
   loadClientMemoryVault,
@@ -65,6 +67,8 @@ interface Message {
   content: string;
   timestamp: Date;
   category?: string;
+  arbitration?: PredictiveArbitrationResult | null;
+  ragSources?: Array<{ title: string; source: string; category: string }>;
 }
 
 export interface DeepLinkItem {
@@ -108,6 +112,7 @@ export interface ParsedMessageData {
   timeline: EventHorizonPeriod[];
   upayaSadhana: UpayaSadhanaData | null;
   shastricConsensus: ShastricConsensusData | null;
+  hasPlotDirectionCard?: boolean;
 }
 
 export function switchDashboardTab(tabId: string) {
@@ -203,7 +208,21 @@ export function parseMessageContent(content: string): ParsedMessageData {
     };
   }
 
-  return { cleanedContent: cleaned, probabilityScore, chips, deeplinks, timeline, upayaSadhana, shastricConsensus };
+  const hasPlotDirectionCard =
+    cleaned.includes("[CARD:PLOT_DIRECTION]") ||
+    /Lagna BAV 4-Direction Plot|Best Direction to Buy Plot|सर्वश्रेष्ठ प्लॉट\/भूमि क्रय दिशा/i.test(cleaned);
+  cleaned = cleaned.replace(/\[CARD:PLOT_DIRECTION\]/g, "").trim();
+
+  return {
+    cleanedContent: cleaned,
+    probabilityScore,
+    chips,
+    deeplinks,
+    timeline,
+    upayaSadhana,
+    shastricConsensus,
+    hasPlotDirectionCard,
+  };
 }
 
 export function buildPersonalizedWelcomeMessage(natalEphem?: EphemerisResult): string {
@@ -564,6 +583,11 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
     icon: "📐",
     description: "C.S. Patel Shodhya Pinda, Trikona reductions, and 8 Kakshyas micro-transits",
     prompts: [
+      {
+        icon: "💎",
+        title: "Best Plot & Land Direction (Lagna BAV)",
+        prompt: "Based on my Ascendant (Lagna) Bhinnashtakavarga (49 Bindus), which cardinal direction has the highest bindus for buying a plot, land, or home?",
+      },
       {
         icon: "💎",
         title: "Shodhya Pinda Karmic Vitality",
@@ -3168,6 +3192,49 @@ Whenever analyzing life domains, look at the house from the relevant Lagna: weal
 \`\`\``;
   }
 
+  // Interceptor 40: Ascendant (Lagna) Bhinnashtakavarga (49 Bindus) & Directional Plot / Land Purchase Engine
+  if (
+    /\b(lagna bhinnashtakavarga|lagnashtakavarga|ascendant bhinnashtakavarga|lagna bav|49 bindus|buy a plot|buy plot|buy land|plot direction|land direction|direction to buy plot|which direction.*plot|which direction.*land|which direction.*house|plot purchase)\b/i.test(q)
+  ) {
+    const av = calculateAshtakavarga(natalEphem);
+    const lpp = av.lagnaPlotPurchase;
+    const lagnaBav = av.bav.Lagna;
+    if (lpp && lagnaBav) {
+      const dirLines = lpp.directionalRankings
+        .map(
+          (d, idx) =>
+            `${idx === 0 ? "👑 **#1 WINNING DIRECTION**" : `**#${idx + 1}**`} **${d.direction} (${d.sanskritName} / ${d.hindiName})** — **${d.bindus} Bindus** (${d.percentage}% • Element: ${d.element} • Houses ${d.houses.join("-")} • Status: **${d.status}**)`
+        )
+        .join("\n- ");
+
+      return `### 🏡 **Ascendant (Lagna) Bhinnashtakavarga (49 Bindus) & Auspicious Plot / Land Purchase Direction**
+
+> **Classical Parashari & Vastu Sutra (BPHS Ch. 66):** The Ascendant (Lagna) Bhinnashtakavarga distributes exactly **49 benefic rekhas (bindus)** from the 7 classical planets and the Lagna. Grouping the 12 signs by their elemental Digbala triplicities reveals the exact cardinal direction holding the highest terrestrial prosperity (*Bhumi Labha*) for buying a plot, land, or home.
+
+#### 🧭 **4-Direction Lagna BAV Bindu Ranking (Out of 49 Total Bindus):**
+- ${dirLines}
+
+#### 🏆 **Primary Plot & Land Purchase Verdict:**
+- **Recommended Direction:** **${lpp.bestDirection} (${lpp.sanskritName} / ${lpp.hindiName})** with **${lpp.bestBindus} Bindus** (${lpp.percentage}%)
+- **Strongest Rashi Sector:** **${lpp.rashiNames.join(", ")}** (Houses ${lpp.houseNumbers.join(", ")})
+- **Analysis:** ${lpp.plotPurchaseRecommendation}
+- **Vastu & Bhumi Pujan Guidance:** ${lpp.directionalRankings[0]?.vastuGuidelines.join(" • ") || ""}
+
+[CARD:PLOT_DIRECTION]
+
+*⚡ Instant Classical Computation (0ms)*
+
+\`\`\`chips
+[{"id":"chip-plot-1","label":"🏛️ 4th House & D-4 Property Timing","prompt":"When is the most auspicious Dasha and transit window for me to buy a house, land, or vehicle based on my 4th house and Mars?"},{"id":"chip-plot-2","label":"🧭 Vastu Entrance & Purusha Grid","prompt":"Which main entrance direction and room placements are best for my home according to my Vastu Shastra and Jaimini Arudha dossier?"},{"id":"chip-plot-3","label":"📊 Full SAV 337 Bindu Matrix","prompt":"How do my Sarvashtakavarga (SAV) bindus in the 4th, 10th, and 11th houses support wealth and real estate gains?"}]
+\`\`\``;
+    }
+  }
+  if (false) {
+    return `\`\`\`chips
+[]
+\`\`\``;
+  }
+
   return null;
 }
 
@@ -4446,6 +4513,260 @@ export function ShastricConsensusBadge({
   );
 }
 
+export function NeuroSymbolicArbitrationCard({
+  arbitration,
+  ragSources,
+}: {
+  arbitration: PredictiveArbitrationResult;
+  ragSources?: Array<{ title: string; source: string; category: string }>;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const gateList = [
+    arbitration.gates.d1FoundationalSeed,
+    arbitration.gates.d9NavamshaFruit,
+    arbitration.gates.dashaTemporalPermission,
+    arbitration.gates.doubleTransitSanction,
+    arbitration.gates.ashtakavargaPotency,
+    arbitration.gates.afflictionNeutralization,
+  ];
+  const scoreColor =
+    arbitration.compositeScore >= 72
+      ? "text-emerald-300 border-emerald-500/40 bg-emerald-950/40"
+      : arbitration.compositeScore >= 45
+      ? "text-amber-300 border-amber-500/40 bg-amber-950/40"
+      : "text-rose-300 border-rose-500/40 bg-rose-950/40";
+
+  return (
+    <div className="mb-3 rounded-2xl bg-slate-950/90 border border-slate-800/90 p-2.5 shadow-inner space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className={`px-2 py-0.5 rounded-lg border text-[10.5px] font-black ${scoreColor}`}>
+            ⚖️ {arbitration.compositeScore}% Shastric Verdict
+          </span>
+          <span className="text-[10.5px] font-bold text-slate-200 truncate max-w-[200px] sm:max-w-[280px]">
+            {arbitration.verdictTitle}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setExpanded((prev) => !prev)}
+          className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-[9.5px] font-bold text-amber-300 cursor-pointer transition-colors"
+        >
+          {expanded ? "Hide 6-Gate Proof ▲" : "View 6-Gate Proof ▼"}
+        </button>
+      </div>
+
+      {/* Mini 6-Gate Bar Preview */}
+      <div className="grid grid-cols-6 gap-1">
+        {gateList.map((g) => {
+          const pct = Math.round((g.score / g.maxScore) * 100);
+          return (
+            <div key={g.gateName} className="space-y-0.5" title={`${g.gateName}: ${g.score}/${g.maxScore} — ${g.classicalRationale}`}>
+              <div className="h-1.5 w-full rounded-full bg-slate-900 overflow-hidden border border-slate-800">
+                <div
+                  className={`h-full ${
+                    g.status === "PASSED"
+                      ? "bg-emerald-400"
+                      : g.status === "PARTIAL"
+                      ? "bg-amber-400"
+                      : "bg-rose-400"
+                  }`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <div className="text-[8px] font-mono text-slate-400 text-center truncate">
+                {g.gateName.split(" ")[0]} {g.score}/{g.maxScore}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {expanded && (
+        <div className="pt-2 border-t border-slate-800/80 space-y-1.5 text-[10px]">
+          {gateList.map((g) => (
+            <div key={g.gateName} className="p-1.5 rounded-xl bg-slate-900/70 border border-slate-800/60 flex flex-col gap-0.5">
+              <div className="flex items-center justify-between font-bold">
+                <span className="text-slate-200">{g.gateName}</span>
+                <span
+                  className={
+                    g.status === "PASSED"
+                      ? "text-emerald-400"
+                      : g.status === "PARTIAL"
+                      ? "text-amber-400"
+                      : "text-rose-400"
+                  }
+                >
+                  {g.score}/{g.maxScore} ({g.status})
+                </span>
+              </div>
+              <span className="text-slate-400 leading-snug">{g.classicalRationale}</span>
+            </div>
+          ))}
+          {ragSources && ragSources.length > 0 && (
+            <div className="pt-1 flex flex-wrap items-center gap-1">
+              <span className="text-[9px] font-bold text-cyan-400 uppercase">📜 Grounded Shastras:</span>
+              {ragSources.map((s, idx) => (
+                <span
+                  key={`${s.title}-${idx}`}
+                  className="px-1.5 py-0.5 rounded-md bg-cyan-950/50 border border-cyan-500/30 text-[9px] text-cyan-200 font-medium"
+                >
+                  {s.source}: {s.title}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function LagnaPlotDirectionCard({ natalEphemeris }: { natalEphemeris?: EphemerisResult }) {
+  if (!natalEphemeris) return null;
+  const av = calculateAshtakavarga(natalEphemeris);
+  const lpp = av.lagnaPlotPurchase;
+  if (!lpp) return null;
+
+  return (
+    <div className="my-3 rounded-2xl bg-gradient-to-br from-emerald-950/50 via-slate-900 to-amber-950/30 border border-emerald-500/40 p-3 shadow-lg space-y-2.5">
+      <div className="flex items-center justify-between gap-2 border-b border-emerald-500/20 pb-2">
+        <div>
+          <div className="text-[10px] font-black uppercase tracking-wider text-emerald-400">
+            🏡 Lagna Bhinnashtakavarga (49 Bindus) • Land & Plot Compass
+          </div>
+          <div className="text-xs font-black text-slate-100 mt-0.5">
+            Best Direction: <span className="text-amber-300">{lpp.bestDirection} ({lpp.sanskritName} / {lpp.hindiName})</span> — {lpp.bestBindus} Bindus ({lpp.percentage}%)
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            useAstroStore.getState().setViewMode("ashtakavarga");
+          }}
+          className="px-2.5 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/50 text-emerald-200 text-[10px] font-bold cursor-pointer whitespace-nowrap"
+        >
+          Open BAV Grid →
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {lpp.directionalRankings.map((d) => {
+          const isBest = d.direction === lpp.bestDirection;
+          return (
+            <div
+              key={d.direction}
+              className={`p-2 rounded-xl border text-left transition-all ${
+                isBest
+                  ? "bg-emerald-950/80 border-amber-400/80 shadow-md shadow-amber-500/10"
+                  : "bg-slate-950/70 border-slate-800"
+              }`}
+            >
+              <div className="flex items-center justify-between text-[10px] font-bold">
+                <span className={isBest ? "text-amber-300" : "text-slate-300"}>
+                  {isBest ? "👑 " : ""}{d.direction}
+                </span>
+                <span className="font-mono text-emerald-400 font-black">{d.bindus} pts</span>
+              </div>
+              <div className="text-[9px] text-slate-400 mt-0.5">
+                {d.sanskritName} • Houses {d.houses.join("-")}
+              </div>
+              <div className="text-[9px] text-amber-200/90 font-semibold mt-1">
+                {d.percentage}% • {d.status}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function formatInlineMarkdown(line: string): React.ReactNode {
+  const parts = line.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  return parts.map((part, idx) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={idx} className="font-extrabold text-amber-200/95">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return (
+        <code key={idx} className="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-cyan-300 font-mono text-[10.5px]">
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    return part;
+  });
+}
+
+export function renderFormattedChatMarkdown(content: string): React.ReactNode {
+  if (!content) return null;
+  const lines = content.split("\n");
+  const elements: React.ReactNode[] = [];
+
+  lines.forEach((rawLine, idx) => {
+    const line = rawLine.trimEnd();
+    const trimmed = line.trim();
+    if (!trimmed) {
+      elements.push(<div key={`sp-${idx}`} className="h-1.5" />);
+      return;
+    }
+    if (trimmed === "---") {
+      elements.push(<hr key={`hr-${idx}`} className="border-slate-800 my-2" />);
+      return;
+    }
+    if (trimmed.startsWith("#### ")) {
+      elements.push(
+        <h4 key={`h4-${idx}`} className="text-xs font-black text-amber-300 pt-1.5 pb-0.5 flex items-center gap-1">
+          {formatInlineMarkdown(trimmed.slice(5))}
+        </h4>
+      );
+      return;
+    }
+    if (trimmed.startsWith("### ") || trimmed.startsWith("## ")) {
+      const text = trimmed.replace(/^#{2,3}\s+/, "");
+      elements.push(
+        <h3 key={`h3-${idx}`} className="text-[13px] font-black text-amber-300 border-b border-slate-800/80 pb-1 pt-1">
+          {formatInlineMarkdown(text)}
+        </h3>
+      );
+      return;
+    }
+    if (trimmed.startsWith("> ")) {
+      elements.push(
+        <blockquote
+          key={`bq-${idx}`}
+          className="pl-2.5 py-1.5 pr-2 my-1 rounded-r-xl border-l-2 border-amber-400 bg-amber-950/20 text-slate-300 text-[11px] italic"
+        >
+          {formatInlineMarkdown(trimmed.slice(2))}
+        </blockquote>
+      );
+      return;
+    }
+    if (/^[-*•]\s+/.test(trimmed)) {
+      const bulletText = trimmed.replace(/^[-*•]\s+/, "");
+      elements.push(
+        <div key={`li-${idx}`} className="flex items-start gap-1.5 pl-1 py-0.5">
+          <span className="text-amber-400 font-bold select-none mt-0.5">•</span>
+          <div className="flex-1 leading-relaxed">{formatInlineMarkdown(bulletText)}</div>
+        </div>
+      );
+      return;
+    }
+    elements.push(
+      <p key={`p-${idx}`} className="leading-relaxed">
+        {formatInlineMarkdown(trimmed)}
+      </p>
+    );
+  });
+
+  return <div className="space-y-1">{elements}</div>;
+}
+
 export default function AstroChatbot() {
   const {
     currentDate,
@@ -4474,6 +4795,15 @@ export default function AstroChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const [userApiKey, setUserApiKey] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<"compact" | "split" | "fullscreen">("compact");
+  const [consultationDepth, setConsultationDepth] = useState<"seeker" | "scholar">("seeker");
+  const [showToolbars, setShowToolbars] = useState(true);
+
+  const profileThreadKey = useMemo(() => {
+    const utcKey = natalEphemeris?.utcDate ? String(natalEphemeris.utcDate).slice(0, 16) : "default";
+    const cityKey = (location?.cityName || "city").replace(/\s+/g, "_").toLowerCase();
+    return `vedic_chat_thread_${utcKey}_${cityKey}`;
+  }, [natalEphemeris?.utcDate, location?.cityName]);
 
   // Active human feedback and correction loop state (RLHF / HITL)
   const [sessionCorrections, setSessionCorrections] = useState<
@@ -4496,6 +4826,55 @@ export default function AstroChatbot() {
   useEffect(() => {
     const savedKey = localStorage.getItem("vedic_gemini_api_key");
     if (savedKey) setUserApiKey(savedKey);
+    const savedDepth = localStorage.getItem("vedic_consultation_depth");
+    if (savedDepth === "scholar" || savedDepth === "seeker") {
+      setConsultationDepth(savedDepth);
+    }
+  }, []);
+
+  // Load saved chat thread for the active chart profile from localStorage
+  useEffect(() => {
+    try {
+      const savedRaw = localStorage.getItem(profileThreadKey);
+      if (savedRaw) {
+        const parsed = JSON.parse(savedRaw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(
+            parsed.map((m: any) => ({
+              ...m,
+              timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
+            }))
+          );
+          return;
+        }
+      }
+    } catch (_) {}
+    if (natalEphemeris) {
+      setMessages([
+        {
+          id: "welcome",
+          role: "assistant",
+          content: buildPersonalizedWelcomeMessage(natalEphemeris),
+          timestamp: new Date(),
+        },
+      ]);
+    }
+  }, [profileThreadKey]);
+
+  // Persist chat thread per profile when messages update
+  useEffect(() => {
+    if (messages.length > 1) {
+      try {
+        localStorage.setItem(profileThreadKey, JSON.stringify(messages.slice(-40)));
+      } catch (_) {}
+    }
+  }, [messages, profileThreadKey]);
+
+  useEffect(() => {
+    if (false) {
+      try {
+      } catch (_) {}
+    }
   }, []);
 
   // Dynamically personalize initial welcome message when chart is loaded
@@ -4596,7 +4975,15 @@ export default function AstroChatbot() {
     onChunk: (text: string) => void
   ): Promise<string> => {
     const userConfirmedFacts = extractUserConfirmedFacts(allMessages);
-    const systemInstruction = buildChatSystemInstruction(dossier, userConfirmedFacts);
+    const systemInstruction = buildChatSystemInstruction(
+      dossier,
+      userConfirmedFacts,
+      "",
+      "",
+      "",
+      "",
+      consultationDepth
+    );
 
     // Filter chat history to retain rich conversation memory without runaway token bloat
     const filteredHistory = allMessages
@@ -4912,6 +5299,7 @@ export default function AstroChatbot() {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content: instantAnswer,
+        arbitration: arbitratePredictiveQuery(`${activeCategory} ${query}`, natalEphemeris, transitEphemeris),
         timestamp: new Date(),
         category: activeCategory,
       };
@@ -4956,6 +5344,28 @@ export default function AstroChatbot() {
     const activeKey = userApiKey.trim() || DEFAULT_GEMINI_KEY;
 
     // 2. Intent Slicing (Reduces payload from 18,000 tokens to ~3,500 tokens for 4x speed)
+    const activeDashaTree = calculateVimshottariDasha(
+      new Date(natalEphemeris.utcDate),
+      natalEphemeris.planets.Moon?.siderealLongitude || 0,
+      new Date()
+    );
+    const runningDashaPayload = activeDashaTree.activeDasha
+      ? {
+          mahadashaLord: activeDashaTree.activeDasha.mahadasha.name,
+          antardashaLord: activeDashaTree.activeDasha.antardasha.name,
+          pratyantardashaLord: activeDashaTree.activeDasha.pratyantardasha.name,
+        }
+      : undefined;
+    const localArbitration = arbitratePredictiveQuery(
+      `${activeCategory} ${query}`,
+      natalEphemeris,
+      transitEphemeris,
+      runningDashaPayload
+    );
+    setMessages((prev) =>
+      prev.map((m) => (m.id === assistantMsgId ? { ...m, arbitration: localArbitration } : m))
+    );
+
     const queryIntent = detectConsultationIntent(query, activeCategory);
     const slicedDossier = buildAstroDossier(
       natalEphemeris,
@@ -4967,6 +5377,81 @@ export default function AstroChatbot() {
     );
 
     try {
+      if (!activeKey.startsWith("sk-")) {
+        try {
+          const sseRes = await fetch("/api/astro-chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messages: updatedMessages.map((m) => ({
+                role: m.role,
+                content: m.content,
+              })),
+              astroDossier: slicedDossier,
+              userApiKey: activeKey,
+              natalEphemeris,
+              transitEphemeris,
+              runningDasha: runningDashaPayload,
+              activeCorrections: sessionCorrections,
+              clientMemory: loadClientMemoryVault(),
+              stream: true,
+              consultationDepth,
+            }),
+          });
+
+          if (sseRes.ok && sseRes.body && sseRes.headers.get("content-type")?.includes("text/event-stream")) {
+            const reader = sseRes.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = "";
+            let streamedFullText = "";
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split("\n");
+              buffer = lines.pop() || "";
+
+              for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed.startsWith("data:")) continue;
+                const payloadStr = trimmed.slice(5).trim();
+                if (!payloadStr) continue;
+                try {
+                  const evt = JSON.parse(payloadStr);
+                  if (evt.type === "meta") {
+                    setMessages((prev) =>
+                      prev.map((m) =>
+                        m.id === assistantMsgId
+                          ? {
+                              ...m,
+                              arbitration: evt.arbitration || m.arbitration,
+                              ragSources: evt.ragSources || m.ragSources,
+                            }
+                          : m
+                      )
+                    );
+                  } else if (evt.type === "chunk" && evt.text) {
+                    streamedFullText += evt.text;
+                    const snapText = streamedFullText;
+                    setMessages((prev) =>
+                      prev.map((m) => (m.id === assistantMsgId ? { ...m, content: snapText } : m))
+                    );
+                  }
+                } catch (_) {}
+              }
+            }
+
+            if (streamedFullText.trim()) {
+              syncMessagesToMemoryVault([...updatedMessages, { role: "assistant", content: streamedFullText }]);
+              return;
+            }
+          }
+        } catch (sseErr) {
+          console.warn("[AstroChat] Server SSE stream fallback to direct client stream:", sseErr);
+        }
+      }
+
       const reply = await executeStreamingGeminiCall(
         updatedMessages,
         slicedDossier,
@@ -4993,6 +5478,8 @@ export default function AstroChatbot() {
             astroDossier: slicedDossier,
             userApiKey: activeKey,
             natalEphemeris: natalEphemeris,
+            runningDasha: runningDashaPayload,
+            consultationDepth,
             transitEphemeris: transitEphemeris,
             activeCorrections: sessionCorrections,
             clientMemory: loadClientMemoryVault(),
@@ -5159,7 +5646,15 @@ export default function AstroChatbot() {
 
       {/* 2. Slide-Over Chat Modal / Drawer */}
       {isOpen && (
-        <div className="fixed bottom-20 right-2 left-2 sm:left-auto sm:right-6 z-[95] sm:w-[480px] h-[680px] max-h-[84vh] flex flex-col glass-panel bg-slate-950/95 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div
+          className={`fixed z-[95] flex flex-col glass-panel bg-slate-950/95 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 transition-all ${
+            layoutMode === "fullscreen"
+              ? "inset-2 sm:inset-5 w-auto h-auto max-h-[95vh]"
+              : layoutMode === "split"
+              ? "bottom-20 right-2 left-2 sm:left-auto sm:right-6 sm:w-[760px] h-[780px] max-h-[88vh]"
+              : "bottom-20 right-2 left-2 sm:left-auto sm:right-6 sm:w-[480px] h-[680px] max-h-[84vh]"
+          }`}
+        >
           {/* Header */}
           <div className="p-3.5 sm:p-4 bg-slate-900/95 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -5204,6 +5699,54 @@ export default function AstroChatbot() {
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Seeker vs Scholar Depth Mode Toggle */}
+              <button
+                onClick={() => {
+                  const nextDepth = consultationDepth === "seeker" ? "scholar" : "seeker";
+                  setConsultationDepth(nextDepth);
+                  localStorage.setItem("vedic_consultation_depth", nextDepth);
+                }}
+                className={`px-2 h-7 sm:h-8 rounded-xl border text-[10px] font-extrabold flex items-center gap-1 transition-all cursor-pointer ${
+                  consultationDepth === "scholar"
+                    ? "bg-purple-950/70 border-purple-500/60 text-purple-200"
+                    : "bg-emerald-950/60 border-emerald-500/50 text-emerald-200"
+                }`}
+                title={
+                  consultationDepth === "scholar"
+                    ? "Scholar Mode Active (Full Shastric Sutras, Vargas & Technical Proof) — Click for Seeker Mode"
+                    : "Seeker Mode Active (Warm, Accessible Plain Language) — Click for Scholar Mode"
+                }
+              >
+                <span>{consultationDepth === "scholar" ? "📜" : "🌱"}</span>
+                <span className="hidden sm:inline">{consultationDepth === "scholar" ? "Scholar" : "Seeker"}</span>
+              </button>
+
+              {/* Toggle Category & Journey Bars */}
+              <button
+                onClick={() => setShowToolbars((prev) => !prev)}
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-xs transition-colors cursor-pointer ${
+                  showToolbars
+                    ? "bg-slate-800 hover:bg-slate-700 text-slate-300"
+                    : "bg-amber-500/20 border border-amber-500/50 text-amber-300"
+                }`}
+                title={showToolbars ? "Collapse Category Bars (Maximize Reading Space)" : "Show Category & Journey Bars"}
+              >
+                {showToolbars ? "🔼" : "🔽"}
+              </button>
+
+              {/* Viewport Layout Mode Switcher (Compact -> Wide Split -> Full Studio) */}
+              <button
+                onClick={() =>
+                  setLayoutMode((prev) =>
+                    prev === "compact" ? "split" : prev === "split" ? "fullscreen" : "compact"
+                  )
+                }
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-300 hidden sm:flex items-center justify-center text-xs transition-colors cursor-pointer"
+                title={`Switch Viewport Size (Current: ${layoutMode.toUpperCase()})`}
+              >
+                {layoutMode === "fullscreen" ? "🗗" : layoutMode === "split" ? "⛶" : "⇔"}
+              </button>
+
               {/* Download consultation report button */}
               <button
                 onClick={handleDownloadConsultationReport}
@@ -5244,6 +5787,11 @@ export default function AstroChatbot() {
                   ])
                 }
                 className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+                onMouseDown={() => {
+                  try {
+                    localStorage.removeItem(profileThreadKey);
+                  } catch (_) {}
+                }}
                 title="Clear Chat History"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -5263,7 +5811,8 @@ export default function AstroChatbot() {
           </div>
 
           {/* Consultation Categories Bar */}
-          <div className="px-2.5 py-1.5 bg-slate-900 border-b border-slate-800/90 flex items-center gap-1 overflow-x-auto no-scrollbar">
+          {showToolbars && (
+            <div className="px-2.5 py-1.5 bg-slate-900 border-b border-slate-800/90 flex items-center gap-1 overflow-x-auto no-scrollbar">
             {CONSULTATION_CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
@@ -5280,7 +5829,10 @@ export default function AstroChatbot() {
             ))}
           </div>
 
+          )}
+
           {/* Master Consultation Journeys Bar */}
+          {showToolbars && (
           <div className="px-2.5 py-1.5 bg-slate-950/80 border-b border-slate-800/60 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
             <span className="text-[9px] font-black uppercase text-amber-500/80 tracking-wider flex-shrink-0 flex items-center gap-1 pl-1">
               <span>⚡</span> Journeys:
@@ -5311,6 +5863,11 @@ export default function AstroChatbot() {
                 label: "🛡️ Lagnesha Shield",
                 prompt: "Check my Lagna Lord status, protection shield, and strength.",
               },
+              {
+                id: "j-plot",
+                label: "🏡 Plot Direction (Lagna BAV)",
+                prompt: "Based on my Ascendant (Lagna) Bhinnashtakavarga (49 Bindus), which cardinal direction has the highest bindus for buying a plot, land, or home?",
+              },
             ].map((j) => (
               <button
                 key={j.id}
@@ -5322,6 +5879,8 @@ export default function AstroChatbot() {
               </button>
             ))}
           </div>
+
+          )}
 
           {/* Settings Drawer Overlay */}
           {showSettings && (
@@ -5417,7 +5976,18 @@ export default function AstroChatbot() {
                   )}
 
                   <div className="whitespace-pre-wrap space-y-1.5">
-                    {parsed.cleanedContent}
+                    {msg.role === "assistant" && msg.id !== "welcome" && msg.arbitration && (
+                      <NeuroSymbolicArbitrationCard
+                        arbitration={msg.arbitration}
+                        ragSources={msg.ragSources}
+                      />
+                    )}
+                    {msg.role === "assistant"
+                      ? renderFormattedChatMarkdown(parsed.cleanedContent)
+                      : parsed.cleanedContent}
+                    {msg.role === "assistant" && parsed.hasPlotDirectionCard && (
+                      <LagnaPlotDirectionCard natalEphemeris={natalEphemeris} />
+                    )}
                   </div>
 
                   {/* Interactive Generative UI: Event Horizon Timeline */}

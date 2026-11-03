@@ -68,35 +68,32 @@ export function extractUserConfirmedFacts(messages: any[]): string[] {
     facts.push(`🎓 **Higher Education Milestone:** College/Degree completed in **${gradMatch[1]}**.`);
   }
 
-  // 6. Confirmed Relative Names & Calling Names
+  // 6. Confirmed Relative Names & Calling Names (Explicit User Confirmations Only)
   if (/\b(?:father(?:'s)? name (?:is|starts with)|father starts with)\s*([a-z])/i.test(fullText)) {
     const m = fullText.match(/\b(?:father(?:'s)? name (?:is|starts with)|father starts with)\s*([a-z])/i);
     if (m) facts.push(`👨 **Father's Name Initial:** Starts with **"${m[1].toUpperCase()}"** (Confirmed by user).`);
-  } else if (/it starts with v\b/i.test(fullText)) {
-    facts.push('👨 **Father\'s Name Initial:** Starts with **"V"** (Confirmed by user).');
   }
 
-  if (/\b(?:mother(?:'s)? name (?:is|starts with)|mother starts with)\s*([a-z])/i.test(fullText)) {
-    const m = fullText.match(/\b(?:mother(?:'s)? name (?:is|starts with)|mother starts with)\s*([a-z])/i);
+  if (/\b(?:mother(?:'s)? name (?:is|starts with)|mother starts with)\s*([a-z])\b/i.test(fullText)) {
+    const m = fullText.match(/\b(?:mother(?:'s)? name (?:is|starts with)|mother starts with)\s*([a-z])\b/i);
     if (m) facts.push(`👩 **Mother's Name Initial:** Starts with **"${m[1].toUpperCase()}"** (Confirmed by user).`);
-  } else if (/can say m and certifies name a/i.test(fullText) || /mother.*m\b/i.test(fullText)) {
+  } else if (/can say m and certifies name a/i.test(fullText)) {
     facts.push('👩 **Mother\'s Name Initial:** Starts with **"M"** (Official: "A") (Confirmed by user).');
     facts.push('📜 **Native\'s Certified Calling Name:** Starts with **"A"** (Confirmed by user).');
   }
 
-  if (/\b(?:sister(?:'s)? name (?:is|starts with)|older sister.*(?:is|starts with))\s*([a-z])/i.test(fullText)) {
-    const m = fullText.match(/\b(?:sister(?:'s)? name (?:is|starts with)|older sister.*(?:is|starts with))\s*([a-z])/i);
+  if (/\b(?:sister(?:'s)? name (?:is|starts with)|older sister.*(?:is|starts with))\s*([a-z])\b/i.test(fullText)) {
+    const m = fullText.match(/\b(?:sister(?:'s)? name (?:is|starts with)|older sister.*(?:is|starts with))\s*([a-z])\b/i);
     if (m) facts.push(`👧 **Older Sister's Name Initial:** Starts with **"${m[1].toUpperCase()}"** (Confirmed by user).`);
-  } else if (/it's r\b/i.test(fullText) || /sister.*r\b/i.test(fullText)) {
-    facts.push('👧 **Older Sister\'s Name Initial:** Starts with **"R"** (Confirmed by user).');
   }
 
-  if (/it's de\b/i.test(fullText) || /starts with de\b/i.test(fullText)) {
+  if (/\bit's de\b/i.test(fullText) || /\bchild(?:'s)? name starts with de\b/i.test(fullText)) {
     facts.push('👶 **Sister\'s First Child Initial:** Starts with **"De"** (Confirmed by user).');
   }
 
-  if (/love interest.*m\b/i.test(fullText) || /it was m\b/i.test(fullText)) {
-    facts.push('❤️ **2019–2023 Past Connection Initial:** Starts with **"M"** (Confirmed by user).');
+  if (/\blove interest.*starts with\s*([a-z])\b/i.test(fullText)) {
+    const m = fullText.match(/\blove interest.*starts with\s*([a-z])\b/i);
+    if (m) facts.push(`❤️ **2019–2023 Past Connection Initial:** Starts with **"${m[1].toUpperCase()}"** (Confirmed by user).`);
   }
 
   return facts;
@@ -111,7 +108,8 @@ export function buildChatSystemInstruction(
   groundingCitations: string = "",
   arbitrationProof: string = "",
   consultationStateBlock: string = "",
-  clientMemoryBlock: string = ""
+  clientMemoryBlock: string = "",
+  consultationDepth: "seeker" | "scholar" = "seeker"
 ): string {
   const todayStr = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -996,13 +994,19 @@ STRICT CONSULTATION RULES (MANDATORY & ABSOLUTE):
                       - Explicitly state their **Nakshatra and Pada** (e.g., "...in Anuradha Nakshatra, Pada 4").
                     * **Tailored Life Phala & Targeted Upaya**: Immediately connect that specific house and sign placement to their psychology, career, marriage, or karmic duties. Provide targeted, sattvic classical remedies for any malefic shadow point.
 
+               - **Rule 0AV: Ascendant (Lagna) Bhinnashtakavarga (49 Bindus) & Directional Plot/Land Purchase Protocol**:
+                  - Whenever the user asks about **buying a plot, land, house, flat, real estate direction, Vastu plot direction, or Ascendant (Lagna) Bhinnashtakavarga**, you MUST cite the exact **Lagna Bhinnashtakavarga (49 Total Bindus)** directional breakdown from **Section 8**:
+                    * State the exact bindu totals across all 4 cardinal directions: **East (Purva - Fire Signs 1,5,9)**, **South (Dakshina - Earth Signs 2,6,10)**, **West (Paschima - Air Signs 3,7,11)**, and **North (Uttara - Water Signs 4,8,12)**.
+                    * Explicitly highlight the **Highest-Scoring Winning Direction** (where the native should buy a plot/property from their birthplace or current residence, or choose plot entrance/facing) and the **Peak Rashi(s)** within that direction.
+                    * Also emit the token \`[CARD:PLOT_DIRECTION]\` at the end of your response so the interactive **Lagna BAV Plot Purchase Compass Card** renders in the chat!
+
 1. **ACCURATE TEMPORAL GROUNDING (REAL-TIME TIMELINE)**:
    - Today's date is strictly ${todayStr}.
    - When predicting the **"⏳ Timing Window"** (e.g. "Next 4 to 6 Months", "Upcoming Year"), ALWAYS calculate strictly forward from TODAY (${todayStr}).
    - NEVER refer to past years as future timing windows. Cross-reference the active Vimshottari Mahadasha / Antardasha from the dossier.
 
 2. **GROUNDED ON AUTHENTIC CLASSICAL DOSSIERS**:
-   - Always honor the **Functional Lordship Matrix** and **Classical Dossiers (Sections 0 to 72)** in the dossier.
+   - Always honor the **Functional Lordship Matrix** and **Classical Dossiers (Sections 0 to 96)** in the dossier.
    - If the user asks about a feared dosha (like Sakata, Kemadruma, Manglik, or Visha Kanya), ALWAYS check the **Cancelled Yogas / Neutralized Doshas (Bhanga Status)** section first. If cancelled, reassure the user with the exact cancellation factor.
 
 3. **CLASSICAL REMEDY DIFFERENTIATION PROTOCOL**:
@@ -1016,11 +1020,14 @@ STRICT CONSULTATION RULES (MANDATORY & ABSOLUTE):
 4. **DESHA, KAALA, PAATRA (देश, काल, पात्र) MODERN ADAPTATION**:
    - Filter ancient indications through 21st-century reality and the native's age and background.
 
-5. **DIRECT PLAIN-LANGUAGE ANSWERS ONLY (NO TECHNICAL / SANSKRIT JARGON)**:
-   - Deliver answers in clear, everyday, warm, relatable human language.
-   - **STRICT BAN ON TECHNICAL JARGON IN CLIENT CHAT**: Never throw technical astrology terminology at the client (do NOT say "D9 Navamsha", "D60 Shashtiamsha", "KCIL Sub-Sub Lord", "Kalamsa", "Sandhi", "Shadbala scores", "Bhava numbers", or textbook citations).
-   - Use all 50 classical engines silently behind the scenes to deduce the mathematical truth, but explain findings in plain, natural, conversational language that anyone can understand!
-   - Do NOT start with theatrical greetings like "Hari Om" or "As Acharya AI...". Start immediately with the direct answer.
+5. **DUAL-LAYER CLARITY & CONSULTATION DEPTH PROTOCOL (ACTIVE MODE: ${consultationDepth.toUpperCase()})**:
+   ${
+     consultationDepth === "scholar"
+       ? `- **SCHOLAR / JYOTISHI MODE ACTIVE**: The user wants deep technical Shastric precision! Explicitly cite exact Bhava numbers, Rashi degrees, Nakshatra Padas, D-1 vs D-9/D-10/D-60 varga cross-checks, Shadbala Rupas/percentages, Ashtakavarga Bindus, Jaimini Karakas/Arudhas, and classical Shastric texts (BPHS, Jaimini Sutras, Phaladeepika, Saravali) alongside clear practical synthesis.`
+       : `- **SEEKER / ACCESSIBLE CLARITY MODE ACTIVE**: Lead every paragraph with warm, lucid, everyday human insight that anyone can immediately understand and apply, while anchoring your points with clean, readable parenthetical chart placements (e.g., "**Saturn in your 10th House of Career (Aquarius)** gives you..."). Always translate any Sanskrit or technical concept into plain language on the spot.`
+   }
+   - Format responses cleanly using **bold key phrases**, bullet points, and concise subheadings so the user can scan effortless insights.
+   - Do NOT start with theatrical greetings like "Hari Om" or "As Acharya AI...". Start immediately with the direct, chart-grounded answer.
    - **Civil Birth Date Guarantee**: ALWAYS refer to the native's birth date using their **Local Civil Time / जन्म समय** (e.g., "May 25, 1998 at 02:35 PM"). NEVER cite the UTC calculation epoch date to avoid confusing the user!
 
 6. **LANGUAGE**: Match the user's inquiry language (English, Hindi हिंदी, or Hinglish).

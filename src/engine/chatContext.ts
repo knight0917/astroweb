@@ -284,7 +284,14 @@ export function buildAstroDossier(
   let ashtakavargaSummary = "";
   try {
     const av = calculateAshtakavarga(natalEphemeris);
-    ashtakavargaSummary = "SAV Points in Houses -> 1st (Tanu): " + av.sarvaHouseBindus[0] + ", 2nd (Dhana): " + av.sarvaHouseBindus[1] + ", 4th (Sukha): " + av.sarvaHouseBindus[3] + ", 7th (Kalatra): " + av.sarvaHouseBindus[6] + ", 9th (Bhagya): " + av.sarvaHouseBindus[8] + ", 10th (Karma): " + av.sarvaHouseBindus[9] + ", 11th (Labha): " + av.sarvaHouseBindus[10];
+    ashtakavargaSummary = [
+      "SAV Points in Houses (337 Total) -> 1st (Tanu): " + av.sarvaHouseBindus[0] + ", 2nd (Dhana): " + av.sarvaHouseBindus[1] + ", 3rd (Sahaja): " + av.sarvaHouseBindus[2] + ", 4th (Sukha): " + av.sarvaHouseBindus[3] + ", 5th (Putra): " + av.sarvaHouseBindus[4] + ", 6th (Roga): " + av.sarvaHouseBindus[5] + ", 7th (Kalatra): " + av.sarvaHouseBindus[6] + ", 8th (Ayu): " + av.sarvaHouseBindus[7] + ", 9th (Bhagya): " + av.sarvaHouseBindus[8] + ", 10th (Karma): " + av.sarvaHouseBindus[9] + ", 11th (Labha): " + av.sarvaHouseBindus[10] + ", 12th (Vyaya): " + av.sarvaHouseBindus[11],
+      av.bav.Lagna ? `- **Ascendant (Lagna) Bhinnashtakavarga (49 Bindus) by Sign:** ${RASHI_NAMES.map((r, idx) => `${r.englishName}: ${av.bav.Lagna.rashiBindus[idx]}`).join(", ")}` : "",
+      av.lagnaPlotPurchase ? `- **Lagna BAV 4-Direction Plot & Land Purchase Totals:** ${av.lagnaPlotPurchase.directionalRankings.map((d) => `${d.direction} (${d.sanskritName} • ${d.element} • Houses ${d.houses.join("-")}): **${d.bindus} Bindus** (${d.percentage}% • ${d.status})`).join(" | ")}` : "",
+      av.lagnaPlotPurchase ? `- **🏡 Best Direction to Buy Plot / Land / Property:** **${av.lagnaPlotPurchase.bestDirection} (${av.lagnaPlotPurchase.sanskritName} / ${av.lagnaPlotPurchase.hindiName})** with **${av.lagnaPlotPurchase.bestBindus} Bindus** (${av.lagnaPlotPurchase.percentage}% • Rashis: ${av.lagnaPlotPurchase.rashiNames.join(", ")})` : "",
+      av.lagnaPlotPurchase ? `- **Plot Purchase Verdict:** ${av.lagnaPlotPurchase.plotPurchaseRecommendation}` : "",
+      av.lagnaPlotPurchase ? `- **Vastu & Bhumi Guidance:** ${av.lagnaPlotPurchase.directionalRankings[0]?.vastuGuidelines.join(" • ") || ""}` : "",
+    ].filter(Boolean).join("\n");
   } catch (_) {}
 
   // 9A. Complete 12 Houses (Bhava) Occupancy & Lordship Matrix

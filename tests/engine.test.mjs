@@ -9679,3 +9679,74 @@ test("Subtest 155: Italian Morning Pre-Market Trading Terminal & Multi-Timeframe
   assert.ok(brief.microstructureM15.q4DragDefense.includes("Q4"));
 });
 
+
+test("Subtest 156: Phase 64 Next-Gen Chatbot Architecture, 10-Domain Neuro-Symbolic Arbitrator, Dual-Layer Prompt Clarity & Lagna BAV Plot Direction Card", async () => {
+  const { arbitratePredictiveQuery } = await import("../src/engine/predictiveArbitrator.ts");
+  const { buildChatSystemInstruction, extractUserConfirmedFacts } = await import("../src/engine/chatPrompt.ts");
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const location = {
+    cityName: "Varanasi",
+    country: "India",
+    latitude: 25.3176,
+    longitude: 82.9739,
+    timezoneOffsetHours: 5.5,
+  };
+  const natalEphem = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(new Date("2026-10-29T12:00:00Z"), location, "Lahiri", "WholeSign", "Mean");
+
+  // 1. Verify 10-Domain Neuro-Symbolic Arbitrator Routing & Gate 5/6 Dynamic Math
+  const plotArb = arbitratePredictiveQuery(
+    "In which direction should I buy a plot or house?",
+    natalEphem,
+    transitEphem,
+    { mahadashaLord: "Mars", antardashaLord: "Jupiter", pratyantardashaLord: "Venus" }
+  );
+  assert.ok(plotArb.compositeScore >= 0 && plotArb.compositeScore <= 100);
+  assert.ok(plotArb.gates.d1FoundationalSeed.classicalRationale.includes("Target House 4"), "Plot query must target House 4");
+  assert.ok(plotArb.gates.d1FoundationalSeed.classicalRationale.includes("Karaka is Mars"), "Plot query Karaka must be Mars");
+  assert.ok(plotArb.gates.ashtakavargaPotency.classicalRationale.includes("Lagna BAV (49 Bindus)"), "House 4 arbitration must include Lagna BAV direction");
+  assert.ok(plotArb.recommendedUpaya.includes("Vastu Bhumi Pujan"), "House 4 Upaya must recommend Vastu Bhumi Pujan");
+
+  const progenyArb = arbitratePredictiveQuery("When will I have a child / progeny?", natalEphem, transitEphem);
+  assert.ok(progenyArb.gates.d1FoundationalSeed.classicalRationale.includes("Target House 5"), "Progeny query must target House 5");
+  assert.ok(progenyArb.gates.d1FoundationalSeed.classicalRationale.includes("Karaka is Jupiter"), "Progeny Karaka must be Jupiter");
+
+  const eduArb = arbitratePredictiveQuery("Will I succeed in my university degree exam?", natalEphem, transitEphem);
+  assert.ok(eduArb.gates.d1FoundationalSeed.classicalRationale.includes("Target House 5"), "Education query must target House 5");
+  assert.ok(eduArb.gates.d1FoundationalSeed.classicalRationale.includes("Karaka is Mercury"), "Education Karaka must be Mercury");
+
+  const foreignArb = arbitratePredictiveQuery("When will I get my visa and settle abroad?", natalEphem, transitEphem);
+  assert.ok(foreignArb.gates.d1FoundationalSeed.classicalRationale.includes("Target House 12"), "Foreign query must target House 12");
+  assert.ok(foreignArb.gates.d1FoundationalSeed.classicalRationale.includes("Karaka is Rahu"), "Foreign Karaka must be Rahu");
+
+  const legalArb = arbitratePredictiveQuery("Will I win this court litigation and clear debt?", natalEphem, transitEphem);
+  assert.ok(legalArb.gates.d1FoundationalSeed.classicalRationale.includes("Target House 6"), "Litigation query must target House 6");
+  assert.ok(legalArb.gates.d1FoundationalSeed.classicalRationale.includes("Karaka is Mars"), "Litigation Karaka must be Mars");
+
+  // 2. Verify Dual-Layer Prompt Clarity Protocol (Seeker vs Scholar Mode) & Rule 0AV
+  const seekerPrompt = buildChatSystemInstruction("Sample Dossier", [], "", "", "", "", "seeker");
+  assert.ok(seekerPrompt.includes("ACTIVE MODE: SEEKER"));
+  assert.ok(seekerPrompt.includes("SEEKER / ACCESSIBLE CLARITY MODE ACTIVE"));
+  assert.ok(seekerPrompt.includes("Rule 0AV: Ascendant (Lagna) Bhinnashtakavarga (49 Bindus)"));
+  assert.ok(seekerPrompt.includes("[CARD:PLOT_DIRECTION]"));
+
+  const scholarPrompt = buildChatSystemInstruction("Sample Dossier", [], "", "", "", "", "scholar");
+  assert.ok(scholarPrompt.includes("ACTIVE MODE: SCHOLAR"));
+  assert.ok(scholarPrompt.includes("SCHOLAR / JYOTISHI MODE ACTIVE"));
+
+  // 3. Verify brittle hardcoded initial regexes were removed from extractUserConfirmedFacts
+  const unrelatedFacts = extractUserConfirmedFacts([
+    { role: "user", content: "It starts with very good energy and it's definitely a great time." },
+  ]);
+  const hasFalseFatherV = unrelatedFacts.some((f) => f.includes("Father's Name Initial"));
+  const hasFalseChildDe = unrelatedFacts.some((f) => f.includes("Sister's First Child Initial"));
+  assert.strictEqual(hasFalseFatherV, false, "Must not falsely extract Father initial V from unrelated text");
+  assert.strictEqual(hasFalseChildDe, false, "Must not falsely extract Child initial De from unrelated text");
+
+  // 4. Verify Phase 62 Lagna BAV Plot Purchase is injected into buildAstroDossier
+  const dossier = buildAstroDossier(natalEphem, transitEphem, new Date("2026-10-29T12:00:00Z"), "male", undefined, "career");
+  assert.ok(dossier.includes("Ascendant (Lagna) Bhinnashtakavarga (49 Bindus) by Sign:"));
+  assert.ok(dossier.includes("Best Direction to Buy Plot / Land / Property:"));
+});

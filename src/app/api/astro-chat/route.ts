@@ -30,7 +30,18 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { messages, astroDossier, userApiKey, natalEphemeris, transitEphemeris, runningDasha, activeCorrections, clientMemory } = body;
+    const {
+      messages,
+      astroDossier,
+      userApiKey,
+      natalEphemeris,
+      transitEphemeris,
+      runningDasha,
+      activeCorrections,
+      clientMemory,
+      stream = false,
+      consultationDepth = "seeker",
+    } = body;
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -77,6 +88,7 @@ export async function POST(req: NextRequest) {
     // 1. Retrieve grounded Shastric & Nadi rules from Neon pgvector using Astrological HyDE
     let groundingCitations = "";
     let detectedDomain = "general";
+    let ragSources: Array<{ title: string; source: string; category: string }> = [];
     if (lastUserMessage.trim()) {
       try {
         const ragRes = await retrieveGroundedAstroKnowledge(lastUserMessage, {
@@ -86,6 +98,11 @@ export async function POST(req: NextRequest) {
         });
         groundingCitations = ragRes.groundingText;
         detectedDomain = ragRes.domain;
+        ragSources = (ragRes.results || []).slice(0, 4).map((r) => ({
+          title: r.title,
+          source: r.sourceRef,
+          category: r.tradition,
+        }));
       } catch (ragErr) {
         console.warn("[AstroChat] RAG retrieval note:", ragErr);
       }
@@ -94,9 +111,16 @@ export async function POST(req: NextRequest) {
     // 2. Perform Neuro-Symbolic Predictive Arbitration if natal ephemeris is available
     let arbitrationProof = "";
     let prescribedUpaya = "";
+    let arbitrationResult: any = null;
     if (natalEphemeris && natalEphemeris.ascendant && natalEphemeris.planets) {
       try {
-        const arbitration = arbitratePredictiveQuery(detectedDomain, natalEphemeris, transitEphemeris, runningDasha);
+        const arbitration = arbitratePredictiveQuery(
+          `${detectedDomain} ${lastUserMessage}`,
+          natalEphemeris,
+          transitEphemeris,
+          runningDasha
+        );
+        arbitrationResult = arbitration;
         arbitrationProof = arbitration.conciseSummaryProof;
         prescribedUpaya = arbitration.recommendedUpaya;
       } catch (arbErr) {
@@ -115,7 +139,8 @@ export async function POST(req: NextRequest) {
       groundingCitations,
       arbitrationProof,
       consultationStateBlock,
-      clientMemoryBlock
+      clientMemoryBlock,
+      consultationDepth === "scholar" ? "scholar" : "seeker"
     );
 
     // Filter chat history to retain rich conversation memory without runaway token bloat
@@ -313,6 +338,8 @@ export async function POST(req: NextRequest) {
 
     // List of model candidates in priority order (fastest first)
     const candidateModels = [
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
       "gemini-3.6-flash",
       "gemini-3.5-flash",
       "gemini-flash-latest",
@@ -321,6 +348,102 @@ export async function POST(req: NextRequest) {
 
     let lastError = "";
 
+    // 3A. STREAMING SERVER-SENT EVENTS (SSE) ROUTE (WITH FULL RAG + 6-GATE ARBITRATION METADATA)
+    if (stream && geminiApiKey) {
+      for (const modelName of candidateModels) {
+        try {
+          const streamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${geminiApiKey}`;
+          const streamRes = await fetch(streamUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: systemInstruction }],
+              },
+              contents,
+              generationConfig: {
+                temperature: 0.25,
+                topP: 0.95,
+                maxOutputTokens: 4096,
+              },
+            }),
+          });
+
+          if (streamRes.ok && streamRes.body) {
+            const encoder = new TextEncoder();
+            const decoder = new TextDecoder();
+            const upstreamReader = streamRes.body.getReader();
+
+            const readable = new ReadableStream({
+              async start(controller) {
+                // 1. Immediately emit Neuro-Symbolic Arbitration & RAG Grounding metadata
+                const metaPayload = JSON.stringify({
+                  type: "meta",
+                  model: modelName,
+                  provider: "gemini",
+                  domain: detectedDomain,
+                  arbitration: arbitrationResult,
+                  ragSources,
+                });
+                controller.enqueue(encoder.encode(`data: ${metaPayload}\n\n`));
+
+                let buffer = "";
+                try {
+                  while (true) {
+                    const { done, value } = await upstreamReader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split("\n");
+                    buffer = lines.pop() || "";
+
+                    for (const line of lines) {
+                      const trimmed = line.trim();
+                      if (!trimmed.startsWith("data:")) continue;
+                      const jsonStr = trimmed.slice(5).trim();
+                      if (!jsonStr || jsonStr === "[DONE]") continue;
+                      try {
+                        const parsed = JSON.parse(jsonStr);
+                        const deltaText = parsed.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                        if (deltaText) {
+                          controller.enqueue(
+                            encoder.encode(
+                              `data: ${JSON.stringify({ type: "chunk", text: deltaText, model: modelName })}\n\n`
+                            )
+                          );
+                        }
+                      } catch {
+                        // Partial JSON line
+                      }
+                    }
+                  }
+                } catch (readErr) {
+                  console.warn("[AstroChat SSE] Stream read warning:", readErr);
+                } finally {
+                  controller.enqueue(
+                    encoder.encode(`data: ${JSON.stringify({ type: "done", model: modelName })}\n\n`)
+                  );
+                  controller.close();
+                }
+              },
+            });
+
+            return new Response(readable, {
+              headers: {
+                "Content-Type": "text/event-stream; charset=utf-8",
+                "Cache-Control": "no-cache, no-transform",
+                Connection: "keep-alive",
+              },
+            });
+          } else {
+            lastError = await streamRes.text();
+          }
+        } catch (err: any) {
+          lastError = err?.message || "Stream fetch failed";
+        }
+      }
+    }
+
+    // 3B. NON-STREAMING JSON ROUTE (FALLBACK / DIRECT JSON CALLERS)
     for (const modelName of candidateModels) {
       try {
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiApiKey}`;
@@ -345,7 +468,13 @@ export async function POST(req: NextRequest) {
           const replyText =
             data.candidates?.[0]?.content?.parts?.[0]?.text ||
             "I could not synthesize an astrological reading at this moment.";
-          return NextResponse.json({ reply: replyText, model: modelName, provider: "gemini" });
+          return NextResponse.json({
+            reply: replyText,
+            model: modelName,
+            provider: "gemini",
+            arbitration: arbitrationResult,
+            ragSources,
+          });
         } else {
           // Fallback if system_instruction is not supported on this specific model
           const fallbackRes = await fetch(geminiUrl, {
@@ -369,7 +498,13 @@ export async function POST(req: NextRequest) {
             const replyText =
               data.candidates?.[0]?.content?.parts?.[0]?.text ||
               "I could not synthesize an astrological reading at this moment.";
-            return NextResponse.json({ reply: replyText, model: modelName, provider: "gemini" });
+            return NextResponse.json({
+              reply: replyText,
+              model: modelName,
+              provider: "gemini",
+              arbitration: arbitrationResult,
+              ragSources,
+            });
           }
           lastError = await res.text();
         }

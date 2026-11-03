@@ -108,23 +108,38 @@ export function arbitratePredictiveQuery(
   domain: string,
   natalEphemeris: EphemerisResult,
   transitEphemeris?: EphemerisResult,
-  runningDasha?: { mahadashaLord: string; antardashaLord: string }
+  runningDasha?: { mahadashaLord: string; antardashaLord: string; pratyantardashaLord?: string }
 ): PredictiveArbitrationResult {
-  // 1. Determine Target House and Karaka by Domain
+  // 1. Determine Target House and Karaka by Domain (10 Classical Life Domains)
   let targetHouse = 10; // default career
   let naturalKaraka = "Sun";
 
   const d = domain.toLowerCase();
-  if (d.includes("marri") || d.includes("spouse") || d.includes("relationship")) {
+  if (d.includes("marri") || d.includes("spouse") || d.includes("relationship") || d.includes("love") || d.includes("wife") || d.includes("husband") || d.includes("divorce")) {
     targetHouse = 7;
     naturalKaraka = "Venus";
-  } else if (d.includes("wealth") || d.includes("money") || d.includes("financ")) {
+  } else if (d.includes("plot") || d.includes("land") || d.includes("property") || d.includes("house") || d.includes("home") || d.includes("real estate") || d.includes("flat") || d.includes("vastu") || d.includes("vehicle") || d.includes("car")) {
+    targetHouse = 4;
+    naturalKaraka = "Mars";
+  } else if (d.includes("child") || d.includes("progeny") || d.includes("pregnan") || d.includes("baby") || d.includes("santana") || d.includes("son") || d.includes("daughter") || d.includes("ivf")) {
+    targetHouse = 5;
+    naturalKaraka = "Jupiter";
+  } else if (d.includes("educat") || d.includes("exam") || d.includes("study") || d.includes("college") || d.includes("degree") || d.includes("university") || d.includes("scholarship")) {
+    targetHouse = 5;
+    naturalKaraka = "Mercury";
+  } else if (d.includes("foreign") || d.includes("abroad") || d.includes("visa") || d.includes("settle") || d.includes("relocat") || d.includes("immigra") || d.includes("overseas")) {
+    targetHouse = 12;
+    naturalKaraka = "Rahu";
+  } else if (d.includes("wealth") || d.includes("money") || d.includes("financ") || d.includes("income") || d.includes("rich") || d.includes("crore") || d.includes("million") || d.includes("profit")) {
     targetHouse = 2;
     naturalKaraka = "Jupiter";
-  } else if (d.includes("health") || d.includes("diet") || d.includes("disease")) {
+  } else if (d.includes("litigat") || d.includes("court") || d.includes("debt") || d.includes("loan") || d.includes("enemy") || d.includes("dispute") || d.includes("legal")) {
+    targetHouse = 6;
+    naturalKaraka = "Mars";
+  } else if (d.includes("health") || d.includes("diet") || d.includes("disease") || d.includes("illness") || d.includes("medical") || d.includes("surgery") || d.includes("vitality") || d.includes("longevity")) {
     targetHouse = 6;
     naturalKaraka = "Sun";
-  } else if (d.includes("spirit") || d.includes("moksha")) {
+  } else if (d.includes("spirit") || d.includes("moksha") || d.includes("dharma") || d.includes("deity") || d.includes("mantra") || d.includes("meditat") || d.includes("luck") || d.includes("fortune")) {
     targetHouse = 9;
     naturalKaraka = "Jupiter";
   } else {
@@ -204,22 +219,25 @@ export function arbitratePredictiveQuery(
   let gate3Rationale = "Standard Dasha progression active.";
   const md = runningDasha?.mahadashaLord || "";
   const ad = runningDasha?.antardashaLord || "";
+  const pd = runningDasha?.pratyantardashaLord || "";
 
   if (md && ad) {
-    const isLordActive =
-      md.toLowerCase() === targetLordName.toLowerCase() || ad.toLowerCase() === targetLordName.toLowerCase();
-    const isKarakaActive =
-      md.toLowerCase() === naturalKaraka.toLowerCase() || ad.toLowerCase() === naturalKaraka.toLowerCase();
+    const activeLordsLower = [md.toLowerCase(), ad.toLowerCase(), pd.toLowerCase()].filter(Boolean);
+    const isLordActive = activeLordsLower.includes(targetLordName.toLowerCase());
+    const isKarakaActive = activeLordsLower.includes(naturalKaraka.toLowerCase());
+    const mdPlanet = natalEphemeris.planets[md];
+    const adPlanet = natalEphemeris.planets[ad];
+    const occupiesTarget = mdPlanet?.house === targetHouse || adPlanet?.house === targetHouse;
 
-    if (isLordActive && isKarakaActive) {
+    if ((isLordActive && isKarakaActive) || (isLordActive && occupiesTarget)) {
       gate3Score = 20;
-      gate3Rationale = `Both target lord (${targetLordName}) and Karaka (${naturalKaraka}) activated under ${md}-${ad} Dasha!`;
-    } else if (isLordActive || isKarakaActive) {
+      gate3Rationale = `Both target lord (${targetLordName}) and Karaka/Bhava (${naturalKaraka}) activated under ${md}-${ad}${pd ? `-${pd}` : ""} Dasha!`;
+    } else if (isLordActive || isKarakaActive || occupiesTarget) {
       gate3Score = 17;
-      gate3Rationale = `Dasha ${md}-${ad} directly connects to ${isLordActive ? targetLordName : naturalKaraka}.`;
+      gate3Rationale = `Dasha ${md}-${ad}${pd ? `-${pd}` : ""} directly activates ${isLordActive ? targetLordName : isKarakaActive ? naturalKaraka : `House ${targetHouse} occupant`}.`;
     } else {
       gate3Score = 11;
-      gate3Rationale = `Running ${md}-${ad} Dasha provides neutral ambient activation.`;
+      gate3Rationale = `Running ${md}-${ad}${pd ? `-${pd}` : ""} Dasha provides neutral ambient activation.`;
     }
   }
   gate3Score = Math.max(0, Math.min(20, gate3Score));
@@ -279,12 +297,51 @@ export function arbitratePredictiveQuery(
     gate5Score = 2;
     gate5Rationale = `Low Ashtakavarga score (${targetSavBindus} bindus): uphill resistance and delays.`;
   }
+  if (targetHouse === 4 && sav.lagnaPlotPurchase) {
+    gate5Rationale += ` Lagna BAV (49 Bindus) favors ${sav.lagnaPlotPurchase.bestDirection} (${sav.lagnaPlotPurchase.sanskritName}, ${sav.lagnaPlotPurchase.bestBindus} bindus) for plot/home purchase.`;
+  }
   gate5Score = Math.max(0, Math.min(10, gate5Score));
 
-  // 7. Gate 6: Affliction & Bhanga Neutralization (Max 5 points)
+  // 7. Gate 6: Affliction & Bhanga Neutralization (Max 5 points) — Dynamic Astronomical Check
   let gate6Score = 4;
-  let gate6Rationale = "No unmitigated dosha detected on the active axis.";
-  gate6Score = Math.max(0, Math.min(5, gate6Score));
+  const gate6Notes: string[] = [];
+  const sunPos = natalEphemeris.planets["Sun"];
+  const jupPos = natalEphemeris.planets["Jupiter"];
+  const rahuPos = natalEphemeris.planets["Rahu"];
+  const ketuPos = natalEphemeris.planets["Ketu"];
+
+  if (targetLord && targetLordName !== "Sun" && sunPos) {
+    let angDiff = Math.abs(targetLord.siderealLongitude - sunPos.siderealLongitude) % 360;
+    if (angDiff > 180) angDiff = 360 - angDiff;
+    if (angDiff <= 8.5) {
+      gate6Score -= 2;
+      gate6Notes.push(`${targetLordName} is in solar combustion (${angDiff.toFixed(1)}° from Sun)`);
+    }
+  }
+  if (targetLord && (targetLord.rashi.index === rahuPos?.rashi.index || targetLord.rashi.index === ketuPos?.rashi.index)) {
+    gate6Score -= 1;
+    gate6Notes.push(`${targetLordName} shares nodal axis with Rahu/Ketu`);
+  }
+  if (jupPos && targetLord) {
+    const jupDiff = (targetLord.rashi.index - jupPos.rashi.index + 12) % 12;
+    if ([0, 4, 6, 8].includes(jupDiff)) {
+      gate6Score += 2;
+      gate6Notes.push(`Jupiter casts protective Shubha Drishti on ${targetLordName}`);
+    }
+  }
+  if (lordDignity === "DEBILITATED" && targetLord) {
+    const dispName = SIGN_LORDS[targetLord.rashi.index];
+    const dispPlanet = dispName ? natalEphemeris.planets[dispName] : undefined;
+    if (dispPlanet && [1, 4, 7, 10].includes(dispPlanet.house)) {
+      gate6Score += 2;
+      gate6Notes.push(`Neecha Bhanga Raja Yoga active via dispositor ${dispName} in Kendra H${dispPlanet.house}`);
+    }
+  }
+  gate6Score = Math.max(1, Math.min(5, gate6Score));
+  const gate6Rationale =
+    gate6Notes.length > 0
+      ? gate6Notes.join("; ") + "."
+      : "No unmitigated combustion or nodal eclipse detected on the active Bhava lord.";
 
   // 8. Total Composite Fulfillment Score
   const totalComposite = gate1Score + gate2Score + gate3Score + gate4Score + gate5Score + gate6Score;
@@ -320,6 +377,18 @@ export function arbitratePredictiveQuery(
   let recommendedUpaya = "Perform daily morning Surya Arghya with Gayatri Japa and feed birds on Wednesdays.";
   if (targetHouse === 7) {
     recommendedUpaya = "Perform sacred cow service (Gau-Seva) or offer white fragrant flowers on Fridays.";
+  } else if (targetHouse === 4) {
+    recommendedUpaya = "Perform Vastu Bhumi Pujan, honor the Mother/Kula Devata, and offer sweet milk or white rice on Mondays and Tuesdays.";
+  } else if (targetHouse === 5) {
+    recommendedUpaya = "Chant Santana Gopala / Saraswati Stotram on Thursdays and donate educational books or yellow gram to students.";
+  } else if (targetHouse === 2) {
+    recommendedUpaya = "Recite Sri Suktam on Fridays, maintain ethical speech (Satya Vachana), and offer turmeric/saffron tilak on Thursdays.";
+  } else if (targetHouse === 6) {
+    recommendedUpaya = "Recite Aditya Hridaya Stotram and Hanuman Chalisa on Tuesdays, and offer black sesame or stray dog feeding on Saturdays.";
+  } else if (targetHouse === 9) {
+    recommendedUpaya = "Honor your Guru/mentors on Thursdays, light a ghee lamp at dawn, and perform Vishnu Sahasranama parayana.";
+  } else if (targetHouse === 12) {
+    recommendedUpaya = "Practice 10 minutes of evening Prana-Dhyana before sleep and donate blankets or footwear to travelers/shelters on Saturdays.";
   } else if (targetHouse === 10) {
     recommendedUpaya = "Light a mustard oil lamp under a sacred tree on Saturdays and practice selfless workplace duty.";
   }

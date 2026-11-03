@@ -904,7 +904,7 @@
 
 # Phase 41: Pisces (Meena) Archetype, Kalapurusha Script Overlay, Elemental Immunity & Special Drishti Mechanics (Sessions 42, 43, 44, 45)
 
-## Status: In Progress
+## Status: Complete & Verified (All 156 Tests Passing & 0 TS Errors)
 - **Trigger Keywords**: `meena-rashi`, `pisces-significance`, `blind-faith-pisces`, `andha-vishwas`, `daiva-kripa`, `kalapurusha-script-overlay`, `elemental-immunity-hierarchy`, `pathogen-resistance`, `water-lord-fire-immunity`, `special-drishti-archetypes`, `saturn-gemini-capricorn-aspects`, `mars-cancer-scorpio-aspects`, `jupiter-leo-sagittarius-aspects`, `rahu-ketu-nodal-aspects`
 - **Single Source of Truth**: Tracking Phase 41 across `src/engine/meenaKalapurushaDrishti.ts`, `src/engine/chatPrompt.ts`, `src/engine/chatContext.ts`, `src/components/AstroChatbot.tsx`, `src/components/DashaView.tsx`, and `tests/engine.test.mjs`.
 
@@ -1722,3 +1722,40 @@
   - [x] Create interactive React component src/components/PreMarketTradingView.tsx with date picker, quick presets, D1 Macro, H1 24h table, and M15 micro cards.
   - [x] Integrate module into src/store/useAstroStore.ts, src/components/HeaderNav.tsx, src/app/page.tsx, and src/components/MobileBottomNav.tsx.
   - [x] Deploy to GitHub remote origin/main to trigger live production Vercel rebuild for stroweb-swart.vercel.app.
+
+
+---
+
+# Phase 64: Acharya Jyotish AI Pro Next-Gen Chatbot Architecture, 10-Domain Neuro-Symbolic Arbitrator, Unified SSE RAG Streaming & Studio UI Overhaul
+
+## Status: Complete & Verified (All 156 Tests Passing & 0 TS Errors)
+- **Trigger Keywords**: `astrological-calculation`, `generative_ui`, `audit-code-review`, `neuro-symbolic-arbitrator`, `sse-rag-streaming`, `dual-layer-prompt-clarity`, `lagna-bav-plot-direction-card`, `chatbot-studio-ui`
+- **Scope**:
+  1. **Phase 64.1: 10-Domain Neuro-Symbolic Predictive Arbitrator & Real Gate 6 Affliction Math (`src/engine/predictiveArbitrator.ts`)**:
+     - Expand domain arbitration from 5 to 10 complete life domains: Career (`H10`), Marriage (`H7`), Wealth (`H2/H11`), Property/Plot/Home (`H4` + Lagna BAV Direction), Progeny/Children (`H5`), Education (`H4/H5/H9`), Foreign Settlement (`H12/H9`), Health/Vitality (`H6/H8`), Litigation/Debt (`H6`), and Spirituality (`H9/H12`).
+     - Replace hardcoded Gate 6 (`4/5`) with real astronomical affliction & cancellation math (Combustion, Planetary War, Rahu/Ketu nodal conjunction, and Neecha Bhanga / Shubha Drishti mitigation).
+  2. **Phase 64.2: Dual-Layer Prompt Clarity & Memory Vault Cleanup (`src/engine/chatPrompt.ts` & `src/engine/clientMemoryVault.ts`)**:
+     - Resolve contradiction between Rule 0AQ/0AU and Rule 5 by introducing `consultationDepth: "seeker" | "scholar"` mode in `buildChatSystemInstruction`.
+     - Remove brittle global hardcoded initial regexes (`/it starts with v\b/i`, `/it's de\b/i`) that could trigger false positives across users.
+  3. **Phase 64.3: Phase 62 Lagna BAV Plot Purchase Dossier Integration (`src/engine/chatContext.ts`)**:
+     - Inject `av.lagnaPlotPurchase` (49 Bindus, 4 cardinal directions, winning plot purchase direction, best Rashis, and Vastu guidance) into Section 8 of `buildAstroDossier`.
+  4. **Phase 64.4: Unified Server-Sent Events (SSE) RAG + Arbitrator Streaming Route (`src/app/api/astro-chat/route.ts`)**:
+     - Upgrade `/api/astro-chat` to support `stream: true` via SSE (`text/event-stream`), emitting a structured `meta` event (`arbitrationResult`, `ragCitations`, `consultationState`) followed by real-time Gemini token chunks (`chunk` events) and `done`.
+     - Keep backward-compatible JSON response when `stream !== true` so existing tests and callers continue working seamlessly.
+  5. **Phase 64.5: Next-Gen Consultation Studio UI, 6-Gate Verdict Card, Rich Markdown & Per-Profile Persistence (`src/components/AstroChatbot.tsx`)**:
+     - Route primary streaming through `/api/astro-chat` (`stream: true`) with `runningDasha` and `consultationDepth` so 100% of answers get Server RAG, 6-Gate Arbitration, and Client Memory (with client fallback if offline).
+     - Add **3-Mode Viewport Switcher** (`Compact Drawer 480px`, `Wide Split-Screen 760px`, `Full-Screen Studio`) and **Collapsible Category/Journey Bar** (`+160px` vertical reading space).
+     - Add **🌱 Seeker vs. 📜 Scholar Mode** toggle in header + **Per-Profile Chat History Persistence** in `localStorage` + **1-Click Export Markdown**.
+     - Render interactive **6-Gate Neuro-Symbolic Verdict Meter Card** & **RAG Shastric Citation Pills** on AI responses, plus `[CARD:PLOT_DIRECTION]` generative widget and rich Markdown formatting (headers, bold, tables, callouts, bullet lists).
+  6. **Phase 64.6: Automated Verification & Production Build (`tests/engine.test.mjs`)**:
+     - Add Subtest 156 verifying 10-domain `arbitratePredictiveQuery`, dynamic Gate 6 affliction math, `consultationDepth` prompt modes, and Lagna BAV Plot Purchase context dossier injection.
+     - Run `npm test`, `npx tsc --noEmit`, and `npm run build`.
+
+## Phases & Milestones
+
+- [x] **Phase 64.1: 10-Domain Neuro-Symbolic Arbitrator & Gate 6 Math (`src/engine/predictiveArbitrator.ts`)**
+- [x] **Phase 64.2: Dual-Layer Prompt Clarity & Memory Vault Cleanup (`src/engine/chatPrompt.ts` & `src/engine/clientMemoryVault.ts`)**
+- [x] **Phase 64.3: Lagna BAV Plot Purchase Context Integration (`src/engine/chatContext.ts`)**
+- [x] **Phase 64.4: Unified Server-Sent Events (SSE) RAG + Arbitrator Streaming (`src/app/api/astro-chat/route.ts`)**
+- [x] **Phase 64.5: Next-Gen Consultation Studio UI & Generative Cards (`src/components/AstroChatbot.tsx`)**
+- [x] **Phase 64.6: Automated Test Suite & Quality Gates (`tests/engine.test.mjs`)**
