@@ -240,12 +240,12 @@ export default function HeaderNav() {
       ],
     },
     {
-      category: "Financial Astromancy & Trading",
+      category: "Institutional Trading",
       items: [
         {
           mode: "pre-market",
           label: "Pre-Market Trading Terminal",
-          desc: "Rome CET/CEST Daily Macro, 24h Dina/Ratri Horas & M15 Microstructure Playbook",
+          desc: "Rome CET/CEST Daily Macro, 24h Hourly Roadmap & M15 Execution Guide",
           badge: "Gold XAU",
         },
       ],
@@ -448,6 +448,25 @@ export default function HeaderNav() {
               {currentModule.label}
             </span>
             <span className="text-[9px] text-slate-500 font-bold ml-0.5">▼</span>
+          </button>
+
+          {/* Direct Visible Trading Terminal Tab */}
+          <button
+            onClick={() => setViewMode(viewMode === "pre-market" ? "kundli-north" : "pre-market")}
+            className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer font-bold text-xs ${
+              viewMode === "pre-market"
+                ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/30 font-extrabold"
+                : "bg-amber-950/40 hover:bg-amber-900/60 border-amber-600/50 text-amber-300 hover:text-white"
+            }`}
+            title="Switch to Pre-Market Trading Terminal (Rome CET / Gold XAU)"
+          >
+            <span>📈</span>
+            <span className="whitespace-nowrap">Trading Terminal</span>
+            <span className={`text-[9px] px-1 py-0.2 rounded font-extrabold uppercase ${
+              viewMode === "pre-market" ? "bg-slate-900 text-amber-300" : "bg-amber-500/20 text-amber-200"
+            }`}>
+              Gold
+            </span>
           </button>
         </div>
 
