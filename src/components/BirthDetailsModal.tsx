@@ -68,9 +68,10 @@ export default function BirthDetailsModal({
       const day = String(d.getUTCDate()).padStart(2, "0");
       const h = String(d.getUTCHours()).padStart(2, "0");
       const min = String(d.getUTCMinutes()).padStart(2, "0");
+      const sec = String(d.getUTCSeconds()).padStart(2, "0");
 
       setDateStr(`${y}-${m}-${day}`);
-      setTimeStr(`${h}:${min}`);
+      setTimeStr(d.getUTCSeconds() > 0 ? `${h}:${min}:${sec}` : `${h}:${min}`);
     }
   }, [isOpen, activeProfileName, storeGender, storeLocation, currentDate]);
 
@@ -96,13 +97,13 @@ export default function BirthDetailsModal({
     try {
       setIsSubmitting(true);
       const [y, m, d] = dateStr.split("-").map(Number);
-      const [h, min] = timeStr.split(":").map(Number);
+      const [h, min, sec = 0] = timeStr.split(":").map(Number);
 
       const tzOffsetHours = selectedLoc.timezoneOffsetHours ?? 5.5;
       const tzOffsetMs = tzOffsetHours * 3600 * 1000;
 
-      // Local Civil milliseconds treated as UTC, then subtract tz offset to get real UTC
-      const localUtcMs = Date.UTC(y, m - 1, d, h, min, 0);
+      // Local Civil milliseconds treated as UTC, then subtract tz offset to get real UTC (preserving seconds :SS)
+      const localUtcMs = Date.UTC(y, m - 1, d, h || 0, min || 0, sec || 0);
       const targetUtcDate = new Date(localUtcMs - tzOffsetMs);
 
       const finalName = name.trim() || "Seeker";
@@ -224,6 +225,7 @@ export default function BirthDetailsModal({
               </label>
               <input
                 type="time"
+                step="1"
                 value={timeStr}
                 onChange={(e) => setTimeStr(e.target.value)}
                 required

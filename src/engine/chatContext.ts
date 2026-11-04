@@ -179,11 +179,13 @@ export function buildAstroDossier(
   const localDay = localBirthDate.getUTCDate();
   const localHours = String(localBirthDate.getUTCHours()).padStart(2, "0");
   const localMinutes = String(localBirthDate.getUTCMinutes()).padStart(2, "0");
+  const localSecondsNum = localBirthDate.getUTCSeconds();
+  const localSecondsSuffix = localSecondsNum > 0 ? `:${String(localSecondsNum).padStart(2, "0")}` : "";
   const tzSign = tzOffset >= 0 ? "+" : "-";
   const tzAbsH = Math.floor(Math.abs(tzOffset));
   const tzAbsM = Math.round((Math.abs(tzOffset) - tzAbsH) * 60);
   const tzFormatted = `UTC${tzSign}${String(tzAbsH).padStart(2, "0")}:${String(tzAbsM).padStart(2, "0")}`;
-  const localBirthStr = `${localMonth} ${localDay}, ${localYear} at ${localHours}:${localMinutes} (${tzFormatted} Local Standard Time)`;
+  const localBirthStr = `${localMonth} ${localDay}, ${localYear} at ${localHours}:${localMinutes}${localSecondsSuffix} (${tzFormatted} Local Standard Time)`;
 
   const moonLon = natalEphemeris.planets.Moon?.siderealLongitude || 0;
   const ascLon = natalEphemeris.ascendant.siderealLongitude;
@@ -583,17 +585,23 @@ export function buildAstroDossier(
   try {
     const edu = evaluateEducationStream(natalEphemeris);
     const topStreams = edu.streamAptitudes.slice(0, 3)
-      .map((s) => "- " + s.icon + " **" + s.streamName + ":** " + s.aptitudeScorePercent + "% Aptitude • Recommended: " + s.recommendedDegrees.slice(0, 2).join(", "))
+      .map((s) => "- " + s.icon + " **" + s.streamName + ":** " + s.aptitudeScorePercent + "% Aptitude • Formal Study: " + s.recommendedDegrees.slice(0, 2).join(", ") + (s.practicalAndNonDegreePathways ? " • Hands-On / Non-Degree / Self-Taught: " + s.practicalAndNonDegreePathways.slice(0, 2).join(", ") : ""))
       .join("\n");
+
+    const vb = edu.vidhyaBhangaRisk;
+    const vbLine = vb
+      ? `- **Vidhya Bhanga (Academic Interruption / Non-Linear Timeline Audit):** **[${vb.severity} RISK — ${vb.hasAcademicBreakRisk ? "BREAK / DELAY SIGNATURE PRESENT" : "CONTINUOUS"}]** • ${vb.classicalSynthesis}`
+      : "";
 
     educationSummary = [
       "- **Primary Recommended Stream:** **" + edu.topRecommendedStream.streamName + "** (" + edu.topRecommendedStream.aptitudeScorePercent + "% Match)",
       "- **Top Academic Orientations:**",
       topStreams,
-      "- **Tripartite Academic Houses:** 4th House (Schooling): " + edu.tripartiteHouses.fourthHouse.signName + " (Lord: " + edu.tripartiteHouses.fourthHouse.lord + ") • 5th House (Buddhi): " + edu.tripartiteHouses.fifthHouse.signName + " (Lord: " + edu.tripartiteHouses.fifthHouse.lord + ") • 9th House (Higher Vidya): " + edu.tripartiteHouses.ninthHouse.signName + " (Lord: " + edu.tripartiteHouses.ninthHouse.lord + ")",
+      "- **Tripartite Academic Houses:** 4th House (Schooling): " + edu.tripartiteHouses.fourthHouse.signName + " (Lord: " + edu.tripartiteHouses.fourthHouse.lord + ") • 5th House (Buddhi): " + edu.tripartiteHouses.fifthHouse.signName + " (Lord: " + edu.tripartiteHouses.fifthHouse.lord + ", Occupants: " + (edu.tripartiteHouses.fifthHouse.occupants.join(", ") || "None") + ") • 9th House (Higher Vidya): " + edu.tripartiteHouses.ninthHouse.signName + " (Lord: " + edu.tripartiteHouses.ninthHouse.lord + ")",
+      vbLine,
       "- **D24 Siddhamsa (Higher Learning & Distinction):** Lagna in " + edu.d24Siddhamsa.d24LagnaSign + " • Distinction Score: " + edu.d24Siddhamsa.academicDistinctionScore + "% (" + edu.d24Siddhamsa.researchPotential + ")",
       "- **Master Educational Guidance:** " + edu.masterAcademicGuidance,
-    ].join("\n");
+    ].filter(Boolean).join("\n");
   } catch (_) {}
 
   // 19. Parashari Multi-Dasha & Yogini Dasha
@@ -1431,8 +1439,8 @@ export function buildAstroDossier(
         const [dPart, tPart] = iso.split("T");
         if (!dPart || !tPart) return new Date(iso);
         const [y, m, d] = dPart.split("-").map(Number);
-        const [h, min] = tPart.split(":").map(Number);
-        const utcMs = Date.UTC(y, m - 1, d, h || 0, min || 0, 0) - tz * 3600 * 1000;
+        const [h, min, sec = 0] = tPart.split(":").map(Number);
+        const utcMs = Date.UTC(y, m - 1, d, h || 0, min || 0, sec || 0) - tz * 3600 * 1000;
         return new Date(utcMs);
       };
 

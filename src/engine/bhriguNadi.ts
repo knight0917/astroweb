@@ -364,55 +364,70 @@ export function evaluateBhriguPrashna(
 export function calculateNadiAgeProgressions(ephemeris: EphemerisResult): import("./types").NadiAgeProgressionCycle[] {
   const jupObj = ephemeris.planets.Jupiter;
   const jupSignIdx = jupObj ? Math.floor(jupObj.siderealLongitude / 30) : 0;
+  const ascSignIdx = Math.floor(ephemeris.ascendant.siderealLongitude / 30);
+
+  const getOccupantsInSign = (sIdx: number): string[] =>
+    Object.values(ephemeris.planets)
+      .filter((p) => !p.isModernPlanet && Math.floor(p.siderealLongitude / 30) === sIdx)
+      .map((p) => p.name);
+
+  const getHouseFromAsc = (sIdx: number): number => ((sIdx - ascSignIdx + 12) % 12) + 1;
+
+  const formatRoundNote = (roundIdx: number, baseFocus: string): string => {
+    const sIdx = (jupSignIdx + roundIdx) % 12;
+    const h = getHouseFromAsc(sIdx);
+    const occ = getOccupantsInSign(sIdx);
+    return `${baseFocus} (Activates Natal House ${h} in ${SIGN_NAMES[sIdx]}${occ.length ? ` with ${occ.join(", ")}` : ""}).`;
+  };
 
   const cycles: import("./types").NadiAgeProgressionCycle[] = [
     {
       cycleRound: 1,
-      ageRange: "Ages 1 - 12 (Infancy & Education)",
+      ageRange: "Ages 1 - 12 (Childhood Vitality & Early Imprints)",
       progressedSign: SIGN_NAMES[jupSignIdx],
       activatedHouses: [1, 5, 9],
-      lifeFocus: "Physical growth, primary schooling, parental nurture, foundational Sanskaras.",
-      keyMilestones: "Immunity building, language acquisition, and foundational learning.",
+      lifeFocus: formatRoundNote(0, "Physical growth, family environment, innate curiosity, and early life conditioning"),
+      keyMilestones: "Vitality foundation, speech/skill awakening, and early environmental adaptation.",
     },
     {
       cycleRound: 2,
-      ageRange: "Ages 13 - 24 (Higher Learning & Skills)",
+      ageRange: "Ages 13 - 24 (Youth Awakening, Skill/Hustle & Self-Discovery)",
       progressedSign: SIGN_NAMES[(jupSignIdx + 1) % 12],
       activatedHouses: [2, 6, 10],
-      lifeFocus: "Higher education, career skill acquisition, competitive exams, initial financial self-reliance.",
-      keyMilestones: "Graduation, first job / venture, and emergence of independent identity.",
+      lifeFocus: formatRoundNote(1, "Practical skill or knowledge acquisition (formal, self-taught, or hands-on trade), testing through early hurdles, and emerging self-reliance"),
+      keyMilestones: "First independent livelihood/craft/study milestone, directional pivots, and forging personal identity.",
     },
     {
       cycleRound: 3,
-      ageRange: "Ages 25 - 36 (Career & Conjugal Union)",
+      ageRange: "Ages 25 - 36 (Worldly Action, Alliances & Livelihood Expansion)",
       progressedSign: SIGN_NAMES[(jupSignIdx + 2) % 12],
       activatedHouses: [3, 7, 11],
-      lifeFocus: "Matrimony, establishment of family lineage, major career promotions, asset creation.",
-      keyMilestones: "Marriage, childbirth, real estate purchase, and professional expansion.",
+      lifeFocus: formatRoundNote(2, "Consolidating livelihood/work/trade, key partnerships or relationships, geographical movement, and material stability"),
+      keyMilestones: "Major work/business ventures, significant partnerships or autonomous living, and resource building.",
     },
     {
       cycleRound: 4,
-      ageRange: "Ages 37 - 48 (Executive Pinnacle & Status)",
+      ageRange: "Ages 37 - 48 (Mastery, Deep Transformation & Karmic Harvest)",
       progressedSign: SIGN_NAMES[(jupSignIdx + 3) % 12],
       activatedHouses: [4, 8, 12],
-      lifeFocus: "Peak professional leadership, societal prestige, wealth accumulation, spiritual introspection.",
-      keyMilestones: "Executive authority, major business breakthroughs, and mentorship roles.",
+      lifeFocus: formatRoundNote(3, "Peak life experience, inner transformation, navigating major responsibilities, and harvesting long-term karma"),
+      keyMilestones: "Autonomous command in one's chosen path, deep inner shifts, and guiding others.",
     },
     {
       cycleRound: 5,
-      ageRange: "Ages 49 - 60 (Legacy Consolidation & Dharma)",
+      ageRange: "Ages 49 - 60 (Elder Wisdom, Stewardship & Dharma)",
       progressedSign: SIGN_NAMES[(jupSignIdx + 4) % 12],
       activatedHouses: [1, 5, 9],
-      lifeFocus: "Children's settlement, philanthropic investments, religious pilgrimages, legacy handoff.",
-      keyMilestones: "Grandchildren, senior societal honors, and spiritual renunciation.",
+      lifeFocus: formatRoundNote(4, "Sharing life wisdom, community/family stewardship, spiritual deepening, and simplifying worldly entanglements"),
+      keyMilestones: "Mentorship, spiritual pilgrimage or inner retreat, and lasting life contribution.",
     },
     {
       cycleRound: 6,
-      ageRange: "Ages 61 - 72+ (Moksha & Spiritual Enlightenment)",
+      ageRange: "Ages 61 - 72+ (Moksha, Inner Peace & Liberation)",
       progressedSign: SIGN_NAMES[(jupSignIdx + 5) % 12],
       activatedHouses: [2, 6, 10],
-      lifeFocus: "Self-realization, dispassionate wisdom, sharing ancestral knowledge, liberation.",
-      keyMilestones: "Spiritual mastery, peace of mind, and harmonious detachment.",
+      lifeFocus: formatRoundNote(5, "Self-realization, dispassionate wisdom, and peaceful detachment"),
+      keyMilestones: "Spiritual equanimity, grace, and inner freedom.",
     },
   ];
 

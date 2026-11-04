@@ -767,7 +767,10 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     const localMs = currentDate.getTime() + tzOffset * 3600 * 1000;
     const localDate = new Date(localMs);
     const dob = `${localDate.getUTCFullYear()}-${String(localDate.getUTCMonth() + 1).padStart(2, "0")}-${String(localDate.getUTCDate()).padStart(2, "0")}`;
-    const time = `${String(localDate.getUTCHours()).padStart(2, "0")}:${String(localDate.getUTCMinutes()).padStart(2, "0")}`;
+    const secNum = localDate.getUTCSeconds();
+    const time = secNum > 0
+      ? `${String(localDate.getUTCHours()).padStart(2, "0")}:${String(localDate.getUTCMinutes()).padStart(2, "0")}:${String(secNum).padStart(2, "0")}`
+      : `${String(localDate.getUTCHours()).padStart(2, "0")}:${String(localDate.getUTCMinutes()).padStart(2, "0")}`;
 
     const newProfile: BirthProfile = {
       id,

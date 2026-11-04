@@ -31,6 +31,7 @@ export interface StreamAptitude {
   aptitudeScorePercent: number;
   keyKarakaPlanets: string[];
   recommendedDegrees: string[];
+  practicalAndNonDegreePathways?: string[];
   careerPathways: string[];
   classicalReasoning: string;
 }
@@ -43,6 +44,14 @@ export interface D24SiddhamsaReport {
   classicalInterpretation: string;
 }
 
+export interface VidhyaBhangaRiskReport {
+  hasAcademicBreakRisk: boolean;
+  severity: "HIGH" | "MODERATE" | "LOW";
+  triggerFactors: string[];
+  recoveryIndicators: string[];
+  classicalSynthesis: string;
+}
+
 export interface EducationStreamReport {
   tripartiteHouses: {
     fourthHouse: AcademicHouseInfo;
@@ -52,6 +61,7 @@ export interface EducationStreamReport {
   streamAptitudes: StreamAptitude[];
   topRecommendedStream: StreamAptitude;
   d24Siddhamsa: D24SiddhamsaReport;
+  vidhyaBhangaRisk: VidhyaBhangaRiskReport;
   masterAcademicGuidance: string;
 }
 
@@ -92,6 +102,82 @@ export function evaluateEducationStream(natalEphem: EphemerisResult): EducationS
   const h9Lord = RASHI_LORD_NAMES[h9SignIdx];
   const h9Occupants = getOccupants(9);
 
+  const h8SignIdx = (ascSign + 7) % 12;
+  const h8Lord = RASHI_LORD_NAMES[h8SignIdx];
+
+  const isDebilitated = (pName: string): boolean => {
+    const s = getSign(pName);
+    return (
+      (pName === "Sun" && s === 6) ||
+      (pName === "Moon" && s === 7) ||
+      (pName === "Mars" && s === 3) ||
+      (pName === "Mercury" && s === 11) ||
+      (pName === "Jupiter" && s === 9) ||
+      (pName === "Venus" && s === 5) ||
+      (pName === "Saturn" && s === 0)
+    );
+  };
+
+  const isExaltedOrOwn = (pName: string): boolean => {
+    const s = getSign(pName);
+    if (RASHI_LORD_NAMES[s] === pName) return true;
+    return (
+      (pName === "Sun" && s === 0) ||
+      (pName === "Moon" && s === 1) ||
+      (pName === "Mars" && s === 9) ||
+      (pName === "Mercury" && s === 5) ||
+      (pName === "Jupiter" && s === 3) ||
+      (pName === "Venus" && s === 11) ||
+      (pName === "Saturn" && s === 6)
+    );
+  };
+
+  const isGandanta = (pName: string): boolean => {
+    const lon = (planets as any)[pName]?.siderealLongitude || 0;
+    const s = Math.floor(lon / 30);
+    const deg = lon % 30;
+    return ([3, 7, 11].includes(s) && deg >= 26.66) || ([0, 4, 8].includes(s) && deg <= 3.33);
+  };
+
+  const triggerFactors: string[] = [];
+  const recoveryIndicators: string[] = [];
+
+  if (h5Occupants.includes("Rahu") || h5Occupants.includes("Ketu")) {
+    triggerFactors.push(`Nodal axis (${h5Occupants.filter((p) => p === "Rahu" || p === "Ketu").join("/")}) occupying 5th House of Buddhi`);
+  }
+  if (h5Occupants.includes(h8Lord)) {
+    triggerFactors.push(`8th Lord (${h8Lord}) conjoined in 5th House (sudden exam break / stream change)`);
+  }
+  if (h5Occupants.includes("Saturn")) {
+    triggerFactors.push(`Saturn occupying 5th House (delayed graduation / slow methodical maturation)`);
+  }
+  if (isDebilitated(h5Lord)) {
+    triggerFactors.push(`5th Lord ${h5Lord} is Debilitated (Neecha) in ${RASHI_NAMES[getSign(h5Lord)].englishName}`);
+  }
+  if (isGandanta(h5Lord)) {
+    triggerFactors.push(`5th Lord ${h5Lord} is at the Gandānta knot (emotional/mental pressure during board/entrance exams)`);
+  }
+  if ([6, 8, 12].includes(getHouse(h5Lord))) {
+    triggerFactors.push(`5th Lord ${h5Lord} placed in Dusthana House ${getHouse(h5Lord)}`);
+  }
+
+  if ([1, 4, 5, 9, 10, 11].includes(getHouse(h5Lord))) {
+    recoveryIndicators.push(`5th Lord ${h5Lord} placed in auspicious House ${getHouse(h5Lord)} (${RASHI_NAMES[getSign(h5Lord)].englishName})`);
+  }
+  if (isExaltedOrOwn(h4Lord)) {
+    recoveryIndicators.push(`4th Lord ${h4Lord} fortified in Own/Exalted sign in House ${getHouse(h4Lord)}`);
+  }
+  if (isExaltedOrOwn(h9Lord)) {
+    recoveryIndicators.push(`9th Lord ${h9Lord} fortified in Own/Exalted sign in House ${getHouse(h9Lord)} (strong higher-education recovery)`);
+  }
+  if (isExaltedOrOwn("Mercury")) {
+    recoveryIndicators.push(`Vidya Karaka Mercury exalted/own-sign in House ${getHouse("Mercury")}`);
+  }
+
+  const hasAcademicBreakRisk = triggerFactors.length >= 2 || (isDebilitated(h5Lord) && h5Occupants.length > 0);
+  const severity: "HIGH" | "MODERATE" | "LOW" =
+    triggerFactors.length >= 3 ? "HIGH" : triggerFactors.length >= 1 ? "MODERATE" : "LOW";
+
   const fourthHouse: AcademicHouseInfo = {
     houseNum: 4,
     name: "4th House: Schooling & Foundational Environment",
@@ -101,7 +187,7 @@ export function evaluateEducationStream(natalEphem: EphemerisResult): EducationS
     lord: h4Lord,
     lordHouseInD1: getHouse(h4Lord),
     occupants: h4Occupants,
-    synthesis: `4th house in ${RASHI_NAMES[h4SignIdx].englishName} ruled by ${h4Lord} establishes sound retention and learning memory.`,
+    synthesis: `4th house in ${RASHI_NAMES[h4SignIdx].englishName} ruled by ${h4Lord} (in H${getHouse(h4Lord)})${isExaltedOrOwn(h4Lord) ? " provides a resilient analytical foundation" : " shapes foundational schooling environment"}.`,
   };
 
   const fifthHouse: AcademicHouseInfo = {
@@ -113,7 +199,9 @@ export function evaluateEducationStream(natalEphem: EphemerisResult): EducationS
     lord: h5Lord,
     lordHouseInD1: getHouse(h5Lord),
     occupants: h5Occupants,
-    synthesis: `5th house in ${RASHI_NAMES[h5SignIdx].englishName} ruled by ${h5Lord} indicates sharp discernment, critical logic, and inventive flair.`,
+    synthesis: hasAcademicBreakRisk
+      ? `5th house in ${RASHI_NAMES[h5SignIdx].englishName} (${h5Occupants.length ? `occupied by ${h5Occupants.join(", ")}` : "unoccupied"}) with 5th lord ${h5Lord} in H${getHouse(h5Lord)} indicates unconventional intuition but carries a Vidhya Bhanga (academic interruption / exam setback / gap year) signature around age 18–19 before higher-education recovery.`
+      : `5th house in ${RASHI_NAMES[h5SignIdx].englishName} ruled by ${h5Lord} in H${getHouse(h5Lord)} indicates sharp discernment, critical logic, and structured learning.`,
   };
 
   const ninthHouse: AcademicHouseInfo = {
@@ -125,7 +213,7 @@ export function evaluateEducationStream(natalEphem: EphemerisResult): EducationS
     lord: h9Lord,
     lordHouseInD1: getHouse(h9Lord),
     occupants: h9Occupants,
-    synthesis: `9th house in ${RASHI_NAMES[h9SignIdx].englishName} ruled by ${h9Lord} opens gates for higher academic distinctions and specialized research.`,
+    synthesis: `9th house in ${RASHI_NAMES[h9SignIdx].englishName} ruled by ${h9Lord} (in H${getHouse(h9Lord)})${h9Occupants.length ? ` with ${h9Occupants.join(", ")}` : ""} ${isExaltedOrOwn(h9Lord) || h9Occupants.includes(h9Lord) ? "strongly rescues higher university studies after any adolescent schooling turbulence" : "governs university specialization and higher learning"}.`,
   };
 
   // -------------------------------------------------------------------------
@@ -199,63 +287,69 @@ export function evaluateEducationStream(natalEphem: EphemerisResult): EducationS
       aptitudeScorePercent: engScore,
       keyKarakaPlanets: ["Mars (Logic/Machines)", "Saturn (Structures)", "Mercury/Rahu (IT/AI)"],
       recommendedDegrees: ["B.Tech / M.Tech in Computer Science / AI", "Data Engineering", "Mechanical / Electrical Engineering"],
-      careerPathways: ["Software Architect", "AI Engineer", "Robotics Specialist", "Chief Technology Officer"],
-      classicalReasoning: "Strong technical Mars-Saturn-Rahu connectivity with intellectual kendras favors technological mastery and systems architecture.",
+      practicalAndNonDegreePathways: ["Self-Taught Software / Coding", "Electronics & Hardware Repair", "Automotive / Machinery Mechanics", "Construction & Technical Contracting"],
+      careerPathways: ["Software Architect", "AI Engineer", "Robotics Specialist", "Technical Entrepreneur / Master Mechanic"],
+      classicalReasoning: "Strong technical Mars-Saturn-Rahu connectivity with intellectual kendras favors technological mastery, hands-on machinery, and systems architecture (whether via formal degree or self-taught technical craft).",
     },
     {
       id: "commerce",
-      streamName: "Commerce, Finance, Management & Economics",
-      sanskritName: "वाणिज्य, वित्त, अर्थशास्त्र एवं प्रबन्धन",
+      streamName: "Commerce, Finance, Trading & Entrepreneurship",
+      sanskritName: "वाणिज्य, वित्त, व्यापार एवं प्रबन्धन",
       icon: "📈",
       aptitudeScorePercent: comScore,
       keyKarakaPlanets: ["Mercury (Calculation)", "Jupiter (Finance/Treasury)", "Venus (Wealth)"],
       recommendedDegrees: ["MBA Finance", "Chartered Accountancy (CA / CFA)", "B.Com / M.Com", "FinTech / Economics"],
-      careerPathways: ["Investment Banker", "Financial Director", "Corporate Strategist", "Wealth Consultant"],
-      classicalReasoning: "Auspicious Mercury-Jupiter linkage with 2nd and 11th Dhana sthanas promotes commercial acumen and fiscal leadership.",
+      practicalAndNonDegreePathways: ["Independent Financial / Market Trading", "Retail / Wholesale Merchant", "Self-Made Business & Deal-Making", "Supply Chain & Logistics Trade"],
+      careerPathways: ["Financial / Market Trader", "Business Owner / Merchant", "Corporate Strategist", "Wealth Consultant"],
+      classicalReasoning: "Auspicious Mercury-Jupiter linkage with 2nd, 5th, and 11th Dhana sthanas promotes commercial acumen, speculative market intuition, and independent trade (regardless of formal college credentials).",
     },
     {
       id: "science",
-      streamName: "Physical Sciences & Pure Mathematics",
+      streamName: "Physical Sciences, Analytics & Applied Calculation",
       sanskritName: "भौतिकी, रसायन एवं शुद्ध गणित",
       icon: "📐",
       aptitudeScorePercent: sciScore,
       keyKarakaPlanets: ["Mercury (Calculus)", "Sun (Core Abstraction)", "Mars (Precision Logic)"],
       recommendedDegrees: ["B.Sc / M.Sc Mathematics", "Physics / Astrophysics", "Data Science & Statistics"],
-      careerPathways: ["Research Scientist", "Mathematician", "Quantitative Analyst", "Academic Professor"],
-      classicalReasoning: "Mercury and Sun alignment in cognitive trikonas bestows penetrating conceptual abstraction and computational brilliance.",
+      practicalAndNonDegreePathways: ["Quantitative Market Analysis", "Precision Instrumentation & Lab Craft", "Independent Data / Algorithmic Systems"],
+      careerPathways: ["Research Scientist", "Quantitative Analyst", "Data Strategist", "Technical Specialist"],
+      classicalReasoning: "Mercury and Sun alignment in cognitive trikonas bestows penetrating conceptual abstraction and numerical precision.",
     },
     {
       id: "law",
-      streamName: "Law, Governance & Public Administration",
+      streamName: "Law, Governance, Community Leadership & Public Affairs",
       sanskritName: "विधि, न्यायशास्त्र एवं प्रशासनिक सेवा",
       icon: "⚖️",
       aptitudeScorePercent: lawScore,
       keyKarakaPlanets: ["Jupiter (Dharma/Jurisprudence)", "Sun (State Power)", "Mars (Executive Action)"],
       recommendedDegrees: ["BA-LLB / LLM", "Public Policy", "Civil Services (UPSC / State PSC)"],
-      careerPathways: ["Corporate Lawyer", "Judicial Magistrate", "Civil Servant (IAS/IPS)", "Policy Analyst"],
-      classicalReasoning: "Jupiter\'s dharmic aspect on authority sthanas supports ethical jurisprudence, institutional leadership, and constitutional law.",
+      practicalAndNonDegreePathways: ["Grassroots Community Leadership", "Local Governance / Panchayat / Union Leadership", "Real Estate & Land Mediation", "Security & Enforcement Operations"],
+      careerPathways: ["Legal / Policy Advisor", "Public Leader / Organizer", "Civil Servant", "Contract & Land Negotiator"],
+      classicalReasoning: "Jupiter's dharmic aspect on authority sthanas supports ethical leadership, mediation, and organizational command.",
     },
     {
       id: "medicine",
-      streamName: "Medical, Healthcare & Biological Sciences",
+      streamName: "Medical, Healing, Fitness & Life Sciences",
       sanskritName: "चिकित्सा, शल्यक्रिया एवं आयुर्वेद",
       icon: "🩺",
       aptitudeScorePercent: medScore,
       keyKarakaPlanets: ["Sun (Prana/Vitality)", "Mars (Surgical Precision)", "Jupiter/Moon (Healing Herbs)"],
       recommendedDegrees: ["MBBS / MD / MS", "Biotechnology", "Pharmacy / BDS / Ayurveda"],
-      careerPathways: ["Physician / Surgeon", "Healthcare Administrator", "Biotech Researcher", "Pharmacologist"],
-      classicalReasoning: "Vital Sun-Mars-Jupiter interaction with healthcare trik sthanas enables healing diagnostics and biomedical research.",
+      practicalAndNonDegreePathways: ["Traditional Herbal / Holistic Healing", "Physical Therapy, Fitness & Athletics Coaching", "Medical Supply / Pharmacy Trade", "Emergency Care & Nursing Support"],
+      careerPathways: ["Physician / Healer", "Fitness & Wellness Coach", "Healthcare Entrepreneur", "Pharmacologist"],
+      classicalReasoning: "Vital Sun-Mars-Jupiter interaction with healthcare trik sthanas enables healing diagnostics, physical vitality work, and caregiving.",
     },
     {
       id: "humanities",
-      streamName: "Humanities, Arts, Literature & Media",
-      sanskritName: "साहित्य, ललित कला, पत्रकारिता एवं संचार",
+      streamName: "Humanities, Creative Arts, Crafts & Media",
+      sanskritName: "साहित्य, ललित कला, शिल्प एवं संचार",
       icon: "🎨",
       aptitudeScorePercent: artScore,
       keyKarakaPlanets: ["Venus (Aesthetics)", "Moon (Poetic Emotion)", "Mercury (Writing)"],
-      recommendedDegrees: ["BA / MA English / Literature", "Mass Communication & Journalism", "Graphic Design / Fine Arts"],
-      careerPathways: ["Creative Director", "Author / Journalist", "Media Executive", "Design Consultant"],
-      classicalReasoning: "Venus and Moon aesthetic alignment inspires creative eloquence, literary publishing, and artistic innovation.",
+      recommendedDegrees: ["BA / MA Literature", "Mass Communication & Journalism", "Graphic Design / Fine Arts"],
+      practicalAndNonDegreePathways: ["Digital Content Creation & Social Media", "Artisanal Craft, Fashion, Tailoring & Jewelry", "Culinary Arts & Hospitality", "Music, Performance & Storytelling"],
+      careerPathways: ["Creative Creator / Artisan", "Media & Content Producer", "Design Entrepreneur", "Hospitality Specialist"],
+      classicalReasoning: "Venus and Moon aesthetic alignment inspires creative eloquence, visual/manual craftsmanship, and public expression.",
     },
   ];
 
@@ -264,22 +358,54 @@ export function evaluateEducationStream(natalEphem: EphemerisResult): EducationS
   const topRecommendedStream = streamAptitudes[0];
 
   // -------------------------------------------------------------------------
-  // 3. D24 SIDDHAMSA (CHATURVIMSHAMSHA) HIGHER LEARNING
+  // 3. D24 SIDDHAMSA (CHATURVIMSHAMSHA) HIGHER LEARNING & VIDHYA BHANGA AUDIT
   // -------------------------------------------------------------------------
   const d24Chart = calculateShodashavargaChart(natalEphem, "D24");
   const d24LagnaName = d24Chart.ascendant.vargaRashi.englishName;
   const d24H5SignIdx = (d24Chart.ascendant.vargaRashi.index + 4) % 12;
   const d24H5SignName = RASHI_NAMES[d24H5SignIdx].englishName;
 
+  let distinctionScore = 76;
+  if (isExaltedOrOwn("Mercury")) distinctionScore += 8;
+  if (isExaltedOrOwn("Jupiter")) distinctionScore += 6;
+  if (isExaltedOrOwn(h5Lord)) distinctionScore += 7;
+  if (isExaltedOrOwn(h9Lord)) distinctionScore += 6;
+  if (isDebilitated(h5Lord)) distinctionScore -= 12;
+  if (isGandanta(h5Lord)) distinctionScore -= 6;
+  if (h5Occupants.includes("Rahu") || h5Occupants.includes("Ketu")) distinctionScore -= 5;
+  if (h5Occupants.includes(h8Lord)) distinctionScore -= 6;
+  distinctionScore = Math.max(48, Math.min(96, distinctionScore));
+
+  const researchPotential: D24SiddhamsaReport["researchPotential"] =
+    distinctionScore >= 85
+      ? "Exceptional / Doctoral Level"
+      : distinctionScore >= 70
+      ? "High / Professional Mastery"
+      : "Standard / Practical Application";
+
+  const vidhyaBhangaRisk: VidhyaBhangaRiskReport = {
+    hasAcademicBreakRisk,
+    severity,
+    triggerFactors,
+    recoveryIndicators,
+    classicalSynthesis: hasAcademicBreakRisk
+      ? `Classical Vidhya Bhanga & Non-Linear Learning Alert (K.N. Rao 'Planets and Education' & Phaladeepika Ch. 12): ${triggerFactors.join("; ")}. Depending on the native's age and background (Desha-Kaala-Paatra), this manifests in one of four ways: (1) If currently in school (Class 10/12), it creates exam pressure/distraction requiring disciplined focus; (2) If pursuing college, it causes an initial exam setback/drop year around age 18–19 before later completion (${recoveryIndicators.join("; ") || "11th/9th house restoration"}); (3) Leaving formal education after school (10th/12th) or before graduation to enter practical work/trade; or (4) If never formally schooled, channeling 5th-house Buddhi directly into street-smart intuition, speculative skill, or hands-on craft.`
+      : `Unobstructed 4th/5th/9th intellectual axis supports steady absorption of knowledge—whether in formal school/university (${recoveryIndicators.join("; ") || "balanced planetary support"}) or in practical vocational/self-taught mastery.`,
+  };
+
   const d24Siddhamsa: D24SiddhamsaReport = {
     d24LagnaSign: d24LagnaName,
     d24FifthHouseSign: d24H5SignName,
-    academicDistinctionScore: 92,
-    researchPotential: "Exceptional / Doctoral Level",
-    classicalInterpretation: `D24 Siddhamsa Lagna in ${d24LagnaName} with 5th house in ${d24H5SignName} confirms high intellectual absorption capacity, scholarship potential, and academic distinction.`,
+    academicDistinctionScore: distinctionScore,
+    researchPotential,
+    classicalInterpretation: hasAcademicBreakRisk
+      ? `D24 Siddhamsa Lagna in ${d24LagnaName} with 5th house in ${d24H5SignName} (${distinctionScore}% index) shows strong practical/technical mastery (${researchPotential}), though D-1 5th-house afflictions indicate an initial adolescent exam hurdle (Vidhya Bhanga) before university graduation.`
+      : `D24 Siddhamsa Lagna in ${d24LagnaName} with 5th house in ${d24H5SignName} (${distinctionScore}% index) confirms ${researchPotential} and steady intellectual absorption.`,
   };
 
-  const masterAcademicGuidance = `BVB Educational Counselling Model: Primary academic orientation aligns with ${topRecommendedStream.streamName} (${topRecommendedStream.aptitudeScorePercent}% Aptitude). Supported by strong 4th house foundation and D24 Siddhamsa in ${d24LagnaName}.`;
+  const masterAcademicGuidance = hasAcademicBreakRisk
+    ? `BVB Educational Counselling Model: Primary academic orientation aligns with ${topRecommendedStream.streamName} (${topRecommendedStream.aptitudeScorePercent}% Aptitude). ⚠️ NON-LINEAR TIMELINE NOTE: ${vidhyaBhangaRisk.classicalSynthesis}`
+    : `BVB Educational Counselling Model: Primary academic orientation aligns with ${topRecommendedStream.streamName} (${topRecommendedStream.aptitudeScorePercent}% Aptitude). Supported by 4th house foundation and D24 Siddhamsa in ${d24LagnaName}.`;
 
   return {
     tripartiteHouses: {
@@ -290,6 +416,7 @@ export function evaluateEducationStream(natalEphem: EphemerisResult): EducationS
     streamAptitudes,
     topRecommendedStream,
     d24Siddhamsa,
+    vidhyaBhangaRisk,
     masterAcademicGuidance,
   };
 }

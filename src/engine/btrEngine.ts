@@ -104,6 +104,8 @@ export interface VargaSensitivityNode {
   remainingSecondsInCurrentSign?: number;
   boundaryCountdownFormatted?: string;
   boundaryVulnerabilityIndex?: "CRITICAL_SENSITIVE" | "MODERATE_SENSITIVE" | "SECURE";
+  previousAscendantSign?: string;
+  nextAscendantSign?: string;
 }
 
 export interface TriEpochBirthMomentResult {
@@ -315,7 +317,7 @@ export function calculateTattvaShodhana(
   const weekdayName = weekdayNames[dayOfWeek];
   const weekdayLord = weekdayLords[dayOfWeek];
 
-  const localHoursDecimal = localDate.getUTCHours() + localDate.getUTCMinutes() / 60;
+  const localHoursDecimal = localDate.getUTCHours() + localDate.getUTCMinutes() / 60 + localDate.getUTCSeconds() / 3600;
   const sunriseHoursDecimal = 6.0;
   const elapsedMinutes = Math.floor(((localHoursDecimal - sunriseHoursDecimal + 24) % 24) * 60) % 180;
 
@@ -421,7 +423,7 @@ export function calculateVargaSensitivities(natalEphemeris: EphemerisResult): Va
       } else if (elapsedSecondsInCurrentSign <= 45 || remainingSecondsInCurrentSign <= 45) {
         boundaryVulnerabilityIndex = "MODERATE_SENSITIVE";
       }
-    } else if (v.id === "D9" || v.id === "D10" || v.id === "D24") {
+    } else if (v.id === "D3" || v.id === "D7" || v.id === "D9" || v.id === "D10" || v.id === "D24") {
       if (elapsedSecondsInCurrentSign <= 90 || remainingSecondsInCurrentSign <= 90) {
         boundaryVulnerabilityIndex = "CRITICAL_SENSITIVE";
       } else if (elapsedSecondsInCurrentSign <= 180 || remainingSecondsInCurrentSign <= 180) {
@@ -435,6 +437,22 @@ export function calculateVargaSensitivities(natalEphemeris: EphemerisResult): Va
     const vChart = calculateShodashavargaChart(natalEphemeris, v.id as any);
     const currentSign = vChart.ascendant?.vargaRashi?.englishName || "Virgo";
     const currentDeg = (ascLon % v.spanDeg);
+
+    // Compute adjacent (previous and next) Varga Ascendant signs across the cusp boundary
+    const prevLon = (ascLon - elapsedInVargaDeg - 0.02 + 360) % 360;
+    const nextLon = (ascLon + remainingInVargaDeg + 0.02) % 360;
+    const prevEphem: EphemerisResult = {
+      ...natalEphemeris,
+      ascendant: { ...natalEphemeris.ascendant, siderealLongitude: prevLon },
+    };
+    const nextEphem: EphemerisResult = {
+      ...natalEphemeris,
+      ascendant: { ...natalEphemeris.ascendant, siderealLongitude: nextLon },
+    };
+    const prevVChart = calculateShodashavargaChart(prevEphem, v.id as any);
+    const nextVChart = calculateShodashavargaChart(nextEphem, v.id as any);
+    const previousAscendantSign = prevVChart.ascendant?.vargaRashi?.englishName || currentSign;
+    const nextAscendantSign = nextVChart.ascendant?.vargaRashi?.englishName || currentSign;
 
     results.push({
       vargaId: v.id,
@@ -452,6 +470,8 @@ export function calculateVargaSensitivities(natalEphemeris: EphemerisResult): Va
       remainingSecondsInCurrentSign,
       boundaryCountdownFormatted,
       boundaryVulnerabilityIndex,
+      previousAscendantSign,
+      nextAscendantSign,
     });
   }
 
@@ -844,16 +864,74 @@ export function buildFullChronologicalDashaTimeline(
   const birthMs = birthDate.getTime();
   const msInYear = 365.2425 * 24 * 3600 * 1000;
 
-  const HOUSE_ACTIVATION_MAP: Record<string, number[]> = {
-    Sun: [1, 9, 10],
-    Moon: [4, 1, 11],
-    Mars: [3, 8, 10],
-    Rahu: [11, 6, 12],
-    Jupiter: [5, 9, 2, 7],
-    Saturn: [10, 11, 6, 8],
-    Mercury: [1, 4, 10, 5],
-    Ketu: [12, 8, 9],
-    Venus: [2, 7, 4, 9],
+  const ascSign = Math.floor(natalEphemeris.ascendant.siderealLongitude / 30);
+  const SIGN_RULERS = [
+    "Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury",
+    "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter",
+  ];
+
+  const getHousesRuledBy = (planetName: string): number[] => {
+    const ruled: number[] = [];
+    for (let h = 1; h <= 12; h++) {
+      const signIdx = (ascSign + h - 1) % 12;
+      if (SIGN_RULERS[signIdx] === planetName) {
+        ruled.push(h);
+      }
+    }
+    return ruled;
+  };
+
+  const getDynamicPlanetHouses = (planetName: string): number[] => {
+    const pObj = (natalEphemeris.planets as any)[planetName];
+    const occupiedHouse = pObj?.house || 1;
+    if (planetName === "Rahu" || planetName === "Ketu") {
+      // BPHS Ch. 47: Nodes act through occupied house, conjoined planets' lordships, and sign dispositor
+      const nodeSignIdx = Math.floor((pObj?.siderealLongitude || 0) / 30);
+      const dispositor = SIGN_RULERS[nodeSignIdx];
+      const dispHouse = (natalEphemeris.planets as any)[dispositor]?.house || occupiedHouse;
+      const dispRuled = getHousesRuledBy(dispositor);
+      const conjoinedRuled: number[] = [];
+      Object.values(natalEphemeris.planets).forEach((other: any) => {
+        if (!other.isModernPlanet && other.name !== planetName && other.house === occupiedHouse) {
+          conjoinedRuled.push(...getHousesRuledBy(other.name));
+        }
+      });
+      return Array.from(new Set([occupiedHouse, dispHouse, ...dispRuled, ...conjoinedRuled]));
+    }
+    return Array.from(new Set([occupiedHouse, ...getHousesRuledBy(planetName)]));
+  };
+
+  const fifthSignIdx = (ascSign + 4) % 12;
+  const fifthLord = SIGN_RULERS[fifthSignIdx];
+  const eighthSignIdx = (ascSign + 7) % 12;
+  const eighthLord = SIGN_RULERS[eighthSignIdx];
+  const eleventhSignIdx = (ascSign + 10) % 12;
+  const eleventhLord = SIGN_RULERS[eleventhSignIdx];
+  const twelfthSignIdx = (ascSign + 11) % 12;
+  const twelfthLord = SIGN_RULERS[twelfthSignIdx];
+
+  const fifthOccupants = Object.values(natalEphemeris.planets)
+    .filter((p: any) => !p.isModernPlanet && p.house === 5)
+    .map((p: any) => p.name);
+  const hasVidhyaBhangaSeed =
+    fifthOccupants.includes("Rahu") ||
+    fifthOccupants.includes("Ketu") ||
+    fifthOccupants.includes(eighthLord) ||
+    fifthOccupants.includes("Saturn");
+
+  const BHAVA_ARCHETYPE_SHORT: Record<number, string> = {
+    1: "Self/Identity & Vitality",
+    2: "Family, Speech & Sustenance",
+    3: "Courage, Self-Effort & Short Moves",
+    4: "Home, Mother, Roots & Inner Peace",
+    5: "Intellect/Skill, Study, Risk/Speculation & Heart",
+    6: "Struggle, Daily Work, Debt/Health & Obstacles",
+    7: "Partnerships, Alliances & Public Dealings",
+    8: "Sudden Shocks, Breaks, Crisis & Deep Transformation",
+    9: "Fortune, Mentors, Long Journeys & Higher Purpose",
+    10: "Livelihood, Action, Karma & Public Duty",
+    11: "Gains, Community, Goals & Milestone Fulfillment",
+    12: "Distant/Foreign Lands, Uprooting, Loss & Solitude",
   };
 
   const formatDate = (d: Date) =>
@@ -863,18 +941,41 @@ export function buildFullChronologicalDashaTimeline(
     for (const ad of md.antardashas) {
       const ageStart = Math.max(0, (ad.startDate.getTime() - birthMs) / msInYear);
       const ageEnd = (ad.endDate.getTime() - birthMs) / msInYear;
+      const midAge = (ageStart + ageEnd) / 2;
 
-      let lifePhaseTitle = "Foundational Early Years";
-      if (ageStart >= 12 && ageEnd <= 19) lifePhaseTitle = "Schooling & Adolescent Education";
-      else if (ageStart >= 19 && ageEnd <= 25) lifePhaseTitle = "Higher Education, Degree & Career Launch";
-      else if (ageStart >= 25 && ageEnd <= 35) lifePhaseTitle = "Career Consolidation, Marriage & Family Expansion";
-      else if (ageStart >= 35 && ageEnd <= 50) lifePhaseTitle = "Peak Professional Authority & Wealth Building";
-      else if (ageStart >= 50 && ageEnd <= 65) lifePhaseTitle = "Maturity, Social Influence & Mentorship";
-      else if (ageStart >= 65) lifePhaseTitle = "Spiritual Wisdom & Legacy Phase";
+      const mdHouses = getDynamicPlanetHouses(md.lord.name);
+      const adHouses = getDynamicPlanetHouses(ad.lord.name);
+      const activatedHouses = Array.from(new Set([...mdHouses, ...adHouses]));
 
-      const activatedHouses = Array.from(
-        new Set([...(HOUSE_ACTIVATION_MAP[md.lord.name] || []), ...(HOUSE_ACTIVATION_MAP[ad.lord.name] || [])])
-      );
+      const topThemes = activatedHouses
+        .slice(0, 3)
+        .map((h) => `H${h} (${BHAVA_ARCHETYPE_SHORT[h] || "Karma"})`)
+        .join(" + ");
+
+      let stagePrefix = "Early Childhood";
+      if (midAge >= 7 && midAge < 14) stagePrefix = "Formative Youth";
+      else if (midAge >= 14 && midAge < 20) stagePrefix = "Adolescent Transition";
+      else if (midAge >= 20 && midAge < 27) stagePrefix = "Young Adult Foundation";
+      else if (midAge >= 27 && midAge < 38) stagePrefix = "Prime Adult Karma";
+      else if (midAge >= 38 && midAge < 52) stagePrefix = "Mid-Life Consolidation";
+      else if (midAge >= 52 && midAge < 66) stagePrefix = "Elder Stewardship";
+      else if (midAge >= 66) stagePrefix = "Ripened Wisdom & Liberation";
+
+      let specialFlag = "";
+      if (
+        hasVidhyaBhangaSeed &&
+        midAge >= 14 &&
+        midAge < 21 &&
+        (ad.lord.name === "Rahu" || ad.lord.name === "Ketu" || ad.lord.name === eighthLord || md.lord.name === eighthLord)
+      ) {
+        specialFlag = " • ⚠️ 5th/8th/Nodal Shock: Sudden Break, Setback, Drop/Detour or Redirection Before Recovery";
+      } else if (midAge >= 18 && (ad.lord.name === twelfthLord || adHouses.includes(12))) {
+        specialFlag = " • ✈️ 12th-Axis: Uprooting, Distant/Foreign Relocation or Solitude Portal";
+      } else if (midAge >= 18 && (ad.lord.name === eleventhLord || adHouses.includes(11))) {
+        specialFlag = " • 🎯 11th-Axis: Goal/Skill/Milestone Completion & Network Gains";
+      }
+
+      const lifePhaseTitle = `${stagePrefix}: ${topThemes}${specialFlag}`;
 
       windows.push({
         mahadashaLord: md.lord.name,
@@ -958,36 +1059,120 @@ export function generateBtrMasterSummary(
 
   const hh = String(localDate.getUTCHours()).padStart(2, "0");
   const mm = String(localDate.getUTCMinutes()).padStart(2, "0");
+  const ssNum = localDate.getUTCSeconds();
+  const ssSuffix = ssNum > 0 ? `:${String(ssNum).padStart(2, "0")}` : "";
   const dateFormatted = localDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
   const sensitivityTable = sensitivities
     .map(
       (s) =>
-        `- **${s.vargaName}:** Ascendant in **${s.currentAscendantSign}** (${s.currentAscendantDegrees.toFixed(2)}°) • Window: **${s.windowStartLocalTime} to ${s.windowEndLocalTime}** (Span: ${s.timeSpanMinutesTotal}m) • Buffer: *${s.boundaryCountdownFormatted || `${s.elapsedMinutesInCurrentSign}m elapsed, ${s.remainingMinutesInCurrentSign}m remaining`}* [${s.boundaryVulnerabilityIndex || "SECURE"}]`
+        `- **${s.vargaName}:** Ascendant in **${s.currentAscendantSign}** (${s.currentAscendantDegrees.toFixed(2)}°) • Window: **${s.windowStartLocalTime} to ${s.windowEndLocalTime}** (Span: ${s.timeSpanMinutesTotal}m) • Buffer: *${s.boundaryCountdownFormatted || `${s.elapsedMinutesInCurrentSign}m elapsed, ${s.remainingMinutesInCurrentSign}m remaining`}* [${s.boundaryVulnerabilityIndex || "SECURE"}]${s.boundaryVulnerabilityIndex !== "SECURE" ? ` (Prev: ${s.previousAscendantSign} | Next: ${s.nextAscendantSign})` : ""}`
     )
     .join("\n");
 
   const timelineFormatted = timeline
-    .slice(0, 16)
+    .slice(0, 18)
     .map(
       (t) =>
         `- **Age ${t.nativeAgeStart}–${t.nativeAgeEnd} (${t.startFormatted} – ${t.endFormatted}):** **${t.mahadashaLord} – ${t.antardashaLord}** [${t.lifePhaseTitle}] -> Houses ${t.primaryHouseActivations.join(", ")}`
     )
     .join("\n");
 
+  // Compute Non-Linear Chronological Milestone & Anti-Rigidity Audit
+  const ascSign = Math.floor(natalEphemeris.ascendant.siderealLongitude / 30);
+  const SIGN_RULERS = [
+    "Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury",
+    "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter",
+  ];
+  const birthYear = localDate.getUTCFullYear();
+  const fifthLord = SIGN_RULERS[(ascSign + 4) % 12];
+  const eighthLord = SIGN_RULERS[(ascSign + 7) % 12];
+  const ninthLord = SIGN_RULERS[(ascSign + 8) % 12];
+  const eleventhLord = SIGN_RULERS[(ascSign + 10) % 12];
+  const twelfthLord = SIGN_RULERS[(ascSign + 11) % 12];
+
+  const fifthOccupants = Object.values(natalEphemeris.planets)
+    .filter((p: any) => !p.isModernPlanet && p.house === 5)
+    .map((p: any) => p.name);
+  const fifthLordObj = (natalEphemeris.planets as any)[fifthLord];
+  const fifthLordSign = Math.floor((fifthLordObj?.siderealLongitude || 0) / 30);
+  const fifthLordDeg = (fifthLordObj?.siderealLongitude || 0) % 30;
+  const isFifthLordDebilitated =
+    (fifthLord === "Sun" && fifthLordSign === 6) ||
+    (fifthLord === "Moon" && fifthLordSign === 7) ||
+    (fifthLord === "Mars" && fifthLordSign === 3) ||
+    (fifthLord === "Mercury" && fifthLordSign === 11) ||
+    (fifthLord === "Jupiter" && fifthLordSign === 9) ||
+    (fifthLord === "Venus" && fifthLordSign === 5) ||
+    (fifthLord === "Saturn" && fifthLordSign === 0);
+  const isFifthLordGandanta =
+    ([3, 7, 11].includes(fifthLordSign) && fifthLordDeg >= 26.66) ||
+    ([0, 4, 8].includes(fifthLordSign) && fifthLordDeg <= 3.33);
+
+  const hasVidhyaBhanga =
+    isFifthLordDebilitated ||
+    isFifthLordGandanta ||
+    fifthOccupants.includes("Rahu") ||
+    fifthOccupants.includes("Ketu") ||
+    fifthOccupants.includes(eighthLord);
+
+  const nodalReturnYear = Math.round(birthYear + 18.6);
+  const adAt18 = timeline.find((w) => w.nativeAgeStart <= 18.6 && w.nativeAgeEnd >= 18.0);
+  const adGrad = timeline.find(
+    (w) =>
+      w.nativeAgeStart <= 23.8 &&
+      w.nativeAgeEnd >= 21.5 &&
+      (w.antardashaLord === eleventhLord || w.antardashaLord === fifthLord || w.antardashaLord === ninthLord || w.primaryHouseActivations.includes(11))
+  );
+  const adForeign = timeline.find(
+    (w) =>
+      w.nativeAgeStart <= 26.5 &&
+      w.nativeAgeEnd >= 22.0 &&
+      (w.antardashaLord === twelfthLord || w.primaryHouseActivations.includes(12))
+  );
+
+  const nonLinearAuditLines: string[] = [
+    `  * 🌍 **Desha-Kaala-Paatra (Universal Human Spectrum Law — BPHS Ch. 1 & Prasna Marga):** NEVER assume a single sociological template (e.g., never assume the native went to school/college, works a corporate job, or followed a middle-class conveyor belt). Read each Dasha-Transit window first as **pure planetary & Bhava energy** and adapt it to the native's real walk of life!`,
+  ];
+  if (hasVidhyaBhanga) {
+    const breakReasons: string[] = [];
+    if (fifthOccupants.length > 0) breakReasons.push(`5th House occupied by ${fifthOccupants.join(" + ")}`);
+    if (isFifthLordDebilitated) breakReasons.push(`5th Lord ${fifthLord} Debilitated`);
+    if (isFifthLordGandanta) breakReasons.push(`5th Lord ${fifthLord} in Gandānta (${fifthLordDeg.toFixed(1)}°)`);
+    nonLinearAuditLines.push(
+      `  * ⚠️ **5th/8th/Nodal Disruption Signature (*Bhanga / Parivartana*):** YES (${breakReasons.join("; ")}). Indicates a non-linear life path with sudden breaks, detours, or self-forged reinvention rather than a smooth textbook trajectory.`
+    );
+    nonLinearAuditLines.push(
+      `  * 🌪️ **18.6-Year Nodal Return & 8th-Lord Shock Window (~${nodalReturnYear - 1}–${nodalReturnYear}, Age ~18–19):** Under **${adAt18 ? `${adAt18.mahadashaLord}–${adAt18.antardashaLord} (${adAt18.startFormatted} – ${adAt18.endFormatted})` : "Nodal Return"}**, when Transit Rahu-Ketu returns to its natal axis and activates the 5th/8th axis, the native experiences a **sharp life detour, setback, or directional break around ${nodalReturnYear}** (e.g., for a student: a Class 12 / exam setback or 1-year drop; for a non-student/worker: a sudden livelihood, emotional, or family upheaval), followed by **recovery and a new foundation in ${nodalReturnYear + 1}** once Transit Jupiter aspects the 5th/9th axis.`
+    );
+    nonLinearAuditLines.push(
+      `  * 🎯 **Shifted Milestone Completion Window (~${nodalReturnYear + 5}, Age ~23–24):** Because of the ~1-year restructuring around age 18–19, the subsequent 4-year cycle of skill/study/work foundation culminates around **${nodalReturnYear + 5}** (under **${adGrad ? `${adGrad.mahadashaLord}–${adGrad.antardashaLord} (${adGrad.startFormatted} – ${adGrad.endFormatted})` : `11th Lord ${eleventhLord}`}**, activating House 11 of fulfillment/completion), NOT at a rigid age-21 template!`
+    );
+  } else {
+    nonLinearAuditLines.push(
+      `  * ✅ **5th/9th Axis Continuity:** Unafflicted 5th/9th foundation supports steady skill, learning, or creative development according to the native's background and active Dasha lords.`
+    );
+  }
+  if (adForeign) {
+    nonLinearAuditLines.push(
+      `  * ✈️ **12th-House Uprooting / Distant Relocation & Saturnian Maturation Rule:** **${adForeign.mahadashaLord}–${adForeign.antardashaLord} (${adForeign.startFormatted} – ${adForeign.endFormatted})** activates 12th Lord **${twelfthLord}** (Houses ${adForeign.primaryHouseActivations.join(", ")}). Per Saturnian delay & transit lock laws, the first half of this sub-period completes prior domestic duties/foundations (e.g. **${nodalReturnYear + 5}**), while **actual physical uprooting or border crossing to a distant/foreign land manifests in the second half (around ${nodalReturnYear + 6})** when Transit Saturn in the 12th house and Transit Rahu/Ketu on the 1st-7th Lagna axis trigger physical departure.`
+    );
+  }
+  const nonLinearAuditBlock = nonLinearAuditLines.join("\n");
+
   const now = new Date();
   const nativeAgeYears = Math.max(0, (now.getTime() - birthDate.getTime()) / (365.25 * 24 * 3600 * 1000));
   let lifeStageTitle = "Adult (Praudha Jataka - प्रौढ़ जातक)";
-  let lifeStageGuidance = "Standard adult life event cross-examination applies (higher learning, career shifts, marriage, progeny).";
+  let lifeStageGuidance = "Cross-examine real-world life events across ALL human possibilities (livelihood/work/trade, health/vitality shifts, relocations, relationships, family events, or formal/informal skill milestones) without assuming any fixed societal script.";
   if (nativeAgeYears < 3) {
     lifeStageTitle = `Newborn / Infant (Bala Jataka - बाल जातक, Age: ${nativeAgeYears < 1 ? "< 1 year" : `${Math.floor(nativeAgeYears)} yr(s)`})`;
-    lifeStageGuidance = "CRITICAL: Native is an infant/newborn! DO NOT probe or ask about adult life milestones like college graduation, career, or marriage. Birth time is rectified strictly via Parashari mathematical Shodhanas (Kunda, Pranapada, Tattva), delivery circumstances (normal vs surgical/induced), and parental indicators (D-12).";
+    lifeStageGuidance = "CRITICAL: Native is an infant/newborn! DO NOT probe or ask about adult life milestones. Birth time is rectified strictly via Parashari mathematical Shodhanas (Kunda, Pranapada, Tattva), delivery circumstances (normal vs surgical/induced), and parental indicators (D-12).";
   } else if (nativeAgeYears < 18) {
     lifeStageTitle = `Child / Minor (Kishora Jataka - किशोर जातक, Age: ${Math.floor(nativeAgeYears)} yrs)`;
-    lifeStageGuidance = "Native is a child/minor. Only early childhood milestones (speech, sibling arrival, early schooling aptitude D-24) apply. DO NOT ask about marriage or adult career.";
+    lifeStageGuidance = "Native is a child/minor. Focus on childhood vitality, family environment, sibling dynamics, and natural talents/curiosity (whether in formal schooling, arts, crafts, or practical life). DO NOT ask about marriage or adult career.";
   } else if (nativeAgeYears < 25) {
     lifeStageTitle = `Young Adult (Yuva Jataka - युवा जातक, Age: ${Math.floor(nativeAgeYears)} yrs)`;
-    lifeStageGuidance = "Native is a young adult. Focus on 10th/12th board exams, college qualification, and first career foundation.";
+    lifeStageGuidance = "Native is a young adult. Explore formative turning points (age 15–24) openly across all life paths—whether independent hustle/work, trade/skill mastery, family responsibilities, relocations, emotional/health shifts, or academic/exam milestones.";
   }
 
   const chitkaraCandidateStr = chitkara.rectificationCandidate
@@ -996,7 +1181,7 @@ export function generateBtrMasterSummary(
 
   return `
 #### ⏱️ 73. CLASSICAL BIRTH TIME RECTIFICATION (BTR), PRANAPADA, KUNDA, TATTVA & FULL EVENT DASHA TIMELINE:
-- 📍 **Recorded Birth Moment:** **${dateFormatted} at ${hh}:${mm}** in **${location?.cityName || "Patna"}, ${location?.country || "India"}**
+- 📍 **Recorded Birth Moment:** **${dateFormatted} at ${hh}:${mm}${ssSuffix}** in **${location?.cityName || "Patna"}, ${location?.country || "India"}**
 - 👶 **Native Life Stage & Age:** **${lifeStageTitle}** (Running Age: ~${(Math.round(nativeAgeYears * 10) / 10).toFixed(1)} yrs)
   * *Guidance:* ${lifeStageGuidance}
 - 🧬 **The 3 Classical Birth Epochs (Adhana, Shirodarshana, Bhupatana - Navneet Chitkara & BPHS):**
@@ -1025,6 +1210,8 @@ export function generateBtrMasterSummary(
 ${sensitivityTable}
 - 📜 **Full Chronological Vimshottari Event Timeline (Exact MD-AD Periods):**
 ${timelineFormatted}
+- 🧭 **Non-Linear Chronological Milestone & Anti-Rigidity Audit (K.N. Rao PAC-DARES & BPHS):**
+${nonLinearAuditBlock}
 - ⚖️ **Shastric Sensitivity Law (K.N. Rao & BPHS):**
   * **Dasha Shift Formula:** 1 minute of clock difference = ~6.08 days of Dasha shift.
   * A ±5 minute clock uncertainty alters Dasha boundaries by **ONLY ~30 DAYS (1 month)**, NEVER by years!

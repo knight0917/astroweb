@@ -1759,3 +1759,40 @@
 - [x] **Phase 64.4: Unified Server-Sent Events (SSE) RAG + Arbitrator Streaming (`src/app/api/astro-chat/route.ts`)**
 - [x] **Phase 64.5: Next-Gen Consultation Studio UI & Generative Cards (`src/components/AstroChatbot.tsx`)**
 - [x] **Phase 64.6: Automated Test Suite & Quality Gates (`tests/engine.test.mjs`)**
+
+---
+
+# Phase 65: Anti-Rigidity & Non-Linear Chronological Milestone Engine (Vidhya Bhanga, Dynamic Dasha House Activation, 8th-Lord Mahadasha Filter & Saturnian Foreign Relocation Lag)
+
+## Status: Complete & Verified
+- **Trigger Keywords**: `astrological-calculation`, `audit-code-review`, `systematic-debugging`, `vidhya-bhanga`, `non-linear-chronology`, `dynamic-dasha-houses`, `eighth-lord-mahadasha-filter`, `saturnian-foreign-relocation-lag`
+- **Scope**:
+  1. **Phase 65.1: Dynamic Natal House Activation & Non-Linear Milestone Audit in BTR Engine (`src/engine/btrEngine.ts`)**:
+     - Replace static `HOUSE_ACTIVATION_MAP` in `buildFullChronologicalDashaTimeline` with dynamic natal house occupancy + lordship calculation (including BPHS Ch. 47 nodal dispositor & conjunction rules).
+     - Fix midpoint age bracket logic and add chart-aware `lifePhaseTitle` flags for *Vidhya Bhanga* (5th-house Rahu/Ketu/8th-lord/debilitation), 11th-lord degree completion, and 12th-lord foreign relocation portals.
+     - Inject **Non-Linear Chronological Milestone & Anti-Rigidity Audit** into Section 73 (`generateBtrMasterSummary`).
+  2. **Phase 65.2: Dynamic D-24 Siddhamsa & Vidhya Bhanga Risk Detector (`src/engine/educationStream.ts`, `src/engine/predictiveDecisionGates.ts`, `src/engine/chatContext.ts`)**:
+     - Replace hardcoded `academicDistinctionScore: 92` and `"Exceptional / Doctoral Level"` with dynamic D-1/D-24 dignity & affliction scoring.
+     - Add `vidhyaBhangaRisk` (`hasAcademicBreakRisk`, `severity`, `triggerFactors`, `recoveryIndicators`, `classicalSynthesis`) citing K.N. Rao & Naval Singh's *Planets and Education* and *Phaladeepika* Ch. 12.
+     - Update `EducationDecisionGate` in `src/engine/predictiveDecisionGates.ts` and Section 18 in `src/engine/chatContext.ts`.
+  3. **Phase 65.3: 8th-Lord Mahadasha Filter & Gandānta Friction in Neuro-Symbolic Arbitrator (`src/engine/predictiveArbitrator.ts`)**:
+     - Account for Gandānta knots and 8th-lord occupancy in Gate 1, and 8th-lord Mahadasha restructuring filter in Gate 3.
+  4. **Phase 65.4: Anti-Conveyor-Belt Protocol (`Rule 0AW`) & Non-Linear Fact Extraction (`src/engine/chatPrompt.ts`)**:
+     - Expand `extractUserConfirmedFacts` to capture Class 12 setbacks/drop years, college entry dates, graduation dates, and overseas arrival dates.
+     - Add `Rule 0AW` enforcing strict anti-conveyor-belt chronological verification.
+
+## Phases & Milestones
+
+- [x] **Phase 65.1: Dynamic Natal House Activation & Non-Linear Milestone Audit (`src/engine/btrEngine.ts`)**
+- [x] **Phase 65.2: Dynamic D-24 Siddhamsa & Vidhya Bhanga Risk Detector (`src/engine/educationStream.ts` & `src/engine/predictiveDecisionGates.ts`)**
+- [x] **Phase 65.3: 8th-Lord Mahadasha Filter & Gandānta Friction (`src/engine/predictiveArbitrator.ts`)**
+- [x] **Phase 65.4: Anti-Conveyor-Belt Protocol (`Rule 0AW`) & Fact Extraction (`src/engine/chatPrompt.ts`)**
+- [x] **Phase 65.5: Consultation Report Audit & 4-Point BTR Calibration Upgrade (`src/components/AstroChatbot.tsx`, `src/components/BirthDetailsModal.tsx`, `src/engine/btrEngine.ts`, `src/store/useAstroStore.ts`, `src/engine/chatContext.ts`)**:
+  - [x] Eliminate placebo "Yes-Man" rubber-stamping in Step 2 Adult BTR Verification (`isBtrExplicitLock`) by dynamically computing 5th/8th/11th/12th house factors, 1st Nodal Return (~Age 18.6), and chronological Dasha shifts when the user answers `No` / `No / Delayed` / `Self-Taught / Non-Academic`.
+  - [x] Surface an explicit **Critical Divisional Cusp Boundary Alert** (`D-3`, `D-9`, `D-10`, `D-24`) whenever any key Varga is within `<= 180s` (3 minutes) of a cusp transition, showing exact before/after sign flips (`previousAscendantSign` / `nextAscendantSign`) and cross-checking with sibling order (`D-3`), relationship status (`D-9`), and relocation (`D-4`).
+  - [x] Preserve exact seconds (`:SS`) in birth time inputs (`BirthDetailsModal.tsx` with `step="1"`), profile storage (`useAstroStore.ts`), BTR engine (`btrEngine.ts`), and chat display (`AstroChatbot.tsx` & `chatContext.ts`).
+  - [x] Sanitize exported consultation Markdown reports (`handleDownloadConsultationReport` in `AstroChatbot.tsx`) to strip raw UI tokens (`[PROBABILITY: ...]`, ```` ```chips ... ``` ````, `[BTR_ADULT_VERIFIED]`, `[CARD:...]`).
+- [x] **Phase 65.6: Universal Life-Path Coverage for School-Age (10th/12th), In-Progress Students, School-Only & Unschooled Natives (`src/components/AstroChatbot.tsx`, `src/engine/educationStream.ts`, `src/engine/chatContext.ts`, `src/engine/chatPrompt.ts`)**:
+  - [x] Add explicit interactive options and age-aware defaults in `InteractiveBtrQuestionnaire` & `isBtrExplicitLock` for: (1) `Currently in School (e.g. 8th–10th / 12th)`, (2) `Still Studying / Not Graduated Yet`, (3) `Stopped After School (10th/12th) / No College`, and (4) `Never Went to School / Life-Taught`, plus `Still Studying / Preparing` and `Early Work / Family Trade (< 20)`.
+  - [x] Add `practicalAndNonDegreePathways` across all 6 streams in `src/engine/educationStream.ts` and Section 18 of `src/engine/chatContext.ts`, plus 4-way *Desha-Kaala-Paatra* synthesis in `vidhyaBhangaRisk`.
+  - [x] Expand `extractUserConfirmedFacts` in `src/engine/chatPrompt.ts` to lock in 10th/12th school status, uncompleted graduation, school-only completion, and never-schooled status.

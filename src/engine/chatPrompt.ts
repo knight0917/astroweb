@@ -51,21 +51,48 @@ export function extractUserConfirmedFacts(messages: any[]): string[] {
     facts.push("🌿 **Sibling Position:** **Only Child** (Confirmed by user).");
   }
 
-  // 4. Residence
-  if (/\b(relocated|moved abroad|living in italy|living in usa|living in canada|living away from home)\b/.test(fullText)) {
-    facts.push("✈️ **Residence Status:** **Relocated away from birth region / Ancestral soil**.");
+  // 4. Residence & Foreign Relocation
+  if (/\b(relocated|moved abroad|came to europe|came europe|living in italy|torino|living in usa|living in canada|living away from home)\b/.test(fullText)) {
+    const abroadYearMatch = fullText.match(/(?:came (?:to )?europe|moved (?:to )?(?:europe|italy|abroad)|relocated) (?:in )?((?:jan\w*|feb\w*|mar\w*|apr\w*|may|jun\w*|jul\w*|aug\w*|sep\w*|oct\w*|nov\w*|dec\w*)?\s*\d{4}|\d{4}\s*(?:jan\w*|feb\w*|mar\w*|apr\w*|may|jun\w*|jul\w*|aug\w*|sep\w*|oct\w*|nov\w*|dec\w*)?)/i);
+    if (abroadYearMatch) {
+      facts.push(`✈️ **Foreign Relocation Milestone:** Moved abroad / Europe in **${abroadYearMatch[1].trim()}** (Confirmed by user).`);
+    } else {
+      facts.push("✈️ **Residence Status:** **Relocated away from birth region / Overseas**.");
+    }
   } else if (/\b(home region|birth region|living in birth city|with parents)\b/.test(fullText)) {
     facts.push("🏡 **Residence Status:** **Living in Birth Region**.");
   }
 
-  // 5. Education Anchors
+  // 5. Learning, Livelihood & Life-Path Anchors (Inclusive of Non-Schooling, School-Only 10th/12th, In-Progress Study, Self-Taught, Trade, Breaks & Setbacks)
+  if (/\b(never been to school|never went to school|didn'?t go to school|no formal school\w*|no schooling|uneducated|never attended school)\b/i.test(fullText)) {
+    facts.push("🌱 **Schooling & Life Path Reality:** **Never attended formal school / 100% Life-Taught** (Explicitly confirmed by user — NEVER mention school classes, board exams, or college degrees! Interpret 3rd/5th/9th houses purely as natural intelligence, street-smart intuition, practical skill, and oral/life wisdom).");
+  } else if (/\b(left school|dropped out|self[- ]taught|no college|stopped after (?:10th|12th|school)|10th pass|12th pass)\b/i.test(fullText)) {
+    facts.push("🛠️ **Learning & Life Path Reality:** **Stopped at school level (10th/12th) or left before college / Self-taught practical path** (Explicitly confirmed by user — NEVER assume they completed a college degree!).");
+  }
+  if (/\b(studying in (?:class )?(?:8th|9th|10th|11th|12th|8|9|10|11|12)|currently (?:still )?studying in (?:10th|12th|school)|in (?:class )?(?:10th|12th) in school|still in school)\b/i.test(fullText)) {
+    facts.push("🏫 **Current Schooling Status:** **Currently studying in school (e.g., 10th/12th standard)** (Explicitly confirmed by user — DO NOT treat them as a college graduate or full-time adult worker!).");
+  } else if (/\b(didn'?t complete\w* (?:my |their )?graduation|haven'?t graduated|not graduated yet|still studying|pursuing graduation|in college right now)\b/i.test(fullText)) {
+    facts.push("📖 **Graduation Status:** **Has NOT completed graduation yet (still studying or paused before graduating)** (Explicitly confirmed by user — NEVER claim they already graduated in the past!).");
+  }
   const boardMatch = fullText.match(/10th (?:board )?(?:in )?(\d{4}(?:\s*[-–]\s*\d{4})?)/);
   if (boardMatch) {
     facts.push(`🎓 **Education Milestone:** 10th Board completed in **${boardMatch[1]}**.`);
   }
-  const gradMatch = fullText.match(/(?:graduat\w*|btech|degree|college) (?:in )?(\d{4}(?:\s*[-–]\s*\d{4})?)/);
+  const failMatch = fullText.match(/(?:class 12|12th|exam|board).*?(?:in )?(\d{4}).*?(?:fail\w*|drop\w*|back)|(?:fail\w*|drop\w*).*?(?:class 12|12th|exam|board).*?(?:in )?(\d{4})/i);
+  if (failMatch) {
+    const yr = failMatch[1] || failMatch[2];
+    facts.push(`⚠️ **Life / Academic Setback (Bhanga):** Setback / failure in **${yr}** (Explicitly confirmed by user — DO NOT assume a linear conveyor-belt timeline!).`);
+  }
+  const collegeStartMatch = fullText.match(/(?:start\w*|join\w*|enter\w*) (?:my )?college (?:in )?((?:jan\w*|feb\w*|mar\w*|apr\w*|may|jun\w*|jul\w*|aug\w*|sep\w*|oct\w*|nov\w*|dec\w*)?\s*\d{4}|\d{4}\s*(?:jan\w*|feb\w*|mar\w*|apr\w*|may|jun\w*|jul\w*|aug\w*|sep\w*|oct\w*|nov\w*|dec\w*)?)/i);
+  if (collegeStartMatch) {
+    facts.push(`🏛️ **College Entry Milestone:** Started college in **${collegeStartMatch[1].trim()}** (Confirmed by user).`);
+  }
+  const gradMatch = fullText.match(/(?:graduat\w*|completed (?:my )?(?:btech|degree|college)) (?:in )?((?:jan\w*|feb\w*|mar\w*|apr\w*|may|jun\w*|jul\w*|aug\w*|sep\w*|oct\w*|nov\w*|dec\w*)?\s*\d{4}|\d{4}\s*(?:jan\w*|feb\w*|mar\w*|apr\w*|may|jun\w*|jul\w*|aug\w*|sep\w*|oct\w*|nov\w*|dec\w*)?)/i);
   if (gradMatch) {
-    facts.push(`🎓 **Higher Education Milestone:** College/Degree completed in **${gradMatch[1]}**.`);
+    facts.push(`🎓 **Higher Education Graduation Milestone:** Graduated in **${gradMatch[1].trim()}** (Confirmed by user).`);
+  }
+  if (/\b(entering into trading|into trading|we trade|day trad\w*|forex|crypto|stock market)\b/i.test(fullText)) {
+    facts.push("📈 **Livelihood / Venture Focus:** Actively pursuing or entering **Financial / Market Trading** (Confirmed by user).");
   }
 
   // 6. Confirmed Relative Names & Calling Names (Explicit User Confirmations Only)
@@ -288,11 +315,11 @@ STRICT CONSULTATION RULES (MANDATORY & ABSOLUTE):
         - **ABSOLUTE PROHIBITION**: NEVER ask, probe, or assume past schooling (10th/12th board), college graduation, employment/career, or marriage! An infant born in recent or current years has not lived those life chapters.
         - For newborn charts, BTR is completed strictly via classical **Parashari mathematical Shodhanas (Kunda, Pranapada, Tattva)**, **delivery mode (normal vs surgical/induced)**, **sibling birth order (D-3)**, and **parental indicators (D-12)**. Focus consultation on infant health (*Balarishta* protection), vitality, cognitive potential, and auspicious naming Nakshatras.
       * If the native is a **Child / Minor (Age 3 to 17 / *Kishora Jataka*)**:
-        - Only discuss early schooling, intellectual aptitude (D-24), sibling dynamics, and childhood vitality. NEVER ask about marriage or adult careers.
+        - Only discuss childhood vitality, family environment, sibling dynamics, and natural talents/curiosity (whether in formal study, arts, crafts, or practical life). NEVER ask about marriage or adult careers.
       * If the native is an **Adult (Age 18+ / *Praudha Jataka*)**:
-        - Standard milestone cross-examination applies (higher education, career, marriage, family).
-    - **No Fake Minute Shifts for Standard Milestones**:
-      Passing 10th board at age 15–16 or graduating college at age 21–23 is standard chronological human development. NEVER claim passing an exam at normal age shifts the birth clock by -8 or +5 minutes!
+        - Cross-examine real-world life turning points across ALL human walks of life (livelihood/work/trade, setbacks/breaks, relocations, health/family events, relationships, or formal/informal skill milestones) without assuming a fixed school-college-corporate template.
+    - **No Fake Minute Shifts for Age Milestones**:
+      NEVER claim a general age milestone shifts the birth clock by -8 or +5 minutes without checking the actual Divisional Cusp (D-9, D-10, D-24, D-60) sensitivity window!
     - **The Mathematical Sensitivity Law**:
       1 minute of clock difference shifts the Vimshottari Dasha balance by only ~6.08 days. A ±5 minute clock uncertainty alters Dasha boundaries by ONLY ~30 days (1 month), NEVER by multiple years!
     - **How to Accurately Reverse-Verify Life Events (Section 73 Dossier)**:
@@ -999,6 +1026,24 @@ STRICT CONSULTATION RULES (MANDATORY & ABSOLUTE):
                     * State the exact bindu totals across all 4 cardinal directions: **East (Purva - Fire Signs 1,5,9)**, **South (Dakshina - Earth Signs 2,6,10)**, **West (Paschima - Air Signs 3,7,11)**, and **North (Uttara - Water Signs 4,8,12)**.
                     * Explicitly highlight the **Highest-Scoring Winning Direction** (where the native should buy a plot/property from their birthplace or current residence, or choose plot entrance/facing) and the **Peak Rashi(s)** within that direction.
                     * Also emit the token \`[CARD:PLOT_DIRECTION]\` at the end of your response so the interactive **Lagna BAV Plot Purchase Compass Card** renders in the chat!
+
+               - **Rule 0AW: UNIVERSAL DESHA-KAALA-PAATRA, ANTI-CONVEYOR-BELT & NON-LINEAR HUMAN TIMELINE PROTOCOL (BPHS CH. 1, PRASNA MARGA & PHALADEEPIKA)**:
+                  - **1. ZERO SOCIOLOGICAL STEREOTYPING (OPEN TO EVERY WALK OF HUMAN LIFE — DESHA, KAALA, PAATRA)**:
+                    * NEVER assume that every human being lives an urban middle-class conveyor-belt script! Some people never attended school or college, some started working or trading in childhood, some are self-taught artisans/entrepreneurs/farmers/monks, some never marry or marry early/late, and some face raw survival, health, family, or financial battles instead of textbook degrees and corporate promotions.
+                    * When reconstructing past events or predicting future windows, **ALWAYS lead with the pure astrological & energetic truth of the active Houses, Planets, Nodal Returns, and Transits**, and frame its real-world manifestation inclusively across the full human spectrum:
+                      - **House 4 / 5 / 9 Activation**: Governs foundational environment (H4), discernment/skill/risk/heart/creativity/children (H5), and guidance/higher purpose/long journeys (H9). Present how it manifests whether the person is in **formal study, self-taught craft/trading, creative hustle, romantic/emotional turbulence, or spiritual search**.
+                      - **House 2 / 6 / 10 / 11 Activation**: Governs family resources/survival (H2), daily struggle/debt/health/conflict/service (H6), karma/livelihood/action (H10), and gains/community/goal completion (H11). NEVER assume a white-collar office job! Frame it for **any livelihood: independent trading, hands-on craft, business, daily hustle, family duty, or career**.
+                      - **House 7 Activation**: Governs one-on-one partnerships, contracts, alliances, public dealings, or marriage/relationships. NEVER assume someone is married just because of their age.
+                      - **House 8 / 12 Activation**: Governs sudden shocks, breaks, survival crises, ego-stripping transformations, losses, isolation/hospitalization, or crossing borders into distant/foreign lands.
+                  - **2. The Bhanga / Disruption & 18.6-Year Nodal Return Law (Non-Linear Setbacks & Reinvention)**:
+                    * Before reconstructing any past timeline (especially ages 15–26), ALWAYS inspect **Section 18** and **Section 73 (Non-Linear Chronological Milestone & Anti-Rigidity Audit)**.
+                    * When the 5th house or active axis is occupied by **Rahu/Ketu**, **Saturn**, or the **8th Lord**, AND/OR its lord is **Debilitated (*Neecha*) or in *Gandānta***, the chart carries a **Bhanga (Sudden Break / Interruption / Redirection)** signature.
+                    * When an **8th-Lord or Rahu/Ketu Dasha/Antardasha** overlaps the **~18.6-Year Nodal Return (Age ~18–19)** while Transit Jupiter passes through a Dusthana (e.g., 8th house) or Peak Sade Sati operates, diagnose a **sharp life detour, setback, failure, or 1-year break/restructuring** (e.g., in 2018 for a Sept 1999 birth — whether as an exam failure/drop year in schooling, a sudden family/emotional shock, or a livelihood disruption), followed by **recovery and a new foundation the following year** (e.g., 2019) once Transit Jupiter aspects the 5th/9th axis!
+                  - **3. The 8th-Lord Mahadasha Restructuring Filter (*Mahadashadhipati Pradhanyam*)**:
+                    * If the overarching Mahadasha lord rules the **8th House (Randhresha)** (e.g., Venus for Pisces Lagna), it NEVER grants a linear, effortless textbook ride. Every sub-period first triggers an 8th-house test, delay, or deep restructuring before delivering the sub-lord's promise.
+                  - **4. Shifted Milestone Completion & Saturnian Foreign/Distant Relocation Lag (11th vs. 12th House Separation)**:
+                    * When an age 18–19 *Bhanga* shifts the start of a foundation cycle by ~1 year (e.g., starting in 2019 instead of 2017/2018), the subsequent 4-year cycle culminates ~1–2 years later than standard stereotypes (e.g., completing in **May 2023** under the **11th-Lord / Saturn sub-period**, activating House 11 of goal/milestone fulfillment).
+                    * When the **12th-Lord Antardasha** (e.g., **Venus–Saturn** for Pisces Lagna, where Saturn rules H11 & H12) operates, do NOT conflate the start of the Antardasha with immediate physical migration! In the first half of the sub-period, Saturn acts as the **11th lord** (completing domestic milestones/duties); **actual physical uprooting or departure to a foreign/distant land (12th house)** occurs in the **second half of the sub-period** (e.g., **September 2024**) when **Transit Saturn in the 12th house** and **Transit Rahu/Ketu crossing the 1st–7th Natal Lagna axis** physically uproot the native.
 
 1. **ACCURATE TEMPORAL GROUNDING (REAL-TIME TIMELINE)**:
    - Today's date is strictly ${todayStr}.

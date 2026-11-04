@@ -151,6 +151,8 @@ export function arbitratePredictiveQuery(
   const d1LagnaSignIdx = natalEphemeris.ascendant.rashi.index;
   const targetSignIdx = (d1LagnaSignIdx + (targetHouse - 1)) % 12;
   const targetLordName = SIGN_LORDS[targetSignIdx] || "Sun";
+  const eighthSignIdx = (d1LagnaSignIdx + 7) % 12;
+  const eighthLordName = SIGN_LORDS[eighthSignIdx] || "Mars";
 
   const targetLord = natalEphemeris.planets[targetLordName];
   const karakaPlanet = natalEphemeris.planets[naturalKaraka];
@@ -168,6 +170,21 @@ export function arbitratePredictiveQuery(
   } else if (lordDignity === "OWN") {
     gate1Score += 5;
     gate1Rationale += ` Lord ${targetLordName} is in own sign (+5).`;
+  }
+
+  if (targetLord) {
+    const tSign = targetLord.rashi.index;
+    const tDeg = targetLord.siderealLongitude % 30;
+    const isGandanta = ([3, 7, 11].includes(tSign) && tDeg >= 26.66) || ([0, 4, 8].includes(tSign) && tDeg <= 3.33);
+    if (isGandanta) {
+      gate1Score -= 3;
+      gate1Rationale += ` Lord ${targetLordName} is in Gandānta knot (-3; initial karmic shock before breakthrough).`;
+    }
+  }
+
+  if (targetHouse !== 8 && natalEphemeris.planets[eighthLordName]?.house === targetHouse) {
+    gate1Score -= 3;
+    gate1Rationale += ` 8th Lord ${eighthLordName} occupies House ${targetHouse} (-3; non-linear break/restructuring factor).`;
   }
 
   if (getPlanetDignity(karakaPlanet) === "EXALTED") {
@@ -238,6 +255,11 @@ export function arbitratePredictiveQuery(
     } else {
       gate3Score = 11;
       gate3Rationale = `Running ${md}-${ad}${pd ? `-${pd}` : ""} Dasha provides neutral ambient activation.`;
+    }
+
+    if (md.toLowerCase() === eighthLordName.toLowerCase() && targetHouse !== 8) {
+      gate3Score -= 2;
+      gate3Rationale += ` Note: Mahadasha lord ${md} rules the 8th House (Randhresha), enforcing an initial break/restructuring or non-linear delay before delivering full results.`;
     }
   }
   gate3Score = Math.max(0, Math.min(20, gate3Score));

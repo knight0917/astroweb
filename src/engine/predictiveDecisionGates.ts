@@ -105,7 +105,11 @@ export interface EducationDecisionGate {
   jupiterDignity: string;
   d24FifthLord: string;
   recommendedStreams: string[];
-  competitiveExamPotential: "Exceptional" | "High with Focused Effort" | "Moderate / Practical Field Preferred";
+  competitiveExamPotential:
+    | "Exceptional"
+    | "High with Focused Effort"
+    | "Moderate / Practical Field Preferred"
+    | "Non-Linear / Recovery After Initial Exam Setback (Vidhya Bhanga Signature)";
   coreCognitiveStrengths: string[];
 }
 
@@ -377,6 +381,13 @@ export function calculatePredictiveDecisionGates(
   const d24FifthSignIdx = (d24.ascendant.vargaSignIndex + 4) % 12;
   const d24FifthLord = RASHI_NAMES[d24FifthSignIdx].lord;
 
+  const hasVidhyaBhanga = education.vidhyaBhangaRisk?.hasAcademicBreakRisk || fifthLordDignity.includes("Debilitated");
+  const examPotential = hasVidhyaBhanga
+    ? "Non-Linear / Recovery After Initial Exam Setback (Vidhya Bhanga Signature)"
+    : [1, 5, 9, 10].includes(fifthLordHouse)
+    ? "Exceptional"
+    : "High with Focused Effort";
+
   const educationGate: EducationDecisionGate = {
     fifthLord,
     fifthLordHouse,
@@ -385,7 +396,7 @@ export function calculatePredictiveDecisionGates(
     jupiterDignity: getDignity("Jupiter", jupiterRashi),
     d24FifthLord,
     recommendedStreams: education.streamAptitudes.slice(0, 3).map((s) => s.streamName),
-    competitiveExamPotential: [1, 5, 9, 10].includes(fifthLordHouse) ? "Exceptional" : "High with Focused Effort",
+    competitiveExamPotential: examPotential,
     coreCognitiveStrengths: education.streamAptitudes.slice(0, 2).map((s) => s.classicalReasoning),
   };
 

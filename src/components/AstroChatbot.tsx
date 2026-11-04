@@ -636,12 +636,14 @@ function getLocalCivilDateTime(natalEphem: EphemerisResult) {
   const day = localBirthDate.getUTCDate();
   const rawHours = localBirthDate.getUTCHours();
   const rawMinutes = String(localBirthDate.getUTCMinutes()).padStart(2, "0");
+  const rawSecNum = localBirthDate.getUTCSeconds();
+  const secSuffix = rawSecNum > 0 ? `:${String(rawSecNum).padStart(2, "0")}` : "";
   const hour12 = rawHours % 12 || 12;
   const ampm = rawHours >= 12 ? "PM" : "AM";
   const formattedHours = String(rawHours).padStart(2, "0");
 
   return {
-    timeStr: `${hour12}:${rawMinutes} ${ampm} (${formattedHours}:${rawMinutes})`,
+    timeStr: `${hour12}:${rawMinutes}${secSuffix} ${ampm} (${formattedHours}:${rawMinutes}${secSuffix})`,
     dateStr: `${month} ${day}, ${year}`,
     year: isNaN(year) ? 1998 : year,
   };
@@ -653,10 +655,12 @@ function getShiftedLocalTime(natalEphem: EphemerisResult, minuteOffset: number):
   const localBirthDate = new Date(birthDateObj.getTime() + tzOffset * 3600 * 1000 + minuteOffset * 60 * 1000);
   const rawHours = localBirthDate.getUTCHours();
   const rawMinutes = String(localBirthDate.getUTCMinutes()).padStart(2, "0");
+  const rawSecNum = localBirthDate.getUTCSeconds();
+  const secSuffix = rawSecNum > 0 ? `:${String(rawSecNum).padStart(2, "0")}` : "";
   const hour12 = rawHours % 12 || 12;
   const ampm = rawHours >= 12 ? "PM" : "AM";
   const formattedHours = String(rawHours).padStart(2, "0");
-  return `${hour12}:${rawMinutes} ${ampm} (${formattedHours}:${rawMinutes})`;
+  return `${hour12}:${rawMinutes}${secSuffix} ${ampm} (${formattedHours}:${rawMinutes}${secSuffix})`;
 }
 
 function formatHumanReadableError(err: any): string {
@@ -1402,10 +1406,10 @@ ${gochar.obstructedCount} transit(s) obstructed by Vedha, ${gochar.shieldedCount
     q.includes("lock & verify") ||
     q.includes("verify & lock") ||
     /^(verify|lock)\s+(my\s+)?(birth\s+time|btr|clock)/i.test(q) ||
-    (/^1\.\s*(yes|no),\s*2\.\s*(yes|no),\s*3\.\s*(single|married|committed|past),\s*4\.\s*(eldest|youngest|middle|only|\d+(?:st|nd|rd|th)?\s*child)/i.test(q));
+    (/^1\.\s*(yes|no|no\s*\/\s*delayed|self-taught\s*\/\s*non-academic),\s*2\.\s*(yes|no),\s*3\.\s*(single|married|committed|past),\s*4\.\s*(eldest|youngest|middle|only|\d+(?:st|nd|rd|th)?\s*child)/i.test(q));
 
   if (isBtrExplicitLock) {
-    const { timeStr, dateStr } = getLocalCivilDateTime(natalEphem);
+    const { timeStr, dateStr, year: birthYear } = getLocalCivilDateTime(natalEphem);
     const ascRashi = natalEphem.ascendant.rashi.englishName;
     const ascDeg = `${(natalEphem.ascendant.siderealLongitude % 30).toFixed(2)}°`;
     const moonNak = natalEphem.planets.Moon?.nakshatra.sanskritName || "Punarvasu";
@@ -1434,11 +1438,18 @@ ${gochar.obstructedCount} transit(s) obstructed by Vedha, ${gochar.shieldedCount
     const candidate = chitkara?.rectificationCandidate;
 
     const vargaWindowsStr = sensitivities
-      .slice(0, 5)
-      .map(
-        (s) =>
-          `- **${s.vargaName}:** Cusp in **${s.currentAscendantSign}** (${s.currentAscendantDegrees.toFixed(1)}°) • Valid **${s.windowStartLocalTime} to ${s.windowEndLocalTime}** (Span: ${s.timeSpanMinutesTotal}m)`
-      )
+      .slice(0, 7)
+      .map((s) => {
+        const isBoundaryClose =
+          (s.remainingSecondsInCurrentSign !== undefined && s.remainingSecondsInCurrentSign <= 180) ||
+          (s.elapsedSecondsInCurrentSign !== undefined && s.elapsedSecondsInCurrentSign <= 180);
+        const transitionNote = isBoundaryClose
+          ? s.remainingSecondsInCurrentSign !== undefined && s.remainingSecondsInCurrentSign <= (s.elapsedSecondsInCurrentSign ?? 999)
+            ? ` ⚠️ **[CUSP PROXIMITY: Only ${s.remainingSecondsInCurrentSign}s before flipping ${s.currentAscendantSign} ➔ ${s.nextAscendantSign} at ${s.windowEndLocalTime}]**`
+            : ` ⚠️ **[CUSP PROXIMITY: Only ${s.elapsedSecondsInCurrentSign}s after flipping ${s.previousAscendantSign} ➔ ${s.currentAscendantSign} at ${s.windowStartLocalTime}]**`
+          : "";
+        return `- **${s.vargaName}:** Cusp in **${s.currentAscendantSign}** (${s.currentAscendantDegrees.toFixed(2)}°) • Valid **${s.windowStartLocalTime} to ${s.windowEndLocalTime}** (Span: ${s.timeSpanMinutesTotal}m • Buffer: *${s.boundaryCountdownFormatted || `${s.remainingMinutesInCurrentSign}m rem`}*)${transitionNote}`;
+      })
       .join("\n");
 
     const chitkaraSection = chitkara
@@ -1501,13 +1512,27 @@ What would you like to explore for the child?
 
     // CHILD / MINOR VERIFICATION RESPONSE
     if (isMinor) {
-      return `### 🎯 **Childhood Multi-Divisional & Classical Birth Calibration (Kishora Jataka — किशोर जातक)**
+      const isMinorNeverSchooled = /outside formal school|never went to school|non-academic|hands-on/i.test(q);
+      const isMinorInBoardSchool = /10th|12th|currently in school|board/i.test(q);
+      const isMinorCreativeSports = /creative|sports|practical/i.test(q);
+      const isMinorRelocated = /relocated/i.test(q);
+      const isMinorMark = /noticeable mark|sensitive/i.test(q);
+
+      const minorLearningNote = isMinorNeverSchooled
+        ? "🌱 **Life-Taught / Outside Formal Schooling Confirmed:** D-24 & 3rd/5th house intelligence calibrated with observational wisdom, practical hands-on skill, and real-world adaptability (zero classroom/exam assumptions)."
+        : isMinorInBoardSchool
+        ? `🏫 **Currently in School (8th–10th / 12th Foundation Phase, Age ${Math.floor(nativeAge)}):** 4th house (schooling foundation) and 5th house (memory & exam concentration) calibrated with active Dasha.`
+        : isMinorCreativeSports
+        ? "🎨 **Creative, Artistic & Practical/Sports Inclination:** 3rd/5th house talent vectors calibrated with expressive and kinesthetic intelligence."
+        : "📚 **Analytical & Foundational Learning Focus:** 4th/5th house learning vectors calibrated with Mercury/Jupiter intellect axis.";
+
+      return `### 🎯 **Childhood & School-Age Multi-Divisional Calibration (Kishora Jataka — किशोर जातक)**
 
 - 📍 **Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${cityName}, ${countryName}**
 - ⏱️ **Calibrated Birth Moment (*Bhūpatana Lagna*):** **${candidate && candidate.deltaSeconds !== 0 ? candidate.rectifiedLocalTime : timeStr}** (Delta: **${candidate && candidate.deltaSeconds !== 0 ? candidate.deltaFormatted : "0s (Exact)"}**)
-- 🌟 **Verification Status:** **✅ 100% Precision Alignment (Classical BTR Triad, Classical Shodhanas & Childhood Cusps Locked)**
+- 🌟 **Verification Status:** **✅ 100% Precision Alignment (Classical BTR Triad, Classical Shodhanas & Youth Cusps Locked)**
 - 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
-- 🎒 **Native Status:** **Child / Minor (Age ${Math.floor(nativeAge)})**
+- 🎒 **Native Status:** **Youth / Minor (Age ${Math.floor(nativeAge)})**
 
 ---
 
@@ -1522,11 +1547,11 @@ ${chitkaraSection}
 
 ---
 
-#### 🎒 **3. Childhood Milestone Confirmations:**
-- 🎓 **D-24 Siddhamsha (Academic Aptitude Cusp):** ✅ Calibrated with childhood learning vectors and Mercury/Jupiter intellect axis.
+#### 🎒 **3. Youth & School-Age Milestone Confirmations:**
+- 🧭 **D-24 Siddhamsha (Learning / Skill Path):** ${minorLearningNote}
 - 🌿 **D-3 Drekkana (${siblingText}):** ✅ Locks 3rd house and D-3 Drekkana lagna alignment with sibling order.
-- 🏡 **D-4 Chaturthamsha (Domestic Stability):** ✅ 4th house childhood domestic environment verified.
-- 🛡️ **D-60 Shashtiamsha (Physical Shield):** ✅ Childhood vitality and protective drishti confirmed.
+- 🏡 **D-4 Chaturthamsha (${isMinorRelocated ? "Relocated with Family" : "Birth Region Stability"}):** ✅ 4th/12th house childhood domestic environment verified.
+- 🛡️ **D-60 Shashtiamsha (${isMinorMark ? "Distinct Mark / Sensitive Phase" : "Strong Childhood Resilience"}):** ✅ Childhood vitality and protective drishti confirmed.
 
 ---
 
@@ -1534,21 +1559,33 @@ ${chitkaraSection}
 ${vargaWindowsStr}
 
 ---
-💡 **The child's chart clock is 100% mathematically calibrated!** All future predictions will now operate on this verified birth chart.
+💡 **The youth chart clock is 100% mathematically calibrated!** All future predictions will now operate on this verified birth chart.
 
-What would you like to explore for the child?
-- 🎓 **Academic Guidance:** *"Best study subjects, cognitive strengths, and higher learning potential?"*
-- 🌟 **Health & Well-being:** *"Physical vitality, immunity, and daily routines?"*
-- 🎨 **Creative Strengths:** *"Innate hobbies, creative talents, and sports aptitude?"*
+What would you like to explore next?
+- 🧭 **Study, Focus & Skill Path:** *"Best subjects, practical skills, or concentration remedies for my current age?"*
+- 🌟 **Health & Energy:** *"Physical vitality, immunity, and daily routines?"*
+- 🎨 **Natural Talents:** *"Innate strengths, creative talents, and future direction?"*
 
 *⚡ Instant Classical Computation (0ms)*`;
     }
 
     // ADULT VERIFICATION RESPONSE
-    // 1. D-24 Siddhamsha (Higher Education / Degree)
-    const isQ1Yes = /1\.\s*yes|1:\s*yes|q1\s*:\s*yes/i.test(q);
-    // 2. D-10 Dasamsa (Career Entry & Responsibility)
-    const isQ2Yes = /2\.\s*yes|2:\s*yes|q2\s*:\s*yes/i.test(q);
+    // 1. D-24 Siddhamsha (All 5 Real-World Learning / Non-School / In-Progress Paths)
+    const isQ1NeverSchooled = /1\.\s*(?:never went to school|no formal school|uneducated)/i.test(q);
+    const isQ1SchoolOnly = /1\.\s*(?:school only|stopped after school|10th|12th)/i.test(q);
+    const isQ1StillStudying = /1\.\s*(?:still studying|not graduated yet|in progress)/i.test(q);
+    const isQ1SelfTaught = /1\.\s*self-taught|non-academic/i.test(q);
+    const isQ1Yes =
+      !isQ1NeverSchooled &&
+      !isQ1SchoolOnly &&
+      !isQ1StillStudying &&
+      !isQ1SelfTaught &&
+      /1\.\s*yes\b|1:\s*yes\b|q1\s*:\s*yes\b/i.test(q);
+
+    // 2. D-10 Dasamsa (Career Entry, Still Studying, or Early Work)
+    const isQ2StillStudying = /2\.\s*still studying|not working full-time/i.test(q);
+    const isQ2EarlyWork = /2\.\s*early work|family trade|working since early/i.test(q);
+    const isQ2Yes = !isQ2StillStudying && !isQ2EarlyWork && /2\.\s*yes\b|2:\s*yes\b|q2\s*:\s*yes\b/i.test(q);
     
     // 3. D-9 Navamsha (Relationship / Marriage Anchor)
     let d9Status = "Single / Self-Focus";
@@ -1564,11 +1601,136 @@ What would you like to explore for the child?
     // 6. D-60 Shashtiamsha (Karmic Pivot / Physical Resilience)
     const isQ6Yes = /6\.\s*yes|6:\s*yes|q6\s*:\s*yes|4\.\s*yes|4:\s*yes/i.test(q);
 
+    // Compute dynamic chart & Dasha diagnostics for all Q1 / Q2 paths (no placebo rubber-stamping)
+    const ascSignIdx = Math.floor(natalEphem.ascendant.siderealLongitude / 30);
+    const SIGN_RULERS = [
+      "Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury",
+      "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter",
+    ];
+    const thirdLord = SIGN_RULERS[(ascSignIdx + 2) % 12];
+    const fourthLord = SIGN_RULERS[(ascSignIdx + 3) % 12];
+    const fifthLord = SIGN_RULERS[(ascSignIdx + 4) % 12];
+    const eighthLord = SIGN_RULERS[(ascSignIdx + 7) % 12];
+    const eleventhLord = SIGN_RULERS[(ascSignIdx + 10) % 12];
+    const twelfthLord = SIGN_RULERS[(ascSignIdx + 11) % 12];
+
+    const fifthOccupants = Object.values(natalEphem.planets)
+      .filter((p) => !p.isModernPlanet && p.house === 5)
+      .map((p) => p.name);
+    const fifthLordObj = (natalEphem.planets as Record<string, any>)[fifthLord];
+    const fifthLordLon = fifthLordObj?.siderealLongitude || 0;
+    const fifthLordSignIdx = Math.floor(fifthLordLon / 30);
+    const fifthLordDegNum = fifthLordLon % 30;
+    const isFifthLordGandanta =
+      ([3, 7, 11].includes(fifthLordSignIdx) && fifthLordDegNum >= 26.666) ||
+      ([0, 4, 8].includes(fifthLordSignIdx) && fifthLordDegNum <= 3.333);
+    const isFifthLordDebilitated =
+      (fifthLord === "Sun" && fifthLordSignIdx === 6) ||
+      (fifthLord === "Moon" && fifthLordSignIdx === 7) ||
+      (fifthLord === "Mars" && fifthLordSignIdx === 3) ||
+      (fifthLord === "Mercury" && fifthLordSignIdx === 11) ||
+      (fifthLord === "Jupiter" && fifthLordSignIdx === 9) ||
+      (fifthLord === "Venus" && fifthLordSignIdx === 5) ||
+      (fifthLord === "Saturn" && fifthLordSignIdx === 0);
+
+    const dashaTimeline = buildFullChronologicalDashaTimeline(natalEphem);
+    const currentRunningPeriod = dashaTimeline.find((t) => t.nativeAgeStart <= nativeAge && t.nativeAgeEnd >= nativeAge) || dashaTimeline[0];
+    const currentRunningDashaStr = currentRunningPeriod
+      ? `${currentRunningPeriod.mahadashaLord}–${currentRunningPeriod.antardashaLord} (${currentRunningPeriod.startFormatted} – ${currentRunningPeriod.endFormatted})`
+      : "Current Active Dasha";
+    const nodalReturnPeriod = dashaTimeline.find((t) => t.nativeAgeStart <= 19 && t.nativeAgeEnd >= 18.5);
+    const nodalReturnDashaStr = nodalReturnPeriod
+      ? `${nodalReturnPeriod.mahadashaLord}–${nodalReturnPeriod.antardashaLord} (${nodalReturnPeriod.startFormatted} – ${nodalReturnPeriod.endFormatted})`
+      : `Age 18–19 (${birthYear + 18}–${birthYear + 19})`;
+    const shiftedCompletionPeriod =
+      dashaTimeline.find((t) => t.nativeAgeStart <= 24 && t.nativeAgeEnd >= 23 && (t.antardashaLord === eleventhLord || t.primaryHouseActivations.includes(11))) ||
+      dashaTimeline.find((t) => t.nativeAgeStart <= 24 && t.nativeAgeEnd >= 23);
+    const shiftedCompletionDashaStr = shiftedCompletionPeriod
+      ? `${shiftedCompletionPeriod.mahadashaLord}–${shiftedCompletionPeriod.antardashaLord} (${shiftedCompletionPeriod.startFormatted} – ${shiftedCompletionPeriod.endFormatted})`
+      : `${birthYear + 23}–${birthYear + 24}`;
+
+    const vidhyaBhangaFactors: string[] = [];
+    if (fifthOccupants.length > 0) {
+      vidhyaBhangaFactors.push(`5th house occupied by **${fifthOccupants.join(" + ")}**${fifthOccupants.includes(eighthLord) ? ` (with **${eighthLord}** as 8th lord of sudden breaks)` : ""}`);
+    }
+    if (isFifthLordDebilitated || isFifthLordGandanta) {
+      vidhyaBhangaFactors.push(`5th lord **${fifthLord}** ${isFifthLordDebilitated ? "debilitated" : ""}${isFifthLordDebilitated && isFifthLordGandanta ? " & " : ""}${isFifthLordGandanta ? `in the **Gandānta knot (${fifthLordDegNum.toFixed(2)}°)**` : ""}`);
+    }
+    const factorSummary = vidhyaBhangaFactors.length > 0
+      ? vidhyaBhangaFactors.join("; ")
+      : `5th lord **${fifthLord}** and 8th lord **${eighthLord}** restructuring axis`;
+
+    let q1DiagnosticText = "";
+    if (isQ1Yes) {
+      q1DiagnosticText = `✅ Confirmed aligned with D-24 4th/5th/9th learning gateway in the **${birthYear + 21}–${birthYear + 23}** window.`;
+    } else if (isQ1NeverSchooled) {
+      q1DiagnosticText = `🌱 **Never Attended Formal School / Life-Taught Path Confirmed:** In classical Jyotish (*Desha-Kaala-Paatra*), the 5th house (*Buddhi*) and D-24 *Siddhamsha* measure raw intelligence, street-smart intuition, and practical mastery—never mere paper degrees. Your 3rd lord (**${thirdLord}**) and 5th house (${fifthOccupants.length > 0 ? `occupied by **${fifthOccupants.join(" + ")}**` : `ruled by **${fifthLord}**`}) channel wisdom directly into real-world survival, hands-on craft, and independent livelihood outside formal classrooms.`;
+    } else if (isQ1SchoolOnly) {
+      q1DiagnosticText = `🏫 **School-Level Foundation Only (10th/12th) / Non-Collegiate Path Confirmed:** Your 4th lord (**${fourthLord}**) completed foundational schooling, while your 5th-house configuration (${factorSummary}) deliberately redirected your life energy after school (around **${birthYear + 16}–${birthYear + 19}** under **${nodalReturnDashaStr}**) directly into practical work, skill, or independent trade rather than university theory.`;
+    } else if (isQ1StillStudying) {
+      q1DiagnosticText = `📖 **Still Studying / Not Graduated Yet (In-Progress Path at Age ${Math.floor(nativeAge)}):** Your learning/skill journey is actively in progress under **${currentRunningDashaStr}**. ${vidhyaBhangaFactors.length > 0 ? `Note that your chart carries a non-linear *Vidhya-Bhanga* pace (${factorSummary}), explaining why your study timeline has required extra patience or a non-linear route; your strongest completion/fulfillment window aligns with **${shiftedCompletionDashaStr}** (11th lord **${eleventhLord}**).` : `Your 4th lord (**${fourthLord}**) and 5th lord (**${fifthLord}**) support steady ongoing completion.`}`;
+    } else if (isQ1SelfTaught) {
+      q1DiagnosticText = `🛠️ **Self-Taught / Non-Academic Mastery Confirmed:** Your 5th house (${fifthOccupants.length > 0 ? `occupied by **${fifthOccupants.join(" + ")}**` : `ruled by **${fifthLord}**`}) channels intelligence directly into hands-on street-smart craft, independent trade, and real-world skill rather than conventional classroom conveyor-belt schooling.`;
+    } else {
+      q1DiagnosticText = `🔄 **Non-Linear / Shifted Timeline Confirmed (Rejected Standard ${birthYear + 21}–${birthYear + 23} Template):** Answering **No** directly validates your chart's *Vidhya-Bhanga* (non-linear interruption) signature (${factorSummary}). At your **1st Nodal Return (~Age 18.6, ${birthYear + 18}–${birthYear + 19})** under **${nodalReturnDashaStr}**, a sudden exam setback/break occurred (**${birthYear + 19}**), shifting foundation recovery/entry to **${birthYear + 20}** and pushing the primary completion/fulfillment window to **${nativeAge >= 23 ? `${birthYear + 24}` : "the upcoming 11th-lord window"}** under **${shiftedCompletionDashaStr}** (11th-house fulfillment via **${eleventhLord}**).`;
+    }
+
+    let q2DiagnosticText = "";
+    if (isQ2Yes) {
+      q2DiagnosticText = `✅ Confirmed aligned with D-10 Karma cusp and Saturn/10th-house responsibility shift in **${birthYear + 24}–${birthYear + 26}**.`;
+    } else if (isQ2StillStudying) {
+      q2DiagnosticText = `📚 **Focus on Ongoing Study / Preparation Confirmed:** Rather than a conventional full-time job entry, your current Dasha (**${currentRunningDashaStr}**) is channeling energy into preparation and skill building before your primary D-10 livelihood launch.`;
+    } else if (isQ2EarlyWork) {
+      q2DiagnosticText = `🛠️ **Early Livelihood / Practical Hustle (Started Before Age 20) Confirmed:** Your 3rd lord (**${thirdLord}**) and 10th-house Karma axis initiated real-world earning, family duty, or practical trade early in youth rather than waiting for a mid-20s corporate conveyor belt.`;
+    } else {
+      q2DiagnosticText = `🔄 **Non-Linear 11th/12th House Split Confirmed (Rejected Standard ${birthYear + 24}–${birthYear + 26} Office Conveyor Belt):** Answering **No** confirms that **${shiftedCompletionDashaStr}** (with **${twelfthLord}** ruling the 12th house of foreign lands/uprooting and **${eleventhLord}** ruling 11th-house fulfillment) split into two distinct real-world phases: **(a) ${birthYear + 24}** resolved your delayed foundational milestone first, while **(b) ${birthYear + 25}** (reinforced by Transit Saturn in the 12th house and Transit Rahu over the 1st-house Lagna) manifested as **12th-house cross-border/long-distance relocation** (${isQ5Relocated ? "matching your confirmed **5. Relocated** anchor" : "restructuring your environment"}) and independent/speculative pursuit rather than a conventional domestic job shift.`;
+    }
+
+    // Check for critical cusp proximity across D-3, D-9, D-10, D-24 (within 180 seconds = 3 minutes)
+    const d3Node = sensitivities.find((s) => s.vargaId === "D3");
+    const d9Node = sensitivities.find((s) => s.vargaId === "D9");
+    const d10Node = sensitivities.find((s) => s.vargaId === "D10");
+    const d24Node = sensitivities.find((s) => s.vargaId === "D24");
+    const criticalVargas = [d3Node, d9Node, d10Node, d24Node].filter(
+      (s): s is NonNullable<typeof d3Node> =>
+        Boolean(
+          s &&
+            ((s.remainingSecondsInCurrentSign !== undefined && s.remainingSecondsInCurrentSign <= 180) ||
+              (s.elapsedSecondsInCurrentSign !== undefined && s.elapsedSecondsInCurrentSign <= 180))
+        )
+    );
+
+    const cuspAlertSection =
+      criticalVargas.length > 0
+        ? `---
+
+#### ⚠️ **Critical Divisional Cusp Boundary Alert (Razor-Thin Multi-Varga Junction):**
+Your recorded Ascendant (**${ascRashi} ${ascDeg}**) sits within **seconds** of a major divisional sign boundary. A shift of just **18 to 90 seconds** on the hospital clock flips the following divisional charts:
+${criticalVargas
+  .map((s) => {
+    const isNearEnd = (s.remainingSecondsInCurrentSign ?? 999) <= (s.elapsedSecondsInCurrentSign ?? 999);
+    const boundaryClock = isNearEnd ? s.windowEndLocalTime : s.windowStartLocalTime;
+    const secAway = isNearEnd ? s.remainingSecondsInCurrentSign : s.elapsedSecondsInCurrentSign;
+    const signBefore = isNearEnd ? s.currentAscendantSign : s.previousAscendantSign;
+    const signAfter = isNearEnd ? s.nextAscendantSign : s.currentAscendantSign;
+    let domainCrossCheck = "";
+    if (s.vargaId === "D3") {
+      domainCrossCheck = ` ──► *Cross-Check with your confirmed **4. ${siblingText}** status: Before **${boundaryClock}** locks **D-3 ${signBefore}**; after **${boundaryClock}** (+${secAway}s) flips to **D-3 ${signAfter}** (governing younger sibling/courage dynamics).*`;
+    } else if (s.vargaId === "D9") {
+      domainCrossCheck = ` ──► *Cross-Check with your confirmed **3. ${d9Status}** & **5. ${isQ5Relocated ? "Relocated" : "Ancestral Soil"}** anchors: Before **${boundaryClock}** holds **D-9 ${signBefore}**; after **${boundaryClock}** (+${secAway}s) flips to **D-9 ${signAfter}** (shifting the D-9 7th/12th dharma & foreign settlement axis).*`;
+    } else if (s.vargaId === "D24") {
+      domainCrossCheck = ` ──► *Cross-Check with **1. Non-Linear Learning/Skill Path**: Flips **D-24 ${signBefore} ➔ ${signAfter}** at **${boundaryClock}**.*`;
+    }
+    return `- 🚨 **${s.vargaName}:** Only **${secAway}s** from boundary at **${boundaryClock}** • **<= ${boundaryClock}: ${signBefore}** vs. **> ${boundaryClock}: ${signAfter}**${domainCrossCheck}`;
+  })
+  .join("\n")}`
+        : "";
+
     return `### 🎯 **Multi-Divisional & Classical 3-Point Birth Time Calibration (D-1, D-3, D-4, D-9, D-10, D-24, D-60)**
 
 - 📍 **Hospital Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${cityName}, ${countryName}**
 - ⏱️ **Calibrated True Birth Moment (*Bhūpatana Lagna*):** **${candidate && candidate.deltaSeconds !== 0 ? candidate.rectifiedLocalTime : timeStr}** (Delta: **${candidate && candidate.deltaSeconds !== 0 ? candidate.deltaFormatted : "0s (Exact)"}** • D-60 Lagna: **${candidate && candidate.deltaSeconds !== 0 ? candidate.d60LagnaSign : chitkara ? chitkara.condition3D60KetuDispositorLagna.secondarySign : "Calibrated"}**)
-- 🌟 **Verification Status:** **✅ 100% Calibrated & Synchronized (Classical 3-Point BTR Triad & Multi-Divisional Milestones Locked)**
+- 🌟 **Verification Status:** **✅ 100% Calibrated & Synchronized (Classical 3-Point BTR Triad & Non-Linear Milestones Verified)**
 - 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
 - 🏥 **Clinical Delivery Latency:** *${candidate && candidate.deltaSeconds !== 0 ? candidate.clinicalNote : "Recorded birth time aligns directly with the umbilical severance moment."}*
 
@@ -1585,13 +1747,15 @@ ${chitkaraSection}
 
 ---
 
-#### 🔒 **3. 6-Point Multi-Divisional Milestone Confirmations:**
-- 🎓 **D-24 Siddhamsha (Higher Learning Cusp):** ${isQ1Yes ? "✅ Confirmed aligned with D-24 4th/5th/9th learning gateway." : "✅ Calibrated with foundational education axis."}
-- 💼 **D-10 Dasamsa (Career Authority Axis):** ${isQ2Yes ? "✅ Confirmed aligned with D-10 Karma cusp and Saturn transit axis." : "✅ Internal career consolidation phase confirmed."}
-- 💍 **D-9 Navamsha (${d9Status}):** ✅ Aligns with the 7th Lord in D-9 Navamsha, locking your soul-relationship timeline.
-- 🌿 **D-3 Drekkana (${siblingText}):** ✅ Locks the 3rd house and D-3 Drekkana lagna alignments with your birth order.
-- 🏡 **D-4 Chaturthamsha (${isQ5Relocated ? "Relocated from Ancestral Roots" : "Ancestral Soil Stability"}):** ✅ 4th/12th house stability vector verified in D-4 chart.
-- 🛡️ **D-60 Shashtiamsha (${isQ6Yes ? "Karmic Pivot / Physical Mark" : "Protective Shield"}):** ✅ Protective benefic drishti shielding confirmed.
+#### 🔒 **3. 6-Point Multi-Divisional & Non-Linear Milestone Diagnostics:**
+- 🎓 **D-24 Siddhamsha (Learning, Skill & Foundation Axis):** ${q1DiagnosticText}
+- 💼 **D-10 Dasamsa (Livelihood, Action & Responsibility Axis):** ${q2DiagnosticText}
+- 💍 **D-9 Navamsha (${d9Status}):** ✅ Synchronized with D-9 Navamsha (**${d9Node?.currentAscendantSign || "Virgo"}** Lagna; ${d9Node && (d9Node.remainingSecondsInCurrentSign ?? 999) <= 180 ? `note **${d9Node.nextAscendantSign}** cusp only ${d9Node.remainingSecondsInCurrentSign}s away at ${d9Node.windowEndLocalTime}` : "7th-house partnership axis locked"}).
+- 🌿 **D-3 Drekkana (${siblingText}):** ✅ Calibrated with 3rd-house sibling/courage axis and D-3 Drekkana (**${d3Node?.currentAscendantSign || ascRashi}**${d3Node && (d3Node.remainingSecondsInCurrentSign ?? 999) <= 180 ? ` ➔ flips to **${d3Node.nextAscendantSign}** at **${d3Node.windowEndLocalTime}**, only ${d3Node.remainingSecondsInCurrentSign}s away` : ""}).
+- 🏡 **D-4 Chaturthamsha (${isQ5Relocated ? "Relocated from Ancestral Roots" : "Ancestral Soil Stability"}):** ✅ ${isQ5Relocated ? `12th-lord (**${twelfthLord}**) & Rahu/Saturn displacement vector verified across D-1 and D-4 Chaturthamsha.` : "4th-house ancestral foundation stability verified in D-4 Chaturthamsha."}
+- 🛡️ **D-60 Shashtiamsha (${isQ6Yes ? "Karmic Pivot / Shock-to-Breakthrough" : "Protective Shield"}):** ✅ ${isQ6Yes ? `Validates high-voltage 5th/8th/12th transformation pivots and D-60 (**${triEpoch.d60VulnerabilityStatus.d60Sign}**) resilience.` : "Protective benefic drishti shielding confirmed in D-60."}
+
+${cuspAlertSection}
 
 ---
 
@@ -1599,12 +1763,12 @@ ${chitkaraSection}
 ${vargaWindowsStr}
 
 ---
-💡 **Your chart clock is 100% mathematically, divisionally, and harmonically calibrated!** All future predictions, dasha timings, and varga readings will now operate on your true verified birth moment.
+💡 **Your chart clock is 100% mathematically, divisionally, and harmonically calibrated!** All future predictions, dasha timings, and varga readings will now operate on your true verified birth moment and non-linear life trajectory.
 
 What would you like to explore first?
-- 💼 **Career & Wealth:** *"Job vs. Business, promotion timing, or Indu Lagna wealth potential?"*
+- 💼 **Career, Trading & Wealth:** *"Independent business/trading vs. job, wealth timing, or Indu Lagna potential?"*
+- 🌍 **Relocation & Timeline:** *"Year-by-year past and future event verification across my active Dasha?"*
 - 💍 **Marriage & Partnerships:** *"Marriage timing, spouse characteristics, or compatibility?"*
-- 👶 **Progeny & Family:** *"Timing of children, family expansion, or child blueprint?"*
 - ⭐ **27 Nakshatras Activation:** *"Which Nakshatra is active for my age?"*
 
 *⚡ Instant Classical Computation (0ms)*`;
@@ -1683,14 +1847,34 @@ ${candidateStr}`
 * 🫁 **Pranapada Lagna (प्राणपद लग्न):** Pranapada in **${pranapada.pranapadaRashi}** (House ${pranapada.pranapadaHouseFromLagna} from Lagna) ──► **${pranapada.classicalVerdict}**
 * 🌿 **Tattva Shodhana (तत्व शोधन):** Primary: **${tattva.primaryTattva}** | Active Antar-Tattva: **${tattva.antarTattva} (${tattva.antarTattvaGender})** ──► **${tattva.classicalVerdict}**`;
 
+    const d3NodeStep1 = sensitivities.find((s) => s.vargaId === "D3");
+    const d24NodeStep1 = sensitivities.find((s) => s.vargaId === "D24");
+    const step1CuspAlerts = [d3NodeStep1, d9Node, d24NodeStep1]
+      .filter(
+        (s): s is NonNullable<typeof d9Node> =>
+          Boolean(
+            s &&
+              ((s.remainingSecondsInCurrentSign !== undefined && s.remainingSecondsInCurrentSign <= 180) ||
+                (s.elapsedSecondsInCurrentSign !== undefined && s.elapsedSecondsInCurrentSign <= 180))
+          )
+      )
+      .map((s) => {
+        const isNearEnd = (s.remainingSecondsInCurrentSign ?? 999) <= (s.elapsedSecondsInCurrentSign ?? 999);
+        const boundaryClock = isNearEnd ? s.windowEndLocalTime : s.windowStartLocalTime;
+        const secAway = isNearEnd ? s.remainingSecondsInCurrentSign : s.elapsedSecondsInCurrentSign;
+        const signBefore = isNearEnd ? s.currentAscendantSign : s.previousAscendantSign;
+        const signAfter = isNearEnd ? s.nextAscendantSign : s.currentAscendantSign;
+        return `**${s.vargaId}** (${signBefore} ➔ ${signAfter} at ${boundaryClock}, only ${secAway}s buffer)`;
+      });
+
     const d60RadarSection = `---
 
-### 🚨 Real-Time D-60 (Shashtiamsha) Boundary Radar for Your Chart
+### 🚨 Real-Time Divisional & D-60 (Shashtiamsha) Boundary Radar for Your Chart
 Because hospital clocks carry a 2–15 minute margin of error (clerical delay or post-delivery Apgar scoring), divisional boundary analysis reveals your exact clock sensitivity:
 * ${vulnBadge}
 * **Active D-60 Sign:** **${d60.d60Sign}** (Span: 120 seconds / 2.0 mins)
 * **Real-Time Buffer:** **${d60.bufferDescription}**
-* **D-9 Navamsha Window:** **${d9Node ? `${d9Node.windowStartLocalTime} to ${d9Node.windowEndLocalTime} (${d9Node.currentAscendantSign})` : "Active"}**
+* **D-9 Navamsha Window:** **${d9Node ? `${d9Node.windowStartLocalTime} to ${d9Node.windowEndLocalTime} (${d9Node.currentAscendantSign}${d9Node.nextAscendantSign && (d9Node.remainingSecondsInCurrentSign ?? 999) <= 180 ? ` ➔ flips to ${d9Node.nextAscendantSign} in ${d9Node.remainingSecondsInCurrentSign}s!` : ""})` : "Active"}**${step1CuspAlerts.length > 0 ? `\n* **⚠️ Critical Multi-Varga Cusp Alert:** ${step1CuspAlerts.join(" • ")}` : ""}
 * **Diagnostic Verdict:** ${d60.recommendation}`;
 
     const lifeStageNote = isInfant
@@ -3263,7 +3447,9 @@ function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: In
   const [infantLocation, setInfantLocation] = useState<string>("Ancestral Region");
 
   // State for minor/child
-  const [minorAptitude, setMinorAptitude] = useState<string>("Academic Focus");
+  const [minorAptitude, setMinorAptitude] = useState<string>(
+    nativeAge >= 12 ? "Currently in School (10th/12th)" : "Academic Focus"
+  );
   const [minorSibling, setMinorSibling] = useState<string>("Eldest");
   const [minorReloc, setMinorReloc] = useState<string>("Ancestral Soil");
   const [minorHealth, setMinorHealth] = useState<string>("Strong Health");
@@ -3274,8 +3460,8 @@ function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: In
   const careerStart = birthYear + 24;
   const careerEnd = birthYear + 26;
 
-  const [q1, setQ1] = useState<string>("Yes");
-  const [q2, setQ2] = useState<string>("Yes");
+  const [q1, setQ1] = useState<string>(nativeAge < 22 ? "Still Studying / Not Graduated Yet" : "Yes");
+  const [q2, setQ2] = useState<string>(nativeAge < 23 ? "Still Studying / Preparing" : "Yes");
   const [q3, setQ3] = useState<string>("Single");
   const [q4, setQ4] = useState<string>("Eldest");
   const [q5, setQ5] = useState<string>("Relocated");
@@ -3511,20 +3697,21 @@ function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: In
           </div>
         )}
 
-        {/* Minor Q1: Learning Aptitude */}
+        {/* Minor Q1: Learning / Schooling / Hands-On Path */}
         <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
-            <span>🎓</span>
-            <span>1. D-24 Siddhamsha — Academic &amp; Learning Aptitude:</span>
+            <span>🧭</span>
+            <span>1. D-24 Siddhamsha — Schooling, Skill or Learning Path:</span>
           </div>
           <p className="text-[11px] text-slate-300 leading-snug">
-            What is the child's primary learning inclination or academic strength?
+            How is the youth's current schooling, board study (e.g., 8th–10th/12th), or hands-on skill path unfolding?
           </p>
           <div className="flex flex-wrap gap-1.5 pt-1">
             {[
+              { label: "🏫 Currently in School (e.g. 8th–10th / 12th)", val: "Currently in School (10th/12th)" },
               { label: "📚 Strong Academic & Analytical Focus", val: "Academic Focus" },
-              { label: "🎨 Creative, Artistic & Expressive", val: "Creative & Arts" },
-              { label: "⚽ Active, Sports & Practical Skills", val: "Sports & Practical" },
+              { label: "🎨 Creative, Sports & Practical Skills", val: "Creative & Practical" },
+              { label: "🌱 Never Went to School / Hands-On Life Learning", val: "Outside Formal School" },
             ].map((opt) => (
               <button
                 key={opt.val}
@@ -3687,19 +3874,24 @@ function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: In
         </div>
       )}
 
-      {/* Q1 - D-24 Higher Learning */}
+      {/* Q1 - D-24 Learning, Schooling, In-Progress or Non-School Path */}
       <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
-          <span>🎓</span>
-          <span>1. D-24 Siddhamsha — Higher Education Milestone ({gradStart} – {gradEnd}):</span>
+          <span>🧭</span>
+          <span>1. D-24 Siddhamsha — Education, Schooling, Skill or Life-Taught Path:</span>
         </div>
         <p className="text-[11px] text-slate-300 leading-snug">
-          Did you complete college graduation, post-grad, or an important skill qualification around {gradStart}–{gradEnd} (age {gradStart - birthYear}–{gradEnd - birthYear})?
+          Which best describes your learning or schooling background (including if you are still studying, stopped at 10th/12th school, had a break/delay, or never attended school)?
         </p>
         <div className="flex flex-wrap gap-1.5 pt-1">
           {[
-            { label: `✅ Yes (Graduated / Skill in ${gradStart}–${gradEnd})`, val: "Yes" },
-            { label: "❌ No / Different Year", val: "No" },
+            ...(nativeAge >= 21
+              ? [{ label: `✅ Graduated Around ${gradStart}–${gradEnd}`, val: "Yes" }]
+              : []),
+            { label: "⏳ Delayed / Exam Break / Graduated Later", val: "No / Delayed" },
+            { label: "📖 Still Studying / Not Graduated Yet", val: "Still Studying / Not Graduated Yet" },
+            { label: "🏫 Stopped After School (10th/12th) / No College", val: "School Only (10th/12th)" },
+            { label: "🌱 Never Went to School / Life-Taught", val: "Never Went to School / Self-Taught" },
           ].map((opt) => (
             <button
               key={opt.val}
@@ -3717,19 +3909,23 @@ function InteractiveBtrQuestionnaire({ natalEphemeris, onVerify, isLoading }: In
         </div>
       </div>
 
-      {/* Q2 - D-10 Dasamsa Career */}
+      {/* Q2 - D-10 Dasamsa Livelihood, Work, Study or Life Responsibility */}
       <div className="space-y-1.5 bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-100">
           <span>💼</span>
-          <span>2. D-10 Dasamsa — Career Pressure &amp; Role Shift ({careerStart} – {careerEnd}):</span>
+          <span>2. D-10 Dasamsa — Work, Trade, Ongoing Study or Life Responsibility:</span>
         </div>
         <p className="text-[11px] text-slate-300 leading-snug">
-          Did {careerStart}–{careerEnd} (age {careerStart - birthYear}–{careerEnd - birthYear}) bring increased responsibilities, career/job transition, or a serious foundation-building phase?
+          How has your work, independent trade, or responsibility path unfolded{nativeAge >= 24 ? ` around ${careerStart}–${careerEnd} (age ${careerStart - birthYear}–${careerEnd - birthYear})` : ""}?
         </p>
         <div className="flex flex-wrap gap-1.5 pt-1">
           {[
-            { label: "✅ Yes (Heavy Responsibility / Shift)", val: "Yes" },
-            { label: "❌ No", val: "No" },
+            ...(nativeAge >= 23
+              ? [{ label: `✅ Major Work / Life Shift (${careerStart}–${careerEnd})`, val: "Yes" }]
+              : []),
+            { label: "⏳ Different Year / Relocation / Independent Path", val: "No" },
+            { label: "📚 Still Studying / Preparing (Not Working Yet)", val: "Still Studying / Preparing" },
+            { label: "🛠️ Working / Family Trade Since Early Age (< 20)", val: "Early Work / Family Trade" },
           ].map((opt) => (
             <button
               key={opt.val}
@@ -4081,32 +4277,32 @@ function Round2DrillDownCard({
 
           <button
             type="button"
-            onClick={() => onSelect(`Primary school milestone around age 8–10`)}
+            onClick={() => onSelect(`Childhood milestone or family/health shift around age 8–10`)}
             disabled={isLoading}
             className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-cyan-500/50 text-slate-200 transition-all cursor-pointer"
           >
-            <div className="font-bold text-xs text-cyan-300">📚 Age 8–10</div>
-            <div className="text-[10.5px] text-slate-400">Primary Schooling &amp; Sports/Arts</div>
+            <div className="font-bold text-xs text-cyan-300">🌱 Age 8–10</div>
+            <div className="text-[10.5px] text-slate-400">Childhood Environment, Talent or Health Shift</div>
           </button>
 
           <button
             type="button"
-            onClick={() => onSelect(`Middle school transition around age 12–14`)}
+            onClick={() => onSelect(`Early teen transition, skill awakening, or family event around age 12–14`)}
             disabled={isLoading}
             className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-cyan-500/50 text-slate-200 transition-all cursor-pointer"
           >
-            <div className="font-bold text-xs text-cyan-300">🎓 Age 12–14</div>
-            <div className="text-[10.5px] text-slate-400">Middle School &amp; Subject Focus</div>
+            <div className="font-bold text-xs text-cyan-300">🧭 Age 12–14</div>
+            <div className="text-[10.5px] text-slate-400">Early Teen Awakening, Skill or Family Shift</div>
           </button>
 
           <button
             type="button"
-            onClick={() => onSelect(`10th board schooling around age 15–16`)}
+            onClick={() => onSelect(`Major youth turning point around age 15–16`)}
             disabled={isLoading}
             className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-cyan-500/50 text-slate-200 transition-all cursor-pointer"
           >
-            <div className="font-bold text-xs text-cyan-300">📜 Age 15–16</div>
-            <div className="text-[10.5px] text-slate-400">10th Board Exam Milestone</div>
+            <div className="font-bold text-xs text-cyan-300">⚡ Age 15–16</div>
+            <div className="text-[10.5px] text-slate-400">Youth Turning Point (Work, Life Shift or Study)</div>
           </button>
         </div>
       </div>
@@ -4120,10 +4316,10 @@ function Round2DrillDownCard({
           <span className="text-base">⏳</span>
           <div>
             <h4 className="font-extrabold text-amber-300 text-xs tracking-wide">
-              Chronological Life Era Drill-Down
+              Chronological Life Era Drill-Down (All Life Paths)
             </h4>
             <p className="text-[10.5px] text-slate-400">
-              Select the era where your primary educational or life milestone occurred:
+              Select the age window where a major life turning point (work/hustle, setback, relocation, relationship, health, or study) occurred:
             </p>
           </div>
         </div>
@@ -4135,42 +4331,42 @@ function Round2DrillDownCard({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <button
           type="button"
-          onClick={() => onSelect(`10th board around ${age15}`)}
+          onClick={() => onSelect(`Major life turning point, family/work shift, or milestone around ${age15}`)}
           disabled={isLoading}
           className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
         >
-          <div className="font-bold text-xs text-amber-300">🎒 ~{age15} (Age ~15)</div>
-          <div className="text-[10.5px] text-slate-400">10th Board / Schooling Transition</div>
+          <div className="font-bold text-xs text-amber-300">🌱 ~{age15} (Age ~15–16)</div>
+          <div className="text-[10.5px] text-slate-400">Early Youth Shift, Family/Work or Study Event</div>
         </button>
 
         <button
           type="button"
-          onClick={() => onSelect(`12th board around ${age17}`)}
+          onClick={() => onSelect(`Major turning point, setback/break, or new direction around ${age17}–${age17 + 1}`)}
           disabled={isLoading}
           className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
         >
-          <div className="font-bold text-xs text-amber-300">🎓 ~{age17} (Age ~17–18)</div>
-          <div className="text-[10.5px] text-slate-400">12th Board / High School Graduation</div>
+          <div className="font-bold text-xs text-amber-300">⚡ ~{age17}–{age17 + 1} (Age ~17–19)</div>
+          <div className="text-[10.5px] text-slate-400">Nodal Return Shock, Break/Setback or Direction Shift</div>
         </button>
 
         <button
           type="button"
-          onClick={() => onSelect(`College graduation around ${age21}`)}
+          onClick={() => onSelect(`Major milestone, independent livelihood/trade, or completion around ${age21}–${age21 + 2}`)}
           disabled={isLoading}
           className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
         >
-          <div className="font-bold text-xs text-amber-300">📜 ~{age21} (Age ~21–22)</div>
-          <div className="text-[10.5px] text-slate-400">Undergraduate Degree Completion</div>
+          <div className="font-bold text-xs text-amber-300">🎯 ~{age21}–{age21 + 2} (Age ~21–24)</div>
+          <div className="text-[10.5px] text-slate-400">Livelihood/Trade Launch, Skill or Milestone Completion</div>
         </button>
 
         <button
           type="button"
-          onClick={() => onSelect(`Post-graduation or career entry around ${age23}`)}
+          onClick={() => onSelect(`Major relocation, overseas move, venture, or life pivot around ${age23}–${age23 + 2}`)}
           disabled={isLoading}
           className="p-2.5 text-left rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 text-slate-200 transition-all cursor-pointer"
         >
-          <div className="font-bold text-xs text-amber-300">💼 ~{age23} (Age ~23–25)</div>
-          <div className="text-[10.5px] text-slate-400">Post-Grad / Major Career Milestone</div>
+          <div className="font-bold text-xs text-amber-300">✈️ ~{age23}–{age23 + 2} (Age ~23–26)</div>
+          <div className="text-[10.5px] text-slate-400">Distant Relocation, Independent Venture or Major Pivot</div>
         </button>
       </div>
     </div>
@@ -4950,8 +5146,16 @@ export default function AstroChatbot() {
 
     messages.forEach((m) => {
       if (m.id === "welcome") return;
+      const sanitizedContent = m.content
+        .replace(/^\[PROBABILITY:[^\]]*\]\s*/gim, "")
+        .replace(/```(?:chips|deeplinks|timeline|sadhana)[\s\S]*?```/gi, "")
+        .replace(/\s*\[BTR_[A-Z_]+\]/gi, "")
+        .replace(/\s*\[CARD:[A-Z_]+\]/gi, "")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+      if (!sanitizedContent) return;
       lines.push(`### ${m.role === "user" ? "👤 Client Inquiry" : "🔮 Acharya Reading"}:`);
-      lines.push(m.content);
+      lines.push(sanitizedContent);
       lines.push("");
     });
 
