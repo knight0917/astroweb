@@ -1814,7 +1814,28 @@
   - [x] Surface an explicit **Critical Divisional Cusp Boundary Alert** (`D-3`, `D-9`, `D-10`, `D-24`) whenever any key Varga is within `<= 180s` (3 minutes) of a cusp transition, showing exact before/after sign flips (`previousAscendantSign` / `nextAscendantSign`) and cross-checking with sibling order (`D-3`), relationship status (`D-9`), and relocation (`D-4`).
   - [x] Preserve exact seconds (`:SS`) in birth time inputs (`BirthDetailsModal.tsx` with `step="1"`), profile storage (`useAstroStore.ts`), BTR engine (`btrEngine.ts`), and chat display (`AstroChatbot.tsx` & `chatContext.ts`).
   - [x] Sanitize exported consultation Markdown reports (`handleDownloadConsultationReport` in `AstroChatbot.tsx`) to strip raw UI tokens (`[PROBABILITY: ...]`, ```` ```chips ... ``` ````, `[BTR_ADULT_VERIFIED]`, `[CARD:...]`).
-- [x] **Phase 65.6: Universal Life-Path Coverage for School-Age (10th/12th), In-Progress Students, School-Only & Unschooled Natives (`src/components/AstroChatbot.tsx`, `src/engine/educationStream.ts`, `src/engine/chatContext.ts`, `src/engine/chatPrompt.ts`)**:
+- [x] **Phase 65.6: Universal Life-Path Coverage for School-Age (10th/12th), In-Progress Students, School-Only & Unschooled Natives (`src/components/AstroChatbot.tsx`, `src/engine/educationStream.ts`, `src/engine/chatContext.ts`, `src/engine/chatPrompt.ts`)**
+
+---
+
+# Phase 66: Universal Command Searchbar Radiant Celestial Beautification & Contrast Elevation
+
+## Status: Complete & Verified (All 156 Tests Passing & 0 TS Errors)
+- **Trigger Keywords**: `searchbar-beautification`, `radiant-glow`, `celestial-glassmorphism`, `tactile-keycap`, `header-nav-contrast`, `command-palette`
+- **Single Source of Truth**: Tracking phases and milestones for Phase 66.
+- **Scope**:
+  1. Elevate the center universal quick search trigger bar in `src/components/HeaderNav.tsx` from a dark recessed pill into a radiant, visually arresting celestial command searchbar.
+  2. Implement an ambient glowing gradient wrapper (`amber-500` / `yellow-400` / `purple-500` celestial aura) with soft outer glow and crisp high-contrast border.
+  3. Redesign the search magnifying glass into an illuminated jewel capsule with sparkle accent.
+  4. Redesign the `Ctrl K` keycap into a tactile 3D mechanical pill badge with metallic accent.
+  5. Enhance typography with high-contrast text (`text-slate-200` to `text-white`), subtle hover glow, and responsive micro-badge (`Quick Jump`).
+  6. Harmonize the opened command palette modal search input with glowing amber focus and crisp visual cues.
+
+## Phases & Milestones
+- [x] **Phase 66.1: Searchbar Trigger Ambient Glow & Glassmorphic Container (`src/components/HeaderNav.tsx`)**
+- [x] **Phase 66.2: Search Icon Jewel Capsule & Tactile Keycap Upgrade (`src/components/HeaderNav.tsx`)**
+- [x] **Phase 66.3: Command Palette Modal Search Input Harmony (`src/components/HeaderNav.tsx`, `src/components/MobileBottomNav.tsx`)**
+- [x] **Phase 66.4: Verification, Lint & Test Suite Validation (`npm test`, `npx tsc --noEmit`)**:
   - [x] Add explicit interactive options and age-aware defaults in `InteractiveBtrQuestionnaire` & `isBtrExplicitLock` for: (1) `Currently in School (e.g. 8th–10th / 12th)`, (2) `Still Studying / Not Graduated Yet`, (3) `Stopped After School (10th/12th) / No College`, and (4) `Never Went to School / Life-Taught`, plus `Still Studying / Preparing` and `Early Work / Family Trade (< 20)`.
   - [x] Add `practicalAndNonDegreePathways` across all 6 streams in `src/engine/educationStream.ts` and Section 18 of `src/engine/chatContext.ts`, plus 4-way *Desha-Kaala-Paatra* synthesis in `vidhyaBhangaRisk`.
   - [x] Expand `extractUserConfirmedFacts` in `src/engine/chatPrompt.ts` to lock in 10th/12th school status, uncompleted graduation, school-only completion, and never-schooled status.

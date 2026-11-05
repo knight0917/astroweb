@@ -470,29 +470,50 @@ export default function HeaderNav() {
           </button>
         </div>
 
-        {/* Center: Universal Quick Search Trigger Bar */}
-        <div className="flex-1 max-w-xs md:max-w-md mx-1 sm:mx-3">
+        {/* Center: Universal Quick Search Trigger Bar (Elevated Radiant Celestial Design) */}
+        <div className="flex-1 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mx-1 sm:mx-3 relative group">
+          {/* Ambient Celestial Glow Aura */}
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500/30 via-yellow-400/20 to-amber-600/30 rounded-2xl blur-xs opacity-70 group-hover:opacity-100 group-hover:blur-sm transition-all duration-300 pointer-events-none" />
+
           <button
             onClick={() => {
               setShowSearchModal(true);
               setSearchQuery("");
               setSearchSelectedIndex(0);
             }}
-            className="w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/60 text-slate-300 hover:text-white transition-all shadow-inner group cursor-pointer text-xs"
-            title="Search any menu or module (Ctrl+K)"
+            className="relative w-full flex items-center justify-between gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-slate-900/95 via-slate-900/90 to-slate-950/95 hover:from-slate-850 hover:to-slate-900 border border-amber-500/40 hover:border-amber-400/90 text-slate-100 hover:text-white transition-all duration-300 shadow-[0_2px_12px_-2px_rgba(245,158,11,0.18)] hover:shadow-[0_4px_22px_0px_rgba(245,158,11,0.35)] cursor-pointer text-xs"
+            title="Search any Jyotish module, Kundli, Vastu, Dasha (Ctrl+K)"
           >
-            <div className="flex items-center gap-2 truncate">
-              <svg className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
-              </svg>
-              <span className="text-slate-400 group-hover:text-slate-200 truncate">
-                Search modules, kundli, vastu...
-              </span>
+            <div className="flex items-center gap-2 sm:gap-2.5 truncate">
+              {/* Jewel Search Icon Capsule */}
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-400/25 via-amber-500/15 to-amber-600/10 border border-amber-400/40 flex items-center justify-center text-amber-400 group-hover:text-amber-300 group-hover:border-amber-300/80 group-hover:scale-105 transition-all shadow-xs flex-shrink-0">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" strokeLinecap="round" />
+                </svg>
+              </div>
+
+              {/* High-Contrast Search Label & Sparkle Indicator */}
+              <div className="flex items-center gap-1.5 truncate">
+                <span className="text-slate-200 group-hover:text-amber-100 font-semibold text-xs sm:text-[12.5px] tracking-wide truncate">
+                  Search modules, kundli, vastu...
+                </span>
+                <span className="hidden xl:inline text-amber-400/70 group-hover:text-amber-300 text-[10px] animate-pulse">
+                  ✦
+                </span>
+              </div>
             </div>
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9.5px] font-mono font-semibold text-slate-400 bg-slate-800/90 border border-slate-700 rounded shadow-xs flex-shrink-0">
-              <span className="text-[10px]">Ctrl</span>K
-            </kbd>
+
+            {/* Right: Tactile 3D Keycap Badge */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="hidden lg:inline text-[9px] font-bold uppercase tracking-wider text-amber-400/80 group-hover:text-amber-300 transition-colors">
+                Quick Jump
+              </span>
+              <kbd className="inline-flex items-center gap-0.5 px-2 py-0.5 text-[9.5px] sm:text-[10px] font-mono font-bold text-amber-300/90 group-hover:text-amber-200 bg-gradient-to-b from-slate-800 to-slate-900 border border-amber-500/40 group-hover:border-amber-400/80 rounded-md shadow-inner shadow-black/50">
+                <span className="text-[10px] font-sans">Ctrl</span>
+                <span>K</span>
+              </kbd>
+            </div>
           </button>
         </div>
 
@@ -591,13 +612,15 @@ export default function HeaderNav() {
             onClick={() => setShowSearchModal(false)}
           />
 
-          <div className="relative z-10 w-full max-w-2xl bg-slate-950 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in-95 duration-150">
+          <div className="relative z-10 w-full max-w-2xl bg-slate-950 border-2 border-amber-500/40 rounded-2xl shadow-[0_0_50px_-10px_rgba(245,158,11,0.25)] overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in-95 duration-150">
             {/* Search Input Bar */}
-            <div className="p-3 sm:p-4 border-b border-slate-800 bg-slate-900/90 flex items-center gap-3">
-              <svg className="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
-              </svg>
+            <div className="p-3 sm:p-4 border-b border-amber-500/30 bg-gradient-to-r from-slate-900 via-slate-900/95 to-slate-950 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400/25 via-amber-500/15 to-amber-600/10 border border-amber-400/40 flex items-center justify-center text-amber-400 shadow-xs flex-shrink-0">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" strokeLinecap="round" />
+                </svg>
+              </div>
               <input
                 ref={searchInputRef}
                 autoFocus
@@ -629,7 +652,7 @@ export default function HeaderNav() {
                   }
                 }}
                 placeholder="Type to search any module (e.g. Vastu, Dasha, Matchmaking, Gochar, Shadbala)..."
-                className="w-full bg-transparent text-sm sm:text-base text-slate-100 placeholder:text-slate-500 focus:outline-none font-medium"
+                className="w-full bg-transparent text-sm sm:text-base text-slate-100 placeholder:text-slate-400 focus:outline-none font-semibold tracking-wide"
               />
               {searchQuery && (
                 <button
@@ -639,7 +662,7 @@ export default function HeaderNav() {
                   ✕
                 </button>
               )}
-              <kbd className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono text-slate-400 bg-slate-800/80 border border-slate-700 rounded">
+              <kbd className="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-bold text-amber-300 bg-slate-800 border border-amber-500/30 rounded shadow-xs">
                 ESC
               </kbd>
             </div>

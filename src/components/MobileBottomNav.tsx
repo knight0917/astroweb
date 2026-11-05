@@ -128,23 +128,23 @@ export default function MobileBottomNav() {
               </div>
             </div>
 
-            {/* Live Search Input */}
-            <div className="relative">
+            {/* Live Search Input (Elevated Celestial Styling) */}
+            <div className="relative group">
               <input
                 type="text"
                 value={mobileSearch}
                 onChange={(e) => setMobileSearch(e.target.value)}
                 placeholder="Search modules (e.g. Vastu, Dasha, Match)..."
-                className="w-full bg-slate-900/90 border border-slate-700 text-slate-100 text-xs rounded-xl pl-8 pr-7 py-2 focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder:text-slate-500"
+                className="w-full bg-slate-900 border border-amber-500/40 text-slate-100 text-xs rounded-xl pl-9 pr-7 py-2.5 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30 placeholder:text-slate-400 shadow-[0_2px_10px_-2px_rgba(245,158,11,0.15)] font-medium"
               />
-              <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+              <svg className="w-4 h-4 text-amber-400 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
                 <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
+                <path d="m21 21-4.35-4.35" strokeLinecap="round" />
               </svg>
               {mobileSearch && (
                 <button
                   onClick={() => setMobileSearch("")}
-                  className="absolute right-2.5 top-2 text-slate-400 hover:text-white text-xs"
+                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-white text-xs p-0.5 rounded bg-slate-800"
                 >
                   ✕
                 </button>
