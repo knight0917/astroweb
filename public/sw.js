@@ -1,4 +1,4 @@
-// Vedic Sky Progressive Web App Service Worker
+// PurohitJI AI Progressive Web App Service Worker
 const CACHE_NAME = 'vedic-sky-cache-v1';
 const PRECACHE_ASSETS = [
   '/',

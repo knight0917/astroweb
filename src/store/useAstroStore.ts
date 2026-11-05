@@ -484,7 +484,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
       localStorage.setItem(STORAGE_LAST_CACHE_CLEANUP_KEY, String(now));
       set({ lastCacheCleanupTime: now });
 
-      console.log("[Vedic Sky Tracker] 24-Hour Cache Invalidation successfully executed across all connected device storage.");
+      console.log("[PurohitJI AI] 24-Hour Cache Invalidation successfully executed across all connected device storage.");
       return {
         cleaned: true,
         message: "24-Hour cache invalidation completed. Device storage synchronized with cloud vault.",

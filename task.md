@@ -1762,6 +1762,28 @@
 
 ---
 
+# Phase 65: Brand Identity Update to "PurohitJI AI"
+
+## Status: Complete & Verified (All 156 Tests Passing & 0 TS Errors)
+- **Trigger Keywords**: `brand-identity`, `purohitji-ai`, `website-name-update`, `meta-branding`, `pwa-manifest`
+- **Scope**:
+  1. Update website name and branding to `"PurohitJI AI"` across navigation headers, titles, OpenGraph, PWA manifest, and reports.
+  2. Update `src/app/layout.tsx` (Title, OpenGraph siteName, Apple Web App title, metadata keywords).
+  3. Update `src/app/manifest.ts` and `public/manifest.json` (App name and short name).
+  4. Update `src/components/HeaderNav.tsx` (Top navbar brand header, drawer title, footer navigation label).
+  5. Update `src/components/ComprehensiveReportView.tsx` (Header logo, Executive Pocket Card, and print footer).
+  6. Update `src/components/PwaRegister.tsx` (Update and Install PWA dialogs).
+  7. Update `src/app/page.tsx` and `src/store/useAstroStore.ts` (Footer copyright and cache console tag).
+  8. Update `src/app/api/astro-chat/route.ts` and `src/components/AstroChatbot.tsx` (`X-Title` and `HTTP-Referer`).
+
+## Phases & Milestones
+- [x] **Phase 65.1: Global Metadata & Manifest Renaming (`src/app/layout.tsx`, `src/app/manifest.ts`, `public/manifest.json`, `public/sw.js`)**
+- [x] **Phase 65.2: Header & Navigation UI Brand Update (`src/components/HeaderNav.tsx`, `src/app/page.tsx`)**
+- [x] **Phase 65.3: Report, PWA & Store Consistency (`src/components/ComprehensiveReportView.tsx`, `src/components/PwaRegister.tsx`, `src/store/useAstroStore.ts`)**
+- [x] **Phase 65.4: Chatbot Headers & Verification (`src/app/api/astro-chat/route.ts`, `src/components/AstroChatbot.tsx`, `tests/engine.test.mjs`)**
+
+---
+
 # Phase 65: Anti-Rigidity & Non-Linear Chronological Milestone Engine (Vidhya Bhanga, Dynamic Dasha House Activation, 8th-Lord Mahadasha Filter & Saturnian Foreign Relocation Lag)
 
 ## Status: Complete & Verified

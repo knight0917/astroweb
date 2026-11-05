@@ -5264,8 +5264,8 @@ export default function AstroChatbot() {
             method: "POST",
             headers: {
               Authorization: `Bearer ${apiKey}`,
-              "HTTP-Referer": "https://vedicsky.app",
-              "X-Title": "Vedic Sky AI",
+              "HTTP-Referer": "https://astroweb-swart.vercel.app",
+              "X-Title": "PurohitJI AI",
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
