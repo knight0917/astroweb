@@ -1,5 +1,5 @@
 // PurohitJI AI Progressive Web App Service Worker
-const CACHE_NAME = 'vedic-sky-cache-v1';
+const CACHE_NAME = 'vedic-sky-cache-v2';
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.webmanifest',
@@ -30,17 +30,22 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch: Stale-while-revalidate for static assets, network-first for pages
+// Fetch: Stale-while-revalidate for static assets, network-first for navigation pages
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
-
-  // Skip cross-origin external API requests (like live geocoding)
-  if (url.origin !== self.location.origin) {
+  // Never intercept non-GET requests (e.g. POST SSE chat streams or mutations)
+  if (request.method !== 'GET') {
     return;
   }
 
-  // Next.js chunks, fonts, and images: Cache-first with network fallback
+  const url = new URL(request.url);
+
+  // Skip cross-origin external API requests and all private / dynamic /api/* endpoints
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  // Next.js chunks, fonts, and images: Cache-first with background revalidation
   if (
     request.destination === 'style' ||
     request.destination === 'script' ||
@@ -50,7 +55,6 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
         if (cachedResponse) {
-          // Fetch updated version in background to update cache
           fetch(request).then((networkResponse) => {
             if (networkResponse && networkResponse.status === 200) {
               caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse));
@@ -70,18 +74,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML Pages: Network-first to always deliver freshest astronomical updates
-  event.respondWith(
-    fetch(request)
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
-        }
-        return networkResponse;
-      })
-      .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
-  );
+  // HTML Navigation Pages: Network-first to always deliver freshest astronomical updates
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
+    );
+  }
 });
 
 // Listen for messages (Skip waiting & 24-Hour cache clearing)

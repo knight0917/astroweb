@@ -220,24 +220,24 @@ export function calculatePlanetaryAgeActivations(
   evaluationDate: Date = new Date()
 ): { currentAge: number; activeHouse: HouseAgeActivation; allHouses: HouseAgeActivation[]; planetaryAwakenings: any[] } {
   const birthDate = new Date(natalEphem.utcDate);
-  const diffMs = evaluationDate.getTime() - birthDate.getTime();
-  const currentAge = Math.floor(diffMs / (365.2425 * 86400000));
+  const diffMs = Math.max(0, evaluationDate.getTime() - birthDate.getTime());
+  const currentAge = Math.max(1, Math.floor(diffMs / (365.2425 * 86400000)));
 
   const ascRashiIdx = Math.floor(natalEphem.ascendant.siderealLongitude / 30);
 
   const HOUSE_META = [
-    { num: 1, name: "1st House (Lagna)", skt: "तनु भाव", baseAges: [1, 25, 49, 73], theme: "Self-reinvention, health overhaul, vitality and personal sovereignty." },
-    { num: 2, name: "2nd House (Dhana)", skt: "धन भाव", baseAges: [2, 26, 50, 74], theme: "Family wealth restructuring, speech, liquid assets and dietary habits." },
-    { num: 3, name: "3rd House (Sahasa)", skt: "सहज भाव", baseAges: [3, 27, 51, 75], theme: "Bold initiatives, digital enterprise, communication triumphs and sibling dynamics." },
-    { num: 4, name: "4th House (Sukha)", skt: "सुख भाव", baseAges: [4, 28, 52, 76], theme: "Real estate acquisition, vehicle upgrades, mother's blessing and domestic sanctuary." },
-    { num: 5, name: "5th House (Putra)", skt: "पुत्र भाव", baseAges: [5, 29, 53, 77], theme: "Creative breakthroughs, intellect manifestation, investment gains and progeny." },
-    { num: 6, name: "6th House (Shatru)", skt: "रिपु भाव", baseAges: [6, 30, 54, 78], theme: "Defeating professional rivals, resolving debts, overcoming health challenges." },
-    { num: 7, name: "7th House (Jaya)", skt: "जाया भाव", baseAges: [7, 31, 55, 79], theme: "Marriage milestone, business partnership fruition and public prominence." },
-    { num: 8, name: "8th House (Randhra)", skt: "रन्ध्र भाव", baseAges: [8, 32, 56, 80], theme: "Occult depth, deep psychological transformation, unearned wealth and rebirth." },
-    { num: 9, name: "9th House (Dharma)", skt: "धर्म भाव", baseAges: [9, 33, 57, 81], theme: "Bhagyodaya (fortune rise), pilgrimage, spiritual guru blessing and higher law." },
-    { num: 10, name: "10th House (Karma)", skt: "कर्म भाव", baseAges: [10, 34, 58, 82], theme: "Career zenith, leadership appointment, societal authority and professional recognition." },
-    { num: 11, name: "11th House (Labha)", skt: "लाभ भाव", baseAges: [11, 35, 59, 83], theme: "Major aspirational fruition, massive financial inflows and network expansion." },
-    { num: 12, name: "12th House (Vyaya)", skt: "व्यय भाव", baseAges: [12, 36, 60, 84], theme: "Foreign settlements, spiritual retreat, detachment and subconscious liberation." },
+    { num: 1, name: "1st House (Lagna)", skt: "तनु भाव", baseAges: [1, 13, 25, 37, 49, 61, 73], theme: "Self-reinvention, health overhaul, vitality and personal sovereignty." },
+    { num: 2, name: "2nd House (Dhana)", skt: "धन भाव", baseAges: [2, 14, 26, 38, 50, 62, 74], theme: "Family wealth restructuring, speech, liquid assets and dietary habits." },
+    { num: 3, name: "3rd House (Sahasa)", skt: "सहज भाव", baseAges: [3, 15, 27, 39, 51, 63, 75], theme: "Bold initiatives, digital enterprise, communication triumphs and sibling dynamics." },
+    { num: 4, name: "4th House (Sukha)", skt: "सुख भाव", baseAges: [4, 16, 28, 40, 52, 64, 76], theme: "Real estate acquisition, vehicle upgrades, mother's blessing and domestic sanctuary." },
+    { num: 5, name: "5th House (Putra)", skt: "पुत्र भाव", baseAges: [5, 17, 29, 41, 53, 65, 77], theme: "Creative breakthroughs, intellect manifestation, investment gains and progeny." },
+    { num: 6, name: "6th House (Shatru)", skt: "रिपु भाव", baseAges: [6, 18, 30, 42, 54, 66, 78], theme: "Defeating professional rivals, resolving debts, overcoming health challenges." },
+    { num: 7, name: "7th House (Jaya)", skt: "जाया भाव", baseAges: [7, 19, 31, 43, 55, 67, 79], theme: "Marriage milestone, business partnership fruition and public prominence." },
+    { num: 8, name: "8th House (Randhra)", skt: "रन्ध्र भाव", baseAges: [8, 20, 32, 44, 56, 68, 80], theme: "Occult depth, deep psychological transformation, unearned wealth and rebirth." },
+    { num: 9, name: "9th House (Dharma)", skt: "धर्म भाव", baseAges: [9, 21, 33, 45, 57, 69, 81], theme: "Bhagyodaya (fortune rise), pilgrimage, spiritual guru blessing and higher law." },
+    { num: 10, name: "10th House (Karma)", skt: "कर्म भाव", baseAges: [10, 22, 34, 46, 58, 70, 82], theme: "Career zenith, leadership appointment, societal authority and professional recognition." },
+    { num: 11, name: "11th House (Labha)", skt: "लाभ भाव", baseAges: [11, 23, 35, 47, 59, 71, 83], theme: "Major aspirational fruition, massive financial inflows and network expansion." },
+    { num: 12, name: "12th House (Vyaya)", skt: "व्यय भाव", baseAges: [12, 24, 36, 48, 60, 72, 84], theme: "Foreign settlements, spiritual retreat, detachment and subconscious liberation." },
   ];
 
   const allHouses: HouseAgeActivation[] = HOUSE_META.map((h) => {

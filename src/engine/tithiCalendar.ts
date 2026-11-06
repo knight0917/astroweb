@@ -215,6 +215,47 @@ function getMoonPhase(angleDiff: number): { emoji: string; illumination: number 
   return { emoji, illumination };
 }
 
+interface CachedAngaInterval {
+  endMs: number;
+  index: number;
+  ayanamshaKey: string;
+}
+
+const tithiIntervalCache: CachedAngaInterval[] = [];
+const nakshatraIntervalCache: CachedAngaInterval[] = [];
+const MONTHLY_CALENDAR_CACHE_MAX = 24;
+const monthlyCalendarCache = new Map<string, MonthlyTithiCalendarResult>();
+
+function findCachedIntervalEnd(
+  cache: CachedAngaInterval[],
+  t0: number,
+  index: number,
+  ayanamshaKey: string
+): number | null {
+  for (let i = cache.length - 1; i >= 0; i--) {
+    const entry = cache[i];
+    if (
+      entry.index === index &&
+      entry.ayanamshaKey === ayanamshaKey &&
+      t0 <= entry.endMs &&
+      entry.endMs - t0 < 32 * 3600 * 1000
+    ) {
+      return entry.endMs;
+    }
+  }
+  return null;
+}
+
+function recordCachedInterval(
+  cache: CachedAngaInterval[],
+  entry: CachedAngaInterval
+): void {
+  if (cache.length >= 64) {
+    cache.shift();
+  }
+  cache.push(entry);
+}
+
 /**
  * Calculates the exact moment when the current Tithi ends.
  * 1 Tithi = 12° elongation between Moon and Sun.
@@ -225,48 +266,57 @@ export function calculateTithiEndTime(
   ayanamshaType: string = "Lahiri",
   referenceDate?: Date
 ): { endTime: Date; endTimeFormatted: string; remainingHoursFormatted: string; hoursRemaining: number; isEnded: boolean } {
-  const tzOffset = location.timezoneOffsetHours || 5.5;
+  const tzOffset = location.timezoneOffsetHours ?? 5.5;
   const t0 = anchorDate.getTime();
   const refTime = referenceDate ? referenceDate.getTime() : t0;
 
   const getAngle = (t: number) => {
-    const d = new Date(t);
-    const astroTime = Astronomy.MakeTime(d);
-    const sunGeo = Astronomy.GeoVector(Astronomy.Body.Sun, astroTime, true);
-    const moonGeo = Astronomy.GeoVector(Astronomy.Body.Moon, astroTime, true);
-    const sunEcl = Astronomy.Ecliptic(sunGeo);
-    const moonEcl = Astronomy.Ecliptic(moonGeo);
+    const astroTime = Astronomy.MakeTime(new Date(t));
+    const sunEcl = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Sun, astroTime, true));
+    const moonEcl = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Moon, astroTime, true));
     return (moonEcl.elon - sunEcl.elon + 360) % 360;
   };
 
   const angle0 = getAngle(t0);
-  const tithiIndex = Math.floor(angle0 / 12);
-  const targetAngle = ((tithiIndex + 1) * 12) % 360;
-  const degreesNeeded = ((tithiIndex + 1) * 12) - angle0; // 0 to 12 degrees
+  const tithiIndex = Math.min(29, Math.floor(angle0 / 12));
 
-  // Moon moves ~12.19 deg/day relative to Sun (~0.508 deg/hour)
-  const approxHours = degreesNeeded / 0.508;
-  let low = t0;
-  let high = t0 + Math.max(approxHours * 1.5, 2) * 3600 * 1000 + 4 * 3600 * 1000;
+  let endTimestamp = findCachedIntervalEnd(tithiIntervalCache, t0, tithiIndex, "tropical");
+  if (endTimestamp === null) {
+    const targetAngle = ((tithiIndex + 1) * 12) % 360;
+    const degreesNeeded = (tithiIndex + 1) * 12 - angle0;
+    const estMs = t0 + (degreesNeeded / 0.5079) * 3600 * 1000;
 
-  for (let i = 0; i < 14; i++) {
-    const mid = (low + high) / 2;
-    const curAngle = getAngle(mid);
-    let diff = (curAngle - targetAngle + 360) % 360;
-    if (diff > 180) diff -= 360;
+    let low = Math.max(t0, estMs - 3.5 * 3600 * 1000);
+    let high = estMs + 4.5 * 3600 * 1000;
 
-    if (Math.abs(diff) < 0.001) {
-      low = mid;
-      break;
+    const signedDiff = (cur: number) => {
+      let d = (cur - targetAngle + 360) % 360;
+      if (d > 180) d -= 360;
+      return d;
+    };
+    if (low > t0 && signedDiff(getAngle(low)) >= 0) low = t0;
+    if (signedDiff(getAngle(high)) < 0) high = t0 + 30 * 3600 * 1000;
+
+    for (let i = 0; i < 9; i++) {
+      const mid = (low + high) / 2;
+      const diff = signedDiff(getAngle(mid));
+      if (Math.abs(diff) < 0.001) {
+        low = mid;
+        high = mid;
+        break;
+      }
+      if (diff < 0) low = mid;
+      else high = mid;
     }
-    if (diff < 0) {
-      low = mid;
-    } else {
-      high = mid;
-    }
+
+    endTimestamp = (low + high) / 2;
+    recordCachedInterval(tithiIntervalCache, {
+      endMs: endTimestamp,
+      index: tithiIndex,
+      ayanamshaKey: "tropical",
+    });
   }
 
-  const endTimestamp = (low + high) / 2;
   const endDate = new Date(endTimestamp);
 
   const isEnded = endTimestamp <= refTime;
@@ -334,47 +384,58 @@ export function calculateNakshatraEndTime(
   ayanamshaType: string = "Lahiri",
   referenceDate?: Date
 ): { endTime: Date; endTimeFormatted: string; remainingHoursFormatted: string; isEnded: boolean } {
-  const tzOffset = location.timezoneOffsetHours || 5.5;
+  const tzOffset = location.timezoneOffsetHours ?? 5.5;
   const t0 = anchorDate.getTime();
   const refTime = referenceDate ? referenceDate.getTime() : t0;
 
   const getMoonSidereal = (t: number) => {
-    const d = new Date(t);
-    const astroTime = Astronomy.MakeTime(d);
+    const astroTime = Astronomy.MakeTime(new Date(t));
     const ayan = getAyanamsha(astroTime.ut, ayanamshaType as any);
-    const moonGeo = Astronomy.GeoVector(Astronomy.Body.Moon, astroTime, true);
-    const moonEcl = Astronomy.Ecliptic(moonGeo);
+    const moonEcl = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Moon, astroTime, true));
     return toSiderealLongitude(moonEcl.elon, ayan);
   };
 
   const lon0 = getMoonSidereal(t0);
-  const nakSpan = 360 / 27; // 13.333333°
-  const nakIdx = Math.floor(lon0 / nakSpan);
-  const targetLon = ((nakIdx + 1) * nakSpan) % 360;
-  const degNeeded = ((nakIdx + 1) * nakSpan) - lon0;
+  const nakSpan = 360 / 27;
+  const nakIdx = Math.min(26, Math.floor(lon0 / nakSpan));
 
-  const approxHours = degNeeded / 0.549;
-  let low = t0;
-  let high = t0 + Math.max(approxHours * 1.5, 2) * 3600 * 1000 + 4 * 3600 * 1000;
+  let endTimestamp = findCachedIntervalEnd(nakshatraIntervalCache, t0, nakIdx, ayanamshaType);
+  if (endTimestamp === null) {
+    const targetLon = ((nakIdx + 1) * nakSpan) % 360;
+    const degNeeded = (nakIdx + 1) * nakSpan - lon0;
+    const estMs = t0 + (degNeeded / 0.549) * 3600 * 1000;
 
-  for (let i = 0; i < 14; i++) {
-    const mid = (low + high) / 2;
-    const curLon = getMoonSidereal(mid);
-    let diff = (curLon - targetLon + 360) % 360;
-    if (diff > 180) diff -= 360;
+    let low = Math.max(t0, estMs - 3.5 * 3600 * 1000);
+    let high = estMs + 4.5 * 3600 * 1000;
 
-    if (Math.abs(diff) < 0.001) {
-      low = mid;
-      break;
+    const signedDiff = (cur: number) => {
+      let d = (cur - targetLon + 360) % 360;
+      if (d > 180) d -= 360;
+      return d;
+    };
+    if (low > t0 && signedDiff(getMoonSidereal(low)) >= 0) low = t0;
+    if (signedDiff(getMoonSidereal(high)) < 0) high = t0 + 30 * 3600 * 1000;
+
+    for (let i = 0; i < 9; i++) {
+      const mid = (low + high) / 2;
+      const diff = signedDiff(getMoonSidereal(mid));
+      if (Math.abs(diff) < 0.001) {
+        low = mid;
+        high = mid;
+        break;
+      }
+      if (diff < 0) low = mid;
+      else high = mid;
     }
-    if (diff < 0) {
-      low = mid;
-    } else {
-      high = mid;
-    }
+
+    endTimestamp = (low + high) / 2;
+    recordCachedInterval(nakshatraIntervalCache, {
+      endMs: endTimestamp,
+      index: nakIdx,
+      ayanamshaKey: ayanamshaType,
+    });
   }
 
-  const endTimestamp = (low + high) / 2;
   const endDate = new Date(endTimestamp);
 
   const isEnded = endTimestamp <= refTime;
@@ -435,38 +496,49 @@ export function calculateNakshatraEndTime(
  */
 export function calculateYogaEndTime(
   anchorDate: Date,
-  location: GeoLocation
+  location: GeoLocation,
+  ayanamshaType: string = "Lahiri"
 ): { endTime: Date; endTimeFormatted: string } {
-  const tzOffset = location.timezoneOffsetHours || 5.5;
+  const tzOffset = location.timezoneOffsetHours ?? 5.5;
   const t0 = anchorDate.getTime();
 
   const getYogaSum = (t: number) => {
-    const d = new Date(t);
-    const astroTime = Astronomy.MakeTime(d);
-    const sunGeo = Astronomy.GeoVector(Astronomy.Body.Sun, astroTime, true);
-    const moonGeo = Astronomy.GeoVector(Astronomy.Body.Moon, astroTime, true);
-    const sunEcl = Astronomy.Ecliptic(sunGeo);
-    const moonEcl = Astronomy.Ecliptic(moonGeo);
-    return (sunEcl.elon + moonEcl.elon) % 360;
+    const astroTime = Astronomy.MakeTime(new Date(t));
+    const ayan = getAyanamsha(astroTime.ut, ayanamshaType as any);
+    const sunEcl = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Sun, astroTime, true));
+    const moonEcl = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Moon, astroTime, true));
+    return (
+      toSiderealLongitude(sunEcl.elon, ayan) + toSiderealLongitude(moonEcl.elon, ayan)
+    ) % 360;
   };
 
   const sum0 = getYogaSum(t0);
   const span = 360 / 27;
-  const idx = Math.floor(sum0 / span);
+  const idx = Math.min(26, Math.floor(sum0 / span));
   const target = ((idx + 1) * span) % 360;
-  const degNeeded = ((idx + 1) * span) - sum0;
+  const degNeeded = (idx + 1) * span - sum0;
 
-  const approxHours = degNeeded / 0.59;
-  let low = t0;
-  let high = t0 + Math.max(approxHours * 1.5, 2) * 3600 * 1000 + 4 * 3600 * 1000;
+  const estMs = t0 + (degNeeded / 0.59) * 3600 * 1000;
+  let low = Math.max(t0, estMs - 3.5 * 3600 * 1000);
+  let high = estMs + 4.5 * 3600 * 1000;
+  const signedDiff = (cur: number) => {
+    let d = (cur - target + 360) % 360;
+    if (d > 180) d -= 360;
+    return d;
+  };
+  if (low > t0 && signedDiff(getYogaSum(low)) >= 0) low = t0;
+  if (signedDiff(getYogaSum(high)) < 0) high = t0 + 30 * 3600 * 1000;
 
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 8; i++) {
     const mid = (low + high) / 2;
-    const cur = getYogaSum(mid);
-    let diff = (cur - target + 360) % 360;
-    if (diff > 180) diff -= 360;
-    if (Math.abs(diff) < 0.001) break;
-    if (diff < 0) low = mid; else high = mid;
+    const diff = signedDiff(getYogaSum(mid));
+    if (Math.abs(diff) < 0.002) {
+      low = mid;
+      high = mid;
+      break;
+    }
+    if (diff < 0) low = mid;
+    else high = mid;
   }
 
   const endTimestamp = (low + high) / 2;
@@ -491,35 +563,42 @@ export function calculateKaranaEndTime(
   anchorDate: Date,
   location: GeoLocation
 ): { endTime: Date; endTimeFormatted: string } {
-  const tzOffset = location.timezoneOffsetHours || 5.5;
+  const tzOffset = location.timezoneOffsetHours ?? 5.5;
   const t0 = anchorDate.getTime();
 
   const getAngle = (t: number) => {
-    const d = new Date(t);
-    const astroTime = Astronomy.MakeTime(d);
-    const sunGeo = Astronomy.GeoVector(Astronomy.Body.Sun, astroTime, true);
-    const moonGeo = Astronomy.GeoVector(Astronomy.Body.Moon, astroTime, true);
-    const sunEcl = Astronomy.Ecliptic(sunGeo);
-    const moonEcl = Astronomy.Ecliptic(moonGeo);
+    const astroTime = Astronomy.MakeTime(new Date(t));
+    const sunEcl = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Sun, astroTime, true));
+    const moonEcl = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Moon, astroTime, true));
     return (moonEcl.elon - sunEcl.elon + 360) % 360;
   };
 
   const angle0 = getAngle(t0);
-  const idx = Math.floor(angle0 / 6);
+  const idx = Math.min(59, Math.floor(angle0 / 6));
   const target = ((idx + 1) * 6) % 360;
-  const degNeeded = ((idx + 1) * 6) - angle0;
+  const degNeeded = (idx + 1) * 6 - angle0;
 
-  const approxHours = degNeeded / 0.508;
-  let low = t0;
-  let high = t0 + Math.max(approxHours * 1.5, 2) * 3600 * 1000 + 4 * 3600 * 1000;
+  const estMs = t0 + (degNeeded / 0.508) * 3600 * 1000;
+  let low = Math.max(t0, estMs - 2.5 * 3600 * 1000);
+  let high = estMs + 3.5 * 3600 * 1000;
+  const signedDiff = (cur: number) => {
+    let d = (cur - target + 360) % 360;
+    if (d > 180) d -= 360;
+    return d;
+  };
+  if (low > t0 && signedDiff(getAngle(low)) >= 0) low = t0;
+  if (signedDiff(getAngle(high)) < 0) high = t0 + 18 * 3600 * 1000;
 
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 8; i++) {
     const mid = (low + high) / 2;
-    const cur = getAngle(mid);
-    let diff = (cur - target + 360) % 360;
-    if (diff > 180) diff -= 360;
-    if (Math.abs(diff) < 0.001) break;
-    if (diff < 0) low = mid; else high = mid;
+    const diff = signedDiff(getAngle(mid));
+    if (Math.abs(diff) < 0.002) {
+      low = mid;
+      high = mid;
+      break;
+    }
+    if (diff < 0) low = mid;
+    else high = mid;
   }
 
   const endTimestamp = (low + high) / 2;
@@ -1202,6 +1281,21 @@ export function getMonthlyTithiCalendar(
   location: GeoLocation,
   ayanamshaType = "Lahiri"
 ): MonthlyTithiCalendarResult {
+  const tzOffsetForCache = location.timezoneOffsetHours ?? 5.5;
+  const today = new Date();
+  const todayY = today.getFullYear();
+  const todayM = today.getMonth() + 1;
+  const todayD = today.getDate();
+  const isCurrentMonth = year === todayY && month === todayM;
+  const timeBucket = isCurrentMonth
+    ? Math.floor(today.getTime() / 300_000)
+    : `${todayY}-${todayM}-${todayD}`;
+  const calCacheKey = `${year}_${month}_${(location.latitude || 0).toFixed(2)}_${(location.longitude || 0).toFixed(2)}_${tzOffsetForCache}_${ayanamshaType}_${timeBucket}`;
+  const cachedCalendar = monthlyCalendarCache.get(calCacheKey);
+  if (cachedCalendar) {
+    return cachedCalendar;
+  }
+
   const daysInMonth = new Date(year, month, 0).getDate();
   const firstDayOfWeek = new Date(year, month - 1, 1).getDay(); // 0 = Sunday, 1 = Monday...
 
@@ -1212,13 +1306,8 @@ export function getMonthlyTithiCalendar(
   const ekadashiDates: Date[] = [];
   const pradoshDates: Date[] = [];
 
-  const today = new Date();
-  const todayY = today.getFullYear();
-  const todayM = today.getMonth() + 1;
-  const todayD = today.getDate();
-
   for (let d = 1; d <= daysInMonth; d++) {
-    const tzOffset = location.timezoneOffsetHours || 5.5;
+    const tzOffset = location.timezoneOffsetHours ?? 5.5;
     const localHour = 6.0; // 6 AM (Udaya Tithi anchor)
     const utcHour = (localHour - tzOffset + 24) % 24;
     const utcDayAdjustment = localHour - tzOffset < 0 ? d - 1 : d;
@@ -1264,14 +1353,23 @@ export function getMonthlyTithiCalendar(
     // Nakshatra of Moon
     const nakshatra = getNakshatra(moonSidereal);
 
-    // Yoga: (Sun tropical + Moon tropical) / 13° 20'
-    const yogaSum = (sunEcl.elon + moonEcl.elon) % 360;
-    const yogaIdx = Math.floor(yogaSum / (360 / 27));
+    // Yoga: (Sun sidereal + Moon sidereal) / 13° 20'
+    const yogaSum = (sunSidereal + moonSidereal) % 360;
+    const yogaIdx = Math.min(26, Math.floor(yogaSum / (360 / 27)));
     const yogaName = YOGA_NAMES[yogaIdx] || "Shobhana";
 
-    // Karana: Half of Tithi (diff / 6°)
-    const karanaIdx = Math.floor(diff / 6) % 11;
-    const karanaName = KARANA_NAMES[karanaIdx] || "Bava";
+    // Karana: Half of Tithi (diff / 6°), 60 Karanas per lunar month (4 Sthira + 8×7 Chara)
+    const karanaRaw = Math.min(59, Math.floor(diff / 6));
+    let karanaName = "Bava";
+    if (karanaRaw === 0) {
+      karanaName = "Kintughna";
+    } else if (karanaRaw >= 57) {
+      const fixedKaranas = ["Shakuni", "Chatushpada", "Naga", "Kintughna"];
+      karanaName = fixedKaranas[karanaRaw - 57] || "Shakuni";
+    } else {
+      karanaName = KARANA_NAMES[(karanaRaw - 1) % 7] || "Bava";
+    }
+    const karanaIdx = karanaRaw + 1;
     const isBhadra = karanaName.includes("Vishti");
 
     const dateObj = new Date(year, month - 1, d);
@@ -1325,7 +1423,7 @@ export function getMonthlyTithiCalendar(
     const refDate = isToday ? new Date() : undefined;
     const tithiEndInfo = calculateTithiEndTime(dateAnchor, location, ayanamshaType, refDate);
     const nakEndInfo = calculateNakshatraEndTime(dateAnchor, location, ayanamshaType, refDate);
-    const yogaEndInfo = calculateYogaEndTime(dateAnchor, location);
+    const yogaEndInfo = calculateYogaEndTime(dateAnchor, location, ayanamshaType);
     const karanaEndInfo = calculateKaranaEndTime(dateAnchor, location);
 
     days.push({
@@ -1411,7 +1509,7 @@ export function getMonthlyTithiCalendar(
   const totalCells = firstDayOfWeek + daysInMonth;
   const paddingAfter = (7 - (totalCells % 7)) % 7;
 
-  return {
+  const calendarResult: MonthlyTithiCalendarResult = {
     year,
     month,
     monthName: monthNames[month - 1],
@@ -1426,4 +1524,12 @@ export function getMonthlyTithiCalendar(
     ekadashiDates,
     pradoshDates,
   };
+
+  if (monthlyCalendarCache.size >= MONTHLY_CALENDAR_CACHE_MAX) {
+    const oldestKey = monthlyCalendarCache.keys().next().value;
+    if (typeof oldestKey === "string") monthlyCalendarCache.delete(oldestKey);
+  }
+  monthlyCalendarCache.set(calCacheKey, calendarResult);
+
+  return calendarResult;
 }

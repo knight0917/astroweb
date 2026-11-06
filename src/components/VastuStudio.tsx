@@ -19,6 +19,7 @@ import {
   ROOM_OPTIONS,
   VastuRoomOption,
 } from "@/engine/vastuEngine";
+import { calculateAshtakavarga } from "@/engine/ashtakavarga";
 
 export default function VastuStudio() {
   const { ephemeris: natalEphem, location } = useAstroStore();
@@ -44,7 +45,10 @@ export default function VastuStudio() {
 
   const nativeMoonNak = natalEphem?.planets?.Moon?.nakshatra?.sanskritName || "Ashwini";
   const ascSign = natalEphem?.ascendant?.rashi?.englishName || "Aries";
-  const savList = (natalEphem as any)?.sarvashtakavarga || [28, 30, 32, 29, 31, 33, 27, 34, 30, 29, 32, 28];
+  const savList = useMemo(() => {
+    if (!natalEphem) return [28, 30, 32, 29, 31, 33, 27, 34, 30, 29, 32, 28];
+    return calculateAshtakavarga(natalEphem).sarvaHouseBindus;
+  }, [natalEphem]);
 
   // Master Vastu Synthesis
   const vastuReport = useMemo(() => {

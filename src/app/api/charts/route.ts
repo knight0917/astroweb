@@ -1,24 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getChartsByEmail, saveChart, deleteChart, normalizeEmail, findExistingChartByEmailAndData } from "@/lib/db";
 import { verifyEmailToken } from "@/lib/emailToken";
+import { checkRateLimit, extractClientIp } from "@/lib/rateLimiter";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 /**
  * Resolves and verifies the caller's identity from the request.
- * Accepts token via x-chart-token header or ?token= query param.
+ * Accepts token strictly via x-chart-token header (avoids URL query token leakage).
  * When isReadOnly=true (e.g. GET passwordless chart restore), allows fallback to claimed email.
  * When isReadOnly=false (e.g. POST/DELETE modifications), strictly requires valid HMAC token.
  * Returns the verified normalized email, or null if unauthorized.
  */
 function resolveVerifiedEmail(req: NextRequest, claimedEmail: string, isReadOnly = false): string | null {
   const normClaimed = normalizeEmail(claimedEmail);
-  if (!normClaimed) return null;
+  if (!normClaimed || normClaimed.length > 254) return null;
 
-  const token =
-    req.headers.get("x-chart-token") ||
-    new URL(req.url).searchParams.get("token");
+  const token = req.headers.get("x-chart-token")?.trim();
 
   if (!token) {
     return isReadOnly ? normClaimed : null;
@@ -36,6 +35,15 @@ function resolveVerifiedEmail(req: NextRequest, claimedEmail: string, isReadOnly
 
 export async function GET(req: NextRequest) {
   try {
+    const clientIp = extractClientIp(req.headers);
+    const rl = checkRateLimit(`charts-get:${clientIp}`, 30, 60_000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again shortly." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
 
@@ -60,14 +68,14 @@ export async function GET(req: NextRequest) {
       { success: true, charts, count: charts.length },
       {
         headers: {
-          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          "Cache-Control": "private, no-store, no-cache, must-revalidate",
         },
       }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error in GET /api/charts:", err);
     return NextResponse.json(
-      { error: "Internal Server Error", details: err?.message },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
@@ -75,10 +83,19 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = extractClientIp(req.headers);
+    const rl = checkRateLimit(`charts-write:${clientIp}`, 20, 60_000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many chart save requests. Please wait a moment." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+      );
+    }
+
     const body = await req.json();
     const { userEmail, name, gender, dateIso, location, ayanamsha, houseSystem, isDefault, notes, id } = body;
 
-    if (!userEmail || !normalizeEmail(userEmail)) {
+    if (!userEmail || typeof userEmail !== "string" || !normalizeEmail(userEmail)) {
       return NextResponse.json(
         { error: "A valid email address is required." },
         { status: 400 }
@@ -94,29 +111,38 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!name || typeof name !== "string" || !name.trim()) {
+    if (!name || typeof name !== "string" || !name.trim() || name.trim().length > 120) {
       return NextResponse.json(
-        { error: "Name is required." },
+        { error: "A valid chart name (1–120 characters) is required." },
         { status: 400 }
       );
     }
 
-    if (!dateIso || isNaN(new Date(dateIso).getTime())) {
+    if (!dateIso || typeof dateIso !== "string" || isNaN(new Date(dateIso).getTime())) {
       return NextResponse.json(
         { error: "A valid dateIso is required." },
         { status: 400 }
       );
     }
 
-    if (!location || typeof location.latitude !== "number" || typeof location.longitude !== "number") {
+    if (
+      !location ||
+      typeof location.latitude !== "number" ||
+      typeof location.longitude !== "number" ||
+      !Number.isFinite(location.latitude) ||
+      !Number.isFinite(location.longitude) ||
+      Math.abs(location.latitude) > 90 ||
+      Math.abs(location.longitude) > 180
+    ) {
       return NextResponse.json(
-        { error: "A valid location with latitude and longitude is required." },
+        { error: "A valid location with finite latitude [-90, 90] and longitude [-180, 180] is required." },
         { status: 400 }
       );
     }
 
     const birthDate = new Date(dateIso);
-    const tzOffset = location.timezoneOffsetHours || 0;
+    const rawTz = Number(location.timezoneOffsetHours);
+    const tzOffset = Number.isFinite(rawTz) && Math.abs(rawTz) <= 14 ? rawTz : 0;
     const localMs = birthDate.getTime() + tzOffset * 3600 * 1000;
     const localDate = new Date(localMs);
 
@@ -125,14 +151,15 @@ export async function POST(req: NextRequest) {
     const day = String(localDate.getUTCDate()).padStart(2, "0");
     const hours = String(localDate.getUTCHours()).padStart(2, "0");
     const minutes = String(localDate.getUTCMinutes()).padStart(2, "0");
+    const seconds = String(localDate.getUTCSeconds()).padStart(2, "0");
 
     const dob = `${year}-${month}-${day}`;
-    const time = `${hours}:${minutes}`;
+    const time = seconds !== "00" ? `${hours}:${minutes}:${seconds}` : `${hours}:${minutes}`;
 
     // 1. Check if identical chart already exists on this email (Prevent duplicate data, instruct to sync)
     if (!body.forceOverwrite) {
-      const existing = await findExistingChartByEmailAndData(userEmail, {
-        id,
+      const existing = await findExistingChartByEmailAndData(verifiedEmail, {
+        id: typeof id === "string" ? id.slice(0, 64) : undefined,
         name: name.trim(),
         dob,
         time,
@@ -148,33 +175,36 @@ export async function POST(req: NextRequest) {
             alreadyExists: true,
             existingChart: existing,
             error: "This chart data is already available on this email. Please sync to restore it.",
-            message: `Birth chart for '${existing.name}' is already available on ${normalizeEmail(userEmail)}. Please sync to restore it on this device.`,
+            message: `Birth chart for '${existing.name}' is already available on ${verifiedEmail}. Please sync to restore it on this device.`,
           },
           { status: 409 }
         );
       }
     }
 
+    const safeNotes = typeof notes === "string" ? notes.trim().slice(0, 2000) : undefined;
+    const safeElevation = Number.isFinite(Number(location.elevation)) ? Number(location.elevation) : 0;
+
     const savedRecord = await saveChart({
-      id,
-      userEmail: normalizeEmail(userEmail),
+      id: typeof id === "string" && id.trim() ? id.trim().slice(0, 64) : "",
+      userEmail: verifiedEmail,
       name: name.trim(),
       gender: gender === "female" ? "female" : "male",
       dateIso,
       dob,
       time,
       location: {
-        cityName: location.cityName || "Unknown City",
-        country: location.country || "India",
+        cityName: String(location.cityName || "Unknown City").slice(0, 120),
+        country: String(location.country || "India").slice(0, 120),
         latitude: location.latitude,
         longitude: location.longitude,
-        elevation: location.elevation || 0,
+        elevation: safeElevation,
         timezoneOffsetHours: tzOffset,
       },
-      ayanamsha: ayanamsha || "Lahiri",
-      houseSystem: houseSystem || "WholeSign",
+      ayanamsha: typeof ayanamsha === "string" ? ayanamsha.slice(0, 32) : "Lahiri",
+      houseSystem: typeof houseSystem === "string" ? houseSystem.slice(0, 32) : "WholeSign",
       isDefault: Boolean(isDefault),
-      notes: notes?.trim(),
+      notes: safeNotes,
     });
 
     return NextResponse.json({
@@ -182,10 +212,14 @@ export async function POST(req: NextRequest) {
       chart: savedRecord,
       message: `Birth chart for '${savedRecord.name}' successfully saved!`,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error && err.message.includes("ownership") ? err.message : undefined;
+    if (errMsg) {
+      return NextResponse.json({ error: errMsg }, { status: 403 });
+    }
     console.error("Error in POST /api/charts:", err);
     return NextResponse.json(
-      { error: "Internal Server Error", details: err?.message },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
@@ -193,11 +227,20 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const clientIp = extractClientIp(req.headers);
+    const rl = checkRateLimit(`charts-delete:${clientIp}`, 20, 60_000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many delete requests. Please wait a moment." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     const email = searchParams.get("email");
 
-    if (!id || !email || !normalizeEmail(email)) {
+    if (!id || id.length > 64 || !email || !normalizeEmail(email)) {
       return NextResponse.json(
         { error: "Both 'id' and 'email' parameters are required to delete a chart." },
         { status: 400 }
@@ -213,7 +256,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const success = await deleteChart(id, email);
+    const success = await deleteChart(id, verifiedEmail);
     if (!success) {
       return NextResponse.json(
         { error: "Chart not found or unauthorized." },
@@ -222,10 +265,10 @@ export async function DELETE(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, message: "Chart deleted successfully." });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error in DELETE /api/charts:", err);
     return NextResponse.json(
-      { error: "Internal Server Error", details: err?.message },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }

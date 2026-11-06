@@ -19,6 +19,7 @@ export default function VerticalTimeTravel() {
     stepTime,
     togglePlay,
     setPlaySpeed,
+    viewMode,
   } = useAstroStore();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -116,7 +117,8 @@ export default function VerticalTimeTravel() {
   };
 
   useEffect(() => {
-    if (!isPlaying) {
+    // In dual mode, TimeTravelSlider already drives the animation loop to prevent double-stepping
+    if (!isPlaying || viewMode === "dual") {
       if (animRef.current) cancelAnimationFrame(animRef.current);
       return;
     }

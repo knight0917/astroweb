@@ -47,6 +47,19 @@ interface BasePlanetaryAgeRule {
 
 const PARASHARI_MATURATION_RULES: BasePlanetaryAgeRule[] = [
   {
+    planet: "Moon",
+    startAge: 0,
+    endAge: 15,
+    peakAge: 4,
+    classicalSignification: "Balarishta Shield, Formative Manas, Maternal Bonding & Foundational Learning",
+    standardManifestation:
+      "Formative childhood emotional conditioning, early cognitive curiosity, foundational schooling, and protective maternal nourishment.",
+    retrogradeInversionManifestation:
+      "Heightened early sensitivity, imaginative inner world, and unconventional childhood learning rhythms.",
+    shastricRemedy:
+      "Maternal blessings, nourishing sattvic routine, and gentle evening शांति (Shanti) mantra recitation.",
+  },
+  {
     planet: "Jupiter",
     startAge: 16,
     endAge: 20,
@@ -133,15 +146,15 @@ const PARASHARI_MATURATION_RULES: BasePlanetaryAgeRule[] = [
     standardManifestation:
       "Gradual stabilization, elevation to institutional authority, reward for 35 years of perseverance, enduring structural consolidation.",
     retrogradeInversionManifestation:
-      "DEEPANSHU GIRI RETROGRADE INVERSION: Sudden life upheaval, unexpected career overhauls, bold refusal to compromise with institutional tyranny, sudden relocations, and confrontation with past-life karmic debts that completely reset the native's destiny.",
+      "VAKRA SHANI KARMIC INVERSION: Sudden life upheaval, unexpected career overhauls, bold refusal to compromise with institutional rigidity, sudden relocations, and confrontation with past-life karmic debts that reset the native's destiny.",
     shastricRemedy:
       "Mahamrityunjaya Mantra; Saturday evening mustard oil deepam near Peepal tree; selfless charity and service to disabled/elderly.",
   },
   {
     planet: "Rahu",
-    startAge: 42,
+    startAge: 43,
     endAge: 47,
-    peakAge: 42,
+    peakAge: 43,
     classicalSignification: "Maya Matrix, Foreign Expansion & Unconventional Breakthrough",
     standardManifestation:
       "Daring foreign ventures, cross-cultural influence, sudden elevation in social status, high technology adoption, and public fame.",
@@ -219,14 +232,14 @@ export function calculatePlanetaryMaturationTimeline(
 
   if (isRetrogradeSaturnActive) {
     retrogradeAgeAlertDossier =
-      "🚨 CRITICAL LUNAR ASTRO MILESTONE ACTIVE: You are in the Saturn Maturation Window (Age 36–42) with RETROGRADE SATURN (वक्र शनि). Per Deepanshu Giri, retrograde Saturn at age 36 triggers the 'Great Karmic Inversion'—sudden disruption of rigid career paths, dismantling of false security, unconventional life decisions, and an unavoidable settlement of unfulfilled past-life obligations. Do not view unexpected pivots as failures; they are karmic course corrections freeing you from stale obligations.";
+      "🚨 CRITICAL NAISARGIKA MATURATION MILESTONE ACTIVE: You are in the Saturn Maturation Window (Age 36–42) with RETROGRADE SATURN (वक्र शनि). Per classical Nadi & Parashari maturity doctrine, retrograde Saturn at age 36 triggers the 'Great Karmic Inversion'—sudden disruption of rigid career paths, dismantling of false security, unconventional life decisions, and an unavoidable settlement of unfulfilled past-life obligations. Do not view unexpected pivots as failures; they are karmic course corrections freeing you from stale obligations.";
   } else if (isSaturnAge36Active) {
     retrogradeAgeAlertDossier =
       "⚖️ SATURN MATURATION MILESTONE (Age 36–42): Direct Saturn is now crystallizing your enduring life foundation. Hard work, discipline, and endurance invested over the past 35 years are coming to structural fruition.";
   }
 
   const vakSiddhiIntuitionSummary =
-    "Deepanshu Giri emphasizes that astrological insight requires Vak Siddhi (speech intuition) awakened by the Gayatri Mantra. Practicing Gayatri Japa at Brahma Muhurta (4:30 AM) activates the solar Pingala Nadi and grants intuitive clarity.";
+    "Classical Svara & Jyotish Parampara emphasizes that astrological insight requires Vak Siddhi (speech intuition) awakened by the Gayatri Mantra. Practicing Gayatri Japa at Brahma Muhurta (4:30 AM) activates the solar Pingala Nadi and grants intuitive clarity.";
 
   return {
     currentAge,

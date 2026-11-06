@@ -58,7 +58,7 @@ function writeAllFeedbackLocal(records: ChatFeedbackRecord[]): void {
   }
   ensureFeedbackFile();
   try {
-    const tempFile = `${FEEDBACK_DB_FILE}.tmp.${Date.now()}`;
+    const tempFile = `${FEEDBACK_DB_FILE}.tmp.${process.pid}.${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     fs.writeFileSync(tempFile, JSON.stringify(records, null, 2), "utf-8");
     fs.renameSync(tempFile, FEEDBACK_DB_FILE);
   } catch (err) {
@@ -175,7 +175,9 @@ export async function saveChatFeedback(
           user_correction = EXCLUDED.user_correction,
           correction_category = EXCLUDED.correction_category,
           status = EXCLUDED.status,
-          embedding = EXCLUDED.embedding;`,
+          embedding = EXCLUDED.embedding
+        WHERE chat_feedback_corrections.status != 'verified_classical'
+           OR EXCLUDED.status = 'verified_classical';`,
         [
           sanitizedRecord.id,
           sanitizedRecord.userQuery,
@@ -259,10 +261,12 @@ export async function getVerifiedPrecedentCorrections(
         params.push(domain);
       }
 
-      querySql += ` ORDER BY similarity DESC LIMIT ${Math.max(1, limit)};`;
+      const safeLimit = Math.min(25, Math.max(1, Math.floor(limit)));
+      params.push(safeLimit);
+      querySql += ` ORDER BY similarity DESC LIMIT $${params.length};`;
 
       const rows = await (sql as any).query(querySql, params);
-      if (rows && rows.length > 0) {
+      if (Array.isArray(rows) && (rows.length > 0 || IS_VERCEL)) {
         return rows.map((r: any) => ({
           id: r.id,
           userQuery: r.user_query,
@@ -311,6 +315,43 @@ export async function getFeedbackStats(): Promise<{
   corrections: number;
   categories: Record<string, number>;
 }> {
+  if (sql) {
+    try {
+      await initFeedbackDb();
+      const rows = await (sql as any).query(`
+        SELECT
+          feedback_type,
+          (user_correction IS NOT NULL AND user_correction <> '') AS has_correction,
+          correction_category,
+          COUNT(*)::int AS cnt
+        FROM chat_feedback_corrections
+        GROUP BY 1, 2, 3;
+      `);
+      if (Array.isArray(rows) && (rows.length > 0 || IS_VERCEL)) {
+        let total = 0;
+        let helpful = 0;
+        let inaccurate = 0;
+        let corrections = 0;
+        const categories: Record<string, number> = {};
+
+        for (const row of rows) {
+          const cnt = Number(row.cnt) || 0;
+          total += cnt;
+          if (row.feedback_type === "helpful") helpful += cnt;
+          if (row.feedback_type === "inaccurate") inaccurate += cnt;
+          if (row.feedback_type === "correction" || row.has_correction) corrections += cnt;
+          if (row.correction_category) {
+            categories[row.correction_category] = (categories[row.correction_category] || 0) + cnt;
+          }
+        }
+
+        return { total, helpful, inaccurate, corrections, categories };
+      }
+    } catch (err) {
+      console.warn("[FeedbackDB] Neon stats fallback to local:", err);
+    }
+  }
+
   const all = readAllFeedbackLocal();
   let helpful = 0;
   let inaccurate = 0;

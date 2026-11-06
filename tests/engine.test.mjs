@@ -9750,3 +9750,92 @@ test("Subtest 156: Phase 64 Next-Gen Chatbot Architecture, 10-Domain Neuro-Symbo
   assert.ok(dossier.includes("Ascendant (Lagna) Bhinnashtakavarga (49 Bindus) by Sign:"));
   assert.ok(dossier.includes("Best Direction to Buy Plot / Land / Property:"));
 });
+
+test("Subtest 157: Phase 67 Production Hardening, Engine Precision, Interrogative Fact Immunity & Dossier Optimization", async () => {
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const { getMonthlyTithiCalendar } = await import("../src/engine/tithiCalendar.ts");
+  const { getTimezoneOffsetFromIana } = await import("../src/engine/geocoding.ts");
+  const { arbitratePredictiveQuery } = await import("../src/engine/predictiveArbitrator.ts");
+  const { calculateOmniAspectMatrix } = await import("../src/engine/omniAspectEngine.ts");
+  const { calculateUpagrahas, resolveLocalSolarDayBounds } = await import("../src/engine/upagrahas.ts");
+  const { syncMessagesToMemoryVault, createDefaultMemoryVault } = await import("../src/engine/clientMemoryVault.ts");
+  const { calculateVargaSign } = await import("../src/engine/shodashavarga.ts");
+  const { evaluateBcpWheel } = await import("../src/engine/shashtiamsha.ts");
+  const { calculateMatchmaking } = await import("../src/engine/matchmaking.ts");
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+
+  // 1. UTC+0 timezone preservation across engines
+  const londonLoc = { cityName: "London", country: "UK", latitude: 51.5074, longitude: -0.1278, timezoneOffsetHours: 0 };
+  const ephemUtc0 = calculateVedicEphemeris(new Date("2026-01-15T12:00:00Z"), londonLoc, "Lahiri", "WholeSign", "Mean");
+  assert.strictEqual(ephemUtc0.location.timezoneOffsetHours, 0, "timezoneOffsetHours 0 must be strictly preserved without falling back to 5.5");
+
+  const calUtc0 = getMonthlyTithiCalendar(2026, 1, londonLoc);
+  assert.strictEqual(calUtc0.days.length >= 28, true, "Monthly tithi calendar must generate for UTC+0 location");
+
+  assert.strictEqual(getTimezoneOffsetFromIana("UTC"), 0, "UTC offset must be 0");
+  assert.strictEqual(getTimezoneOffsetFromIana("Europe/London", new Date("2026-01-15")), 0, "London winter offset must be 0");
+
+  // 2. Arbitrator word-boundary routing
+  const careerQ = arbitratePredictiveQuery("When will my career take off?", ephemUtc0, ephemUtc0);
+  assert.ok(careerQ.gates.d1FoundationalSeed.classicalRationale.includes("Target House 10"), "Career query must target House 10");
+
+  const house10Q = arbitratePredictiveQuery("What does my 10th house show?", ephemUtc0, ephemUtc0);
+  assert.ok(house10Q.gates.d1FoundationalSeed.classicalRationale.includes("Target House 10"), "10th house query must target House 10");
+
+  const vehicleQ = arbitratePredictiveQuery("When will I buy a car or plot?", ephemUtc0, ephemUtc0);
+  assert.ok(vehicleQ.gates.d1FoundationalSeed.classicalRationale.includes("Target House 4"), "Car/plot query must target House 4, not House 10 via collision");
+
+  // 3. OmniAspectMatrix non-zero age Dasha & dynamic primary drivers
+  const birth1995 = new Date("1995-10-15T06:30:00Z");
+  const natal1995 = calculateVedicEphemeris(birth1995, { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 }, "Lahiri", "WholeSign", "Mean");
+  const eval2026 = new Date("2026-11-06T12:00:00Z");
+  const omni2026 = calculateOmniAspectMatrix(natal1995, ephemUtc0, eval2026);
+  assert.ok(omni2026.lifeVectorScores.career.primaryDrivers.length >= 1, "Career primary drivers must not be empty");
+  assert.ok(omni2026.lifeVectorScores.wealth.primaryDrivers.length >= 1, "Wealth primary drivers must not be empty");
+  assert.ok(!omni2026.lifeVectorScores.career.primaryDrivers[0].includes("Pisces 10th House"), "Must not contain hardcoded Pisces 10th house for non-Gemini Lagna");
+
+  // 4. Solar day bounds & positive day duration
+  const nyLoc = { cityName: "New York", country: "USA", latitude: 40.7128, longitude: -74.006, timezoneOffsetHours: -5 };
+  const nyBounds = resolveLocalSolarDayBounds(new Date("2026-06-21T12:00:00Z"), nyLoc);
+  const dayDurationMs = nyBounds.sunsetMs - nyBounds.sunriseMs;
+  assert.ok(dayDurationMs > 0, "Solar day duration must be positive");
+  assert.ok(nyBounds.sunriseMs < nyBounds.sunsetMs, "Sunrise must precede sunset");
+  assert.ok(nyBounds.sunsetMs < nyBounds.nextSunriseMs, "Sunset must precede next sunrise");
+
+  // 5. Interrogative clause fact extraction immunity
+  const interrogativeMsgs = [
+    { role: "user", content: "When will I get married? Will I have a son?" },
+    { role: "user", content: "My elder brother works in IT." }
+  ];
+  const vault = syncMessagesToMemoryVault(interrogativeMsgs, createDefaultMemoryVault());
+  assert.strictEqual(vault.confirmedFacts.some((f) => f.includes("Married") || f.includes("Child")), false, "Must not extract married or child facts from interrogative questions");
+  assert.strictEqual(vault.confirmedFacts.some((f) => f.includes("Eldest")), false, "Elder brother must not be labeled Eldest");
+  assert.strictEqual(vault.maritalStatus, undefined, "Marital status must remain unset from question");
+  assert.strictEqual(vault.hasChildren, undefined, "Children must remain unset from question");
+
+  // 6. Shodashavarga exact degree division & BCP safety
+  assert.strictEqual(calculateVargaSign(10, "D9"), 3, "10° in Aries is 4th Navamsha (Cancer, index 3)");
+  const bcpResult = evaluateBcpWheel(ephemUtc0, 0);
+  assert.ok(bcpResult.currentActiveCycle.activeHouseNum >= 1, "Age 0 must safely evaluate BCP cycle without crashing");
+
+  // 7. Matchmaking Nadi Dosha cancellation safety
+  const boySame = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 });
+  const girlSame = calculateVedicEphemeris(new Date("1995-10-15T06:30:00Z"), { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 });
+  const matchSame = calculateMatchmaking(boySame, girlSame);
+  assert.ok(matchSame.kootas.nadi);
+  assert.strictEqual(matchSame.kootas.nadi.isCancelled, false, "Eka-Nakshatra Eka-Pada must not falsely cancel Nadi Dosha");
+
+  // 8. buildAstroDossier intent slicing and warm cache hit latency
+  const startCold = performance.now();
+  const careerDossierCold = buildAstroDossier(natal1995, ephemUtc0, eval2026, "male", undefined, "career");
+  const coldDuration = performance.now() - startCold;
+
+  const startWarm = performance.now();
+  const careerDossierWarm = buildAstroDossier(natal1995, ephemUtc0, eval2026, "male", undefined, "career");
+  const warmDuration = performance.now() - startWarm;
+
+  assert.strictEqual(careerDossierCold, careerDossierWarm, "Warm cached dossier must equal cold dossier");
+  assert.ok(warmDuration < 15, `Warm dossier cache hit must be fast (took ${warmDuration.toFixed(2)}ms)`);
+  assert.ok(careerDossierCold.includes("Ascendant (Lagna) Bhinnashtakavarga (49 Bindus) by Sign:"), "Career dossier must contain Lagna BAV");
+  assert.ok(careerDossierCold.includes("Best Direction to Buy Plot / Land / Property:"), "Career dossier must contain Plot Direction");
+});

@@ -6,6 +6,7 @@
 
 import * as Astronomy from "astronomy-engine";
 import { GeoLocation } from "./types";
+import { resolveLocalSolarDayBounds } from "./upagrahas";
 
 export type ChoghadiyaType =
   | "Amrit"
@@ -179,25 +180,17 @@ export function calculateChoghadiyaAndHoras(
   evaluationDate: Date,
   location: GeoLocation
 ): ChoghadiyaHoraResult {
-  const tzOffset = location.timezoneOffsetHours || 5.5;
-  const observer = new Astronomy.Observer(location.latitude, location.longitude, location.elevation || 0);
+  const tzOffset = location.timezoneOffsetHours ?? 5.5;
+  const { sunriseMs, sunsetMs, nextSunriseMs, sunriseDayOfWeek } = resolveLocalSolarDayBounds(
+    evaluationDate,
+    location,
+    true
+  );
 
-  // Compute local sunrise & sunset anchored from start of day
-  const startOfDayUtc = new Date(Date.UTC(evaluationDate.getUTCFullYear(), evaluationDate.getUTCMonth(), evaluationDate.getUTCDate(), 0, 0, 0));
-  const astroTime = Astronomy.MakeTime(startOfDayUtc);
-  const sunriseResult = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, +1, astroTime, 1);
-  const sunrise = sunriseResult ? sunriseResult.date : new Date(startOfDayUtc.getTime() + 6 * 3600 * 1000);
-
-  const sunsetResult = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, -1, Astronomy.MakeTime(sunrise), 1);
-  const sunset = sunsetResult ? sunsetResult.date : new Date(sunrise.getTime() + 12 * 3600 * 1000);
-
-  // Approximate next sunrise (sunset to next sunrise)
-  const nextSunriseResult = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, +1, Astronomy.MakeTime(sunset), 1);
-  const nextSunrise = nextSunriseResult ? nextSunriseResult.date : new Date(sunset.getTime() + 12 * 3600 * 1000);
-
-  // Day of week based on local sunrise
-  const localSunriseD = new Date(sunrise.getTime() + tzOffset * 3600 * 1000);
-  const dayOfWeek = localSunriseD.getUTCDay();
+  const sunrise = new Date(sunriseMs);
+  const sunset = new Date(sunsetMs);
+  const nextSunrise = new Date(nextSunriseMs);
+  const dayOfWeek = sunriseDayOfWeek;
 
   const dayDurationMs = sunset.getTime() - sunrise.getTime();
   const nightDurationMs = nextSunrise.getTime() - sunset.getTime();

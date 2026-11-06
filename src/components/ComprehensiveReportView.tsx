@@ -27,7 +27,7 @@ export default function ComprehensiveReportView() {
       natalEphemeris: ephemeris,
       birthDate: currentDate,
       location,
-      name: activeProfileName === "Live Now" ? "Seeker" : (activeProfileName || "Seeker"),
+      name: activeProfileName?.includes("Live") ? "Seeker" : (activeProfileName || "Seeker"),
       gender,
     });
   }, [ephemeris, currentDate, location, gender, activeProfileName]);

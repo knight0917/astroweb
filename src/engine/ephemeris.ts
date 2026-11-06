@@ -10,7 +10,7 @@ import type {
 } from "./types";
 import { getAyanamsha, toSiderealLongitude } from "./ayanamsha";
 import { getRashi, getNakshatra, getHouse } from "./rashiNakshatra";
-import { calculateAscendantAndAngles } from "./ascendant";
+import { calculateAscendantAndAngles, getEclipticObliquityDegrees } from "./ascendant";
 import { PLANET_METADATA, TITHI_NAMES, YOGA_NAMES, KARANA_NAMES } from "./constants";
 import { calculateUpagrahas } from "./upagrahas";
 import { calculateTithiEndTime, calculateNakshatraEndTime } from "./tithiCalendar";
@@ -50,7 +50,22 @@ function getTrueLunarNodeTropical(daysSinceJ2000: number): number {
     0.1699 * Math.sin(M_sun) +
     0.049 * Math.sin(2 * (D_elong - M_moon));
 
-  return ((meanNode + correction % 360) + 360) % 360;
+  return (((meanNode + correction) % 360) + 360) % 360;
+}
+
+function eclipticLonToHorizon(
+  tropicalLonDeg: number,
+  astroTime: Astronomy.AstroTime,
+  observer: Astronomy.Observer
+): { altitude: number; azimuth: number } {
+  const lonRad = (tropicalLonDeg * Math.PI) / 180;
+  const epsRad = (getEclipticObliquityDegrees(astroTime) * Math.PI) / 180;
+  const decRad = Math.asin(Math.sin(lonRad) * Math.sin(epsRad));
+  const raRad = Math.atan2(Math.sin(lonRad) * Math.cos(epsRad), Math.cos(lonRad));
+  const raHours = ((((raRad * 180) / Math.PI) % 360 + 360) % 360) / 15;
+  const decDeg = (decRad * 180) / Math.PI;
+  const hor = Astronomy.Horizon(astroTime, observer, raHours, decDeg, "normal");
+  return { altitude: hor.altitude, azimuth: hor.azimuth };
 }
 
 const EPHEMERIS_CACHE_MAX = 500;
@@ -130,8 +145,11 @@ export function calculateVedicEphemeris(
   }
 
   const rahuTropical = nodeType === "True" ? getTrueLunarNodeTropical(jd) : getMeanLunarNodeTropical(jd);
+  const ketuTropical = (rahuTropical + 180) % 360;
   const rahuSidereal = toSiderealLongitude(rahuTropical, ayanamsha);
   const ketuSidereal = (rahuSidereal + 180) % 360;
+  const rahuHor = eclipticLonToHorizon(rahuTropical, astroTime, observer);
+  const ketuHor = eclipticLonToHorizon(ketuTropical, astroTime, observer);
 
   planets["Rahu"] = {
     id: "Rahu",
@@ -145,8 +163,8 @@ export function calculateVedicEphemeris(
     isRetrograde: true,
     latitude: 0,
     distanceAU: 0.00257,
-    altitude: 0,
-    azimuth: 0,
+    altitude: rahuHor.altitude,
+    azimuth: rahuHor.azimuth,
     rashi: getRashi(rahuSidereal),
     nakshatra: getNakshatra(rahuSidereal),
     house: getHouse(rahuSidereal, ascLon, houseSystem),
@@ -158,14 +176,14 @@ export function calculateVedicEphemeris(
     sanskritName: "Ketu (South Node)",
     symbol: "☋",
     color: "#8D6E63",
-    tropicalLongitude: (rahuTropical + 180) % 360,
+    tropicalLongitude: ketuTropical,
     siderealLongitude: ketuSidereal,
     speed: -0.05295,
     isRetrograde: true,
     latitude: 0,
     distanceAU: 0.00257,
-    altitude: 0,
-    azimuth: 0,
+    altitude: ketuHor.altitude,
+    azimuth: ketuHor.azimuth,
     rashi: getRashi(ketuSidereal),
     nakshatra: getNakshatra(ketuSidereal),
     house: getHouse(ketuSidereal, ascLon, houseSystem),
@@ -243,10 +261,11 @@ export function calculateVedicEphemeris(
   const tithiEnd = calculateTithiEndTime(date, location, ayanamshaType, date);
   const nakEnd = calculateNakshatraEndTime(date, location, ayanamshaType, date);
 
+  const safeTzOffset = location.timezoneOffsetHours ?? 5.5;
   const result: EphemerisResult = {
     utcDate: date.toISOString(),
-    localDate: new Date(date.getTime() + location.timezoneOffsetHours * 3600 * 1000).toISOString(),
-    julianDay: jd,
+    localDate: new Date(date.getTime() + safeTzOffset * 3600 * 1000).toISOString(),
+    julianDay: jd + 2451545.0,
     ayanamshaValue: ayanamsha,
     ayanamshaType,
     location,

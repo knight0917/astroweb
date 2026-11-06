@@ -122,28 +122,32 @@ export function expandQueryWithChartEntities(
   if (typeof chartDossierOrContext === "string" && chartDossierOrContext.length > 0) {
     const text = chartDossierOrContext;
 
-    // 1. Extract Lagna Sign
-    const lagnaMatch = text.match(/Ascendant\s*\([^)]*\)\s*:\s*([A-Za-z]+)/i) || text.match(/Lagna\s*:\s*([A-Za-z]+)/i);
+    // 1. Extract Lagna Sign (markdown-bold tolerant)
+    const lagnaMatch =
+      text.match(/\**Ascendant\s*\([^)]*\)\**\s*:\**\s*([A-Za-z]+)/i) ||
+      text.match(/\**Lagna\**\s*:\**\s*([A-Za-z]+)/i);
     if (lagnaMatch) {
       chartHighlights.push(`Natal Lagna: ${lagnaMatch[1]}`);
     }
 
     // 2. Extract Active Vimshottari Dasha
-    const dashaMatch = text.match(/Active\s*Vimshottari\s*Dasha\s*:\s*([A-Za-z0-9\s–-]+)/i) || text.match(/Current\s*Dasha\s*:\s*([A-Za-z0-9\s–-]+)/i);
+    const dashaMatch =
+      text.match(/\**Active\s*Vimshottari\s*Dasha\**\s*:\**\s*([A-Za-z0-9\s/–-]+)/i) ||
+      text.match(/\**Current\s*(?:Running\s*)?Dasha\**\s*:\**\s*([A-Za-z0-9\s/–-]+)/i);
     if (dashaMatch) {
       chartHighlights.push(`Active Dasha: ${dashaMatch[1].trim()}`);
     }
 
     // 3. Extract Target House Sign & Lord
     if (domain === "marriage") {
-      const h7Match = text.match(/House\s*7\s*\(([^)]+)\)\s*:\s*Occupants:\s*([^|;\n]+)/i);
-      if (h7Match) chartHighlights.push(`7th House: ${h7Match[1]} (Occupants: ${h7Match[2].trim()})`);
+      const h7Match = text.match(/\**House\s*7\s*\(([^)]+)\)\**\s*:\**\s*(?:Occupants:\s*)?([^|;\n]+)/i);
+      if (h7Match) chartHighlights.push(`7th House: ${h7Match[1]} (Occupants: ${h7Match[2].replace(/\*/g, "").trim()})`);
     } else if (domain === "career") {
-      const h10Match = text.match(/House\s*10\s*\(([^)]+)\)\s*:\s*Occupants:\s*([^|;\n]+)/i);
-      if (h10Match) chartHighlights.push(`10th House: ${h10Match[1]} (Occupants: ${h10Match[2].trim()})`);
+      const h10Match = text.match(/\**House\s*10\s*\(([^)]+)\)\**\s*:\**\s*(?:Occupants:\s*)?([^|;\n]+)/i);
+      if (h10Match) chartHighlights.push(`10th House: ${h10Match[1]} (Occupants: ${h10Match[2].replace(/\*/g, "").trim()})`);
     } else if (domain === "health") {
-      const h6Match = text.match(/House\s*6\s*\(([^)]+)\)\s*:\s*Occupants:\s*([^|;\n]+)/i);
-      if (h6Match) chartHighlights.push(`6th House: ${h6Match[1]} (Occupants: ${h6Match[2].trim()})`);
+      const h6Match = text.match(/\**House\s*6\s*\(([^)]+)\)\**\s*:\**\s*(?:Occupants:\s*)?([^|;\n]+)/i);
+      if (h6Match) chartHighlights.push(`6th House: ${h6Match[1]} (Occupants: ${h6Match[2].replace(/\*/g, "").trim()})`);
     }
   }
 

@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveChatFeedback, getFeedbackStats, sanitizeFeedbackText, FeedbackType, CorrectionCategory } from "@/lib/feedbackDb";
 import { generateEmbedding } from "@/lib/embeddingService";
+import { checkRateLimit, extractClientIp } from "@/lib/rateLimiter";
+
+const VALID_CATEGORIES: CorrectionCategory[] = ["bhavas", "timing", "upaya", "calculation", "other"];
 
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = extractClientIp(req.headers);
+    const rl = checkRateLimit(`chat-feedback:${clientIp}`, 15, 60_000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many feedback submissions. Please wait a moment." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+      );
+    }
+
     const body = await req.json();
     const {
-      id,
       userQuery,
       botResponse,
       feedbackType,
@@ -16,17 +27,17 @@ export async function POST(req: NextRequest) {
       domain,
     } = body;
 
-    // 1. Validation
-    if (!userQuery || typeof userQuery !== "string" || !userQuery.trim()) {
+    // 1. Boundary validation
+    if (!userQuery || typeof userQuery !== "string" || !userQuery.trim() || userQuery.length > 4000) {
       return NextResponse.json(
-        { error: "User query context is required." },
+        { error: "Valid user query context (<= 4000 chars) is required." },
         { status: 400 }
       );
     }
 
-    if (!botResponse || typeof botResponse !== "string" || !botResponse.trim()) {
+    if (!botResponse || typeof botResponse !== "string" || !botResponse.trim() || botResponse.length > 24000) {
       return NextResponse.json(
-        { error: "Bot response context is required." },
+        { error: "Valid bot response context (<= 24000 chars) is required." },
         { status: 400 }
       );
     }
@@ -39,26 +50,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const trimmedCorrection =
+      typeof userCorrection === "string" ? userCorrection.trim().slice(0, 3000) : "";
+    const safeCategory =
+      typeof correctionCategory === "string" && VALID_CATEGORIES.includes(correctionCategory as CorrectionCategory)
+        ? (correctionCategory as CorrectionCategory)
+        : undefined;
+    const safeDomain =
+      typeof domain === "string" && /^[a-z0-9_-]{1,30}$/i.test(domain.trim())
+        ? domain.trim().toLowerCase()
+        : "general";
+
+    let safeChartContext: Record<string, unknown> = {};
+    if (chartContext && typeof chartContext === "object" && !Array.isArray(chartContext)) {
+      const serialized = JSON.stringify(chartContext);
+      if (serialized.length <= 8000) {
+        safeChartContext = chartContext as Record<string, unknown>;
+      }
+    }
+
     let embedding: number[] | undefined;
     // Generate embedding for user correction if provided
-    if (userCorrection && typeof userCorrection === "string" && userCorrection.trim().length > 0) {
+    if (trimmedCorrection.length > 0) {
       try {
-        const textToEmbed = `${domain || "general"} query: ${userQuery}. Correction: ${userCorrection}`;
+        const textToEmbed = `${safeDomain} query: ${userQuery.slice(0, 1000)}. Correction: ${trimmedCorrection}`;
         embedding = await generateEmbedding(textToEmbed);
       } catch (embErr) {
         console.warn("[FeedbackAPI] Embedding generation notice:", embErr);
       }
     }
 
+    // Never accept client-supplied IDs on unauthenticated public submissions (prevents row overwrite)
     const saved = await saveChatFeedback({
-      id: id || undefined,
-      userQuery: sanitizeFeedbackText(userQuery),
-      botResponse: sanitizeFeedbackText(botResponse),
+      userQuery: sanitizeFeedbackText(userQuery.slice(0, 4000)),
+      botResponse: sanitizeFeedbackText(botResponse.slice(0, 24000)),
       feedbackType,
-      userCorrection: userCorrection ? sanitizeFeedbackText(userCorrection) : undefined,
-      correctionCategory: correctionCategory as CorrectionCategory | undefined,
-      chartContext: chartContext || {},
-      domain: domain || "general",
+      userCorrection: trimmedCorrection ? sanitizeFeedbackText(trimmedCorrection) : undefined,
+      correctionCategory: safeCategory,
+      chartContext: safeChartContext,
+      domain: safeDomain,
       embedding,
       status: "unverified",
     });
@@ -69,10 +99,10 @@ export async function POST(req: NextRequest) {
       message: "Feedback and correction precedent recorded successfully.",
       status: saved.status,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[FeedbackAPI] Error in POST /api/chat-feedback:", err);
     return NextResponse.json(
-      { error: "Failed to record feedback.", details: err?.message },
+      { error: "Failed to record feedback." },
       { status: 500 }
     );
   }
@@ -85,10 +115,10 @@ export async function GET() {
       success: true,
       stats,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[FeedbackAPI] Error in GET /api/chat-feedback:", err);
     return NextResponse.json(
-      { error: "Failed to retrieve feedback statistics.", details: err?.message },
+      { error: "Failed to retrieve feedback statistics." },
       { status: 500 }
     );
   }

@@ -26,28 +26,66 @@ export function extractUserConfirmedFacts(messages: any[]): string[] {
 
   const fullText = userTexts.join(" \n ");
 
-  // 1. Marital Status
-  if (/\b(i am married|married|my wife|my husband|my spouse|got married|we married)\b/.test(fullText)) {
-    if (!/\b(not married|unmarried|single)\b/.test(fullText) || /\b(i am married|married and i have|already married)\b/.test(fullText)) {
+  const declarativeClauses: string[] = [];
+  for (const text of userTexts) {
+    const clauses = text.split(/(?<=[.!?])\s+|\n+/);
+    for (const clause of clauses) {
+      const trimmed = clause.trim();
+      if (!trimmed) continue;
+      if (
+        trimmed.includes("?") ||
+        /^\s*(?:when|will|can|could|would|should|if|whether|how|what|why|who|where|is|are|do|does|did|shall|may|might)\b/i.test(
+          trimmed
+        ) ||
+        /\b(?:when will|will i|get married|getting married|marriage timing|want to have|will have|wish to have|hope to have)\b/i.test(
+          trimmed
+        )
+      ) {
+        continue;
+      }
+      declarativeClauses.push(trimmed);
+    }
+  }
+  const declarativeText = declarativeClauses.join(" \n ");
+
+  // 1. Marital Status (declarative statements only)
+  if (
+    /\b(i am married|married|my wife|my husband|my spouse|got married|we married)\b/.test(
+      declarativeText
+    )
+  ) {
+    if (
+      !/\b(not married|unmarried|never married|single)\b/.test(declarativeText) ||
+      /\b(i am married|married and i have|already married)\b/.test(declarativeText)
+    ) {
       facts.push("💍 **Marital Reality:** **Married** (Explicitly confirmed by user in consultation).");
     }
-  } else if (/\b(i am single|unmarried|single|not married yet)\b/.test(fullText)) {
+  } else if (
+    /\b(i am single|unmarried|never married|single|not married yet)\b/.test(declarativeText)
+  ) {
     facts.push("💍 **Marital Reality:** **Single / Unmarried** (Explicitly confirmed by user).");
   }
 
-  // 2. Progeny / Children
-  if (/\b(i have a kid|have a kid|have a child|have children|my kid|my child|my son|my daughter|blessed with a baby)\b/.test(fullText)) {
+  // 2. Progeny / Children (declarative statements only)
+  if (
+    /\b(i have a kid|have a kid|have a child|have children|my kid|my child|my son|my daughter|blessed with a baby|with a son|with a daughter|have a son|have a daughter)\b/.test(
+      declarativeText
+    ) &&
+    !/\b(no child\w*|no kid\w*|don'?t have (?:a )?(?:kid|child|son|daughter)|childless)\b/.test(
+      declarativeText
+    )
+  ) {
     facts.push("👶 **Progeny Reality:** **Has a Child / Children** (Explicitly confirmed by user).");
   }
 
-  // 3. Sibling Position
-  if (/\b(eldest|elder brother|elder sister|1st born|first born)\b/.test(fullText)) {
+  // 3. Sibling Position (do NOT confuse having an "elder brother/sister" with BEING the eldest)
+  if (/\b(eldest|1st born|first born)\b/.test(declarativeText)) {
     facts.push("🌿 **Sibling Position:** **Eldest Child** (Confirmed by user).");
-  } else if (/\b(youngest|younger brother|younger sister|last born)\b/.test(fullText)) {
+  } else if (/\b(youngest|last born)\b/.test(declarativeText)) {
     facts.push("🌿 **Sibling Position:** **Youngest Child** (Confirmed by user).");
-  } else if (/\b(middle child|middle)\b/.test(fullText)) {
+  } else if (/\b(middle child|i am the middle)\b/.test(declarativeText)) {
     facts.push("🌿 **Sibling Position:** **Middle Child** (Confirmed by user).");
-  } else if (/\b(only child)\b/.test(fullText)) {
+  } else if (/\b(only child|single child)\b/.test(declarativeText)) {
     facts.push("🌿 **Sibling Position:** **Only Child** (Confirmed by user).");
   }
 

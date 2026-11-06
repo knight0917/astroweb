@@ -76,7 +76,7 @@ function writeAllChartsLocal(charts: StoredBirthChart[]): void {
   }
   ensureDbFile();
   try {
-    const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
+    const tempFile = `${DB_FILE}.tmp.${process.pid}.${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     fs.writeFileSync(tempFile, JSON.stringify(charts, null, 2), "utf-8");
     fs.renameSync(tempFile, DB_FILE);
   } catch (err) {
@@ -86,6 +86,25 @@ function writeAllChartsLocal(charts: StoredBirthChart[]): void {
 
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+function resolveSafeTimezoneOffset(value: unknown, fallback = 5.5): number {
+  if (value === null || value === undefined || value === "") return fallback;
+  const num = Number(value);
+  return Number.isFinite(num) && Math.abs(num) <= 14 ? num : fallback;
+}
+
+function normalizeDateIsoString(raw: unknown): string {
+  if (raw instanceof Date) return raw.toISOString();
+  if (typeof raw !== "string" || !raw.trim()) return "";
+  const trimmed = raw.trim();
+  // Normalize PostgreSQL text timestamps ("1998-05-24 18:46:59+00") to strict ISO-8601 for Safari/WebKit
+  if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(trimmed)) {
+    return trimmed
+      .replace(/^(\d{4}-\d{2}-\d{2})\s+/, "$1T")
+      .replace(/\+00(?::00)?$/, "Z");
+  }
+  return trimmed;
 }
 
 /**
@@ -105,13 +124,13 @@ export async function getChartsByEmail(email: string): Promise<StoredBirthChart[
         ORDER BY updated_at DESC;
       `;
 
-      if (rows && rows.length > 0) {
+      if (Array.isArray(rows) && (rows.length > 0 || IS_VERCEL)) {
         return rows.map((row: any) => ({
           id: row.id,
           userEmail: row.user_email,
           name: row.name,
-          gender: row.gender || "male",
-          dateIso: row.date_iso,
+          gender: row.gender === "female" ? "female" : "male",
+          dateIso: normalizeDateIsoString(row.date_iso),
           dob: row.dob,
           time: row.time,
           location: {
@@ -120,14 +139,14 @@ export async function getChartsByEmail(email: string): Promise<StoredBirthChart[
             latitude: Number(row.latitude),
             longitude: Number(row.longitude),
             elevation: Number(row.elevation || 0),
-            timezoneOffsetHours: Number(row.timezone_offset_hours || 5.5),
+            timezoneOffsetHours: resolveSafeTimezoneOffset(row.timezone_offset_hours, 5.5),
           },
           ayanamsha: row.ayanamsha || "Lahiri",
           houseSystem: row.house_system || "WholeSign",
           isDefault: Boolean(row.is_default),
           notes: row.notes,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at,
+          createdAt: normalizeDateIsoString(row.created_at),
+          updatedAt: normalizeDateIsoString(row.updated_at),
         }));
       }
     } catch (err) {
@@ -149,24 +168,24 @@ export async function getChartsByEmail(email: string): Promise<StoredBirthChart[
           id: row.id,
           userEmail: row.user_email,
           name: row.name,
-          gender: row.gender || "male",
-          dateIso: row.date_iso,
+          gender: row.gender === "female" ? "female" : "male",
+          dateIso: normalizeDateIsoString(row.date_iso),
           dob: row.dob,
           time: row.time,
           location: {
             cityName: row.city_name || "Unknown City",
             country: row.country || "India",
-            latitude: row.latitude,
-            longitude: row.longitude,
-            elevation: row.elevation || 0,
-            timezoneOffsetHours: row.timezone_offset_hours || 5.5,
+            latitude: Number(row.latitude),
+            longitude: Number(row.longitude),
+            elevation: Number(row.elevation || 0),
+            timezoneOffsetHours: resolveSafeTimezoneOffset(row.timezone_offset_hours, 5.5),
           },
           ayanamsha: row.ayanamsha || "Lahiri",
           houseSystem: row.house_system || "WholeSign",
           isDefault: Boolean(row.is_default),
           notes: row.notes,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at,
+          createdAt: normalizeDateIsoString(row.created_at),
+          updatedAt: normalizeDateIsoString(row.updated_at),
         }));
       }
     } catch (err) {
@@ -178,6 +197,14 @@ export async function getChartsByEmail(email: string): Promise<StoredBirthChart[
   const all = readAllChartsLocal();
   return all
     .filter((c) => normalizeEmail(c.userEmail) === norm)
+    .map((c) => ({
+      ...c,
+      dateIso: normalizeDateIsoString(c.dateIso),
+      location: {
+        ...c.location,
+        timezoneOffsetHours: resolveSafeTimezoneOffset(c.location?.timezoneOffsetHours, 5.5),
+      },
+    }))
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 }
 
@@ -247,18 +274,25 @@ export async function saveChart(
 
   const id = chart.id || `knd_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
+  const safeTzOffset = resolveSafeTimezoneOffset(chart.location.timezoneOffsetHours, 5.5);
+
   const record: StoredBirthChart = {
     ...chart,
     id,
     userEmail: normEmail,
+    dateIso: normalizeDateIsoString(chart.dateIso),
+    location: {
+      ...chart.location,
+      timezoneOffsetHours: safeTzOffset,
+    },
     createdAt: nowIso,
     updatedAt: nowIso,
   };
 
-  // 1. Save to Neon Serverless Postgres
+  // 1. Save to Neon Serverless Postgres (strictly enforce tenant ownership on conflict)
   if (sql) {
     try {
-      await sql`
+      const upserted = await sql`
         INSERT INTO birth_charts (
           id, user_email, name, gender, date_iso, dob, time,
           city_name, country, latitude, longitude, elevation,
@@ -266,10 +300,9 @@ export async function saveChart(
         ) VALUES (
           ${record.id}, ${record.userEmail}, ${record.name}, ${record.gender}, ${record.dateIso}, ${record.dob}, ${record.time},
           ${record.location.cityName}, ${record.location.country}, ${record.location.latitude}, ${record.location.longitude}, ${record.location.elevation || 0},
-          ${record.location.timezoneOffsetHours || 5.5}, ${record.ayanamsha || "Lahiri"}, ${record.houseSystem || "WholeSign"}, ${Boolean(record.isDefault)}, ${record.notes || null}, ${nowIso}
+          ${safeTzOffset}, ${record.ayanamsha || "Lahiri"}, ${record.houseSystem || "WholeSign"}, ${Boolean(record.isDefault)}, ${record.notes || null}, ${nowIso}
         )
         ON CONFLICT (id) DO UPDATE SET
-          user_email = EXCLUDED.user_email,
           name = EXCLUDED.name,
           gender = EXCLUDED.gender,
           date_iso = EXCLUDED.date_iso,
@@ -285,9 +318,17 @@ export async function saveChart(
           house_system = EXCLUDED.house_system,
           is_default = EXCLUDED.is_default,
           notes = EXCLUDED.notes,
-          updated_at = EXCLUDED.updated_at;
+          updated_at = EXCLUDED.updated_at
+        WHERE birth_charts.user_email = EXCLUDED.user_email
+        RETURNING id;
       `;
+      if (Array.isArray(upserted) && upserted.length === 0) {
+        throw new Error("Forbidden: chart ID ownership mismatch.");
+      }
     } catch (err) {
+      if (err instanceof Error && err.message.includes("ownership")) {
+        throw err;
+      }
       console.warn("Neon save error, falling back:", err);
     }
   }
@@ -295,6 +336,16 @@ export async function saveChart(
   // 2. Fallback to Supabase
   if (supabase) {
     try {
+      const { data: existingRow } = await supabase
+        .from("birth_charts")
+        .select("user_email")
+        .eq("id", record.id)
+        .maybeSingle();
+
+      if (existingRow && normalizeEmail(existingRow.user_email) !== normEmail) {
+        throw new Error("Forbidden: chart ID ownership mismatch.");
+      }
+
       await supabase.from("birth_charts").upsert({
         id: record.id,
         user_email: record.userEmail,
@@ -308,7 +359,7 @@ export async function saveChart(
         latitude: record.location.latitude,
         longitude: record.location.longitude,
         elevation: record.location.elevation || 0,
-        timezone_offset_hours: record.location.timezoneOffsetHours || 5.5,
+        timezone_offset_hours: safeTzOffset,
         ayanamsha: record.ayanamsha || "Lahiri",
         house_system: record.houseSystem || "WholeSign",
         is_default: Boolean(record.isDefault),
@@ -316,6 +367,9 @@ export async function saveChart(
         updated_at: nowIso,
       });
     } catch (err) {
+      if (err instanceof Error && err.message.includes("ownership")) {
+        throw err;
+      }
       console.warn("Supabase save exception:", err);
     }
   }
@@ -325,12 +379,19 @@ export async function saveChart(
     const all = readAllChartsLocal();
     const existingIdx = all.findIndex((c) => c.id === id);
     if (existingIdx !== -1) {
+      if (normalizeEmail(all[existingIdx].userEmail) !== normEmail) {
+        throw new Error("Forbidden: chart ID ownership mismatch.");
+      }
       all[existingIdx] = record;
     } else {
       all.push(record);
     }
     writeAllChartsLocal(all);
-  } catch (_) {}
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("ownership")) {
+      throw err;
+    }
+  }
 
   return record;
 }
@@ -345,11 +406,14 @@ export async function deleteChart(id: string, email: string): Promise<boolean> {
   // 1. Neon Serverless Postgres
   if (sql) {
     try {
-      await sql`
+      const deletedRows = await sql`
         DELETE FROM birth_charts
-        WHERE id = ${id} AND user_email = ${normEmail};
+        WHERE id = ${id} AND user_email = ${normEmail}
+        RETURNING id;
       `;
-      deletedFromCloud = true;
+      if (Array.isArray(deletedRows) && deletedRows.length > 0) {
+        deletedFromCloud = true;
+      }
     } catch (err) {
       console.warn("Neon delete exception:", err);
     }
@@ -358,12 +422,15 @@ export async function deleteChart(id: string, email: string): Promise<boolean> {
   // 2. Supabase
   if (supabase) {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("birth_charts")
         .delete()
         .eq("id", id)
-        .eq("user_email", normEmail);
-      if (!error) deletedFromCloud = true;
+        .eq("user_email", normEmail)
+        .select("id");
+      if (!error && Array.isArray(data) && data.length > 0) {
+        deletedFromCloud = true;
+      }
     } catch (err) {
       console.warn("Supabase delete exception:", err);
     }
@@ -408,7 +475,7 @@ function writeAllReviewsLocal(reviews: StoredReview[]): void {
   }
   ensureDbFile();
   try {
-    const tempFile = `${REVIEWS_DB_FILE}.tmp.${Date.now()}`;
+    const tempFile = `${REVIEWS_DB_FILE}.tmp.${process.pid}.${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     fs.writeFileSync(tempFile, JSON.stringify(reviews, null, 2), "utf-8");
     fs.renameSync(tempFile, REVIEWS_DB_FILE);
   } catch (err) {
@@ -417,18 +484,21 @@ function writeAllReviewsLocal(reviews: StoredReview[]): void {
 }
 
 /**
- * Get all reviews (ordered newest first)
+ * Get recent reviews (ordered newest first, capped at 100)
  */
-export async function getReviews(): Promise<StoredReview[]> {
+export async function getReviews(limit = 100): Promise<StoredReview[]> {
+  const safeLimit = Math.min(200, Math.max(1, Math.floor(limit)));
   // 1. Neon Postgres
   if (sql) {
     try {
       const rows = await sql`
-        SELECT * FROM reviews
-        ORDER BY created_at DESC;
+        SELECT id, name, email, subject, description, rating, created_at
+        FROM reviews
+        ORDER BY created_at DESC
+        LIMIT ${safeLimit};
       `;
 
-      if (rows && rows.length > 0) {
+      if (Array.isArray(rows) && (rows.length > 0 || IS_VERCEL)) {
         return rows.map((row: any) => ({
           id: row.id,
           name: row.name,
@@ -436,7 +506,7 @@ export async function getReviews(): Promise<StoredReview[]> {
           subject: row.subject,
           description: row.description,
           rating: Number(row.rating) || 5,
-          createdAt: row.created_at,
+          createdAt: normalizeDateIsoString(row.created_at),
         }));
       }
     } catch (err) {
@@ -449,8 +519,9 @@ export async function getReviews(): Promise<StoredReview[]> {
     try {
       const { data, error } = await supabase
         .from("reviews")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("id, name, email, subject, description, rating, created_at")
+        .order("created_at", { ascending: false })
+        .limit(safeLimit);
 
       if (!error && data && data.length > 0) {
         return data.map((row: any) => ({
@@ -459,8 +530,8 @@ export async function getReviews(): Promise<StoredReview[]> {
           email: row.email,
           subject: row.subject,
           description: row.description,
-          rating: row.rating || 5,
-          createdAt: row.created_at,
+          rating: Number(row.rating) || 5,
+          createdAt: normalizeDateIsoString(row.created_at),
         }));
       }
     } catch (err) {
@@ -469,7 +540,9 @@ export async function getReviews(): Promise<StoredReview[]> {
   }
 
   const local = readAllReviewsLocal();
-  return local.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return local
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, safeLimit);
 }
 
 /**
@@ -485,6 +558,10 @@ export async function saveReview(reviewData: {
   const id = `rev_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const createdAt = new Date().toISOString();
   const cleanSubject = reviewData.subject.trim().slice(0, 50);
+  const safeRating =
+    typeof reviewData.rating === "number" && Number.isFinite(reviewData.rating)
+      ? Math.min(5, Math.max(1, Math.round(reviewData.rating)))
+      : 5;
 
   const newReview: StoredReview = {
     id,
@@ -492,7 +569,7 @@ export async function saveReview(reviewData: {
     email: normalizeEmail(reviewData.email),
     subject: cleanSubject,
     description: reviewData.description.trim(),
-    rating: typeof reviewData.rating === "number" ? Math.min(5, Math.max(1, reviewData.rating)) : 5,
+    rating: safeRating,
     createdAt,
   };
 

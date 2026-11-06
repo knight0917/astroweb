@@ -223,14 +223,24 @@ export function evaluatePrashna(
   const orbDiff = Math.abs(normAngle - targetAngle);
   const isWithinOrb = aspectType !== "None" && orbDiff <= maxAllowedOrb;
 
+  const circularDistance = (a: number, b: number): number => {
+    const diff = Math.abs(a - b) % 360;
+    return diff > 180 ? 360 - diff : diff;
+  };
+
   // Applying vs Separating (Ithasala vs Ishrafa)
-  const isApplying = degFaster < degSlower;
+  const sameSignificator = lagnesha === karyesha;
+  const isApplying = sameSignificator ? true : degFaster < degSlower;
 
   // Evaluate Tajika 16 Yogas
   const detectedYogas: TajikaYogaResult[] = [];
 
   // 1. Ithasala (Muthashila) Yoga
-  const hasIthasala = isWithinOrb && isApplying && (aspectType === "Trine (120°)" || aspectType === "Sextile (60°)" || aspectType === "Conjunction (0°)");
+  const hasIthasala =
+    !sameSignificator &&
+    isWithinOrb &&
+    isApplying &&
+    (aspectType === "Trine (120°)" || aspectType === "Sextile (60°)" || aspectType === "Conjunction (0°)");
   if (hasIthasala) {
     detectedYogas.push({
       name: "Ithasala (Muthashila) Yoga",
@@ -243,7 +253,7 @@ export function evaluatePrashna(
   }
 
   // 2. Ishrafa (Musaripha) Yoga
-  const hasIshrafa = isWithinOrb && !isApplying;
+  const hasIshrafa = !sameSignificator && isWithinOrb && !isApplying;
   if (hasIshrafa) {
     detectedYogas.push({
       name: "Ishrafa (Musaripha) Yoga",
@@ -271,7 +281,8 @@ export function evaluatePrashna(
   }
 
   // 4. Kamboola Yoga (Moon joining Ithasala)
-  const hasKamboola = hasIthasala && Math.abs(moon.siderealLongitude - lagnaPlanet.siderealLongitude) < 12;
+  const hasKamboola =
+    hasIthasala && circularDistance(moon.siderealLongitude, lagnaPlanet.siderealLongitude) < 12;
   if (hasKamboola) {
     detectedYogas.push({
       name: "Kamboola Yoga",
@@ -287,8 +298,8 @@ export function evaluatePrashna(
   const saturn = ephem.planets.Saturn;
   const mars = ephem.planets.Mars;
   const isAfflicted =
-    Math.abs(saturn.siderealLongitude - lagnaPlanet.siderealLongitude) < 5 ||
-    Math.abs(mars.siderealLongitude - karyaPlanet.siderealLongitude) < 5;
+    (lagnesha !== "Saturn" && circularDistance(saturn.siderealLongitude, lagnaPlanet.siderealLongitude) < 5) ||
+    (karyesha !== "Mars" && circularDistance(mars.siderealLongitude, karyaPlanet.siderealLongitude) < 5);
 
   if (isAfflicted) {
     detectedYogas.push({
@@ -340,7 +351,7 @@ export function evaluatePrashna(
 
   return {
     topic,
-    queryTime: new Date(ephem.julianDay),
+    queryTime: new Date(ephem.utcDate),
     seedNumber,
     lagnaSign: RASHI_NAMES[ascSign].englishName,
     lagnaDegree: `${Math.floor(ascLon % 30)}° ${Math.floor((ascLon * 60) % 60)}'`,

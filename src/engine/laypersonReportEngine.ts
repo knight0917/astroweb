@@ -1083,8 +1083,20 @@ Your conscious life mission and outer vitality are powered by the ${sunRashi} Su
       partnerArchetype: PLANET_PARTNER_ARCHETYPES[dk.planetId]?.traits || "Loving, supportive, loyal, and balanced.",
       relationshipAdvice: PLANET_PARTNER_ARCHETYPES[dk.planetId]?.advice || "Communicate with transparency and celebrate mutual growth.",
     },
-    karakamshaSign: ak.rashi.englishName,
-    soulCalling: `With your Atmakaraka radiating in ${ak.rashi.englishName}, your soul finds its highest fulfillment when balancing practical worldly achievements with conscious inner integrity.`,
+    karakamshaSign: RASHI_NAMES[
+      calculateVargaSign(
+        natalEphemeris.planets[ak.planetId]?.siderealLongitude ?? ak.rashi.index * 30,
+        "D9"
+      )
+    ].englishName,
+    soulCalling: `With your Atmakaraka (${ak.planetName}) placed in ${
+      RASHI_NAMES[
+        calculateVargaSign(
+          natalEphemeris.planets[ak.planetId]?.siderealLongitude ?? ak.rashi.index * 30,
+          "D9"
+        )
+      ].englishName
+    } Navamsha (Karakamsha), your soul finds its highest fulfillment when balancing practical worldly achievements with conscious inner integrity.`,
   };
 
   // 4. Ashtakavarga Energy Matrix & Functional Directions
@@ -1696,7 +1708,13 @@ Your conscious life mission and outer vitality are powered by the ${sunRashi} Su
   };
 
   // 13. Karmic Weather Station (Live Transits & Sade Sati)
-  const transitEphem = calculateVedicEphemeris(now, location, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(
+    now,
+    location,
+    natalEphemeris.ayanamshaType || "Lahiri",
+    natalEphemeris.houses?.system || "WholeSign",
+    "Mean"
+  );
   const gochar = calculateGochar(natalEphemeris, transitEphem);
 
   const jupGoch = gochar.transits.find((t) => t.id === "Jupiter");

@@ -157,6 +157,10 @@ export function detectConsultationIntent(query: string, activeCategory?: string)
   return "all";
 }
 
+// 24-entry bounded LRU cache for buildAstroDossier
+const DOSSIER_CACHE_MAX_SIZE = 24;
+const dossierCache = new Map<string, string>();
+
 export function buildAstroDossier(
   natalEphemeris: EphemerisResult,
   transitEphemeris: EphemerisResult,
@@ -165,6 +169,31 @@ export function buildAstroDossier(
   matchmaking?: MatchmakingContextData,
   intent: AstroConsultationIntent = "all"
 ): string {
+  const cacheKey = [
+    natalEphemeris.utcDate,
+    natalEphemeris.ayanamshaType,
+    natalEphemeris.houses?.system || "WholeSign",
+    transitEphemeris.utcDate?.slice(0, 16),
+    Math.floor(evaluationDate.getTime() / 60000),
+    gender,
+    intent,
+    matchmaking ? `${matchmaking.boy?.dateIso}_${matchmaking.girl?.dateIso}` : "none",
+  ].join("::");
+
+  const cached = dossierCache.get(cacheKey);
+  if (cached) return cached;
+
+  const KNOWN_SLICED_INTENTS = new Set<AstroConsultationIntent>([
+    "career",
+    "marriage",
+    "progeny_children",
+    "name_phonetics",
+    "btr_verification",
+    "panchang_muhurta",
+    "remedies_health",
+  ]);
+  const isAll = !KNOWN_SLICED_INTENTS.has(intent);
+  const need = (...allowed: AstroConsultationIntent[]) => isAll || allowed.includes(intent);
   const birthDate = new Date(natalEphemeris.utcDate);
   const location = natalEphemeris.location;
   const tzOffset = location.timezoneOffsetHours || 0;
@@ -284,8 +313,10 @@ export function buildAstroDossier(
 
   // 8. Ashtakavarga SAV Points
   let ashtakavargaSummary = "";
+  let ashtakavargaResult: any = null;
   try {
     const av = calculateAshtakavarga(natalEphemeris);
+    ashtakavargaResult = av;
     ashtakavargaSummary = [
       "SAV Points in Houses (337 Total) -> 1st (Tanu): " + av.sarvaHouseBindus[0] + ", 2nd (Dhana): " + av.sarvaHouseBindus[1] + ", 3rd (Sahaja): " + av.sarvaHouseBindus[2] + ", 4th (Sukha): " + av.sarvaHouseBindus[3] + ", 5th (Putra): " + av.sarvaHouseBindus[4] + ", 6th (Roga): " + av.sarvaHouseBindus[5] + ", 7th (Kalatra): " + av.sarvaHouseBindus[6] + ", 8th (Ayu): " + av.sarvaHouseBindus[7] + ", 9th (Bhagya): " + av.sarvaHouseBindus[8] + ", 10th (Karma): " + av.sarvaHouseBindus[9] + ", 11th (Labha): " + av.sarvaHouseBindus[10] + ", 12th (Vyaya): " + av.sarvaHouseBindus[11],
       av.bav.Lagna ? `- **Ascendant (Lagna) Bhinnashtakavarga (49 Bindus) by Sign:** ${RASHI_NAMES.map((r, idx) => `${r.englishName}: ${av.bav.Lagna.rashiBindus[idx]}`).join(", ")}` : "",
@@ -512,6 +543,7 @@ export function buildAstroDossier(
 
   // 14. K.N. Rao Karma & Rebirth Intelligence
   let karmaSummary = "";
+  if (isAll) {
   try {
     const kr = evaluateKarmaRebirth(natalEphemeris);
     const vakriStr = kr.retrogradeContracts.length > 0
@@ -529,9 +561,11 @@ export function buildAstroDossier(
       vakriStr,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 15. K.N. Rao Double Transit (DTP) & PAC-DARES
   let dtpSummary = "";
+  if (need("career", "btr_verification", "progeny_children")) {
   try {
     const dtp = calculateDoubleTransit(natalEphemeris, transitEphemeris);
     const milestonesStr = Object.values(dtp.milestones)
@@ -552,9 +586,11 @@ export function buildAstroDossier(
       pacDaresStr,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 16. K.N. Rao Timing of Marriage Suite
   let marriageSummary = "";
+  if (need("marriage")) {
   try {
     const mt = evaluateMarriageTiming(natalEphemeris, transitEphemeris, evaluationDate);
     marriageSummary = [
@@ -566,9 +602,11 @@ export function buildAstroDossier(
       "- **Remedial Guidance:** " + mt.remedialGuidance,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 17. K.N. Rao Advanced Predictive Techniques
   let techniquesSummary = "";
+  if (need("btr_verification")) {
   try {
     const tech = evaluateKnRaoTechniques(natalEphemeris);
     techniquesSummary = [
@@ -579,9 +617,11 @@ export function buildAstroDossier(
       "- **Master Predictive Verdict:** " + tech.masterPredictiveSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 18. K.N. Rao & Naval Singh Planets & Education
   let educationSummary = "";
+  if (need("career", "progeny_children")) {
   try {
     const edu = evaluateEducationStream(natalEphemeris);
     const topStreams = edu.streamAptitudes.slice(0, 3)
@@ -603,9 +643,11 @@ export function buildAstroDossier(
       "- **Master Educational Guidance:** " + edu.masterAcademicGuidance,
     ].filter(Boolean).join("\n");
   } catch (_) {}
+  }
 
   // 19. Parashari Multi-Dasha & Yogini Dasha
   let multiDashaSummary = "";
+  if (isAll) {
   try {
     const multiDasha = evaluateMultiDashaSystems(natalEphemeris, evaluationDate);
     const eligibleCond = multiDasha.conditionalEligibilities
@@ -620,9 +662,11 @@ export function buildAstroDossier(
       "- **Multi-Dasha Triangulation:** " + multiDasha.multiDashaTriangulation.triangulationVerdict + " (Concurrence: " + multiDasha.multiDashaTriangulation.concurrenceScorePercent + "%)",
     ].join("\n");
   } catch (_) {}
+  }
 
   // 20. Primordial Parashari BPHS Core (Vols 1 & 2)
   let bphsSummary = "";
+  if (isAll) {
   try {
     const bphs = evaluateBphsCore(natalEphemeris);
     const avasthaStr = bphs.sayanadiAvasthas.slice(0, 5)
@@ -638,9 +682,11 @@ export function buildAstroDossier(
       "- **Master BPHS Synthesis:** " + bphs.masterBphsSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 20B. BPHS Karmic Curses (Ch. 83) & Arishta Janma Shantis (Ch. 85-96)
   let bphsKarmicSummary = "";
+  if (need("marriage", "progeny_children", "remedies_health")) {
   try {
     const ks = synthesizeBphsKarmicShanti(natalEphemeris);
     const activeCurseList = ks.curses.filter((c) => c.isActive).map((c) => `${c.name} [${c.severity}] (${c.classicalRemedy.sanskritTitle})`);
@@ -653,9 +699,11 @@ export function buildAstroDossier(
       `- **Prescribed Parashari Shānti Protocols:** ${ks.curses.filter((c) => c.isActive).map((c) => `[${c.name}]: ${c.classicalRemedy.prescription} (Mantra: ${c.classicalRemedy.mantra}) (Dāna: ${c.classicalRemedy.danaItems.join(", ")})`).concat(ks.birthShantis.filter((s) => s.isAfflicted).map((s) => `[${s.name}]: ${s.classicalVedicShanti.kalashaWorship} (Japa: ${s.classicalVedicShanti.mantraRecitation})`)).join(" || ") || "Perform regular Nitya Gayatri and Shiva Aradhana."}`
     ].join("\n");
   } catch (_) {}
+  }
 
   // 21. Acharya Varahamihira Brihat Jataka
   let bjSummary = "";
+  if (isAll) {
   try {
     const bj = evaluateBrihatJataka(natalEphemeris);
     bjSummary = [
@@ -667,9 +715,11 @@ export function buildAstroDossier(
       "- **Master Varahamihira Synthesis:** " + bj.masterVarahamihiraSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 22. Acharya Varahamihira Brihat Samhita Suite (Kurma Chakra, Graha Yuddha, Ratna Pariksha)
   let bsSummary = "";
+  if (isAll) {
   try {
     const bs = evaluateBrihatSamhita(natalEphemeris);
     const yuddhaStr = bs.grahaYuddhas.length > 0
@@ -693,9 +743,11 @@ export function buildAstroDossier(
       "- **Master Brihat Samhita Synthesis:** " + bs.masterBrihatSamhitaSynthesis,
     ].filter(Boolean).join("\n");
   } catch (_) {}
+  }
 
   // 23. Deva Keralam (Chandra Kala Nadi) 150 Nadi Amshas Suite
   let dkSummary = "";
+  if (isAll) {
   try {
     const dk = evaluateDevaKeralam(natalEphemeris, transitEphemeris);
     const triggersStr = dk.activeTransitTriggers.length > 0
@@ -716,9 +768,11 @@ export function buildAstroDossier(
       "- **Master Deva Keralam Synthesis:** " + dk.masterDevaKeralamSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 24. Doctrines of Suka Nadi (Maharshi Shukacharya) Suite
   let sukaSummary = "";
+  if (isAll) {
   try {
     const suka = calculateSukaNadi(natalEphemeris);
     const topTrine = suka.directionalTrines.sort((a, b) => b.strengthScore - a.strengthScore)[0];
@@ -738,9 +792,11 @@ export function buildAstroDossier(
       "- **Master Suka Nadi Synthesis:** " + suka.masterSukaSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 25. Maharshi Jaimini Upadesha Sutras (Complete 4 Adhyayas) Suite
   let jsSummary = "";
+  if (isAll) {
   try {
     const js = evaluateJaiminiSutrasComplete(natalEphemeris);
     const topKLBhavas = js.karakamshaBhavas.filter((b) => [1, 2, 4, 5, 9, 12].includes(b.bhavaNum));
@@ -765,9 +821,11 @@ export function buildAstroDossier(
       "- **Master Jaimini Synthesis:** " + js.masterJaiminiSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 26. Gayatri Jyotish (Savita Solar Resonance & 24 Aksharas) Suite
   let gayatriSummary = "";
+  if (isAll) {
   try {
     const gj = evaluateGayatriJyotish(natalEphemeris);
     const koshasStr = gj.koshaDiagnostics.map((k) => `- **${k.sanskritTitle}:** ${k.vitalityScore}% (${k.pranicStatus}) • Guidance: ${k.harmonizationGuidance}`).join("\n");
@@ -792,9 +850,11 @@ export function buildAstroDossier(
       "- **Master Gayatri Synthesis:** " + gj.masterGayatriSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 27. Acharya Ganesh Kavi Jataka Alankara (1613 CE) Suite
   let alankaraSummary = "";
+  if (isAll) {
   try {
     const ja = evaluateJatakaAlankara(natalEphemeris);
     const topHouses = [...ja.bhavaAlankaras].sort((a, b) => b.alankaraScore - a.alankaraScore).slice(0, 4);
@@ -817,9 +877,11 @@ export function buildAstroDossier(
       "- **Master Jataka Alankara Synthesis:** " + ja.masterAlankaraSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 28. Dr. B.V. Raman Jatak Nirnay (Parts 1 & 2 - How to Judge a Horoscope) Suite
   let nirnaySummary = "";
+  if (isAll) {
   try {
     const jn = evaluateJatakNirnay(natalEphemeris);
     const topBhavas = [...jn.bhavaJudgements].sort((a, b) => b.compositeRamanScore - a.compositeRamanScore).slice(0, 4);
@@ -844,9 +906,11 @@ export function buildAstroDossier(
       "- **Master Jatak Nirnay Synthesis:** " + jn.masterNirnaySynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 29. Vaidyanatha Dikshita Jataka Parijata (Volumes 1-3, 18 Adhyayas) Suite
   let parijataSummary = "";
+  if (isAll) {
   try {
     const jp = evaluateJatakaParijata(natalEphemeris);
     const activeYogas = jp.shodashaYogas.filter((y) => y.isFormed);
@@ -874,9 +938,11 @@ export function buildAstroDossier(
       "- **Master Jataka Parijata Synthesis:** " + jp.masterParijataSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 30. Maharaja Kalyana Varma Saravali (800 CE, 45 Adhyayas) Suite
   let saravaliSummary = "";
+  if (isAll) {
   try {
     const sv = evaluateSaravali(natalEphemeris);
     const activeYogas = sv.royalYogas.filter((y) => y.isFormed);
@@ -905,9 +971,11 @@ export function buildAstroDossier(
       "- **Master Saravali Synthesis:** " + sv.masterSaravaliSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 31. Acharya Mantreswara Phaladeepika (28 Adhyayas) Suite
   let phaladeepikaSummary = "";
+  if (isAll) {
   try {
     const pd = evaluatePhaladeepika(natalEphemeris);
     const activeViparita = pd.viparitaRajaYogas.filter((v) => v.isFormed);
@@ -935,9 +1003,11 @@ export function buildAstroDossier(
       "- **Master Phaladeepika Synthesis:** " + pd.masterPhaladeepikaSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 32. Prasna Marga (32 Adhyayas) & Prasna Arudha Phala Horary Suite
   let prasnaMargaSummary = "";
+  if (need("panchang_muhurta")) {
   try {
     const pm = evaluatePrasnaMarga(natalEphemeris);
     const sutrasStr = pm.panchaSutras.map((s) => `- **${s.sutraName} (${s.sanskritName.split(" ")[0]}):** ${s.status} -> ${s.diagnosticVerdict}`).join("\n");
@@ -963,9 +1033,11 @@ export function buildAstroDossier(
       "- **Master Horary Verdict:** " + pm.masterPrasnaVerdict,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 33. Acharya Sadananda Samhita Skandha (Mundane & Astrometeorology)
   let samhitaSummary = "";
+  if (isAll) {
   try {
     const ss = evaluateSamhitaSkandha(natalEphemeris);
     const commoditiesStr = ss.arghaCommodities.map((c) => `- **${c.commodityName}:** ${c.trend} -> ${c.classicalArghaReasoning}`).join("\n");
@@ -987,9 +1059,11 @@ export function buildAstroDossier(
       "- **Master Samhita Synthesis:** " + ss.masterSamhitaSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 34. Acharya Ramadayalu Sanketanidhi (9 Sanketas) Suite
   let sanketanidhiSummary = "";
+  if (isAll) {
   try {
     const sn = evaluateSanketanidhi(natalEphemeris);
     const topVridhiBhavas = sn.bhavaVitality.filter((b) => b.vridhiScore >= 70).slice(0, 4);
@@ -1014,9 +1088,11 @@ export function buildAstroDossier(
       "- **Master Sanketanidhi Synthesis:** " + sn.masterSanketanidhiSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 35. Acharya Venkatesha Sharma Sarvartha Chintamani (13 Adhyayas)
   let chintamaniSummary = "";
+  if (need("career")) {
   try {
     const sc = evaluateSarvarthaChintamani(natalEphemeris);
     const topBhavas = sc.bhavaPredictions.filter((b) => b.chintamaniScore >= 70).slice(0, 4);
@@ -1038,9 +1114,11 @@ export function buildAstroDossier(
       "- **Master Sarvartha Chintamani Synthesis:** " + sc.masterChintamaniSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 36. Classical Stri Jataka (Female Horoscopy & Trimsamsha)
   let striJatakaSummary = "";
+  if (need("marriage")) {
   try {
     const sj = evaluateStriJataka(natalEphemeris);
     striJatakaSummary = [
@@ -1055,9 +1133,11 @@ export function buildAstroDossier(
       "- **Master Stri Jataka Synthesis:** " + sj.masterStriJatakaSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 37. Maharshi Satyacharya Satya Jataka (Dhruva Nadi)
   let satyaJatakaSummary = "";
+  if (isAll) {
   try {
     const satya = evaluateSatyaJataka(natalEphemeris);
     const starLordsStr = satya.planetaryStarLords.slice(0, 4).map((s) => `- **${s.planetName} in ${s.nakshatraName} (${s.starLord}):** Manifests House(s) ${s.manifestedBhavas.join(", ")}`).join("\n");
@@ -1074,9 +1154,11 @@ export function buildAstroDossier(
       "- **Master Satya Jataka Synthesis:** " + satya.masterSatyaJatakaSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 38. Sugam Jyotish (Practical Predictive Manual & Everyday Remedies)
   let sugamJyotishSummary = "";
+  if (need("remedies_health")) {
   try {
     const sj = evaluateSugamJyotish(natalEphemeris);
     const topBhavas = sj.bhavaDiagnostics.filter((b) => b.practicalScore >= 70).slice(0, 4);
@@ -1097,9 +1179,11 @@ export function buildAstroDossier(
       "- **Master Sugam Jyotish Synthesis:** " + sj.masterSugamSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 39. Uttara Kalamrita (Mahakavi Kalidasa - VRY, Shukra-Shani Paradox & Karakatva)
   let uttaraKalamritaSummary = "";
+  if (isAll) {
   try {
     const uk = evaluateUttaraKalamrita(natalEphemeris);
     const activeVrys = uk.viparitaRajaYogas.filter((v) => v.isActive).map((v) => `- **${v.yogaName}:** ${v.potency} (${v.dusthanaLord} in H${v.placedHouse}) -> ${v.effects}`).join("\n");
@@ -1119,9 +1203,11 @@ export function buildAstroDossier(
       "- **Master Uttara Kalamrita Synthesis:** " + uk.masterUttaraKalamritaSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 40. Vedic Astrology and Predictions (Multi-Tier Event Forecasting & Milestones)
   let vedicPredictionsSummary = "";
+  if (need("btr_verification")) {
   try {
     const vp = evaluateVedicPredictions(natalEphemeris);
     const topMilestones = vp.milestonePredictions.slice(0, 3).map((m) => `- **${m.title} (${m.sanskritTitle}):** ${m.probabilityTier} (${m.probabilityScore}%) • *Horizon:* ${m.timeHorizon} -> ${m.predictiveVerdict}`).join("\n");
@@ -1135,9 +1221,11 @@ export function buildAstroDossier(
       "- **Master Vedic Predictions Synthesis:** " + vp.masterPredictionsSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 41. Jataka Chandrika (Laghu Parashari - Prof. B. Suryanarain Rao)
   let jatakaChandrikaSummary = "";
+  if (isAll) {
   try {
     const jc = evaluateJatakaChandrika(natalEphemeris);
     const rolesStr = jc.grahaRoles.map((r) => `- **${r.grahaName}:** ${r.functionalNature} (H${r.housesOwned.join(",")}) -> ${r.classicalReasoning}`).join("\n");
@@ -1155,9 +1243,11 @@ export function buildAstroDossier(
       "- **Master Jataka Chandrika Synthesis:** " + jc.masterChandrikaSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 42. Chappanna Prasna Sastra (56 Questions Horary Oracle - Prof. B. Suryanarain Rao)
   let chappannaPrasnaSummary = "";
+  if (isAll) {
   try {
     const cp = evaluateChappannaPrasna(natalEphemeris, 1);
     const sampleQueries = [1, 8, 15, 22, 29, 36, 43, 50].map((id) => {
@@ -1172,9 +1262,11 @@ export function buildAstroDossier(
       "- **Master Chappanna Prasna Synthesis:** " + cp.masterPrasnaSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 43. Maharshi Bhrigu Samhita (Karmic Debts, Past Life Sins & Pariharas)
   let bhriguSamhitaSummary = "";
+  if (isAll) {
   try {
     const bs = evaluateBhriguSamhita(natalEphemeris);
     const debtsStr = bs.karmicDebts.map(
@@ -1188,9 +1280,11 @@ export function buildAstroDossier(
       "- **Master Bhrigu Samhita Synthesis:** " + bs.masterSamhitaSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 44. Sri Ramanujacharya Bhavartha Ratnakara (Dr. B.V. Raman)
   let bhavarthaRatnakaraSummary = "";
+  if (isAll) {
   try {
     const br = evaluateBhavarthaRatnakara(natalEphemeris);
     const activeYogasStr = [...br.activeYogas, ...br.dhanaYogas, ...br.dashaExceptions]
@@ -1204,9 +1298,11 @@ export function buildAstroDossier(
       "- **Master Ratnakara Synthesis:** " + br.masterRatnakaraSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 47. Jaimini Master Suite (Iranganti Rangacharya & Arudha Exceptions)
   let jaiminiRangacharyaSummary = "";
+  if (isAll) {
   try {
     const jr = evaluateJaiminiRangacharya(natalEphemeris);
     const padasStr = jr.varnadaPadas.slice(0, 6).map((p) => `  - **${p.name}:** Sign: ${p.signName} (${p.vitalityImpact})`).join("\n");
@@ -1223,9 +1319,11 @@ export function buildAstroDossier(
       "- **Master Jaimini Synthesis:** " + jr.masterRangacharyaSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 48. Crux of Vedic Astrology (Pt. Sanjay Rath) & Parashari Conditional Dashas
   let cruxOfAstrologySummary = "";
+  if (isAll) {
   try {
     const ca = evaluateCruxOfAstrology(natalEphemeris);
     const condDashaStr = ca.conditionalDashas.map((cd) => `  - **${cd.dashaName}:** ${cd.isEligible ? "✅ ACTIVE" : "❌ INACTIVE"} (${cd.eligibilityReason})`).join("\n");
@@ -1238,9 +1336,11 @@ export function buildAstroDossier(
       "- **Master Crux Synthesis:** " + ca.masterCruxSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 49. Kalamsa & Cuspal Interlinks Theory (KCIL — S.P. Khullar)
   let cuspalInterlinksSummary = "";
+  if (isAll) {
   try {
     const kcil = evaluateCuspalInterlinks(natalEphemeris);
     const cuspsStr = kcil.cuspalData.slice(0, 6).map((c) => `  - **Cusp ${c.cuspNum} (${c.signName}):** RL: ${c.signLord} | NL: ${c.starLord} | SL: ${c.subLord} | SSL: **${c.subSubLord}** (PS: ${c.positionalStatus ? "Yes" : "No"}) -> *Links: [${c.linkedHouses.join(", ")}]*`).join("\n");
@@ -1255,9 +1355,11 @@ export function buildAstroDossier(
       "- **Master KCIL Synthesis:** " + kcil.masterKcilSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 51. Meena Nadi (Jeeva & Sareera Stellar Theory)
   let meenaNadiSummary = "";
+  if (isAll) {
   try {
     const mn = evaluateMeenaNadi(natalEphemeris);
     const planetsStr = Object.values(mn.planets).slice(0, 7).map((p) => `  - **${p.planetName}:** Jeeva: ${p.jeevaPlanet} (H${p.jeevaHouse}) | Sareera: ${p.sareeraPlanet} (H${p.sareeraHouse}) -> **${p.vitalityGrade}** (${p.fruitOutcome})`).join("\n");
@@ -1270,9 +1372,11 @@ export function buildAstroDossier(
       "- **Master Meena Synthesis:** " + mn.masterMeenaSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 52. Mahadeva's Jataka Tattvam (5 Sutra Vivekas)
   let jatakaTattvamSummary = "";
+  if (isAll) {
   try {
     const jt = evaluateJatakaTattvam(natalEphemeris);
     const activeSutrasStr = jt.activeSutras.filter((s) => s.isActivated).slice(0, 5).map((s) => `  - **${s.id} (${s.viveka}):** *"${s.sanskritSutra}"* -> ${s.englishTranslation}`).join("\n");
@@ -1285,9 +1389,11 @@ export function buildAstroDossier(
       "- **Master Jataka Tattvam Synthesis:** " + jt.masterJatakaTattvamSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 53. D-12 Padma Chakra & Dwadasamsa Nadi
   let padmaChakraSummary = "";
+  if (isAll) {
   try {
     const pc = evaluatePadmaChakra(natalEphemeris);
     const petalsStr = pc.petals.slice(0, 6).map((p) => `  - **Petal ${p.petalNumber} (${p.solarAditya}):** ${p.ancestralKarmicType} (${p.lifeBlessing})`).join("\n");
@@ -1300,9 +1406,11 @@ export function buildAstroDossier(
       "- **Master Padma Chakra Synthesis:** " + pc.masterPadmaChakraSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 54. D-60 Shashtiamsha 60 Deities & Bhrigu Chakra Paddhati (BCP)
   let shashtiamshaBcpSummary = "";
+  if (need("remedies_health")) {
   try {
     const d60 = evaluateShashtiamsha(natalEphemeris);
     const nativeAge = Math.max(1, evaluationDate.getFullYear() - birthDate.getFullYear());
@@ -1321,9 +1429,11 @@ export function buildAstroDossier(
       "- **Master D60 & BCP Synthesis:** " + d60.masterShashtiamshaSynthesis + " " + bcp.masterBcpSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 55. Maharshi Patanjali Yoga Sutras & Astrological Chakra Sadhana
   let patanjaliYogaSummary = "";
+  if (need("remedies_health")) {
   try {
     const py = evaluatePatanjaliYoga(natalEphemeris);
     const chakrasStr = py.chakras.map((c) => `  - **${c.chakraNumber}. ${c.sanskritName} (${c.englishName}):** ${c.balanceScore}% (${c.status.split(" ")[0]}) | Grahas: ${c.rulingGrahas.join(", ")} | Asana: ${c.recommendedAsana} | Pranayama: ${c.recommendedPranayama} | Bija: ${c.bijaMantra}`).join("\n");
@@ -1340,9 +1450,11 @@ export function buildAstroDossier(
       "- **Master Patanjali Synthesis:** " + py.masterPatanjaliSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 56. Classical Kota Chakra & Dasha-Lord Transit Defense
   let kotaChakraSummary = "";
+  if (need("remedies_health")) {
   try {
     const kc = evaluateKotaChakra(natalEphemeris);
     const dlt = evaluateDashaLordTransit(natalEphemeris);
@@ -1359,9 +1471,11 @@ export function buildAstroDossier(
       "- **Master Kota Synthesis:** " + kc.masterKotaSynthesis + " " + dlt.masterDashaTransitSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 57. Dr. B.V. Raman 300 Important Combinations, Lal Kitab & Narayana Kavacham
   let raman300Summary = "";
+  if (need("remedies_health")) {
   try {
     const r300 = evaluateRaman300Combinations(natalEphemeris);
     const lk = evaluateLalKitabTeva(natalEphemeris);
@@ -1380,9 +1494,11 @@ export function buildAstroDossier(
       "- **Master Raman & Lal Kitab Synthesis:** " + r300.masterRamanSynthesis + " " + lk.masterLalKitabSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 58. Empirical Benchmark Horoscopes & Archetypal Karmic Resonance
   let benchmarkSummary = "";
+  if (isAll) {
   try {
     const bm = evaluateBenchmarkResonance(natalEphemeris);
     const archetypesStr = bm.archetypes.map((a) => `  - **${a.category}:** **${a.resonancePercentage}% Affinity** (Closest Titans: ${a.closestTitanMatch}) -> ${a.karmicTakeaway}`).join("\n");
@@ -1395,9 +1511,11 @@ export function buildAstroDossier(
       "- **Master Benchmark Synthesis:** " + bm.masterBenchmarkSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 59. Sri Neelakanta Prasna Tantra 16 Tajik Yogas, 12 Sahams & Margabandhu Shield
   let prasnaTantraSummary = "";
+  if (need("panchang_muhurta")) {
   try {
     const pt = evaluatePrasnaTantra(natalEphemeris);
     const mb = evaluateMargabandhuStotram(natalEphemeris);
@@ -1414,9 +1532,11 @@ export function buildAstroDossier(
       "- **Master Prasna Verdict:** " + pt.masterPrasnaVerdict + " " + mb.masterMargabandhuSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 60. C.S. Patel & Aiyar Ashtakavarga Shodhana, Shodhya Pinda & 8 Kakshyas
   let patelAshtakavargaSummary = "";
+  if (isAll) {
   try {
     const pa = evaluatePatelAshtakavarga(natalEphemeris);
     const pindasStr = pa.shodhyaPindas.map((p) => `  - **${p.planetName}:** **${p.shodhyaPinda} Shodhya Pinda** (Rashi: ${p.rashiPinda}, Graha: ${p.grahaPinda}) -> ~${p.longevityAyurContributionYears} Ayur Units`).join("\n");
@@ -1430,10 +1550,11 @@ export function buildAstroDossier(
       "- **Master Patel Synthesis:** " + pa.masterPatelSynthesis,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 24. Kundli Milan & Ashtakoota 36-Guna Compatibility (Active Pair)
   let matchmakingSummary = "";
-  if (matchmaking && matchmaking.boy && matchmaking.girl) {
+  if (need("marriage") && matchmaking && matchmaking.boy && matchmaking.girl) {
     try {
       const parseLocal = (iso: string, tz: number = 5.5) => {
         const [dPart, tPart] = iso.split("T");
@@ -1596,10 +1717,11 @@ export function buildAstroDossier(
     ].join("\n");
   } catch (_) {}
 
-  const decisionGates = calculatePredictiveDecisionGates(natalEphemeris);
+  const decisionGates = calculatePredictiveDecisionGates(natalEphemeris, transitEphemeris, evaluationDate);
 
   // 61. Job vs Business & D-10 Dasamsa Career Phala (Unified Multi-Book & Handwritten Rules)
   let careerDossierSummary = "";
+  if (need("career")) {
   try {
     const careerAnalysis = analyzeCareerJobBusiness(natalEphemeris);
     careerDossierSummary = [
@@ -1646,9 +1768,11 @@ export function buildAstroDossier(
       `- **Executive Multi-Book Verdict:** ${careerAnalysis.executiveSummary}`,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 62. Pushkara Navamsha, Pushkara Bhaga & Pushkara Vargottama (Jataka Parijata)
   let pushkaraSummary = "";
+  if (isAll) {
   try {
     const pushkaraRes = evaluatePushkaraNavamsha(natalEphemeris);
     const pushkaraList = pushkaraRes.pushkaraEntities.map((e) => {
@@ -1666,9 +1790,11 @@ export function buildAstroDossier(
       `- **Pushkara Blessing Synthesis:** ${pushkaraRes.overallPushkaraBlessingSummary}`,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 63. Master Multi-Varga Marriage & Separation Shields (Stri Jataka, D-9 & D-30)
   let marriageMasterSummary = "";
+  if (need("marriage")) {
   try {
     const marriageMaster = evaluateMarriageMasterSynthesis(natalEphemeris, gender);
     marriageMasterSummary = [
@@ -1685,9 +1811,11 @@ export function buildAstroDossier(
       `- **Executive Multi-Varga Verdict:** ${marriageMaster.executiveMarriageSummary}`,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 64. Love Affairs, Elopement, Sexual Vitality & Yogini Dasha
   let relationshipAffairsSummary = "";
+  if (need("marriage")) {
   try {
     const relRes = evaluateRelationshipAffairs(natalEphemeris, gender);
     relationshipAffairsSummary = [
@@ -1701,9 +1829,11 @@ export function buildAstroDossier(
       `- **Executive Relationship Synthesis:** ${relRes.executiveRelationshipSummary}`,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 65. Bhrigu Nandi Nadi, Vivah Saham & Rashi Tulya Navamsha
   let bhriguNadiSummary = "";
+  if (need("marriage")) {
   try {
     const bnnRes = evaluateBhriguNadiMarriageTiming(natalEphemeris, transitEphemeris, gender);
     bhriguNadiSummary = [
@@ -1719,9 +1849,11 @@ export function buildAstroDossier(
       `- **Executive BNN & Saham Verdict:** ${bnnRes.executiveBnnTimingSummary}`,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 66. Adhana Kundali (Garbhadhana / Nisheka Lagna Conception Chart & 10-Month Foetal Gestation)
   let adhanaSummary = "";
+  if (need("btr_verification", "progeny_children")) {
   try {
     const adhanaRes = calculateAdhanaKundali(natalEphemeris, birthDate, location);
     const topMonths = adhanaRes.gestationalMonths.map((m) =>
@@ -1738,9 +1870,11 @@ export function buildAstroDossier(
       `- **Executive Adhana Synthesis:** ${adhanaRes.executiveSummary}`,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 67. Vedic Name Decoding, Svara Jyotish & Calling Name Phonetics
   let nameSummary = "";
+  if (need("name_phonetics")) {
   try {
     const nameRes = evaluateVedicNameMatrix(natalEphemeris, gender);
     const dominantList = nameRes.dominantLagnaPlanets.map((d) =>
@@ -1760,22 +1894,28 @@ export function buildAstroDossier(
       `- **Executive Name Synthesis:** ${nameRes.executiveNameSummary}`,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 68. Dr. Samir Tripathi Vedic Master Suite (Indu Lagna, Age Triggers, Baadhak & Bhagya Bindu)
   let samirTripathiSummary = "";
+  if (need("career")) {
   try {
     samirTripathiSummary = generateDrSamirTripathiSummary(natalEphemeris, transitEphemeris, evaluationDate);
   } catch (_) {}
+  }
 
   // 69. Rashi Tulya Navamsha (RTN) Cross-Varga Projection Dossier (Deva Keralam & C.S. Patel)
   let rtnSummary = "";
+  if (need("career", "marriage")) {
   try {
     const calculatedAge = Math.max(0, Math.floor((evaluationDate.getTime() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)));
     rtnSummary = generateRashiTulyaNavamshaSummary(natalEphemeris, transitEphemeris, calculatedAge);
   } catch (_) {}
+  }
 
   // 70. Dr. Samir Tripathi Classical Daily Vedic Panchanga & Astro Guidance Dossier
   let samirPanchangSummary = "";
+  if (need("panchang_muhurta")) {
   try {
     const panchangRes = calculateSamirTripathiPanchang(evaluationDate, transitEphemeris.location || location, natalEphemeris.ayanamshaType);
     const cbStrong = panchangRes.chandraBalaList.filter((cb) => cb.strength.includes("Shubha")).map((cb) => cb.rashiName).join(", ");
@@ -1805,10 +1945,12 @@ export function buildAstroDossier(
       `- **Panchanga Shuddhi Score:** **${panchangRes.shuddhiScore}%**`,
     ].join("\n");
   } catch (_) {}
+  }
 
 
   // 72. Classical & Personalized Vastu Shastra Blueprint (Samarāṅgaṇa-Sūtradhāra & Dr. D.N. Shukla)
   let vastuSummary = "";
+  if (isAll) {
   try {
     const moonNak = natalEphemeris.planets.Moon?.nakshatra.sanskritName || "Ashwini";
     const ascSign = natalEphemeris.ascendant.rashi.englishName;
@@ -1820,7 +1962,7 @@ export function buildAstroDossier(
       ? "Vayu (Air)"
       : "Jala (Water)";
 
-    const savList = (natalEphemeris as any).sarvashtakavarga || [28, 30, 32, 29, 31, 33, 27, 34, 30, 29, 32, 28];
+    const savList = ashtakavargaResult?.sarvaHouseBindus || (natalEphemeris as any).sarvashtakavarga || [28, 30, 32, 29, 31, 33, 27, 34, 30, 29, 32, 28];
     const vastuStrength = calculateAshtakavargaVastuStrength(savList);
     const ayadiSample = calculateAyadiShadvarga(36, 24, moonNak);
     const jVastu = calculateJaiminiArudhaVastu(natalEphemeris);
@@ -1856,21 +1998,27 @@ export function buildAstroDossier(
       `  - Sacred Yantras: 3D Siddha Meru Sri Yantra in NE, Kuber Yantra in North, Vastu Dosh Nivaran Yantra on Main Door.`,
     ].filter(Boolean).join("\n");
   } catch (_) {}
+  }
 
   // 71. 27 Nakshatras Activation Years & Cosmic Awakening Dossier (Dr. Samir Tripathi & Nadi Shastra)
   let nakshatraActivationSummary = "";
+  if (need("career", "progeny_children", "btr_verification")) {
   try {
     nakshatraActivationSummary = generateNakshatraActivationSummary(natalEphemeris, birthDate, evaluationDate);
   } catch (_) {}
+  }
 
   // 73. Classical Birth Time Rectification (BTR) & Full Event Dasha Timeline
   let btrMasterSummary = "";
+  if (need("btr_verification")) {
   try {
     btrMasterSummary = generateBtrMasterSummary(natalEphemeris, gender);
   } catch (_) {}
+  }
 
   // 75. Classical Gochara Vedha & Real-Time Transit Telemetry (Phaladeepika Ch. 26)
   let gocharaVedhaSummary = "";
+  if (need("career", "marriage", "remedies_health")) {
   try {
     const transitLines = gochar.transits.map((t) => {
       let statusIcon = "🟢";
@@ -1898,9 +2046,11 @@ export function buildAstroDossier(
       ...transitLines,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 76. Acharya Vishnukripa Rahu & Ketu Conjunctions Master Dossier
   let rahuConjunctionsSummary = "";
+  if (need("career", "marriage", "remedies_health")) {
   try {
     const rc = detectRahuConjunctions(natalEphemeris);
     const conjLines = rc.conjunctions.map((c) => {
@@ -1914,9 +2064,11 @@ export function buildAstroDossier(
       conjLines.length > 0 ? conjLines.join("\n") : "- No tight planetary conjunctions with Rahu or Ketu (Nodal axis operates primarily through house placement).",
     ].join("\n");
   } catch (_) {}
+  }
 
   // 77. Kundli Life Report Complete Synthesis & Executive Pocket Blueprint
   let lifeReportSummary = "";
+  if (need("career")) {
   try {
     const lr = calculateLaypersonReport({
       natalEphemeris,
@@ -1934,9 +2086,11 @@ export function buildAstroDossier(
       `- **Soul's Guardian Deity (Ishta Devata):** **${lr.ishtaDevata.ishtaDevataName}** • Sacred Mantra: **${lr.ishtaDevata.sacredMantra}** • Path: ${lr.ishtaDevata.spiritualPath}`,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 78. Classical Progeny, Children & Saptamsha (D-7) Santana Nirnaya Dossier
   let progenyMasterSummary = "";
+  if (need("progeny_children")) {
   try {
     const pm = evaluateProgenyMaster(natalEphemeris, gender);
     const pregLines = pm.pregnancies.map((p) => {
@@ -1962,9 +2116,11 @@ export function buildAstroDossier(
       `- **Executive Synthesis:** ${pm.executiveSynthesis}`,
     ].filter(Boolean).join("\n");
   } catch (_) {}
+  }
 
   // 79. Lunar Astro Name Vibrational Energy & Parashara Planetary Maturation Ages (Deepanshu Giri)
   let lunarAstroNameSummary = "";
+  if (need("name_phonetics")) {
   try {
     const ageReport = calculatePlanetaryMaturationTimeline(natalEphemeris, birthDate, evaluationDate);
     const activeName = "Seeker";
@@ -1992,128 +2148,163 @@ export function buildAstroDossier(
       `  - *Lagna Resonance:* ${nameCongruence.resonanceWithLagnaLord}`,
       `  - *Moon Resonance:* ${nameCongruence.resonanceWithMoon}`,
       `  - *Overall Audit:* ${nameCongruence.overallAudit}`,
-      `- **Vak Siddhi & Astrological Intuition Guideline (Deepanshu Giri):** ${ageReport.vakSiddhiIntuitionSummary}`,
+      `- **Vak Siddhi & Astrological Intuition Guideline:** ${ageReport.vakSiddhiIntuitionSummary}`,
       `- **Shastric Botanical / Living Upaya:** ${ageReport.activeMilestone.shastricRemedy}`,
     ].join("\n");
   } catch (_) {}
+  }
 
   // 80. Paka Lagna, Annual House Progression, Rahu-Ketu Nuclear Bomb Effect & 9th House Bhagyodaya
   let annualActivationSummary = "";
+  if (need("career")) {
   try {
     const masterAnnualReport = generateAnnualActivationMasterSummary(natalEphemeris, birthDate, evaluationDate);
     annualActivationSummary = masterAnnualReport.masterExecutiveSummary;
   } catch (_) {}
+  }
 
   // 81. Medhaj Astro Gochara & Planetary Transits Suite (Sessions 52–60)
   let medhajGocharaSummary = "";
+  if (need("career")) {
   try {
     const medhajReport = generateMedhajGocharaMasterReport(natalEphemeris, transitEphemeris, birthDate, evaluationDate);
     medhajGocharaSummary = medhajReport.masterExecutiveSummary;
   } catch (_) {}
+  }
 
   // 82. Medhaj Astro Planetary Activations, 8/12 Manglik Yoga & 5 Geometric Sambandhas (Sessions 68–70)
   let medhajActivationSummary = "";
+  if (need("career", "marriage")) {
   try {
     const medhajActReport = generateMedhajActivationMasterReport(natalEphemeris, birthDate, evaluationDate);
     medhajActivationSummary = medhajActReport.masterExecutiveSummary;
   } catch (_) {}
+  }
 
   // 83. Medhaj Astro Arudha Lagna, Jyotirlinga, Tide Theory & Grand Raj Yogas (Sessions 75–79)
   let medhajArudhaSummary = "";
+  if (need("career", "marriage")) {
   try {
     const medhajArudhaMaster = generateMedhajArudhaMasterReport(natalEphemeris, transitEphemeris, birthDate, evaluationDate);
     medhajArudhaSummary = medhajArudhaMaster.masterExecutiveSummary;
   } catch (_) {}
+  }
 
   // 84. Medhaj Astro Baadhak Theory & Nodal Transits (Sessions 82, 84 & 85)
   let medhajBaadhakSummary = "";
+  if (need("career", "marriage")) {
   try {
     const medhajBaadhakMaster = generateMedhajBaadhakMasterReport(natalEphemeris, transitEphemeris, birthDate, evaluationDate);
     medhajBaadhakSummary = medhajBaadhakMaster.masterExecutiveSummary;
   } catch (_) {}
+  }
 
   // 85. Medhaj Astro Indu Lagna Wealth Masterclass (Sessions 86 & 87)
   let medhajInduLagnaSummary = "";
+  if (need("career", "marriage")) {
   try {
     const medhajInduMaster = generateMedhajInduLagnaMasterReport(natalEphemeris, transitEphemeris, birthDate, evaluationDate);
     medhajInduLagnaSummary = medhajInduMaster.masterExecutiveSummary;
   } catch (_) {}
+  }
 
   // 86. Medhaj Astro MKS, Rahu-Ketu Past Life Roots & Saturn Cosmic Law (Sessions 71, 72 & 74)
   let medhajMksPastLifeSummary = "";
+  if (need("career", "marriage", "remedies_health")) {
   try {
     const medhajMksMaster = generateMedhajMksPastLifeMasterReport(natalEphemeris, birthDate, evaluationDate);
     medhajMksPastLifeSummary = medhajMksMaster.masterExecutiveSummary;
   } catch (_) {}
+  }
 
   // 87. Medhaj Astro Rahu-Ketu Transit, Rohini Bhedana & Sacred Remedies (Sessions 83, 88 & 89)
   let medhajRahuKetuTransitSummary = "";
+  if (need("career", "marriage", "remedies_health")) {
   try {
     const medhajNodalMaster = generateMedhajRahuKetuTransitMasterReport(natalEphemeris, transitEphemeris, birthDate, evaluationDate);
     medhajRahuKetuTransitSummary = medhajNodalMaster.masterExecutiveSummary;
   } catch (_) {}
+  }
 
   // 88. Agni Transits in Fire Signs, Divine Lineage Triad & Dual Sign Matrix (Sessions 90, 91 & 92)
   let agniTransitLineageSummary = "";
+  if (need("remedies_health")) {
   try {
     const agniMaster = generateAgniTransitLineageReport(natalEphemeris, transitEphemeris);
     agniTransitLineageSummary = agniMaster.executiveSummary;
   } catch (_) {}
+  }
 
   // 89. Bhagya Bindu (Pars Fortuna) Triggers & Secret Code of Planets (Sessions 97 & 99)
   let bhagyaBinduSecretCodeSummary = "";
+  if (need("remedies_health")) {
   try {
     const bbScMaster = generateBhagyaBinduSecretCodeReport(natalEphemeris, transitEphemeris);
     bhagyaBinduSecretCodeSummary = bbScMaster.synthesisSummary;
   } catch (_) {}
+  }
 
   // 90. Lifestyle Remedies as a Way of Life & The 40-Day Rule (Session 41)
   let lifestyleRemediesWayOfLifeSummary = "";
+  if (need("remedies_health")) {
   try {
     const lifestyleMaster = generateLifestyleRemediesReport(natalEphemeris);
     lifestyleRemediesWayOfLifeSummary = lifestyleMaster.masterDossierSummary;
   } catch (_) {}
+  }
 
   // 91. Natal Panchanga Deep Blueprint, Dagdha Rashis & Yogi/Avayogi (Sessions 46, 47, 48, 49, 96, 98)
   let natalPanchangaDeepSummary = "";
+  if (need("remedies_health")) {
   try {
     natalPanchangaDeepSummary = generateNatalPanchangaDeepReport(natalEphemeris);
   } catch (_) {}
+  }
 
   // 92. Makara Rashi (Capricorn), Kurma Avatara Archetype & Saturn's 5-Fold Influence (Sessions 36, 37, 38)
   let makaraKurmaSaturnSummary = "";
+  if (need("remedies_health")) {
   try {
     const makaraReport = generateMakaraKurmaMasterReport(natalEphemeris, birthDate.toISOString());
     makaraKurmaSaturnSummary = makaraReport.masterExecutiveSummary;
   } catch (_) {}
+  }
 
   // 93. Kumbha Rashi (Aquarius), Bhrigu Bindu, Rahu Triad & Bhairava Shield (Sessions 39, 40)
   let kumbhaAquariusRahuSummary = "";
+  if (need("remedies_health")) {
   try {
     const kumbhaReport = generateKumbhaAquariusMasterReport(natalEphemeris);
     kumbhaAquariusRahuSummary = kumbhaReport.holisticDossierSummary;
   } catch (_) {}
+  }
 
   // 94. Meena Rashi (Pisces), Kalapurusha Script Overlay, Elemental Immunity & Special Drishti Matrix (Sessions 42-45)
   let meenaKalapurushaDrishtiSummary = "";
+  if (need("remedies_health")) {
   try {
     const meenaReport = generateMeenaKalapurushaDrishtiMasterReport(natalEphemeris);
     meenaKalapurushaDrishtiSummary = meenaReport.holisticDossierSummary;
   } catch (_) {}
+  }
 
   // 95. Planetary Dignities, Conscious Awareness vs. Blind Spot & Transit Geometric Axes (Sessions 80, 81)
   let uchhaNeechaAwarenessSummary = "";
+  if (need("career", "remedies_health")) {
   try {
     const uchhaNeechaReport = generateUchhaNeechaAwarenessMasterReport(natalEphemeris, transitEphemeris);
     uchhaNeechaAwarenessSummary = uchhaNeechaReport.masterDossierSummary;
   } catch (_) {}
+  }
 
   // 96. Three Rishis Modality Framework, Sacred Lineage Deities & Sign Lord Blind Spots (Sessions 93, 94 & 95)
   let rishiDrekkanaSummary = "";
+  if (need("career", "remedies_health")) {
   try {
     const rishiDrekkanaReport = generateRishiDrekkanaMasterReport(natalEphemeris, evaluationDate);
     rishiDrekkanaSummary = rishiDrekkanaReport.masterDossierSummary;
   } catch (_) {}
+  }
 
   const lines = [
     "### NATIVE'S COMPREHENSIVE VEDIC ASTROLOGICAL DOSSIER (B.V. RAMAN & PARASHARI STANDARD):",
@@ -2757,5 +2948,11 @@ export function buildAstroDossier(
     lines.push(matchmakingSummary);
   }
 
-  return lines.filter(Boolean).join("\n");
+  const result = lines.filter(Boolean).join("\n");
+  if (dossierCache.size >= DOSSIER_CACHE_MAX_SIZE) {
+    const firstKey = dossierCache.keys().next().value;
+    if (firstKey) dossierCache.delete(firstKey);
+  }
+  dossierCache.set(cacheKey, result);
+  return result;
 }

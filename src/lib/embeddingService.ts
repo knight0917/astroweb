@@ -66,19 +66,26 @@ export function generateDeterministicFallbackVector(text: string, dim: number = 
  */
 export async function generateEmbedding(text: string, customApiKey?: string): Promise<number[]> {
   const apiKey = resolveGeminiApiKey(customApiKey);
+  if (!apiKey) {
+    return generateDeterministicFallbackVector(text, 768);
+  }
 
-  const candidateModels = ["models/gemini-embedding-001", "models/gemini-embedding-2"];
+  const candidateModels = ["models/gemini-embedding-001"];
 
   for (const model of candidateModels) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/${model}:embedContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/${model}:embedContent`;
       const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
         body: JSON.stringify({
           content: { parts: [{ text }] },
           outputDimensionality: 768,
         }),
+        signal: AbortSignal.timeout(8_000),
       });
 
       if (res.ok) {
@@ -89,7 +96,7 @@ export async function generateEmbedding(text: string, customApiKey?: string): Pr
         }
       }
     } catch {
-      // try next candidate model
+      // try next candidate model or fallback
     }
   }
 

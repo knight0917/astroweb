@@ -71,6 +71,12 @@ export function SceneAtmosphere() {
     return g;
   }, []);
 
+  React.useEffect(() => {
+    return () => {
+      starGeometry.dispose();
+    };
+  }, [starGeometry]);
+
   return (
     <>
       <color attach="background" args={[SD_COLORS.background]} />

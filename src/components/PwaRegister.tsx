@@ -9,18 +9,34 @@ export default function PwaRegister() {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   useEffect(() => {
+    let activeReg: ServiceWorkerRegistration | null = null;
+    let refreshing = false;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && activeReg) {
+        activeReg.update().catch(() => {});
+      }
+    };
+
+    const handleControllerChange = () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    };
+
     // Only register in browser and production / supported environments
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")
         .then((reg) => {
+          activeReg = reg;
           // Listen for new service worker installation
           reg.addEventListener("updatefound", () => {
             const newWorker = reg.installing;
             if (newWorker) {
               newWorker.addEventListener("statechange", () => {
                 if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-                  // A new update is ready!
                   setWaitingWorker(newWorker);
                   setUpdateAvailable(true);
                 }
@@ -34,32 +50,19 @@ export default function PwaRegister() {
             setUpdateAvailable(true);
           }
 
-          // Check for updates on page visibility change
-          document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible") {
-              reg.update().catch(() => {});
-            }
-          });
+          document.addEventListener("visibilitychange", handleVisibilityChange);
         })
         .catch((err) => {
           console.warn("PWA Service Worker registration failed:", err);
         });
 
-      // Reload page once new service worker takes control
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (!refreshing) {
-          refreshing = true;
-          window.location.reload();
-        }
-      });
+      navigator.serviceWorker.addEventListener("controllerchange", handleControllerChange);
     }
 
     // Capture PWA Install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      // Only show install prompt once per device if not dismissed or installed
       if (typeof window !== "undefined") {
         const isDismissed = localStorage.getItem("vedic_pwa_dismissed");
         const isInstalled = localStorage.getItem("vedic_pwa_installed");
@@ -73,6 +76,10 @@ export default function PwaRegister() {
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+        navigator.serviceWorker.removeEventListener("controllerchange", handleControllerChange);
+      }
     };
   }, []);
 

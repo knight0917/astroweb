@@ -7,7 +7,7 @@
  */
 
 import { EphemerisResult, PatelAshtakavargaAnalysis, ShodhyaPindaReport, KakshyaZoneItem } from "./types";
-import { calculateAshtakavarga } from "./ashtakavarga";
+import { calculateAshtakavarga, BAV_RULES, ContributorRule } from "./ashtakavarga";
 
 export const RASHI_GUNAKARAS = [7, 10, 8, 4, 10, 5, 7, 8, 9, 5, 11, 12]; // Aries to Pisces
 export const GRAHA_GUNAKARAS: Record<string, number> = {
@@ -185,25 +185,46 @@ export function evaluatePatelAshtakavarga(ephemeris: EphemerisResult): PatelAsht
   // ----------------------------------------------------
   // 4. THE 8 KAKSHYAS EVALUATOR (3°45' Micro-Transit Zones)
   // ----------------------------------------------------
-  const moonDegInSign = (ephemeris.planets.Moon?.siderealLongitude || 0) % 30;
+  const moonLon = ephemeris.planets.Moon?.siderealLongitude || 0;
+  const moonSignIdx = Math.floor(moonLon / 30);
+  const moonDegInSign = moonLon % 30;
   const currentKakshyaIdx = Math.min(7, Math.floor(moonDegInSign / 3.75));
+  const moonBavRules = BAV_RULES.Moon;
+  const ascSignIdx = Math.floor(ephemeris.ascendant.siderealLongitude / 30);
 
   const kakshyas: KakshyaZoneItem[] = KAKSHYA_LORDS.map((lord, idx) => {
     const startDeg = (idx * 3.75).toFixed(2);
     const endDeg = ((idx + 1) * 3.75).toFixed(2);
     const isCurrent = idx === currentKakshyaIdx;
 
+    const contributorKey = (lord === "Ascendant" ? "lagna" : lord.toLowerCase()) as keyof ContributorRule;
+    const contributorSignIdx =
+      lord === "Ascendant"
+        ? ascSignIdx
+        : Math.floor((ephemeris.planets[lord]?.siderealLongitude || 0) / 30);
+    const houseOffsetFromContributor = ((moonSignIdx - contributorSignIdx + 12) % 12) + 1;
+    const hasRealBindu = moonBavRules[contributorKey]?.includes(houseOffsetFromContributor) ?? false;
+
     const occupying: string[] = [];
-    if (isCurrent) occupying.push("Moon (Mind / Flow)");
+    for (const pName of ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"]) {
+      const p = ephemeris.planets[pName];
+      if (!p) continue;
+      if (Math.floor(p.siderealLongitude / 30) === moonSignIdx) {
+        const pKakshya = Math.min(7, Math.floor((p.siderealLongitude % 30) / 3.75));
+        if (pKakshya === idx) {
+          occupying.push(pName === "Moon" ? "Moon (Mind / Flow)" : pName);
+        }
+      }
+    }
 
     return {
       kakshyaNumber: idx + 1,
       degreeSpan: `${startDeg}° - ${endDeg}°`,
       governingLord: lord,
-      hasBeneficBindu: idx % 2 === 0 || isCurrent,
+      hasBeneficBindu: hasRealBindu,
       currentTransitingPlanets: occupying,
       transitActivationStatus: isCurrent
-        ? `🔥 Active Transit Kakshya: Governed by ${lord} -> Delivering instantaneous mental and physical fruit.`
+        ? `🔥 Active Transit Kakshya: Governed by ${lord} (${hasRealBindu ? "Prastaraka Bindu Present — Auspicious Fruit" : "Bindu-Shunya — Restrained Output"}).`
         : `Dormant Kakshya until activated by transit trigger.`,
     };
   });

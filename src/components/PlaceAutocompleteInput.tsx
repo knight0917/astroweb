@@ -43,13 +43,17 @@ export const PlaceAutocompleteInput: React.FC<PlaceAutocompleteInputProps> = ({
       clearTimeout(debounceTimerRef.current);
     }
 
+    const abortController = new AbortController();
+
     debounceTimerRef.current = setTimeout(async () => {
       try {
-        const results = await searchLocationSuggestions(value);
+        const results = await searchLocationSuggestions(value, abortController.signal);
         setSuggestions(results);
         setIsOpen(results.length > 0);
-      } catch (err) {
-        console.error("Place search error:", err);
+      } catch (err: any) {
+        if (err?.name !== "AbortError") {
+          console.error("Place search error:", err);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -57,6 +61,7 @@ export const PlaceAutocompleteInput: React.FC<PlaceAutocompleteInputProps> = ({
 
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      abortController.abort();
     };
   }, [value]);
 

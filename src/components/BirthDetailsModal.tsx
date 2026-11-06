@@ -52,7 +52,7 @@ export default function BirthDetailsModal({
   // Initialize form fields from store when opened
   useEffect(() => {
     if (isOpen) {
-      setName(activeProfileName === "Live Now" ? "" : (activeProfileName || ""));
+      setName(activeProfileName?.includes("Live") ? "" : (activeProfileName || ""));
       setLocalGender(storeGender || "male");
       setSelectedLoc(storeLocation);
       setCitySearch("");

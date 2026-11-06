@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getReviews, saveReview, hasRecentReviewByEmail, normalizeEmail } from "@/lib/db";
+import { checkRateLimit, extractClientIp } from "@/lib/rateLimiter";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function GET() {
   try {
-    const reviews = await getReviews();
+    const reviews = await getReviews(100);
+    // Strip reviewer email PII before returning to public clients
+    const publicReviews = reviews.map(({ email: _omitEmail, ...rest }) => rest);
     return NextResponse.json({
       success: true,
-      reviews,
-      count: reviews.length,
+      reviews: publicReviews,
+      count: publicReviews.length,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error in GET /api/reviews:", err);
     return NextResponse.json(
-      { error: "Failed to retrieve reviews", details: err?.message },
+      { error: "Failed to retrieve reviews" },
       { status: 500 }
     );
   }
@@ -22,6 +25,15 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = extractClientIp(req.headers);
+    const ipLimit = checkRateLimit(`reviews-post:${clientIp}`, 5, 60_000);
+    if (!ipLimit.allowed) {
+      return NextResponse.json(
+        { error: "Too many review submissions from this network. Please wait before trying again." },
+        { status: 429, headers: { "Retry-After": String(ipLimit.retryAfterSec) } }
+      );
+    }
+
     const body = await req.json();
     const { name, email, subject, description, rating } = body;
 
@@ -40,7 +52,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Validate Email
-    if (!email || typeof email !== "string" || !EMAIL_REGEX.test(email.trim())) {
+    if (!email || typeof email !== "string" || email.trim().length > 254 || !EMAIL_REGEX.test(email.trim())) {
       return NextResponse.json(
         { error: "A valid email address is required." },
         { status: 400 }
@@ -92,27 +104,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const safeRating =
+      typeof rating === "number" && Number.isFinite(rating)
+        ? Math.min(5, Math.max(1, Math.round(rating)))
+        : 5;
+
     // 6. Save to Database
     const savedReview = await saveReview({
       name: name.trim(),
       email: normalizeEmail(email),
       subject: subject.trim().slice(0, 20),
       description: description.trim(),
-      rating: typeof rating === "number" ? Math.min(5, Math.max(1, rating)) : 5,
+      rating: safeRating,
     });
+
+    const { email: _omitSavedEmail, ...publicSavedReview } = savedReview;
 
     return NextResponse.json(
       {
         success: true,
-        review: savedReview,
+        review: publicSavedReview,
         message: "Thank you! Your feedback has been recorded successfully.",
       },
       { status: 201 }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error in POST /api/reviews:", err);
     return NextResponse.json(
-      { error: "Failed to submit feedback", details: err?.message },
+      { error: "Failed to submit feedback" },
       { status: 500 }
     );
   }

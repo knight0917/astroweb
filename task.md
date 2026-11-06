@@ -1839,3 +1839,46 @@
   - [x] Add explicit interactive options and age-aware defaults in `InteractiveBtrQuestionnaire` & `isBtrExplicitLock` for: (1) `Currently in School (e.g. 8th–10th / 12th)`, (2) `Still Studying / Not Graduated Yet`, (3) `Stopped After School (10th/12th) / No College`, and (4) `Never Went to School / Life-Taught`, plus `Still Studying / Preparing` and `Early Work / Family Trade (< 20)`.
   - [x] Add `practicalAndNonDegreePathways` across all 6 streams in `src/engine/educationStream.ts` and Section 18 of `src/engine/chatContext.ts`, plus 4-way *Desha-Kaala-Paatra* synthesis in `vidhyaBhangaRisk`.
   - [x] Expand `extractUserConfirmedFacts` in `src/engine/chatPrompt.ts` to lock in 10th/12th school status, uncompleted graduation, school-only completion, and never-schooled status.
+
+
+---
+
+# Phase 67: Full-Codebase Security Hardening, Astrological Bug Remediation & Performance Optimization
+
+## Status: Complete & Verified (All 157 Tests Passing & Production Build Clean)
+- **Trigger Keywords**: `audit-code-review`, `systematic-debugging`, `astrological-calculation`, `mathematical-calculation`, `security-hardening`, `idor-prevention`, `bundle-splitting`, `lazy-dossier-memoization`, `webgl-memory-disposal`
+- **Single Source of Truth**: Tracking all security, mathematical/astrological accuracy, API resilience, and frontend/WebGL performance optimizations across Phase 67.
+
+## Phases & Milestones
+
+- [x] **Phase 67.1: Security, Auth, DB, RAG & Service Worker Hardening**
+  - [x] Remove hardcoded Neon DB URL & encode credentials in `src/lib/neon.ts`; load `.env.local` in `package.json` test script.
+  - [x] Remove client-bundled `FALLBACK_B64` & `NEXT_PUBLIC_GEMINI_API_KEY` and fix SSE JSON prompt-guard/429 bypass + stream `AbortController` in `src/components/AstroChatbot.tsx`.
+  - [x] Harden `src/lib/emailToken.ts` (prod secret enforcement, HMAC-first verification, hex validation), rate-limit `src/app/api/auth/email-token/route.ts`, and remove `?token=` query leak in `src/app/api/charts/route.ts`.
+  - [x] Fix `timezoneOffsetHours` UTC+0 (`0 || 5.5`) corruption, `saveChart` `ON CONFLICT` IDOR ownership guard, `deleteChart` `RETURNING id`, unique temp filenames, and `getReviews` `LIMIT 100` in `src/lib/db.ts`.
+  - [x] Strip reviewer `email` PII, validate `Number.isFinite(rating)`, and rate-limit `src/app/api/reviews/route.ts`.
+  - [x] Harden `src/app/api/chat-feedback/route.ts` & `src/lib/feedbackDb.ts` (rate limit, length caps, server-side ID for unverified submissions, Neon `getFeedbackStats` aggregation).
+  - [x] Harden `src/app/api/cron/keep-alive/route.ts` (mandatory prod `CRON_SECRET` with `timingSafeEqual`, Neon `sql` ping, sanitized error output).
+  - [x] Harden `src/app/api/astro-chat/route.ts`, `src/lib/rateLimiter.ts`, `src/lib/embeddingService.ts`, `src/lib/vectorDb.ts`, & `src/lib/ragRetriever.ts` (bounded rate-limit store, trusted IP extraction, full-history sanitization & prompt-injection check, `x-goog-api-key` header, valid Gemini models, `AbortSignal.timeout`, SSE `cancel()`, offline deterministic embedding short-circuit & memoization, markdown-tolerant HyDE parsing).
+  - [x] Fix `public/sw.js` (bypass non-`GET` and `/api/*`, navigate-only HTML fallback), `next.config.mjs` (security headers & `poweredByHeader: false`), `src/app/layout.tsx` (accessibility viewport & single manifest), and `src/components/PwaRegister.tsx` (listener cleanup).
+
+- [x] **Phase 67.2: Core Ephemeris, Astrological Math & Lazy `chatContext` Optimization**
+  - [x] Fix `src/engine/upagrahas.ts`, `src/engine/choghadiyaHora.ts`, & `src/engine/tithiCalendar.ts` (UTC+0 `timezoneOffsetHours`, Western-hemisphere local solar day & pre-sunrise previous-evening sunset, plus sunrise/sunset & Tithi/Nakshatra boundary caching).
+  - [x] Fix `src/engine/shodashavarga.ts` exact rational division (`Math.min(N - 1, Math.floor((degInSign * N) / 30))`).
+  - [x] Fix `src/engine/predictiveArbitrator.ts` (`"career"` vs `"car"`/`"house"` word-boundary routing & dynamic timing window).
+  - [x] Fix `src/engine/omniAspectEngine.ts` (`birthDate = new Date(ephem.utcDate)` & dynamic chart-driven drivers/chips/brief).
+  - [x] Fix `src/engine/predictiveDecisionGates.ts` & `src/engine/chatContext.ts` (pass live `transitEphemeris`, real Jaimini `UL`, real `22nd Drekkana` & `64th Navamsha` lords, `&&` Double Transit).
+  - [x] Fix `src/engine/chatPrompt.ts` & `src/engine/clientMemoryVault.ts` (interrogative-safe fact extraction, fixed sibling order, per-chart storage scoping).
+  - [x] Fix `src/components/VastuStudio.tsx` & `src/engine/chatContext.ts` (connect real 337-bindu `calculateAshtakavarga`), `src/engine/lunarAstroNameEnergy.ts`, `src/engine/planetaryAgeActivation.ts`, `src/engine/careerJobBusiness.ts`, `src/engine/medhajActivation.ts`, `src/engine/medhajRahuKetuTransit.ts`, `src/engine/laypersonReportEngine.ts`, `src/engine/samirTripathiSuite.ts`, and `src/engine/bhriguNadi.ts`.
+  - [x] Refactor `src/engine/chatContext.ts` (`buildAstroDossier`) with intent-sliced lazy evaluation and bounded LRU memoization.
+
+- [x] **Phase 67.3: React 19, Zustand Store, Code-Splitting & Three.js WebGL Optimization**
+  - [x] Lazy-mount `<AstroChatbot />` & `<EntityDetailModal />` in `src/app/page.tsx` via lightweight launcher button; remove dead `astroDossier = useMemo(...)` and 1Hz welcome-message churn in `src/components/AstroChatbot.tsx`.
+  - [x] Gate all 17 secondary report `useMemo` hooks on `activeTab` in `src/components/DashaView.tsx`.
+  - [x] Optimize `src/store/useAstroStore.ts`, `src/components/TimeTravelSlider.tsx`, & `src/components/VerticalTimeTravel.tsx` (single RAF loop in `"dual"` view, debounced `localStorage` writes skipped during playback/live, backward storage cleanup loop, safe Postgres timestamp normalization, `document.hidden` live tick pause, atomic store selectors).
+  - [x] Fix `src/components/SkyDome.tsx`, `src/components/skydome/visuals.tsx`, & `src/components/skydome/textures.ts` (`BufferGeometry.dispose()` on unmount, `512x256` nebula canvas, `keydown` input guard, non-passive `wheel` listener, 1h-bucketed `useGeocentricTrails`).
+  - [x] Add `AbortController` to `src/components/PlaceAutocompleteInput.tsx` & `src/engine/geocoding.ts`; fix duplicate `saveProfile` on `/report` (`src/app/report/page.tsx`), `"Live"` profile checks (`BirthDetailsModal.tsx`, `ComprehensiveReportView.tsx`), and remove `dangerouslySetInnerHTML` in `DevaKeralamDeck.tsx`.
+
+- [x] **Phase 67.4: Automated Regression Tests, Benchmarks & Production Build Verification**
+  - [x] Add Subtest 157 in `tests/engine.test.mjs` covering UTC+0 timezone preservation, `"career"` vs `"car"` arbitration, non-zero-age `omniAspectEngine`, Western-hemisphere/pre-sunrise `upagrahas`, interrogative-safe fact extraction, Vastu 337-SAV integration, exact Varga boundaries, and `buildAstroDossier` intent-slicing speedup.
+  - [x] Verify `npx tsc --noEmit`, `npm test`, `npx tsx --test src/engine/omniAspectEngine.test.ts`, and `npm run build` pass with 0 errors.

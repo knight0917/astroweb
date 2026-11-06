@@ -255,7 +255,7 @@ export function decomposeNameVarnaPhonetics(name: string) {
   const gutturals = (clean.match(/[kg]/g) || []).length; // Mars
   const retroflex = (clean.match(/[tdn]/g) || []).length; // Mercury
   const palatals = (clean.match(/[cjshz]/g) || []).length; // Venus
-  const dentals = (clean.match(/[th|dh]/g) || []).length; // Jupiter
+  const dentals = (clean.match(/(?:th|dh)/g) || []).length; // Jupiter
   const labials = (clean.match(/[pbmf]/g) || []).length; // Saturn
   const aspirates = (clean.match(/[hx]/g) || []).length; // Rahu/Ketu
 

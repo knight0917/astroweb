@@ -190,6 +190,7 @@ function getStoredMatchmaking(): MatchmakingStoreState {
   }
 }
 
+let saveActiveChartTimer: any = null;
 function saveActiveChartToStorage(
   date: Date,
   location: GeoLocation,
@@ -198,18 +199,21 @@ function saveActiveChartToStorage(
   gender: "male" | "female" = "male"
 ) {
   if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(
-      STORAGE_ACTIVE_KEY,
-      JSON.stringify({
-        dateIso: date.toISOString(),
-        location,
-        ayanamsha,
-        profileName: profileName || null,
-        gender,
-      })
-    );
-  } catch (_) {}
+  if (saveActiveChartTimer) clearTimeout(saveActiveChartTimer);
+  saveActiveChartTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(
+        STORAGE_ACTIVE_KEY,
+        JSON.stringify({
+          dateIso: date.toISOString(),
+          location,
+          ayanamsha,
+          profileName: profileName || null,
+          gender,
+        })
+      );
+    } catch (_) {}
+  }, 250);
 }
 
 interface AstroState {
@@ -304,6 +308,7 @@ function syncGlobalLiveInterval(get: () => AstroState, set: (partial: any) => vo
   if (state.isLive && !state.isPlaying) {
     if (!globalLiveInterval) {
       globalLiveInterval = setInterval(() => {
+        if (typeof document !== "undefined" && document.hidden) return;
         const current = get();
         if (!current.isLive || current.isPlaying) {
           if (globalLiveInterval) {
@@ -467,12 +472,14 @@ export const useAstroStore = create<AstroState>((set, get) => ({
       }
 
       // 3. Invalidate temporary transient keys
+      const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key && (key.startsWith("vedic_transient_") || key.startsWith("vedic_cache_"))) {
-          localStorage.removeItem(key);
+          keysToRemove.push(key);
         }
       }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
 
       // 4. Auto-sync profiles with Cloud DB if email is linked
       const currentEmail = get().userEmail;
@@ -582,8 +589,10 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   },
 
   setDate: (date) => {
-    const { location, ayanamsha, houseSystem, nodeType, activeProfileName, gender } = get();
-    saveActiveChartToStorage(date, location, ayanamsha, activeProfileName, gender);
+    const { location, ayanamsha, houseSystem, nodeType, activeProfileName, gender, isPlaying } = get();
+    if (!isPlaying) {
+      saveActiveChartToStorage(date, location, ayanamsha, activeProfileName, gender);
+    }
     set({
       isLive: false,
       currentDate: date,

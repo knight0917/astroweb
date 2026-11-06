@@ -1,6 +1,27 @@
 import { neon } from "@neondatabase/serverless";
 
+function tryLoadLocalEnvFile(): void {
+  if (typeof window !== "undefined") return;
+  try {
+    const loadEnv = (process as NodeJS.Process & { loadEnvFile?: (path?: string) => void }).loadEnvFile;
+    if (typeof loadEnv === "function") {
+      loadEnv(".env.local");
+    }
+  } catch {
+    // .env.local is optional in production / CI environments
+  }
+}
+
 function resolveDatabaseUrl(): string {
+  if (
+    !process.env.DATABASE_URL &&
+    !process.env.POSTGRES_URL &&
+    !process.env.STORAGE_DATABASE_URL &&
+    !process.env.PGHOST
+  ) {
+    tryLoadLocalEnvFile();
+  }
+
   // 1. Check all standard and prefix-based connection strings
   const envCandidates = [
     process.env.DATABASE_URL,
@@ -28,17 +49,16 @@ function resolveDatabaseUrl(): string {
   const db = process.env.PGDATABASE || process.env.POSTGRES_DATABASE || process.env.STORAGE_PGDATABASE || "neondb";
 
   if (host && user && password) {
-    return `postgresql://${user}:${password}@${host}/${db}?sslmode=require`;
+    return `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}/${encodeURIComponent(db)}?sslmode=require`;
   }
 
-  // 3. Fallback to project Neon cluster if environment variables are not injected
-  return "postgresql://neondb_owner:npg_Jqd6Bng5ofYW@ep-morning-cloud-b8l1w5r7-pooler.c-14.us-east-1.aws.neon.tech/neondb?sslmode=require";
+  return "";
 }
 
 const databaseUrl = resolveDatabaseUrl();
 
-if (!databaseUrl) {
-  console.warn("[Neon] No database connection URL found in environment variables.");
+if (!databaseUrl && process.env.NODE_ENV !== "test") {
+  console.warn("[Neon] No database connection URL found in environment variables; operating in local fallback mode.");
 }
 
 export const sql = databaseUrl ? neon(databaseUrl) : null;

@@ -217,7 +217,7 @@ export function calculateVargaSign(longitude: number, vargaId: VargaId): number 
 
     case "D2": {
       // D2 Hora (15 deg): Odd -> Sun(Leo:4), Moon(Cancer:3); Even -> Moon(3), Sun(4)
-      const part = Math.floor(degInSign / 15);
+      const part = Math.min(1, Math.floor((degInSign * 2) / 30));
       if (isOdd) {
         return part === 0 ? 4 : 3; // Sun(Leo), Moon(Cancer)
       } else {
@@ -227,26 +227,26 @@ export function calculateVargaSign(longitude: number, vargaId: VargaId): number 
 
     case "D3": {
       // D3 Drekkana (10 deg): 1st, 5th, 9th from natal sign
-      const part = Math.floor(degInSign / 10);
+      const part = Math.min(2, Math.floor((degInSign * 3) / 30));
       return (natalSign + part * 4) % 12;
     }
 
     case "D4": {
       // D4 Chaturthamsha (7.5 deg): 1st, 4th, 7th, 10th from natal sign
-      const part = Math.floor(degInSign / 7.5);
+      const part = Math.min(3, Math.floor((degInSign * 4) / 30));
       return (natalSign + part * 3) % 12;
     }
 
     case "D7": {
       // D7 Saptamsha (30/7 deg): Odd -> from same; Even -> from 7th (natalSign + 6)
-      const part = Math.floor(degInSign / (30 / 7));
+      const part = Math.min(6, Math.floor((degInSign * 7) / 30));
       const start = isOdd ? natalSign : (natalSign + 6) % 12;
       return (start + part) % 12;
     }
 
     case "D9": {
       // D9 Navamsha (3 deg 20 min): Fire->Aries(0), Earth->Cap(9), Air->Libra(6), Water->Cancer(3)
-      const part = Math.floor(degInSign / (30 / 9));
+      const part = Math.min(8, Math.floor((degInSign * 9) / 30));
       let start = 0;
       if (element === 0) start = 0; // Aries
       else if (element === 1) start = 9; // Capricorn
@@ -257,20 +257,20 @@ export function calculateVargaSign(longitude: number, vargaId: VargaId): number 
 
     case "D10": {
       // D10 Dashamsha (3 deg): Odd -> from same; Even -> from 9th (natalSign + 8)
-      const part = Math.floor(degInSign / 3);
+      const part = Math.min(9, Math.floor((degInSign * 10) / 30));
       const start = isOdd ? natalSign : (natalSign + 8) % 12;
       return (start + part) % 12;
     }
 
     case "D12": {
       // D12 Dwadashamsha (2.5 deg): starts from same sign
-      const part = Math.floor(degInSign / 2.5);
+      const part = Math.min(11, Math.floor((degInSign * 12) / 30));
       return (natalSign + part) % 12;
     }
 
     case "D16": {
       // D16 Shodashamsha (1.875 deg): Movable->Aries(0), Fixed->Leo(4), Dual->Sagittarius(8)
-      const part = Math.floor(degInSign / 1.875);
+      const part = Math.min(15, Math.floor((degInSign * 16) / 30));
       let start = 0;
       if (modality === 0) start = 0;
       else if (modality === 1) start = 4;
@@ -280,7 +280,7 @@ export function calculateVargaSign(longitude: number, vargaId: VargaId): number 
 
     case "D20": {
       // D20 Vimshamsha (1.5 deg): Movable->Aries(0), Fixed->Sagittarius(8), Dual->Leo(4)
-      const part = Math.floor(degInSign / 1.5);
+      const part = Math.min(19, Math.floor((degInSign * 20) / 30));
       let start = 0;
       if (modality === 0) start = 0;
       else if (modality === 1) start = 8;
@@ -290,14 +290,14 @@ export function calculateVargaSign(longitude: number, vargaId: VargaId): number 
 
     case "D24": {
       // D24 Chaturvimshamsha (1.25 deg): Odd -> Leo(4); Even -> Cancer(3)
-      const part = Math.floor(degInSign / 1.25);
+      const part = Math.min(23, Math.floor((degInSign * 24) / 30));
       const start = isOdd ? 4 : 3;
       return (start + part) % 12;
     }
 
     case "D27": {
       // D27 Saptavimshamsha (30/27 deg): Fire->Aries(0), Earth->Cancer(3), Air->Libra(6), Water->Cap(9)
-      const part = Math.floor(degInSign / (30 / 27));
+      const part = Math.min(26, Math.floor((degInSign * 27) / 30));
       let start = 0;
       if (element === 0) start = 0;
       else if (element === 1) start = 3;
@@ -325,14 +325,14 @@ export function calculateVargaSign(longitude: number, vargaId: VargaId): number 
 
     case "D40": {
       // D40 Khavedamsha (0.75 deg): Odd -> Aries(0); Even -> Libra(6)
-      const part = Math.floor(degInSign / 0.75);
+      const part = Math.min(39, Math.floor((degInSign * 40) / 30));
       const start = isOdd ? 0 : 6;
       return (start + part) % 12;
     }
 
     case "D45": {
       // D45 Akshavedamsha (30/45 deg): Movable->Aries(0), Fixed->Leo(4), Dual->Sagittarius(8)
-      const part = Math.floor(degInSign / (30 / 45));
+      const part = Math.min(44, Math.floor((degInSign * 45) / 30));
       let start = 0;
       if (modality === 0) start = 0;
       else if (modality === 1) start = 4;
@@ -342,7 +342,7 @@ export function calculateVargaSign(longitude: number, vargaId: VargaId): number 
 
     case "D60": {
       // D60 Shashtiamsha (0.5 deg): starts from same sign
-      const part = Math.floor(degInSign / 0.5);
+      const part = Math.min(59, Math.floor((degInSign * 60) / 30));
       return (natalSign + part) % 12;
     }
 

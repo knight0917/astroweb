@@ -39,6 +39,88 @@ export interface ClientMemoryVault {
 
 const VAULT_STORAGE_KEY = "vedic_client_memory_vault_v1";
 
+function resolveVaultStorageKey(scopeKey?: string): string {
+  if (!scopeKey || !scopeKey.trim()) return VAULT_STORAGE_KEY;
+  return `${VAULT_STORAGE_KEY}_${scopeKey.trim()}`;
+}
+
+const CALLING_NAME_STOPWORDS = new Set([
+  "here",
+  "married",
+  "single",
+  "divorced",
+  "unmarried",
+  "committed",
+  "asking",
+  "curious",
+  "looking",
+  "worried",
+  "confused",
+  "scared",
+  "stressed",
+  "anxious",
+  "unemployed",
+  "working",
+  "studying",
+  "student",
+  "born",
+  "from",
+  "living",
+  "facing",
+  "going",
+  "having",
+  "trying",
+  "waiting",
+  "new",
+  "ready",
+  "back",
+  "sure",
+  "not",
+  "very",
+  "really",
+  "currently",
+  "still",
+  "the",
+  "eldest",
+  "youngest",
+  "middle",
+  "only",
+  "also",
+  "just",
+  "now",
+  "fine",
+  "good",
+  "okay",
+  "happy",
+  "sad",
+  "male",
+  "female",
+]);
+
+function extractDeclarativeUserText(rawTexts: string[]): string {
+  const declarativeClauses: string[] = [];
+  for (const text of rawTexts) {
+    const clauses = text.split(/(?<=[.!?])\s+|\n+/);
+    for (const clause of clauses) {
+      const trimmed = clause.trim();
+      if (!trimmed) continue;
+      if (
+        trimmed.includes("?") ||
+        /^\s*(?:when|will|can|could|would|should|if|whether|how|what|why|who|where|is|are|do|does|did|shall|may|might)\b/i.test(
+          trimmed
+        ) ||
+        /\b(?:when will|will i|get married|getting married|marriage timing|want to have|will have|wish to have|hope to have)\b/i.test(
+          trimmed
+        )
+      ) {
+        continue;
+      }
+      declarativeClauses.push(trimmed);
+    }
+  }
+  return declarativeClauses.join(" \n ");
+}
+
 /**
  * Returns default empty memory vault
  */
@@ -58,13 +140,14 @@ export function createDefaultMemoryVault(): ClientMemoryVault {
 /**
  * Loads the persistent memory vault from localStorage (client-side) or returns default.
  */
-export function loadClientMemoryVault(): ClientMemoryVault {
+export function loadClientMemoryVault(scopeKey?: string): ClientMemoryVault {
   if (typeof window === "undefined" || !window.localStorage) {
     return createDefaultMemoryVault();
   }
 
   try {
-    const raw = window.localStorage.getItem(VAULT_STORAGE_KEY);
+    const storageKey = resolveVaultStorageKey(scopeKey);
+    const raw = window.localStorage.getItem(storageKey);
     if (!raw) return createDefaultMemoryVault();
     const parsed = JSON.parse(raw);
     return {
@@ -93,10 +176,11 @@ export function loadClientMemoryVault(): ClientMemoryVault {
 /**
  * Persists the client memory vault to localStorage.
  */
-export function saveClientMemoryVault(vault: ClientMemoryVault): void {
+export function saveClientMemoryVault(vault: ClientMemoryVault, scopeKey?: string): void {
   if (typeof window === "undefined" || !window.localStorage) return;
   try {
-    window.localStorage.setItem(VAULT_STORAGE_KEY, JSON.stringify(vault));
+    const storageKey = resolveVaultStorageKey(scopeKey);
+    window.localStorage.setItem(storageKey, JSON.stringify(vault));
   } catch (err) {
     console.warn("[ClientMemoryVault] Failed to persist vault to storage:", err);
   }
@@ -107,49 +191,99 @@ export function saveClientMemoryVault(vault: ClientMemoryVault): void {
  */
 export function syncMessagesToMemoryVault(
   messages: Array<{ role?: string; sender?: string; content?: string }>,
-  existingVault?: ClientMemoryVault
+  existingVaultOrScopeKey?: ClientMemoryVault | string,
+  explicitScopeKey?: string
 ): ClientMemoryVault {
-  const vault = existingVault ? { ...existingVault } : loadClientMemoryVault();
-  
+  const scopeKey =
+    typeof existingVaultOrScopeKey === "string" ? existingVaultOrScopeKey : explicitScopeKey;
+  const existingVault =
+    typeof existingVaultOrScopeKey === "object" && existingVaultOrScopeKey !== null
+      ? existingVaultOrScopeKey
+      : undefined;
+
+  const loaded = existingVault ? existingVault : loadClientMemoryVault(scopeKey);
+  const vault: ClientMemoryVault = {
+    ...loaded,
+    educationMilestones: [...loaded.educationMilestones],
+    careerMilestones: [...loaded.careerMilestones],
+    familyInitials: { ...loaded.familyInitials },
+    confirmedFacts: [...loaded.confirmedFacts],
+    activeSadhana: [...loaded.activeSadhana],
+    notes: [...loaded.notes],
+  };
+
   const userTexts = messages
     .filter((m) => m.role === "user" || m.sender === "user")
     .map((m) => (m.content || "").toLowerCase());
   const fullText = userTexts.join(" \n ");
+  const declarativeText = extractDeclarativeUserText(userTexts);
 
   // 1. Calling Name
-  const nameMatch = fullText.match(/\b(?:my name is|call me|i am|native's name is)\s+([a-z]{3,20})\b/i);
-  if (nameMatch && !vault.clientCallingName && !/here|married|single|asking|curious|looking/i.test(nameMatch[1])) {
-    vault.clientCallingName = nameMatch[1].charAt(0).toUpperCase() + nameMatch[1].slice(1);
+  const explicitNameMatch =
+    declarativeText.match(/\b(?:my name is|call me|native's name is)\s+([a-z]{3,20})\b/i) ||
+    declarativeText.match(/\bi am\s+([a-z]{3,20})\b/i);
+  if (
+    explicitNameMatch &&
+    !vault.clientCallingName &&
+    !CALLING_NAME_STOPWORDS.has(explicitNameMatch[1].toLowerCase())
+  ) {
+    vault.clientCallingName =
+      explicitNameMatch[1].charAt(0).toUpperCase() + explicitNameMatch[1].slice(1);
   }
 
-  // 2. Marital Status
-  if (/\b(i am married|married|my wife|my husband|my spouse|got married|we married)\b/.test(fullText)) {
-    if (!/\b(not married|unmarried|single)\b/.test(fullText) || /\b(i am married|already married)\b/.test(fullText)) {
+  // 2. Marital Status (strictly declarative, ignores questions like "when will I get married?")
+  if (
+    /\b(i am married|married|my wife|my husband|my spouse|got married|we married)\b/.test(
+      declarativeText
+    )
+  ) {
+    if (
+      !/\b(not married|unmarried|never married|single)\b/.test(declarativeText) ||
+      /\b(i am married|already married)\b/.test(declarativeText)
+    ) {
       vault.maritalStatus = "Married";
-      addUniqueFact(vault.confirmedFacts, "💍 **Marital Reality:** **Married** (Explicitly confirmed by user).");
+      addUniqueFact(
+        vault.confirmedFacts,
+        "💍 **Marital Reality:** **Married** (Explicitly confirmed by user)."
+      );
     }
-  } else if (/\b(i am single|unmarried|single|not married yet)\b/.test(fullText)) {
+  } else if (
+    /\b(i am single|unmarried|never married|single|not married yet)\b/.test(declarativeText)
+  ) {
     vault.maritalStatus = "Single";
-    addUniqueFact(vault.confirmedFacts, "💍 **Marital Reality:** **Single / Unmarried** (Explicitly confirmed by user).");
+    addUniqueFact(
+      vault.confirmedFacts,
+      "💍 **Marital Reality:** **Single / Unmarried** (Explicitly confirmed by user)."
+    );
   }
 
-  // 3. Progeny / Children
-  if (/\b(i have a kid|have a kid|have a child|have children|my kid|my child|my son|my daughter|blessed with a baby|with a son|with a daughter|have a son|have a daughter|a son|a daughter)\b/.test(fullText)) {
+  // 3. Progeny / Children (declarative only; excludes bare "a son"/"a daughter" in hypotheticals)
+  if (
+    /\b(i have a kid|have a kid|have a child|have children|my kid|my child|my son|my daughter|blessed with a baby|with a son|with a daughter|have a son|have a daughter)\b/.test(
+      declarativeText
+    ) &&
+    !/\b(no child\w*|no kid\w*|don'?t have (?:a )?(?:kid|child|son|daughter)|childless)\b/.test(
+      declarativeText
+    )
+  ) {
     vault.hasChildren = true;
-    addUniqueFact(vault.confirmedFacts, "👶 **Progeny Reality:** **Has a Child / Children** (Explicitly confirmed by user).");
+    addUniqueFact(
+      vault.confirmedFacts,
+      "👶 **Progeny Reality:** **Has a Child / Children** (Explicitly confirmed by user)."
+    );
   }
 
-  // 4. Sibling Position
-  if (/\b(eldest|elder brother|elder sister|1st born|first born)\b/.test(fullText)) {
+  // 4. Sibling Position (do NOT confuse having an "elder brother/sister" with BEING the eldest)
+  if (/\b(eldest|1st born|first born)\b/.test(declarativeText)) {
     vault.birthOrder = "Eldest";
     addUniqueFact(vault.confirmedFacts, "🌿 **Sibling Position:** **Eldest Child** (Confirmed by user).");
-  } else if (/\b(youngest|younger brother|younger sister|last born)\b/.test(fullText)) {
+  } else if (/\b(youngest|last born)\b/.test(declarativeText)) {
     vault.birthOrder = "Youngest";
     addUniqueFact(vault.confirmedFacts, "🌿 **Sibling Position:** **Youngest Child** (Confirmed by user).");
-  } else if (/\b(middle child|middle)\b/.test(fullText)) {
+  } else if (/\b(middle child|i am the middle)\b/.test(declarativeText)) {
     vault.birthOrder = "Middle";
     addUniqueFact(vault.confirmedFacts, "🌿 **Sibling Position:** **Middle Child** (Confirmed by user).");
-  } else if (/\b(only child)\b/.test(fullText)) {
+  } else if (/\b(only child|single child)\b/.test(declarativeText)) {
     vault.birthOrder = "Only Child";
     addUniqueFact(vault.confirmedFacts, "🌿 **Sibling Position:** **Only Child** (Confirmed by user).");
   }
@@ -198,7 +332,7 @@ export function syncMessagesToMemoryVault(
   }
 
   vault.lastConsultationDate = new Date().toISOString();
-  saveClientMemoryVault(vault);
+  saveClientMemoryVault(vault, scopeKey);
   return vault;
 }
 
@@ -209,9 +343,10 @@ export function recordSadhanaProgress(
   remedyName: string,
   deityOrGraha: string,
   repsDelta: number,
-  dayComplete: boolean = false
+  dayComplete: boolean = false,
+  scopeKey?: string
 ): ClientMemoryVault {
-  const vault = loadClientMemoryVault();
+  const vault = loadClientMemoryVault(scopeKey);
   const id = `sadhana_${deityOrGraha.toLowerCase().replace(/\s+/g, "_")}`;
   
   let item = vault.activeSadhana.find((s) => s.id === id);
@@ -243,7 +378,7 @@ export function recordSadhanaProgress(
   }
 
   item.lastPracticedAt = new Date().toISOString();
-  saveClientMemoryVault(vault);
+  saveClientMemoryVault(vault, scopeKey);
   return vault;
 }
 

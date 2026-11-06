@@ -12,6 +12,22 @@ export interface LocationSuggestion extends GeoLocation {
 export function getTimezoneOffsetFromIana(ianaTimezone?: string, date: Date = new Date()): number {
   if (!ianaTimezone) return 5.5;
   try {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: ianaTimezone,
+      timeZoneName: "longOffset",
+    });
+    const parts = formatter.formatToParts(date);
+    const tzPart = parts.find((p) => p.type === "timeZoneName")?.value;
+    if (tzPart) {
+      if (tzPart === "GMT" || tzPart === "UTC") return 0;
+      const match = tzPart.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/);
+      if (match) {
+        const sign = match[1] === "-" ? -1 : 1;
+        const hours = parseInt(match[2], 10);
+        const minutes = match[3] ? parseInt(match[3], 10) : 0;
+        return sign * (hours + minutes / 60);
+      }
+    }
     const utcDate = new Date(date.toLocaleString("en-US", { timeZone: "UTC" }));
     const tzDate = new Date(date.toLocaleString("en-US", { timeZone: ianaTimezone }));
     const diffHours = (tzDate.getTime() - utcDate.getTime()) / (3600 * 1000);
@@ -75,7 +91,7 @@ export const EXTENDED_LOCAL_PLACES: LocationSuggestion[] = [
 /**
  * Fast search combining instant local matches with live high-precision global geocoding API
  */
-export async function searchLocationSuggestions(query: string): Promise<LocationSuggestion[]> {
+export async function searchLocationSuggestions(query: string, signal?: AbortSignal): Promise<LocationSuggestion[]> {
   const cleanQ = query.trim().toLowerCase();
   if (!cleanQ || cleanQ.length < 2) return [];
 
@@ -90,25 +106,29 @@ export async function searchLocationSuggestions(query: string): Promise<Location
   // 2. Fetch live global geocoding (Open-Meteo free CORS API)
   try {
     const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query.trim())}&count=8&language=en&format=json`;
-    const res = await fetch(url);
+    const timeoutSignal = AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined;
+    const fetchSignal = signal || timeoutSignal;
+    const res = await fetch(url, { signal: fetchSignal });
     if (res.ok) {
       const data = await res.json();
       if (data.results && Array.isArray(data.results)) {
-        const remoteMatches: LocationSuggestion[] = data.results.map((r: any) => {
-          const tzOffset = getTimezoneOffsetFromIana(r.timezone);
-          const stateStr = r.admin1 ? `, ${r.admin1}` : "";
-          const countryStr = r.country ? `, ${r.country}` : "";
-          return {
-            cityName: r.name,
-            country: r.country || "World",
-            state: r.admin1,
-            latitude: parseFloat(r.latitude.toFixed(4)),
-            longitude: parseFloat(r.longitude.toFixed(4)),
-            elevation: Math.round(r.elevation || 10),
-            timezoneOffsetHours: tzOffset,
-            displayName: `${r.name}${stateStr}${countryStr}`,
-          };
-        });
+        const remoteMatches: LocationSuggestion[] = data.results
+          .filter((r: any) => Number.isFinite(r.latitude) && Number.isFinite(r.longitude))
+          .map((r: any) => {
+            const tzOffset = getTimezoneOffsetFromIana(r.timezone);
+            const stateStr = r.admin1 ? `, ${r.admin1}` : "";
+            const countryStr = r.country ? `, ${r.country}` : "";
+            return {
+              cityName: r.name,
+              country: r.country || "World",
+              state: r.admin1,
+              latitude: parseFloat(r.latitude.toFixed(4)),
+              longitude: parseFloat(r.longitude.toFixed(4)),
+              elevation: Math.round(r.elevation || 10),
+              timezoneOffsetHours: tzOffset,
+              displayName: `${r.name}${stateStr}${countryStr}`,
+            };
+          });
 
         // Merge and deduplicate by approx lat/lon
         const combined = [...localMatches];
@@ -125,7 +145,7 @@ export async function searchLocationSuggestions(query: string): Promise<Location
       }
     }
   } catch {
-    // If offline/error, return local matches
+    // If offline/error/abort, return local matches
   }
 
   return localMatches.slice(0, 10);

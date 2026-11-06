@@ -125,8 +125,9 @@ export function evaluateRahuKetuDestinyAxis(
 
   const isTaurusScorpio = (tRahuSignIdx === 1 && tKetuSignIdx === 7) || (nRahuSignIdx === 1 && nKetuSignIdx === 7);
 
-  const rahuHouse = tRahu ? tRahu.house : 2;
-  const ketuHouse = tKetu ? tKetu.house : 8;
+  const natalAscSignIdx = Math.floor((natalEphem.ascendant?.siderealLongitude || 0) / 30);
+  const rahuHouse = ((tRahuSignIdx - natalAscSignIdx + 12) % 12) + 1;
+  const ketuHouse = ((tKetuSignIdx - natalAscSignIdx + 12) % 12) + 1;
 
   let rahuResourceAmplificationScore = 60;
   let ketuUnearnedWealthSeveranceScore = 60;

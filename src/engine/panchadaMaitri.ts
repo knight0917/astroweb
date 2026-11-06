@@ -165,6 +165,23 @@ export function evaluatePanchadaMaitri(ephemeris: EphemerisResult): PanchadaMait
     const dispositorOfA = SIGN_LORDS[signA];
 
     physicalPlanets.forEach((pB) => {
+      if (pA === pB) {
+        fullMatrix[pA][pB] = {
+          planet: pA,
+          dispositor: pB,
+          occupiedSignIndex: signA,
+          occupiedHouse: houseA,
+          naturalRelation: "Friend",
+          temporalRelation: "Friend",
+          compoundRelation: "Adhi Mitra",
+          sanskritName: "स्वक्षेत्री / अधिमित्र",
+          scorePercent: 100,
+          badgeColor: "text-emerald-400 bg-emerald-950/40 border-emerald-500/40",
+          description: "Own Sign (Swakshetra): Planet rules its own sign, operating with sovereign strength and 100% dignity.",
+        };
+        return;
+      }
+
       const houseB = getPlanetHouse(pB);
       const natural = getNaturalRelationship(pA, pB);
       const temporal = getTemporalRelationship(houseA, houseB);

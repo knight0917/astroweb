@@ -176,9 +176,10 @@ export function evaluateBcpWheel(ephemeris: EphemerisResult, currentAge: number 
   const planets = ephemeris.planets;
 
   const getCycleForAge = (age: number): BcpAgeCycle => {
-    const activeHouseNum = ((age - 1) % 12) + 1;
-    const cycleNumber = Math.floor((age - 1) / 12) + 1;
-    const houseSignIdx = (ascRashiIdx + activeHouseNum - 1) % 12;
+    const safeAge = Math.max(1, Math.floor(Number.isFinite(age) ? age : 1));
+    const activeHouseNum = (((safeAge - 1) % 12 + 12) % 12) + 1;
+    const cycleNumber = Math.floor((safeAge - 1) / 12) + 1;
+    const houseSignIdx = ((ascRashiIdx + activeHouseNum - 1) % 12 + 12) % 12;
     const houseSignName = RASHI_NAMES[houseSignIdx].englishName;
     const houseLord = RASHI_NAMES[houseSignIdx].lord;
 

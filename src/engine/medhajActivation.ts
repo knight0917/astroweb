@@ -98,7 +98,8 @@ export function evaluateSunSaturnConjunction(
 
   const sunSign = Math.floor(sun.siderealLongitude / 30);
   const saturnSign = Math.floor(saturn.siderealLongitude / 30);
-  const degreeSeparation = Math.abs(sun.siderealLongitude - saturn.siderealLongitude);
+  const rawSeparation = Math.abs(sun.siderealLongitude - saturn.siderealLongitude) % 360;
+  const degreeSeparation = rawSeparation > 180 ? 360 - rawSeparation : rawSeparation;
   const isConjoined = sunSign === saturnSign || degreeSeparation <= 12.0;
 
   if (!isConjoined) {
@@ -359,7 +360,7 @@ export function evaluateJupiterKetuTwelfthActivation(
   const saturn = natalEphem.planets["Saturn"];
   const rahu = natalEphem.planets["Rahu"];
   const hasMaleficInfluence =
-    (saturn && [1, 3, 9].includes(saturn.house)) || (rahu && [3, 7, 11].includes(rahu.house));
+    (saturn && [1, 3, 6, 9].includes(saturn.house)) || (rahu && [3, 7, 11].includes(rahu.house));
   const isDisputedNeighborMatched = isMarsIn3rd && isMarsInGemini && !!hasMaleficInfluence;
 
   const neighborExplanation = isDisputedNeighborMatched
@@ -573,7 +574,7 @@ export function evaluateMarsActivationAndManglikYoga(
   const rahu = natalEphem.planets["Rahu"];
   const isAfflictedScorpio =
     isScorpioMars &&
-    ((saturn && [1, 4, 7, 8, 10].includes(((marsHouse - saturn.house + 12) % 12) + 1)) ||
+    ((saturn && [1, 3, 7, 10].includes(((marsHouse - saturn.house + 12) % 12) + 1)) ||
       (rahu && [1, 5, 7, 9].includes(((marsHouse - rahu.house + 12) % 12) + 1)));
 
   const scorpioMedicalAdvice = isScorpioMars

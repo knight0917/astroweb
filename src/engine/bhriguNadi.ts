@@ -130,8 +130,8 @@ export function evaluateBhriguNadi(
   evaluationDate: Date = new Date()
 ): BhriguNadiReport {
   const birthDate = new Date(ephemeris.utcDate);
-  const diffTime = Math.abs(evaluationDate.getTime() - birthDate.getTime());
-  const ageYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
+  const diffTime = Math.max(0, evaluationDate.getTime() - birthDate.getTime());
+  const ageYears = diffTime / (1000 * 60 * 60 * 24 * 365.2425);
   const runningAge = Math.floor(ageYears) + 1;
 
   const planets = ephemeris.planets;

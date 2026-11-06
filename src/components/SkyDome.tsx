@@ -1509,7 +1509,7 @@ function SkyScene({
     });
   }, [ephemeris]);
 
-  const trails = useGeocentricTrails(planetList, currentDate.getTime(), ephemeris.ayanamshaValue);
+  const trails = useGeocentricTrails(planetList, Math.floor(currentDate.getTime() / 60000) * 60000, ephemeris.ayanamshaValue);
 
   if (!ephemeris) return null;
 
@@ -1725,6 +1725,18 @@ export default function SkyDome() {
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      if (
+        activeEl &&
+        (activeEl.tagName === "INPUT" ||
+          activeEl.tagName === "TEXTAREA" ||
+          activeEl.tagName === "SELECT" ||
+          (activeEl as HTMLElement).isContentEditable)
+      ) {
+        return;
+      }
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
       if (e.key === "f" || e.key === "F") {
         toggleFullscreen();
       } else if (e.key === "+" || e.key === "=") {
@@ -1744,25 +1756,33 @@ export default function SkyDome() {
     };
   }, []);
 
-  const handleWheel = (e: React.WheelEvent) => {
-    const target = e.target as HTMLElement | null;
-    if (
-      target &&
-      (target.closest(".side-dock") ||
-        target.closest(".deck-scrollable") ||
-        target.closest(".glass-panel") ||
-        target.closest("button") ||
-        target.closest("select") ||
-        target.closest("input") ||
-        target.closest(".custom-scrollbar"))
-    ) {
-      return;
-    }
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
 
-    e.preventDefault();
-    const zoomDelta = e.deltaY * 0.05;
-    setFov((prev) => Math.min(95, Math.max(5, prev + zoomDelta)));
-  };
+    const onWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.closest(".side-dock") ||
+          target.closest(".deck-scrollable") ||
+          target.closest(".glass-panel") ||
+          target.closest("button") ||
+          target.closest("select") ||
+          target.closest("input") ||
+          target.closest(".custom-scrollbar"))
+      ) {
+        return;
+      }
+
+      e.preventDefault();
+      const zoomDelta = e.deltaY * 0.05;
+      setFov((prev) => Math.min(95, Math.max(5, prev + zoomDelta)));
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
 
   // Fine-grained Zustand selectors to prevent re-rendering SkyDome on ephemeris clock ticks
   const isPlaying = useAstroStore((s) => s.isPlaying);
@@ -1772,7 +1792,6 @@ export default function SkyDome() {
   return (
     <div
       ref={containerRef}
-      onWheel={handleWheel}
       className={`relative bg-[#140818] overflow-hidden transition-all duration-300 touch-none select-none ${
         isFullscreen
           ? "fixed inset-0 z-[100] w-screen h-screen rounded-none"

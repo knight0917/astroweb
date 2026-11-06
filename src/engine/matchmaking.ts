@@ -546,8 +546,18 @@ export function calculateMatchmaking(
       isBhakootCancelled = true;
       bhakootCancelReason = `Both Moon signs ruled by same lord (${bLord}); Bhakoot Dosha nullified.`;
       bhakootScore = 7;
+    } else if (grahaMaitriScore >= 5) {
+      isBhakootCancelled = true;
+      bhakootCancelReason = `Mutual planetary friendship (Graha Maitri 5/5 between ${bLord} and ${gLord}) cancels Bhakoot Dosha per Muhurta Chintamani.`;
+      bhakootScore = 7;
     }
   }
+
+  const bhakootAxisLabel = [6, 8].includes(rashiDiff)
+    ? "Bhakoot Dosha (6/8 Shadashtaka)"
+    : [2, 12].includes(rashiDiff)
+    ? "Bhakoot Dosha (2/12 Dwirdwadasa)"
+    : "Bhakoot Dosha (5/9 Navapanchama)";
 
   const bhakoot: KootaScore = {
     name: "Bhakoot",
@@ -557,19 +567,21 @@ export function calculateMatchmaking(
     boyAttribute: `${RASHI_NAMES[bRashiIdx].englishName}`,
     girlAttribute: `${RASHI_NAMES[gRashiIdx].englishName}`,
     isDosha: bhakootScore === 0,
-    doshaName: bhakootScore === 0 ? "Bhakoot Dosha" : undefined,
+    doshaName: bhakootScore === 0 ? bhakootAxisLabel : undefined,
     isCancelled: isBhakootCancelled,
     cancellationReason: bhakootCancelReason,
     description: bhakootScore === 7
       ? isBhakootCancelled
         ? `Bhakoot Dosha cancelled: ${bhakootCancelReason}`
         : "Excellent family prosperity, mutual emotional joy and growth."
-      : "Bhakoot Dosha (Shadashtaka/Dwirdwadasa): Potential financial or emotional strain.",
+      : `${bhakootAxisLabel}: Potential financial or emotional strain.`,
   };
 
   // 8. NADI KOOTA (8 Points)
   const bNadi = NAKSHATRA_NADI[bNakIdx];
   const gNadi = NAKSHATRA_NADI[gNakIdx];
+  const bPada = bMoon.nakshatra.pada;
+  const gPada = gMoon.nakshatra.pada;
   let nadiScore = bNadi.name !== gNadi.name ? 8 : 0;
   let isNadiCancelled = false;
   let nadiCancelReason = "";
@@ -579,9 +591,17 @@ export function calculateMatchmaking(
       isNadiCancelled = true;
       nadiCancelReason = "Same Moon Rashi but different Nakshatras; Nadi Dosha cancelled.";
       nadiScore = 8;
-    } else if (bLord === gLord) {
+    } else if (bNakIdx === gNakIdx && bRashiIdx !== gRashiIdx) {
       isNadiCancelled = true;
-      nadiCancelReason = `Both Moon Rashis ruled by ${bLord}; Nadi Dosha nullified.`;
+      nadiCancelReason = "Same Nakshatra spanning two different Moon Rashis; Nadi Dosha cancelled.";
+      nadiScore = 8;
+    } else if (bNakIdx === gNakIdx && bRashiIdx === gRashiIdx && bPada !== gPada) {
+      isNadiCancelled = true;
+      nadiCancelReason = `Same Nakshatra & Rashi in distinct Charanas (Pada ${bPada} vs Pada ${gPada}); Nadi Dosha mitigated.`;
+      nadiScore = 8;
+    } else if (bRashiIdx !== gRashiIdx && bLord === gLord) {
+      isNadiCancelled = true;
+      nadiCancelReason = `Distinct Moon Rashis ruled by the same lord (${bLord}); Nadi Dosha nullified.`;
       nadiScore = 8;
     }
   }
@@ -631,22 +651,25 @@ export function calculateMatchmaking(
   let manglikText = "Compatible";
   let manglikDesc = "";
 
+  const boyEffectiveManglik = boyManglik.isManglik && !boyManglik.isCancelled;
+  const girlEffectiveManglik = girlManglik.isManglik && !girlManglik.isCancelled;
+
   if (!boyManglik.isManglik && !girlManglik.isManglik) {
     isManglikCompatible = true;
     manglikText = "Both Non-Manglik";
     manglikDesc = "Neither chart has Kuja Dosha. Perfect balance.";
-  } else if (boyManglik.isManglik && girlManglik.isManglik) {
+  } else if (boyEffectiveManglik && girlEffectiveManglik) {
     isManglikCompatible = true;
     manglikText = "Both Manglik (Mutual Cancellation)";
-    manglikDesc = "Both partners have Kuja Dosha, resulting in classical mutual nullification (दोष साम्यता).";
-  } else if ((boyManglik.isManglik && boyManglik.isCancelled) || (girlManglik.isManglik && girlManglik.isCancelled)) {
+    manglikDesc = "Both partners have active Kuja Dosha, resulting in classical mutual nullification (दोष साम्यता).";
+  } else if (!boyEffectiveManglik && !girlEffectiveManglik) {
     isManglikCompatible = true;
     manglikText = "Manglik Dosha Cancelled";
     manglikDesc = "Kuja Dosha is present but nullified by classical planetary exemptions.";
   } else {
     isManglikCompatible = false;
     manglikText = "One Manglik, One Non-Manglik";
-    manglikDesc = "One chart is Manglik while the other is not. Kumbh Vivah or Mars remedial Upayas advised.";
+    manglikDesc = "One chart carries uncancelled Kuja Dosha while the other is non-Manglik or already cancelled. Kumbh Vivah or Mars remedial Upayas advised.";
   }
 
   // 9. CLASSICAL ASHTAKAVARGA SYNASTRY (C.S. Patel & Parashara)
@@ -1250,15 +1273,25 @@ export function evaluateMarriageDestinyGate(params: {
     });
   }
 
-  // 5. Fatal Uncancelled Bhakoot Mrityu-Shadashtaka
+  // 5. Fatal Uncancelled Bhakoot Mrityu-Shadashtaka (6/8 Axis Only)
   if (kootas.bhakoot.isDosha && !kootas.bhakoot.isCancelled) {
-    fatalImpediments.push({
-      rule: "Bhakoot Mrityu-Shadashtaka (भकूट मृत्यु-षडाष्टक)",
-      doshaName: "Uncancelled Bhakoot Dosha (भकूट दोष)",
-      shastricSource: "Muhurta Chintamani (विवाह प्रकरण, Shloka 35)",
-      consequence: "Mutual Moon signs form an uncancelled adverse axis without planetary friendship. Breeds chronic financial hemorrhage, emotional alienation, or legal friction.",
-      remedyOrException: "No classical Rashi Lord friendship exists to cancel this Bhakoot.",
-    });
+    const isShadashtaka =
+      !kootas.bhakoot.doshaName ||
+      kootas.bhakoot.doshaName === "Bhakoot Dosha" ||
+      kootas.bhakoot.doshaName.includes("6/8");
+    if (isShadashtaka) {
+      fatalImpediments.push({
+        rule: "Bhakoot Mrityu-Shadashtaka (भकूट मृत्यु-षडाष्टक)",
+        doshaName: "Uncancelled Bhakoot Shadashtaka Dosha (6/8 भकूट दोष)",
+        shastricSource: "Muhurta Chintamani (विवाह प्रकरण, Shloka 35)",
+        consequence: "Mutual Moon signs form an uncancelled 6/8 Shadashtaka axis without planetary friendship. Breeds chronic financial hemorrhage, emotional alienation, or legal friction.",
+        remedyOrException: "No classical Rashi Lord friendship exists to cancel this 6/8 Bhakoot.",
+      });
+    } else {
+      mitigatingFactors.push(
+        `Non-Shadashtaka ${kootas.bhakoot.doshaName} present: Advises conscious financial/progeny planning and planetary shanti rather than an absolute fatal veto.`
+      );
+    }
   } else if (kootas.bhakoot.isCancelled) {
     mitigatingFactors.push(`Bhakoot Dosha cancelled by friendly/identical lords: ${kootas.bhakoot.cancellationReason}`);
   }

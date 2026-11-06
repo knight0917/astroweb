@@ -136,11 +136,28 @@ const AstroChatbot = dynamic(() => import("../components/AstroChatbot"), {
 });
 
 export default function HomePage() {
-  const { viewMode, setViewMode, initFromStorage } = useAstroStore();
+  const viewMode = useAstroStore((s) => s.viewMode);
+  const setViewMode = useAstroStore((s) => s.setViewMode);
+  const initFromStorage = useAstroStore((s) => s.initFromStorage);
+  const selectedEntityId = useAstroStore((s) => s.selectedEntityId);
+
+  const [chatMounted, setChatMounted] = React.useState(false);
+  const [pendingChatPrompt, setPendingChatPrompt] = React.useState<string | undefined>(undefined);
 
   React.useEffect(() => {
     initFromStorage();
   }, [initFromStorage]);
+
+  React.useEffect(() => {
+    const handleOpenChat = (e: any) => {
+      setChatMounted(true);
+      if (e?.detail?.prompt) {
+        setPendingChatPrompt(e.detail.prompt);
+      }
+    };
+    window.addEventListener("open-astro-chat", handleOpenChat);
+    return () => window.removeEventListener("open-astro-chat", handleOpenChat);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#030712] text-slate-100 pb-16 md:pb-0">
@@ -298,10 +315,22 @@ export default function HomePage() {
       </main>
 
       {/* Detail Inspector Modal on Click */}
-      <EntityDetailModal />
+      {selectedEntityId && <EntityDetailModal />}
 
-      {/* Floating Vedic AI Astrologer Chatbot */}
-      <AstroChatbot />
+      {/* Floating Vedic AI Astrologer Chatbot (Deferred loading for performance) */}
+      {chatMounted ? (
+        <AstroChatbot initialOpen={true} initialPrompt={pendingChatPrompt} />
+      ) : (
+        <button
+          onClick={() => setChatMounted(true)}
+          className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[9999] flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 text-slate-950 font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all border border-amber-300/40 cursor-pointer text-xs"
+          title="Ask Acharya AI (Vedic Astrological Intelligence)"
+          aria-label="Ask Acharya AI"
+        >
+          <span className="text-base animate-bounce">🪷</span>
+          <span className="hidden sm:inline">Ask Acharya AI</span>
+        </button>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-slate-900 py-4 px-4 text-center text-xs text-slate-500 flex flex-wrap items-center justify-center gap-4">

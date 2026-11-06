@@ -6,17 +6,18 @@
  */
 import { createHmac, timingSafeEqual } from "crypto";
 
-const SECRET = process.env.EMAIL_HMAC_SECRET || "";
 const DEFAULT_TTL_DAYS = 30;
+const HEX_SIG_REGEX = /^[0-9a-f]{64}$/i;
 
-/**
- * Warns at startup if the secret is not configured.
- * Does not throw — allows local dev without the env var set.
- */
-if (!SECRET && process.env.NODE_ENV === "production") {
-  console.error(
-    "[emailToken] CRITICAL: EMAIL_HMAC_SECRET is not set. Chart API tokens will not be secure."
-  );
+function resolveHmacSecret(): string {
+  const configured = process.env.EMAIL_HMAC_SECRET?.trim() || "";
+  if (configured) return configured;
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("[emailToken] EMAIL_HMAC_SECRET must be configured in production.");
+  }
+
+  return "dev-only-local-hmac-secret";
 }
 
 /**
@@ -26,45 +27,48 @@ if (!SECRET && process.env.NODE_ENV === "production") {
  * @returns        A base64url-encoded signed token string
  */
 export function signEmailToken(email: string, ttlDays = DEFAULT_TTL_DAYS): string {
+  const secret = resolveHmacSecret();
   const normEmail = email.trim().toLowerCase();
-  const expiresAt = Math.floor(Date.now() / 1000) + ttlDays * 86_400;
+  const safeTtlDays = Number.isFinite(ttlDays) && ttlDays > 0 ? Math.min(365, ttlDays) : DEFAULT_TTL_DAYS;
+  const expiresAt = Math.floor(Date.now() / 1000) + Math.floor(safeTtlDays * 86_400);
   const payload = `${normEmail}:${expiresAt}`;
-  const sig = createHmac("sha256", SECRET || "dev-insecure-secret")
-    .update(payload)
-    .digest("hex");
+  const sig = createHmac("sha256", secret).update(payload).digest("hex");
   return Buffer.from(`${payload}:${sig}`).toString("base64url");
 }
 
 /**
  * Verifies a token. Returns the normalized email if valid, null otherwise.
- * Uses timing-safe comparison to prevent timing attacks.
+ * Verifies HMAC signature in constant time BEFORE inspecting claims or expiry.
  */
 export function verifyEmailToken(token: string): string | null {
-  if (!token || typeof token !== "string") return null;
+  if (!token || typeof token !== "string" || token.length > 512) return null;
   try {
+    const secret = resolveHmacSecret();
     const decoded = Buffer.from(token, "base64url").toString("utf8");
-    const parts = decoded.split(":");
-    // Expect exactly 3 parts: email, expiresAt, sig
-    if (parts.length !== 3) return null;
-    const [email, expiresStr, sig] = parts;
-    const expiresAt = parseInt(expiresStr, 10);
+    const lastColon = decoded.lastIndexOf(":");
+    if (lastColon <= 0) return null;
+    const payload = decoded.slice(0, lastColon);
+    const sig = decoded.slice(lastColon + 1);
+    if (!HEX_SIG_REGEX.test(sig)) return null;
 
-    // Check expiry
-    if (isNaN(expiresAt) || Date.now() / 1000 > expiresAt) return null;
+    const prevColon = payload.lastIndexOf(":");
+    if (prevColon <= 0) return null;
+    const email = payload.slice(0, prevColon);
+    const expiresStr = payload.slice(prevColon + 1);
+    if (!/^\d+$/.test(expiresStr)) return null;
 
-    // Recompute expected signature
-    const payload = `${email}:${expiresAt}`;
-    const expectedSig = createHmac("sha256", SECRET || "dev-insecure-secret")
-      .update(payload)
-      .digest("hex");
-
-    // Timing-safe comparison
+    // 1. Constant-time cryptographic verification FIRST
+    const expectedSig = createHmac("sha256", secret).update(payload).digest("hex");
     const sigBuf = Buffer.from(sig, "hex");
     const expectedBuf = Buffer.from(expectedSig, "hex");
     if (sigBuf.length !== expectedBuf.length) return null;
     if (!timingSafeEqual(sigBuf, expectedBuf)) return null;
 
-    return email; // already normalized at sign time
+    // 2. Expiry check AFTER authenticity is established
+    const expiresAt = Number(expiresStr);
+    if (!Number.isFinite(expiresAt) || Date.now() / 1000 > expiresAt) return null;
+
+    return email;
   } catch {
     return null;
   }

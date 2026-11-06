@@ -9,6 +9,7 @@
 import * as Astronomy from "astronomy-engine";
 import { GeoLocation } from "./types";
 import { calculateVedicEphemeris } from "./ephemeris";
+import { resolveLocalSolarDayBounds } from "./upagrahas";
 
 export type EventCategory =
   | "grihaPravesh"
@@ -62,22 +63,17 @@ export interface EventMuhurtaRecommendation {
 }
 
 export function calculateDayMuhurta(date: Date, location: GeoLocation): DayPanchangaShuddhi {
-  const observer = new Astronomy.Observer(location.latitude, location.longitude, location.elevation || 0);
-  const astroTime = Astronomy.MakeTime(date);
-
-  const sunriseResult = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, +1, astroTime, 1);
-  const sunsetResult = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, -1, astroTime, 1);
-
-  const sunrise = sunriseResult ? sunriseResult.date : new Date(date.getFullYear(), date.getMonth(), date.getDate(), 6, 0);
-  let sunset = sunsetResult ? sunsetResult.date : new Date(date.getFullYear(), date.getMonth(), date.getDate(), 18, 15);
-
-  if (sunset.getTime() < sunrise.getTime()) {
-    sunset = new Date(sunrise.getTime() + 12 * 3600 * 1000);
-  }
+  const { sunriseMs, sunsetMs, sunriseDayOfWeek } = resolveLocalSolarDayBounds(
+    date,
+    location,
+    false
+  );
+  const sunrise = new Date(sunriseMs);
+  const sunset = new Date(sunsetMs);
 
   const dayMs = Math.max(1000 * 3600 * 6, sunset.getTime() - sunrise.getTime());
   const muhurtaMs = dayMs / 15;
-  const dayOfWeek = date.getDay();
+  const dayOfWeek = sunriseDayOfWeek;
 
   const ephem = calculateVedicEphemeris(date, location);
   const tithiNumber = ephem.panchanga.tithi.index;

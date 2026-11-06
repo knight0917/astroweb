@@ -4,6 +4,91 @@ import { getRashi, getNakshatra, getHouse } from "./rashiNakshatra";
 import { calculateTropicalAngles } from "./ascendant";
 import { toSiderealLongitude } from "./ayanamsha";
 
+const RISE_SET_CACHE_MAX = 512;
+const riseSetCache = new Map<
+  string,
+  { sunriseMs: number; sunsetMs: number; nextSunriseMs: number }
+>();
+
+export function resolveLocalSolarDayBounds(
+  date: Date,
+  location: GeoLocation,
+  stepBackBeforeSunrise: boolean = true
+): { sunriseMs: number; sunsetMs: number; nextSunriseMs: number; sunriseDayOfWeek: number } {
+  const tzOffset = location.timezoneOffsetHours ?? 5.5;
+  const lat = Number.isFinite(location.latitude) ? location.latitude : 0;
+  const lon = Number.isFinite(location.longitude) ? location.longitude : 0;
+  const elev = Number.isFinite(location.elevation) ? (location.elevation as number) : 0;
+
+  const computeForMidnight = (midnightUtcMs: number) => {
+    const key = `${lat.toFixed(4)}_${lon.toFixed(4)}_${elev}_${midnightUtcMs}`;
+    const cached = riseSetCache.get(key);
+    if (cached) return cached;
+
+    const observer = new Astronomy.Observer(lat, lon, elev);
+    const startSearch = new Date(midnightUtcMs);
+    const sunriseEvt = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, +1, startSearch, 1);
+    const sunriseMs = sunriseEvt
+      ? sunriseEvt.date.getTime()
+      : midnightUtcMs + 6 * 3600 * 1000;
+
+    const sunsetEvt = Astronomy.SearchRiseSet(
+      Astronomy.Body.Sun,
+      observer,
+      -1,
+      new Date(sunriseMs + 60_000),
+      1
+    );
+    const rawSunsetMs = sunsetEvt
+      ? sunsetEvt.date.getTime()
+      : sunriseMs + 12 * 3600 * 1000;
+    const sunsetMs =
+      rawSunsetMs > sunriseMs ? rawSunsetMs : sunriseMs + 12 * 3600 * 1000;
+
+    const nextSunriseEvt = Astronomy.SearchRiseSet(
+      Astronomy.Body.Sun,
+      observer,
+      +1,
+      new Date(sunsetMs + 60_000),
+      1
+    );
+    const rawNextSunriseMs = nextSunriseEvt
+      ? nextSunriseEvt.date.getTime()
+      : sunriseMs + 24 * 3600 * 1000;
+    const nextSunriseMs =
+      rawNextSunriseMs > sunsetMs ? rawNextSunriseMs : sunsetMs + 12 * 3600 * 1000;
+
+    const bounds = { sunriseMs, sunsetMs, nextSunriseMs };
+    if (riseSetCache.size >= RISE_SET_CACHE_MAX) {
+      const oldest = riseSetCache.keys().next().value;
+      if (typeof oldest === "string") riseSetCache.delete(oldest);
+    }
+    riseSetCache.set(key, bounds);
+    return bounds;
+  };
+
+  const localShifted = new Date(date.getTime() + tzOffset * 3600 * 1000);
+  const localMidnightUtcMs =
+    Date.UTC(
+      localShifted.getUTCFullYear(),
+      localShifted.getUTCMonth(),
+      localShifted.getUTCDate(),
+      0,
+      0,
+      0,
+      0
+    ) -
+    tzOffset * 3600 * 1000;
+
+  let bounds = computeForMidnight(localMidnightUtcMs);
+  if (stepBackBeforeSunrise && date.getTime() < bounds.sunriseMs) {
+    bounds = computeForMidnight(localMidnightUtcMs - 24 * 3600 * 1000);
+  }
+
+  const sunriseDayOfWeek = new Date(bounds.sunriseMs + tzOffset * 3600 * 1000).getUTCDay();
+  return { ...bounds, sunriseDayOfWeek };
+}
+
 export function calculateUpagrahas(
   date: Date,
   location: GeoLocation,
@@ -42,22 +127,20 @@ export function calculateUpagrahas(
     };
   }
 
-  const observer = new Astronomy.Observer(location.latitude, location.longitude, location.elevation || 0);
-  const startOfDay = new Date(date);
-  startOfDay.setUTCHours(0, 0, 0, 0);
-
-  let sunriseTime = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, +1, startOfDay, 1);
-  let sunsetTime = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, -1, startOfDay, 1);
-
-  let sunriseMs = sunriseTime ? sunriseTime.date.getTime() : startOfDay.getTime() + 6 * 3600 * 1000;
-  let sunsetMs = sunsetTime ? sunsetTime.date.getTime() : startOfDay.getTime() + 18 * 3600 * 1000;
+  const { sunriseMs, sunsetMs, nextSunriseMs, sunriseDayOfWeek } = resolveLocalSolarDayBounds(
+    date,
+    location,
+    true
+  );
 
   const currentMs = date.getTime();
   const isDaytime = currentMs >= sunriseMs && currentMs < sunsetMs;
-  let segmentStartMs = isDaytime ? sunriseMs : sunsetMs;
-  let segmentDurationMs = isDaytime ? (sunsetMs - sunriseMs) / 8 : (24 * 3600 * 1000 - (sunsetMs - sunriseMs)) / 8;
+  const segmentStartMs = isDaytime ? sunriseMs : sunsetMs;
+  const segmentDurationMs = isDaytime
+    ? (sunsetMs - sunriseMs) / 8
+    : (nextSunriseMs - sunsetMs) / 8;
 
-  const weekday = date.getUTCDay();
+  const weekday = sunriseDayOfWeek;
   const PLANET_ORDER = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
 
   function getSegmentIndex(targetPlanet: string, isDay: boolean, dayOfWeek: number): number {

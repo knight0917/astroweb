@@ -225,9 +225,12 @@ export function parseMessageContent(content: string): ParsedMessageData {
   };
 }
 
-export function buildPersonalizedWelcomeMessage(natalEphem?: EphemerisResult): string {
+export function buildPersonalizedWelcomeMessage(
+  natalEphem?: EphemerisResult,
+  scopeKey?: string
+): string {
   // Check if returning client has verified realities in memory vault
-  const vault = loadClientMemoryVault();
+  const vault = loadClientMemoryVault(scopeKey);
   if (vault.consultationCount > 0 || vault.confirmedFacts.length > 0 || vault.activeSadhana.length > 0) {
     return buildReturningClientWelcome(vault);
   }
@@ -277,11 +280,6 @@ export function buildPersonalizedWelcomeMessage(natalEphem?: EphemerisResult): s
     );
   }
 }
-
-const FALLBACK_B64 = "QVEuQWI4Uk42TGRLTkVsX1l6SFU0LUtuT2thazNROTlWcHlMR0xhN21tTDgwbWJ4S244VUE=";
-const DEFAULT_GEMINI_KEY =
-  process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
-  (typeof atob === "function" ? atob(FALLBACK_B64) : "");
 
 type ConsultationCategory = "all" | "career" | "marriage" | "sadesati" | "health" | "gemstones" | "education" | "benchmarks" | "prasna" | "ashtakavarga" | "remedies";
 
@@ -4963,20 +4961,23 @@ export function renderFormattedChatMarkdown(content: string): React.ReactNode {
   return <div className="space-y-1">{elements}</div>;
 }
 
-export default function AstroChatbot() {
-  const {
-    currentDate,
-    ephemeris: natalEphemeris,
-    location,
-    ayanamsha,
-    houseSystem,
-    nodeType,
-    gender,
-    viewMode,
-    matchmaking,
-  } = useAstroStore();
+export interface AstroChatbotProps {
+  initialOpen?: boolean;
+  initialPrompt?: string;
+}
 
-  const [isOpen, setIsOpen] = useState(false);
+export default function AstroChatbot({ initialOpen = false, initialPrompt = "" }: AstroChatbotProps = {}) {
+  const currentDate = useAstroStore((s) => s.currentDate);
+  const natalEphemeris = useAstroStore((s) => s.ephemeris);
+  const location = useAstroStore((s) => s.location);
+  const ayanamsha = useAstroStore((s) => s.ayanamsha);
+  const houseSystem = useAstroStore((s) => s.houseSystem);
+  const nodeType = useAstroStore((s) => s.nodeType);
+  const gender = useAstroStore((s) => s.gender);
+  const matchmaking = useAstroStore((s) => s.matchmaking);
+  const viewMode = useAstroStore((s) => s.viewMode);
+
+  const [isOpen, setIsOpen] = useState(initialOpen);
   const [activeCategory, setActiveCategory] = useState<ConsultationCategory>("all");
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -4987,7 +4988,7 @@ export default function AstroChatbot() {
       timestamp: new Date(),
     },
   ]);
-  const [inputPrompt, setInputPrompt] = useState("");
+  const [inputPrompt, setInputPrompt] = useState(initialPrompt);
   const [isLoading, setIsLoading] = useState(false);
   const [userApiKey, setUserApiKey] = useState("");
   const [showSettings, setShowSettings] = useState(false);
@@ -5017,6 +5018,13 @@ export default function AstroChatbot() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const streamAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      streamAbortRef.current?.abort();
+    };
+  }, []);
 
   // Load user API key from localStorage if available
   useEffect(() => {
@@ -5050,7 +5058,7 @@ export default function AstroChatbot() {
         {
           id: "welcome",
           role: "assistant",
-          content: buildPersonalizedWelcomeMessage(natalEphemeris),
+          content: buildPersonalizedWelcomeMessage(natalEphemeris, profileThreadKey),
           timestamp: new Date(),
         },
       ]);
@@ -5066,26 +5074,19 @@ export default function AstroChatbot() {
     }
   }, [messages, profileThreadKey]);
 
-  useEffect(() => {
-    if (false) {
-      try {
-      } catch (_) {}
-    }
-  }, []);
-
-  // Dynamically personalize initial welcome message when chart is loaded
+  // Dynamically personalize initial welcome message when active chart profile changes (bucketed to minute)
   useEffect(() => {
     if (natalEphemeris && messages.length === 1 && messages[0].id === "welcome") {
       setMessages([
         {
           id: "welcome",
           role: "assistant",
-          content: buildPersonalizedWelcomeMessage(natalEphemeris),
+          content: buildPersonalizedWelcomeMessage(natalEphemeris, profileThreadKey),
           timestamp: new Date(),
         },
       ]);
     }
-  }, [natalEphemeris]);
+  }, [profileThreadKey]);
 
   // Listen for global open-astro-chat event from QuickHighlightsBar and 3D Sky Dome HUD
   useEffect(() => {
@@ -5106,15 +5107,10 @@ export default function AstroChatbot() {
     setShowSettings(false);
   };
 
-  // Compute live transit ephemeris
+  // Compute live transit ephemeris (only recalculated when astrological frame settings change)
   const transitEphemeris = useMemo(() => {
     return calculateVedicEphemeris(new Date(), location, ayanamsha, houseSystem, nodeType);
   }, [location, ayanamsha, houseSystem, nodeType]);
-
-  // Build the complete astrological dossier with native gender & live matchmaking pair
-  const astroDossier = useMemo(() => {
-    return buildAstroDossier(natalEphemeris, transitEphemeris, new Date(), gender, matchmaking);
-  }, [natalEphemeris, transitEphemeris, gender, matchmaking]);
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
@@ -5331,7 +5327,6 @@ export default function AstroChatbot() {
 
       const siliconModels = [
         "deepseek-ai/DeepSeek-V3",
-        "deepseek-ai/DeepSeek-V4-Pro",
         "deepseek-ai/DeepSeek-R1",
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
         "Qwen/Qwen2.5-7B-Instruct",
@@ -5393,33 +5388,37 @@ export default function AstroChatbot() {
       }
     }
 
-    // 3. GOOGLE GEMINI STREAMING (DEFAULT / FALLBACK)
+    // 3. GOOGLE GEMINI STREAMING (CLIENT BYOK FALLBACK)
     const candidateModels = [
-      "gemini-3.6-flash",
-      "gemini-3.5-flash",
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
       "gemini-flash-latest",
-      "gemini-3.1-flash-lite",
     ];
 
     let lastError = "";
 
     for (const modelName of candidateModels) {
       try {
-        const streamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${apiKey}`;
+        const streamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse`;
+        const geminiHeaders = {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        };
         const res = await fetch(streamUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: geminiHeaders,
           body: JSON.stringify({
             system_instruction: {
               parts: [{ text: systemInstruction }],
             },
             contents,
             generationConfig: {
-              temperature: 0.4,
+              temperature: 0.3,
               topP: 0.95,
               maxOutputTokens: 4096,
             },
           }),
+          signal: streamAbortRef.current?.signal,
         });
 
         if (res.ok && res.body) {
@@ -5453,19 +5452,23 @@ export default function AstroChatbot() {
 
           if (fullText.trim()) return fullText;
         } else {
-          // Direct fallback if SSE unsupported
-          const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+          // Direct fallback if SSE unsupported (preserves system_instruction)
+          const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
           const directRes = await fetch(fallbackUrl, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: geminiHeaders,
             body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: systemInstruction }],
+              },
               contents,
               generationConfig: {
-                temperature: 0.5,
+                temperature: 0.3,
                 topP: 0.95,
                 maxOutputTokens: 4096,
               },
             }),
+            signal: streamAbortRef.current?.signal,
           });
           if (directRes.ok) {
             const data = await directRes.json();
@@ -5478,6 +5481,7 @@ export default function AstroChatbot() {
           lastError = await res.text();
         }
       } catch (err: any) {
+        if (err?.name === "AbortError") throw err;
         lastError = err?.message || "Network error";
       }
     }
@@ -5525,7 +5529,7 @@ export default function AstroChatbot() {
 
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
-    syncMessagesToMemoryVault(updatedMessages);
+    syncMessagesToMemoryVault(updatedMessages, profileThreadKey);
     setInputPrompt("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -5545,7 +5549,12 @@ export default function AstroChatbot() {
     ]);
     setIsLoading(true);
 
-    const activeKey = userApiKey.trim() || DEFAULT_GEMINI_KEY;
+    streamAbortRef.current?.abort();
+    const requestAbortController = new AbortController();
+    streamAbortRef.current = requestAbortController;
+
+    // Only transmit explicit user-configured BYOK key; server uses GEMINI_API_KEY env var when empty
+    const activeKey = userApiKey.trim();
 
     // 2. Intent Slicing (Reduces payload from 18,000 tokens to ~3,500 tokens for 4x speed)
     const activeDashaTree = calculateVimshottariDasha(
@@ -5597,13 +5606,46 @@ export default function AstroChatbot() {
               transitEphemeris,
               runningDasha: runningDashaPayload,
               activeCorrections: sessionCorrections,
-              clientMemory: loadClientMemoryVault(),
+              clientMemory: loadClientMemoryVault(profileThreadKey),
               stream: true,
               consultationDepth,
             }),
+            signal: requestAbortController.signal,
           });
 
-          if (sseRes.ok && sseRes.body && sseRes.headers.get("content-type")?.includes("text/event-stream")) {
+          const resContentType = sseRes.headers.get("content-type") || "";
+
+          // Respect server-enforced rate limits, missing-key notices, and prompt-injection guard JSON replies
+          if (sseRes.status === 429 || sseRes.status === 401) {
+            const errJson = await sseRes.json().catch(() => ({}));
+            const noticeMsg =
+              errJson?.message ||
+              (sseRes.status === 429
+                ? "You are sending messages too quickly. Please wait a moment before continuing."
+                : "No Google Gemini API key detected. Please click **⚙️ Settings** to add a Gemini API key.");
+            setMessages((prev) =>
+              prev.map((m) => (m.id === assistantMsgId ? { ...m, content: `⚠️ ${noticeMsg}` } : m))
+            );
+            return;
+          }
+
+          if (sseRes.ok && resContentType.includes("application/json")) {
+            const jsonData = await sseRes.json();
+            if (typeof jsonData?.reply === "string" && jsonData.reply.trim()) {
+              setMessages((prev) => {
+                const next = prev.map((m) =>
+                  m.id === assistantMsgId ? { ...m, content: jsonData.reply } : m
+                );
+                if (jsonData.model !== "guard") {
+                  syncMessagesToMemoryVault(next, profileThreadKey);
+                }
+                return next;
+              });
+              return;
+            }
+          }
+
+          if (sseRes.ok && sseRes.body && resContentType.includes("text/event-stream")) {
             const reader = sseRes.body.getReader();
             const decoder = new TextDecoder();
             let buffer = "";
@@ -5647,29 +5689,42 @@ export default function AstroChatbot() {
             }
 
             if (streamedFullText.trim()) {
-              syncMessagesToMemoryVault([...updatedMessages, { role: "assistant", content: streamedFullText }]);
+              syncMessagesToMemoryVault(
+                [...updatedMessages, { role: "assistant", content: streamedFullText }],
+                profileThreadKey
+              );
               return;
             }
           }
-        } catch (sseErr) {
-          console.warn("[AstroChat] Server SSE stream fallback to direct client stream:", sseErr);
+        } catch (sseErr: any) {
+          if (sseErr?.name === "AbortError") return;
+          console.warn("[AstroChat] Server SSE stream fallback check:", sseErr);
         }
       }
 
-      const reply = await executeStreamingGeminiCall(
-        updatedMessages,
-        slicedDossier,
-        activeKey,
-        (streamText) => {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === assistantMsgId ? { ...m, content: streamText } : m))
+      if (activeKey) {
+        const reply = await executeStreamingGeminiCall(
+          updatedMessages,
+          slicedDossier,
+          activeKey,
+          (streamText) => {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === assistantMsgId ? { ...m, content: streamText } : m))
+            );
+          }
+        );
+        if (reply) {
+          syncMessagesToMemoryVault(
+            [...updatedMessages, { role: "assistant", content: reply }],
+            profileThreadKey
           );
+          return;
         }
-      );
-      if (reply) {
-        syncMessagesToMemoryVault([...updatedMessages, { role: "assistant", content: reply }]);
       }
+
+      throw new Error("Unable to stream response from AI consultation server.");
     } catch (err: any) {
+      if (err?.name === "AbortError") return;
       try {
         const response = await fetch("/api/astro-chat", {
           method: "POST",
@@ -5686,15 +5741,18 @@ export default function AstroChatbot() {
             consultationDepth,
             transitEphemeris: transitEphemeris,
             activeCorrections: sessionCorrections,
-            clientMemory: loadClientMemoryVault(),
+            clientMemory: loadClientMemoryVault(profileThreadKey),
           }),
+          signal: requestAbortController.signal,
         });
 
         if (response.ok) {
           const data = await response.json();
           setMessages((prev) => {
             const next = prev.map((m) => (m.id === assistantMsgId ? { ...m, content: data.reply } : m));
-            syncMessagesToMemoryVault(next);
+            if (data.model !== "guard") {
+              syncMessagesToMemoryVault(next, profileThreadKey);
+            }
             return next;
           });
           return;
@@ -5985,7 +6043,7 @@ export default function AstroChatbot() {
                     {
                       id: "welcome",
                       role: "assistant",
-                      content: buildPersonalizedWelcomeMessage(natalEphemeris),
+                      content: buildPersonalizedWelcomeMessage(natalEphemeris, profileThreadKey),
                       timestamp: new Date(),
                     },
                   ])

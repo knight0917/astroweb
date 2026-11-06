@@ -439,88 +439,218 @@ export function calculateWeightedProbabilityScores(
   ashtakavarga: AshtakavargaResult
 ): Record<"career" | "wealth" | "relationships" | "health" | "spirituality", LifeVectorScore> {
   const ascRashi = Math.floor(ephem.ascendant.siderealLongitude / 30);
-  const activeAd = dasha.activeDasha?.antardasha.name || "";
   const activePd = dasha.activeDasha?.pratyantardasha.name || "";
-  const activeMd = dasha.activeDasha?.mahadasha.name || "";
+  const activeMd = dasha.activeDasha?.mahadasha.name || "Jupiter";
+  const activeAd = dasha.activeDasha?.antardasha.name || "Mercury";
 
-  // 1. CAREER & STATUS VECTOR (10th house, D-10, AmK, Exalted Mercury)
-  let careerScore = 60;
+  const getHouseSignIdx = (houseNum: number) => (ascRashi + houseNum - 1) % 12;
+  const getHouseLordName = (houseNum: number) => RASHI_NAMES[getHouseSignIdx(houseNum)].lord;
+  const formatMonthYear = (d?: Date) =>
+    d instanceof Date && !Number.isNaN(d.getTime())
+      ? d.toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" })
+      : "Upcoming Cycle";
+
+  const adEndFormatted = formatMonthYear(dasha.activeDasha?.adEnd);
+  const mdEndFormatted = formatMonthYear(dasha.activeDasha?.mdEnd);
+
+  const lagnaLord = getHouseLordName(1);
+  const secondLord = getHouseLordName(2);
+  const fifthLord = getHouseLordName(5);
+  const seventhLord = getHouseLordName(7);
+  const ninthLord = getHouseLordName(9);
+  const tenthLord = getHouseLordName(10);
+  const eleventhLord = getHouseLordName(11);
+
+  const sarva10 = ashtakavarga.sarvaHouseBindus?.[9] ?? 28;
+  const sarva11 = ashtakavarga.sarvaHouseBindus?.[10] ?? 28;
+  const sarva7 = ashtakavarga.sarvaHouseBindus?.[6] ?? 28;
+  const sarva1 = ashtakavarga.sarvaHouseBindus?.[0] ?? 28;
+  const sarva9 = ashtakavarga.sarvaHouseBindus?.[8] ?? 28;
+
+  // 1. CAREER & STATUS VECTOR (10th house, D-10, AmK, Ashtakavarga, Double Transit)
+  let careerScore = 58 + Math.max(-8, Math.min(12, (sarva10 - 28) * 2));
   const careerDrivers: string[] = [];
   const careerObstacles: string[] = [];
 
+  const tenthLordPos = ephem.planets[tenthLord];
+  if (tenthLordPos && [1, 4, 5, 7, 9, 10, 11].includes(tenthLordPos.house)) {
+    careerScore += 10;
+    careerDrivers.push(
+      `10th Lord ${tenthLord} placed in Kendra/Trikona/Labha House ${tenthLordPos.house} (${tenthLordPos.rashi.englishName}) anchors professional authority.`
+    );
+  }
   const mercuryNuance = combustion.find((c) => c.name === "Mercury");
   if (mercuryNuance?.hasExaltationShield) {
-    careerScore += 20;
-    careerDrivers.push("Exalted 7th-house Mercury forms Bhadra Mahapurusha & Budhaditya Yogas for formal contracts.");
+    careerScore += 12;
+    careerDrivers.push("Exalted Mercury forms high-potency analytical & commercial execution yogas.");
   }
-  if (activeAd === "Mercury") {
-    careerScore += 15;
-    careerDrivers.push("Active Mercury Antardasha (2026-2029) directly triggers career contract execution.");
-  }
-  if (neechaVakri.some((p) => p.name === "Saturn" && p.isNeechaVakri)) {
+  if (doubleTransit.activatedHouses.includes(10)) {
     careerScore += 10;
-    careerDrivers.push("Neecha-Vakri Saturn provides unshakeable technical endurance and late-20s Pashchat Bhagya.");
-    careerObstacles.push("Early 20s stagnation (2023-2026 Venus-Saturn) delayed entry to enforce deep mastery.");
+    careerDrivers.push("Jupiter-Saturn Double Transit actively illuminates the 10th House of Karma.");
+  }
+  if (activeAd === tenthLord || activeMd === tenthLord || activeAd === eleventhLord) {
+    careerScore += 10;
+    careerDrivers.push(
+      `Active ${activeMd}–${activeAd} period (through ${adEndFormatted}) directly triggers career milestone houses.`
+    );
+  }
+  const nvPlanets = neechaVakri.filter((p) => p.isNeechaVakri);
+  if (nvPlanets.length > 0) {
+    careerScore += 6;
+    careerDrivers.push(
+      `Neecha-Vakri ${nvPlanets.map((p) => p.name).join(", ")} confers high Chestabala resilience after initial testing.`
+    );
+  }
+  if (careerDrivers.length === 0) {
+    careerDrivers.push(
+      `10th House carries ${sarva10} Sarvashtakavarga bindus under ${tenthLord} lordship, supporting steady professional progression.`
+    );
+  }
+  if (tenthLordPos && [6, 8, 12].includes(tenthLordPos.house)) {
+    careerScore -= 8;
+    careerObstacles.push(
+      `10th Lord ${tenthLord} in Dusthana House ${tenthLordPos.house} requires strategic adaptability and unconventional skill-building.`
+    );
+  }
+  if (sarva10 < 26) {
+    careerObstacles.push(
+      `Moderate 10th-house SAV density (${sarva10} bindus) demands extra operational persistence.`
+    );
+  }
+  if (careerObstacles.length === 0) {
+    careerObstacles.push("Pacing major role transitions with Double Transit windows prevents premature burnout.");
   }
   careerScore = Math.min(94, Math.max(25, careerScore));
 
-  // 2. WEALTH & INFLOW VECTOR (2nd, 11th, Indu Lagna, Dhana Yogas)
-  let wealthScore = 55;
+  // 2. WEALTH & INFLOW VECTOR (2nd, 11th, SAV, Active Dasha)
+  let wealthScore = 55 + Math.max(-8, Math.min(14, (sarva11 - 28) * 2));
   const wealthDrivers: string[] = [];
   const wealthObstacles: string[] = [];
 
-  const ketuPos = ephem.planets.Ketu;
-  if (ketuPos && ((Math.floor(ketuPos.siderealLongitude / 30) - ascRashi + 12) % 12) + 1 === 11) {
-    wealthScore += 18;
-    wealthDrivers.push("Ketu in 11th House of Gains (Ekadasha Labha) delivers sudden technical stipends & contracts.");
+  const eleventhLordPos = ephem.planets[eleventhLord];
+  const secondLordPos = ephem.planets[secondLord];
+  if (eleventhLordPos && [1, 2, 4, 5, 7, 9, 10, 11].includes(eleventhLordPos.house)) {
+    wealthScore += 12;
+    wealthDrivers.push(
+      `11th Lord ${eleventhLord} in House ${eleventhLordPos.house} (${eleventhLordPos.rashi.englishName}) energizes recurring gains and network inflows.`
+    );
   }
-  if (activePd === "Ketu" || activePd === "Venus") {
-    wealthScore += 15;
-    wealthDrivers.push("Current micro-period unlocks the 11th house liquid cashflow gateway.");
+  if (sarva11 >= 30) {
+    wealthScore += 8;
+    wealthDrivers.push(
+      `Elevated 11th-house Labha Sarvashtakavarga (${sarva11} bindus) multiplies capital retention.`
+    );
   }
-  if (neechaVakri.some((p) => p.name === "Saturn" && p.isNeechaVakri)) {
-    wealthObstacles.push("Debilitated Saturn in 2nd caused severe liquid starvation in early youth before uncoiling.");
+  if ([secondLord, eleventhLord, "Jupiter", "Venus"].includes(activeAd)) {
+    wealthScore += 8;
+    wealthDrivers.push(`Running ${activeAd} Antardasha activates liquid cashflow and asset accumulation channels.`);
+  }
+  if (wealthDrivers.length === 0) {
+    wealthDrivers.push(
+      `2nd Lord ${secondLord} and 11th Lord ${eleventhLord} govern structured wealth compounding (${sarva11} Labha bindus).`
+    );
+  }
+  if (secondLordPos && [6, 8, 12].includes(secondLordPos.house)) {
+    wealthScore -= 8;
+    wealthObstacles.push(
+      `2nd Lord ${secondLord} in House ${secondLordPos.house} cautions against impulsive liquidity leaks.`
+    );
+  }
+  if (wealthObstacles.length === 0) {
+    wealthObstacles.push("Disciplined treasury allocation is required to convert gross inflows into lasting net worth.");
   }
   wealthScore = Math.min(92, Math.max(20, wealthScore));
 
-  // 3. RELATIONSHIPS & MARRIAGE VECTOR (7th house, D-9, DK)
-  let relScore = 50;
+  // 3. RELATIONSHIPS & MARRIAGE VECTOR (7th house, D-9, Combustion/Decoupling)
+  let relScore = 54 + Math.max(-8, Math.min(10, (sarva7 - 28) * 2));
   const relDrivers: string[] = [];
   const relObstacles: string[] = [];
 
-  if (mercuryNuance && mercuryNuance.isCombust) {
-    relScore -= 10;
-    relObstacles.push("7th Lord combustion creates communication friction and hesitation in expressing deep feelings.");
+  const seventhLordPos = ephem.planets[seventhLord];
+  const seventhCombust = combustion.find((c) => c.name === seventhLord && c.isCombust);
+  if (seventhLordPos && [1, 2, 4, 5, 7, 9, 10, 11].includes(seventhLordPos.house)) {
+    relScore += 10;
+    relDrivers.push(
+      `7th Lord ${seventhLord} in House ${seventhLordPos.house} (${seventhLordPos.rashi.englishName}) supports committed partnership alignment.`
+    );
   }
-  if (mercuryNuance?.isD9Decoupled) {
-    relScore += 18;
-    relDrivers.push("Navamsha (D-9) sign decoupling resolves partner misunderstanding in mature adult phase.");
+  if (seventhCombust?.isD9Decoupled) {
+    relScore += 12;
+    relDrivers.push(
+      `Navamsha (D-9) decoupling of ${seventhLord} resolves early communication friction in mature partnership.`
+    );
+  }
+  if (doubleTransit.activatedHouses.includes(7)) {
+    relScore += 10;
+    relDrivers.push("Active Double Transit across the 7th House favors relationship formalization and harmony.");
+  }
+  if (relDrivers.length === 0) {
+    relDrivers.push(
+      `7th House governed by ${seventhLord} (${sarva7} SAV bindus) anchors long-term mutual trust through conscious dialogue.`
+    );
+  }
+  if (seventhCombust && !seventhCombust.isD9Decoupled) {
+    relScore -= 10;
+    relObstacles.push(
+      `7th Lord ${seventhLord} solar proximity (${seventhCombust.separationDeg.toFixed(1)}°) requires patience in emotional expression.`
+    );
+  }
+  if (relObstacles.length === 0) {
+    relObstacles.push("Balancing career commitments with transparent emotional availability prevents misunderstanding.");
   }
   relScore = Math.min(88, Math.max(30, relScore));
 
-  // 4. VITALITY & HEALTH VECTOR (1st, 6th, 8th, Lagnesh Jupiter)
-  let healthScore = 70;
+  // 4. VITALITY & HEALTH VECTOR (1st, 6th, 8th, Lagna Lord)
+  let healthScore = 66 + Math.max(-8, Math.min(10, (sarva1 - 28) * 2));
   const healthDrivers: string[] = [];
   const healthObstacles: string[] = [];
 
-  const jupiterPos = ephem.planets.Jupiter;
-  if (jupiterPos?.isRetrograde) {
-    healthScore += 12;
-    healthDrivers.push("Lagna Lord Jupiter has maximum Chestabala, conferring resilient long-term vitality.");
+  const lagnaLordPos = ephem.planets[lagnaLord];
+  if (lagnaLordPos && [1, 4, 5, 7, 9, 10, 11].includes(lagnaLordPos.house)) {
+    healthScore += 10;
+    healthDrivers.push(
+      `Lagna Lord ${lagnaLord} well-placed in House ${lagnaLordPos.house} (${lagnaLordPos.rashi.englishName}) fortifies constitutional stamina.`
+    );
   }
-  healthObstacles.push("Mental restlessness and over-analysis during periods of forced isolation.");
+  if (lagnaLordPos?.isRetrograde) {
+    healthScore += 6;
+    healthDrivers.push(`Retrograde Lagna Lord ${lagnaLord} carries strong Chestabala recovery vigor.`);
+  }
+  if (healthDrivers.length === 0) {
+    healthDrivers.push(
+      `Ascendant in ${RASHI_NAMES[ascRashi].englishName} (${sarva1} SAV bindus) maintains resilient baseline vitality with rhythmic daily routine.`
+    );
+  }
+  healthObstacles.push("Nervous over-extension during intense Dasha transitions requires structured sleep and pranayama.");
   healthScore = Math.min(95, Math.max(35, healthScore));
 
-  // 5. SPIRITUAL DESTINY VECTOR (9th, 12th, AK Moon, Mars in Scorpio)
-  let spiritScore = 80;
+  // 5. SPIRITUAL DESTINY VECTOR (5th, 9th, 12th, Argala Dharma Loop)
+  let spiritScore = 72 + Math.max(-6, Math.min(10, (sarva9 - 28) * 2));
   const spiritDrivers: string[] = [];
   const spiritObstacles: string[] = [];
 
   if (argala.dispositor5thIn9th) {
-    spiritScore += 15;
-    spiritDrivers.push("5th Lord Moon in 9th with Mars creates profound intellectual and spiritual Trikona Raja Yoga.");
+    spiritScore += 14;
+    spiritDrivers.push(
+      `5th Lord ${fifthLord} linked with 9th House creates a powerful Trikona Dharma-Jnana Yoga.`
+    );
   }
+  const ninthLordPos = ephem.planets[ninthLord];
+  if (ninthLordPos && [1, 4, 5, 7, 9, 10, 11].includes(ninthLordPos.house)) {
+    spiritScore += 8;
+    spiritDrivers.push(
+      `9th Lord ${ninthLord} in House ${ninthLordPos.house} (${ninthLordPos.rashi.englishName}) deepens philosophical intuition and dharmic protection.`
+    );
+  }
+  if (spiritDrivers.length === 0) {
+    spiritDrivers.push(
+      `Trikona lords ${fifthLord} and ${ninthLord} sustain inner clarity, contemplation, and protective purva-punya grace.`
+    );
+  }
+  spiritObstacles.push("Sustaining daily sadhana consistency amidst material responsibilities.");
   spiritScore = Math.min(98, Math.max(40, spiritScore));
+
+  const activeWindowLabel = `${activeMd}–${activeAd} Window (until ${adEndFormatted})`;
 
   return {
     career: {
@@ -532,8 +662,8 @@ export function calculateWeightedProbabilityScores(
       statusTitle: careerScore >= 75 ? "Highly Favorable (Breakthrough Gateway)" : "Developing Momentum",
       primaryDrivers: careerDrivers,
       keyObstacles: careerObstacles,
-      timingWindow: "October 2026 – March 2029 (Peak Execution)",
-      practicalAction: "Deploy technical systems, live code architectures, and commercial proposals immediately.",
+      timingWindow: activeWindowLabel,
+      practicalAction: `Align high-leverage career deliverables with ${tenthLord} and ${activeAd} significations.`,
     },
     wealth: {
       vectorId: "wealth",
@@ -544,8 +674,8 @@ export function calculateWeightedProbabilityScores(
       statusTitle: wealthScore >= 70 ? "Unlocking Cashflow Stream" : "Gradual Stabilization",
       primaryDrivers: wealthDrivers,
       keyObstacles: wealthObstacles,
-      timingWindow: "Late 2026 (Stipend/Signing) to 2027-2028 (Sustained Paychecks)",
-      practicalAction: "Channel Ketu in the 11th via street-animal seva and maintain daily accounting rigor.",
+      timingWindow: activeWindowLabel,
+      practicalAction: `Compound inflows systematically through ${eleventhLord} and ${secondLord} treasury discipline.`,
     },
     relationships: {
       vectorId: "relationships",
@@ -553,11 +683,11 @@ export function calculateWeightedProbabilityScores(
       icon: "💍",
       favorablePct: relScore,
       frictionPct: 100 - relScore,
-      statusTitle: "Maturing Bond & Intellectual Alignment",
+      statusTitle: relScore >= 70 ? "Harmonious Partnership Alignment" : "Maturing Bond & Intellectual Alignment",
       primaryDrivers: relDrivers,
       keyObstacles: relObstacles,
-      timingWindow: "Ages 28–30 (Post-Mercury Maturation)",
-      practicalAction: "Practice transparent communication; avoid over-analyzing emotional intent.",
+      timingWindow: `${activeMd} Mahadasha (through ${mdEndFormatted})`,
+      practicalAction: "Practice transparent communication and mutual dharmic respect in partnerships.",
     },
     health: {
       vectorId: "health",
@@ -565,11 +695,11 @@ export function calculateWeightedProbabilityScores(
       icon: "🌿",
       favorablePct: healthScore,
       frictionPct: 100 - healthScore,
-      statusTitle: "Resilient & High-Tensile Constitution",
+      statusTitle: healthScore >= 72 ? "Resilient & High-Tensile Constitution" : "Balanced Constitutional Care",
       primaryDrivers: healthDrivers,
       keyObstacles: healthObstacles,
-      timingWindow: "Active & Stable",
-      practicalAction: "Morning Surya Arghya and grounding physical breathwork to soothe mental speed.",
+      timingWindow: "Active & Ongoing Daily Rhythm",
+      practicalAction: `Support Lagna Lord ${lagnaLord} via morning Surya Arghya, hydration, and grounding breathwork.`,
     },
     spirituality: {
       vectorId: "spirituality",
@@ -577,11 +707,11 @@ export function calculateWeightedProbabilityScores(
       icon: "🧘",
       favorablePct: spiritScore,
       frictionPct: 100 - spiritScore,
-      statusTitle: "Deep Awakening & Research Intellect",
+      statusTitle: "Deep Awakening & Dharmic Intellect",
       primaryDrivers: spiritDrivers,
       keyObstacles: spiritObstacles,
-      timingWindow: "Lifelong Anchor (Accelerating from Age 27)",
-      practicalAction: "Recite Sri Vishnu Sahasranama and engage with profound metaphysical/scientific texts.",
+      timingWindow: `Lifelong Anchor (${activeMd}–${activeAd} Phase)`,
+      practicalAction: `Honor 9th Lord ${ninthLord} through daily mantra japa and study of classical wisdom.`,
     },
   };
 }
@@ -592,24 +722,28 @@ export function calculateWeightedProbabilityScores(
 export function generateDynamicFollowUpChips(
   matrix: Partial<OmniAspectMatrix>
 ): DynamicFollowUpChip[] {
+  const md = matrix.runningDasha?.mahadasha || "current";
+  const ad = matrix.runningDasha?.antardasha || "active";
+  const asc = matrix.ascendantSignName || "natal";
+
   return [
     {
       id: "chip-timing",
       category: "timing",
-      label: "🗓️ Exact Dates for Inflow",
-      prompt: "What are the exact monthly dates when my next sub-period will unlock my first job contract and money?",
+      label: `🗓️ ${md}–${ad} Peak Dates`,
+      prompt: `What are the exact monthly breakthrough windows during my ${md} Mahadasha and ${ad} Antardasha?`,
     },
     {
       id: "chip-cross-domain",
       category: "cross_domain",
-      label: "💼 How 11th Ketu Helps",
-      prompt: "How does my 11th house Ketu in Capricorn work together with my exalted Mercury to bring high-paying tech roles?",
+      label: `💼 ${asc} Career & Wealth`,
+      prompt: `How do my 10th and 11th house lords interact in D-1 and D-10 to shape my career growth and financial inflow?`,
     },
     {
       id: "chip-remedy",
       category: "remedy",
       label: "⚡ Top Daily Remedy",
-      prompt: "What is the single most powerful daily practice to harmonize my retrograde Saturn and combust Mercury?",
+      prompt: `What is the single most effective daily Vedic remedy for my ${asc} Ascendant and active ${md}–${ad} Dasha?`,
     },
   ];
 }
@@ -634,10 +768,12 @@ export function calculateOmniAspectMatrix(
   const ascRashi = Math.floor(ephem.ascendant.siderealLongitude / 30);
   const ascName = RASHI_NAMES[ascRashi].englishName;
 
-  // Dasha
+  // Dasha (anchored to true natal UTC birth timestamp!)
   const moon = ephem.planets.Moon;
   const moonLon = moon ? moon.siderealLongitude : 0;
-  const dasha = calculateVimshottariDasha(evalDate, moonLon, evalDate);
+  const birthDate = ephem.utcDate ? new Date(ephem.utcDate) : evalDate;
+  const safeBirthDate = Number.isNaN(birthDate.getTime()) ? evalDate : birthDate;
+  const dasha = calculateVimshottariDasha(safeBirthDate, moonLon, evalDate);
 
   // Components
   const neechaVakri = evaluateNeechaVakriPlanets(ephem);
@@ -656,31 +792,36 @@ export function calculateOmniAspectMatrix(
     ashtakavarga
   );
 
-  const suggestedFollowUpChips = generateDynamicFollowUpChips({
-    lifeVectorScores,
-  });
-
-  const activeMd = dasha.activeDasha?.mahadasha.name || "Venus";
+  const activeMd = dasha.activeDasha?.mahadasha.name || "Jupiter";
   const activeAd = dasha.activeDasha?.antardasha.name || "Mercury";
   const activePd = dasha.activeDasha?.pratyantardasha.name || "Mercury";
 
   const fullSummary = `${activeMd} MD / ${activeAd} AD / ${activePd} PD`;
+  const runningDashaObj = {
+    mahadasha: activeMd,
+    antardasha: activeAd,
+    pratyantardasha: activePd,
+    mdEnd: dasha.activeDasha?.mdEnd || evalDate,
+    adEnd: dasha.activeDasha?.adEnd || evalDate,
+    pdEnd: dasha.activeDasha?.pdEnd || evalDate,
+    fullSummary,
+  };
 
-  const narrativeBrief = `Native possesses a high-tensile chart anchored by an Exalted Mercury in the 7th house and Neecha-Vakri Saturn with Jupiter [R] in the 2nd house. Prolonged career delays between 2023 and early 2026 were driven by the Saturnian compression cycle, which has now transitioned into the active Mercury contract gateway (78% favorable career velocity).`;
+  const suggestedFollowUpChips = generateDynamicFollowUpChips({
+    ascendantSignName: ascName,
+    runningDasha: runningDashaObj,
+    lifeVectorScores,
+  });
+
+  const lagnaLord = RASHI_NAMES[ascRashi].lord;
+  const tenthLord = RASHI_NAMES[(ascRashi + 9) % 12].lord;
+  const narrativeBrief = `${ascName} Ascendant chart governed by ${lagnaLord} with 10th Lord ${tenthLord}, currently operating in ${fullSummary}. Multi-varga synthesis indicates ${lifeVectorScores.career.favorablePct}% career momentum and ${lifeVectorScores.wealth.favorablePct}% financial inflow alignment, with Double Transit activating Houses [${doubleTransit.activatedHouses.join(", ") || "none"}].`;
 
   return {
-    evaluationDate,
+    evaluationDate: evalDate,
     ascendantSignIndex: ascRashi,
     ascendantSignName: ascName,
-    runningDasha: {
-      mahadasha: activeMd,
-      antardasha: activeAd,
-      pratyantardasha: activePd,
-      mdEnd: dasha.activeDasha?.mdEnd || new Date(),
-      adEnd: dasha.activeDasha?.adEnd || new Date(),
-      pdEnd: dasha.activeDasha?.pdEnd || new Date(),
-      fullSummary,
-    },
+    runningDasha: runningDashaObj,
     neechaVakriPlanets: neechaVakri,
     combustionNuances: combustion,
     argalaSynthesis: argala,

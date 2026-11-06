@@ -115,31 +115,70 @@ export function arbitratePredictiveQuery(
   let naturalKaraka = "Sun";
 
   const d = domain.toLowerCase();
-  if (d.includes("marri") || d.includes("spouse") || d.includes("relationship") || d.includes("love") || d.includes("wife") || d.includes("husband") || d.includes("divorce")) {
+  if (
+    /\b(marri\w*|spouse|relationship\w*|love|wife|husband|partner\w*|wedding|divorce|7th\s+house|seventh\s+house|d-?9)\b/.test(
+      d
+    )
+  ) {
     targetHouse = 7;
     naturalKaraka = "Venus";
-  } else if (d.includes("plot") || d.includes("land") || d.includes("property") || d.includes("house") || d.includes("home") || d.includes("real estate") || d.includes("flat") || d.includes("vastu") || d.includes("vehicle") || d.includes("car")) {
-    targetHouse = 4;
-    naturalKaraka = "Mars";
-  } else if (d.includes("child") || d.includes("progeny") || d.includes("pregnan") || d.includes("baby") || d.includes("santana") || d.includes("son") || d.includes("daughter") || d.includes("ivf")) {
+  } else if (
+    /\b(child|children|progeny|pregnan\w*|baby|santana|son|daughter|ivf|conceiv\w*|d-?7)\b/.test(d)
+  ) {
     targetHouse = 5;
     naturalKaraka = "Jupiter";
-  } else if (d.includes("educat") || d.includes("exam") || d.includes("study") || d.includes("college") || d.includes("degree") || d.includes("university") || d.includes("scholarship")) {
+  } else if (
+    /\b(educat\w*|exam\w*|study\w*|studies|college|degree|university|scholarship|school\w*|academ\w*|d-?24)\b/.test(
+      d
+    )
+  ) {
     targetHouse = 5;
     naturalKaraka = "Mercury";
-  } else if (d.includes("foreign") || d.includes("abroad") || d.includes("visa") || d.includes("settle") || d.includes("relocat") || d.includes("immigra") || d.includes("overseas")) {
+  } else if (
+    /\b(plot\w*|land\w*|propert\w*|real\s+estate|flat|apartment|villa|vastu|home\s+(?:buy\w*|loan|purchase)|buy\w*\s+(?:a\s+)?(?:house|home)|own\s+(?:a\s+)?(?:house|home)|vehicle\w*|car|cars|bike|automobile|conveyance|4th\s+house|fourth\s+house|d-?4|d-?16)\b/.test(
+      d
+    )
+  ) {
+    targetHouse = 4;
+    naturalKaraka = "Mars";
+  } else if (
+    /\b(career\w*|job\w*|promot\w*|profession\w*|business\w*|work\w*|office|interview\w*|employ\w*|startup|boss|10th\s+house|tenth\s+house|d-?10)\b/.test(
+      d
+    )
+  ) {
+    targetHouse = 10;
+    naturalKaraka = "Sun";
+  } else if (
+    /\b(foreign|abroad|visa|settle\w*|relocat\w*|immigra\w*|overseas|citizenship|12th\s+house|twelfth\s+house)\b/.test(
+      d
+    )
+  ) {
     targetHouse = 12;
     naturalKaraka = "Rahu";
-  } else if (d.includes("wealth") || d.includes("money") || d.includes("financ") || d.includes("income") || d.includes("rich") || d.includes("crore") || d.includes("million") || d.includes("profit")) {
+  } else if (
+    /\b(wealth\w*|money|financ\w*|income|rich|crore\w*|million\w*|profit\w*|invest\w*|trading|stock\w*|salary|bank|2nd\s+house|11th\s+house|d-?2)\b/.test(
+      d
+    )
+  ) {
     targetHouse = 2;
     naturalKaraka = "Jupiter";
-  } else if (d.includes("litigat") || d.includes("court") || d.includes("debt") || d.includes("loan") || d.includes("enemy") || d.includes("dispute") || d.includes("legal")) {
+  } else if (
+    /\b(litigat\w*|court|debt\w*|loan\w*|enem\w*|dispute\w*|legal|lawsuit)\b/.test(d)
+  ) {
     targetHouse = 6;
     naturalKaraka = "Mars";
-  } else if (d.includes("health") || d.includes("diet") || d.includes("disease") || d.includes("illness") || d.includes("medical") || d.includes("surgery") || d.includes("vitality") || d.includes("longevity")) {
+  } else if (
+    /\b(health\w*|diet|disease\w*|illness|medical|surgery|vitality|longevity|hospital|pain|6th\s+house|8th\s+house|d-?30)\b/.test(
+      d
+    )
+  ) {
     targetHouse = 6;
     naturalKaraka = "Sun";
-  } else if (d.includes("spirit") || d.includes("moksha") || d.includes("dharma") || d.includes("deity") || d.includes("mantra") || d.includes("meditat") || d.includes("luck") || d.includes("fortune")) {
+  } else if (
+    /\b(spirit\w*|moksha|dharma|deity|mantra\w*|meditat\w*|luck|fortune|guru|pilgrim\w*|9th\s+house|d-?20)\b/.test(
+      d
+    )
+  ) {
     targetHouse = 9;
     naturalKaraka = "Jupiter";
   } else {
@@ -429,6 +468,13 @@ export function arbitratePredictiveQuery(
     `- Recommended Classical Upaya: ${recommendedUpaya}`,
   ].join("\n");
 
+  const evalYear = transitEphemeris?.utcDate
+    ? new Date(transitEphemeris.utcDate).getUTCFullYear()
+    : new Date().getUTCFullYear();
+  const dynamicTimingWindow = runningDasha
+    ? `${evalYear}–${evalYear + 1} (${runningDasha.mahadashaLord}–${runningDasha.antardashaLord} Window)`
+    : `${evalYear}–${evalYear + 1} (Upcoming 6 to 12 Months)`;
+
   return {
     domain,
     compositeScore: clampedScore,
@@ -436,7 +482,7 @@ export function arbitratePredictiveQuery(
     verdictTitle: title,
     verdictDescription: description,
     clarityPercent: Math.round(clampedScore * 0.95 + 5),
-    activeTimingWindow: "Upcoming 6 to 12 Months",
+    activeTimingWindow: dynamicTimingWindow,
     primaryPositiveDriver: primaryDriver,
     primaryFrictionFactor: primaryFriction,
     recommendedUpaya,

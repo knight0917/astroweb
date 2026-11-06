@@ -209,11 +209,11 @@ export function analyzeCareerJobBusiness(ephem: EphemerisResult): CareerJobBusin
     else if ([6, 8, 12].includes(d110thLordD10House)) d110thLordD10Dignity = "Dusthana in D10";
   }
 
-  // Benefic aspects on D10 Lagna
+  // Benefic aspects on D10 Lagna (H7 casts 7th aspect on H1; Jupiter in H5 casts 9th aspect on H1, Jupiter in H9 casts 5th aspect on H1)
   const d10Aspects: string[] = [];
   d10Chart.entities.forEach((e) => {
     if (["Jupiter", "Venus", "Mercury"].includes(e.name)) {
-      if (e.house === 7 || (e.name === "Jupiter" && [5, 9].includes((13 - e.house) % 12))) {
+      if (e.house === 7 || (e.name === "Jupiter" && [5, 9].includes(e.house))) {
         d10Aspects.push(`${e.name} (H${e.house} in D10)`);
       }
     }

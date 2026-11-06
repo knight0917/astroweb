@@ -13,7 +13,7 @@
 
 import { EphemerisResult } from "./types";
 import { RASHI_NAMES } from "./constants";
-import { calculateJaiminiKarakas } from "./jaimini";
+import { calculateJaiminiKarakas, calculateArudhaPadas } from "./jaimini";
 import { calculateShodashavargaChart } from "./shodashavarga";
 import { calculateDoubleTransit } from "./doubleTransit";
 import { evaluateMarriageTiming } from "./marriageTiming";
@@ -166,6 +166,8 @@ export function calculatePredictiveDecisionGates(
   const ascLon = natalEphem.ascendant.siderealLongitude;
   const ascSign = Math.floor(ascLon / 30);
   const jaimini = calculateJaiminiKarakas(natalEphem);
+  const arudhaPadas = calculateArudhaPadas(natalEphem);
+  const d3 = calculateShodashavargaChart(natalEphem, "D3");
   const d9 = calculateShodashavargaChart(natalEphem, "D9");
   const d10 = calculateShodashavargaChart(natalEphem, "D10");
   const d24 = calculateShodashavargaChart(natalEphem, "D24");
@@ -176,6 +178,14 @@ export function calculatePredictiveDecisionGates(
   const manglik = evaluateManglikDosha(natalEphem);
 
   const ephemerisPlanetMap = natalEphem.planets;
+
+  const doesDoubleTransitActivateHouse = (targetHouse: number): boolean => {
+    const jupH = doubleTransit.transitAspects.transitJupiterHouseFromLagna;
+    const satH = doubleTransit.transitAspects.transitSaturnHouseFromLagna;
+    const jupTouches = [1, 5, 7, 9].includes(((targetHouse - jupH + 12) % 12) + 1);
+    const satTouches = [1, 3, 7, 10].includes(((targetHouse - satH + 12) % 12) + 1);
+    return jupTouches && satTouches;
+  };
 
   // Helper: Get house lord (1-indexed house)
   const getHouseLord = (houseNum: number): string => {
@@ -210,7 +220,7 @@ export function calculatePredictiveDecisionGates(
   const d10TenthLordRashi = d10TenthEntity?.vargaRashi.englishName || "Aries";
 
   const isDoubleTransitOn10th = doubleTransit.milestones.career.isDtpFulfilled;
-  const isDoubleTransitOn10thLord = doubleTransit.transitAspects.transitJupiterHouseFromLagna === tenthLordHouse || doubleTransit.transitAspects.transitSaturnHouseFromLagna === tenthLordHouse;
+  const isDoubleTransitOn10thLord = doesDoubleTransitActivateHouse(tenthLordHouse);
 
   const hasRajyaPraptiYoga = [1, 4, 5, 9, 10, 11].includes(tenthLordHouse) && tenthLordDignity !== "Debilitated (नीच)";
   const activeDhanaHouses = [2, 5, 9, 11].filter((h) => getHouseOccupants(h).length > 0 || getHouseLord(h) === tenthLord);
@@ -267,7 +277,7 @@ export function calculatePredictiveDecisionGates(
   const dkRashi = dkPlanet ? dkPlanet.rashi.index : 0;
 
   const isDoubleTransitOn7th = marriage.doubleTransit.isDoubleTransitFulfilled || doubleTransit.milestones.marriage.isDtpFulfilled;
-  const isDoubleTransitOn7thLord = doubleTransit.transitAspects.transitJupiterHouseFromLagna === seventhLordHouse || doubleTransit.transitAspects.transitSaturnHouseFromLagna === seventhLordHouse;
+  const isDoubleTransitOn7thLord = doesDoubleTransitActivateHouse(seventhLordHouse);
 
   const delayIndicatorSaturnD9Lagna = d9LagnaOccupants.includes("Saturn");
   const delayIndicatorKetuD9Lagna = d9LagnaOccupants.includes("Ketu");
@@ -286,6 +296,9 @@ export function calculatePredictiveDecisionGates(
     ? `Maturity Fruition Phase: Ages 28–32+ (${currentYear + 1}–${currentYear + 2})`
     : `Next Major Alignment Phase: ${currentYear + 1}–${currentYear + 2}`;
 
+  const ulPada = arudhaPadas.find((p) => p.code === "UL") || arudhaPadas[11];
+  const upapadaSignIdx = ulPada ? ulPada.padaSignIndex : (ascSign + 11) % 12;
+
   const marriageGate: MarriageDecisionGate = {
     seventhHouseSign: RASHI_NAMES[(ascSign + 6) % 12].englishName,
     seventhLord,
@@ -301,8 +314,8 @@ export function calculatePredictiveDecisionGates(
       rashi: RASHI_NAMES[dkRashi].englishName,
       house: dkPlanet ? dkPlanet.house : 7,
     },
-    upapadaLagnaRashi: RASHI_NAMES[(ascSign + 8) % 12].englishName,
-    upapadaLord: getHouseLord(9),
+    upapadaLagnaRashi: RASHI_NAMES[upapadaSignIdx].englishName,
+    upapadaLord: RASHI_NAMES[upapadaSignIdx].lord,
     isDoubleTransitOn7th,
     isDoubleTransitOn7thLord,
     isManglik: manglik.isManglik,
@@ -348,6 +361,9 @@ export function calculatePredictiveDecisionGates(
   const jupiterHouse = ephemerisPlanetMap.Jupiter?.house || 1;
   const hasJupiterAspectOnLagnaOrMoon = [1, 5, 7, 9].includes((1 - jupiterHouse + 12) % 12 + 1) || [1, 5, 7, 9].includes(((ephemerisPlanetMap.Moon?.house || 1) - jupiterHouse + 12) % 12 + 1);
 
+  const kharesh22ndSignIdx = (d3.ascendant.vargaSignIndex + 7) % 12;
+  const nav64SignIdx = (d9.ascendant.vargaSignIndex + 3) % 12;
+
   const healthGate: HealthDecisionGate = {
     lagnaLord,
     lagnaLordHouse,
@@ -355,8 +371,8 @@ export function calculatePredictiveDecisionGates(
     sixthLord,
     eighthLord,
     twelfthLord,
-    kharesh22ndDrekkanaLord: getHouseLord(8),
-    sixtyFourthNavamshaLord: getHouseLord(4),
+    kharesh22ndDrekkanaLord: RASHI_NAMES[kharesh22ndSignIdx].lord,
+    sixtyFourthNavamshaLord: RASHI_NAMES[nav64SignIdx].lord,
     hasHarshaYoga,
     hasSaralaYoga,
     hasVimalaYoga,

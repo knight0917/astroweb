@@ -32,7 +32,8 @@ export function calculateTropicalAngles(
   const lstDeg = ((gmstDeg + longitudeDeg) % 360 + 360) % 360;
   const lstRad = (lstDeg * Math.PI) / 180;
 
-  const latRad = (latitudeDeg * Math.PI) / 180;
+  const clampedLatDeg = Math.max(-89.9999, Math.min(89.9999, latitudeDeg));
+  const latRad = (clampedLatDeg * Math.PI) / 180;
   const epsDeg = getEclipticObliquityDegrees(astroTime);
   const epsRad = (epsDeg * Math.PI) / 180;
 

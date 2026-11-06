@@ -288,8 +288,8 @@ export function getRaysTexture(): THREE.Texture {
 
 export function getNebulaSkyTexture(): THREE.Texture {
   return cached("nebula", () => {
-    const w = 1024;
-    const h = 512;
+    const w = 512;
+    const h = 256;
     const fbm = makeFbm(201, 8, 4, 5);
     const base = hex("#14081a");
     const plum = hex("#3b1238");

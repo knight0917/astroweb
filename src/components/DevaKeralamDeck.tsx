@@ -5,6 +5,20 @@ import { useAstroStore } from "../store/useAstroStore";
 import { evaluateDevaKeralam, NADI_AMSHA_METAS } from "../engine/devaKeralam";
 import { DevaKeralamAnalysis, DevaKeralamPlanetNadi, NadiAmshaInfo } from "../engine/types";
 
+function renderMarkdownBold(text: string) {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, idx) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={idx} className="font-bold text-amber-200">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+}
+
 export default function DevaKeralamDeck() {
   const { ephemeris } = useAstroStore();
   const [activeTab, setActiveTab] = useState<"lagna" | "planets" | "matrix" | "transits">("lagna");
@@ -156,7 +170,7 @@ export default function DevaKeralamDeck() {
                 <span className="text-purple-300 font-bold block">💰 Classical Dhana Yogas:</span>
                 <ul className="list-disc list-inside text-slate-200 space-y-1">
                   {report.dhanaYogas.map((y, i) => (
-                    <li key={i} dangerouslySetInnerHTML={{ __html: y.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") }}></li>
+                    <li key={i}>{renderMarkdownBold(y)}</li>
                   ))}
                 </ul>
               </div>
@@ -165,7 +179,7 @@ export default function DevaKeralamDeck() {
                 <span className="text-amber-400 font-bold block">👑 Classical Raja Yogas:</span>
                 <ul className="list-disc list-inside text-slate-200 space-y-1">
                   {report.rajaYogas.map((r, i) => (
-                    <li key={i} dangerouslySetInnerHTML={{ __html: r.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") }}></li>
+                    <li key={i}>{renderMarkdownBold(r)}</li>
                   ))}
                 </ul>
               </div>

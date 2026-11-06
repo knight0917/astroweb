@@ -1,4 +1,7 @@
 import { sql } from "./neon";
+import { generateDeterministicFallbackVector } from "./embeddingService";
+
+const fallbackChunkVectorCache = new Map<string, number[]>();
 
 export interface AstroKnowledgeChunk {
   id: string;
@@ -170,17 +173,21 @@ export async function searchNeonSimilarRules(
       );
     }
 
-    return rows.map((r: any) => ({
-      id: r.id,
-      tradition: r.tradition,
-      sourceRef: r.source_ref,
-      topic: r.topic,
-      subTopic: r.sub_topic || undefined,
-      title: r.title,
-      chunkContent: r.chunk_content,
-      conditions: typeof r.conditions === "string" ? JSON.parse(r.conditions) : r.conditions,
-      similarity: Number(r.similarity) || 0,
-    }));
+    const minSim = typeof options.minSimilarity === "number" ? options.minSimilarity : -1;
+
+    return rows
+      .map((r: any) => ({
+        id: r.id,
+        tradition: r.tradition,
+        sourceRef: r.source_ref,
+        topic: r.topic,
+        subTopic: r.sub_topic || undefined,
+        title: r.title,
+        chunkContent: r.chunk_content,
+        conditions: typeof r.conditions === "string" ? JSON.parse(r.conditions) : r.conditions,
+        similarity: Number(r.similarity) || 0,
+      }))
+      .filter((r: VectorSearchResult) => r.similarity >= minSim);
   } catch (err) {
     console.warn("[VectorDB] Neon similarity query failed, defaulting to in-memory:", err);
     return [];
@@ -203,6 +210,7 @@ export function searchInMemorySimilarRules(
 ): VectorSearchResult[] {
   const limit = options.limit || 5;
   const results: VectorSearchResult[] = [];
+  const targetDim = queryEmbedding.length > 0 ? queryEmbedding.length : 768;
 
   for (const chunk of corpus) {
     // Topic filtering
@@ -210,15 +218,26 @@ export function searchInMemorySimilarRules(
       continue;
     }
 
+    let chunkVec = chunk.embedding;
+    if ((!chunkVec || chunkVec.length !== targetDim) && queryEmbedding.length === targetDim) {
+      const cacheKey = `${chunk.id}:${targetDim}`;
+      chunkVec = fallbackChunkVectorCache.get(cacheKey);
+      if (!chunkVec) {
+        const seedText = `${chunk.title} ${chunk.chunkContent} ${(chunk.conditions?.keywords || []).join(" ")}`;
+        chunkVec = generateDeterministicFallbackVector(seedText, targetDim);
+        fallbackChunkVectorCache.set(cacheKey, chunkVec);
+      }
+    }
+
     let score = 0;
-    if (chunk.embedding && chunk.embedding.length === queryEmbedding.length) {
+    if (chunkVec && chunkVec.length === queryEmbedding.length && queryEmbedding.length > 0) {
       let dot = 0;
       let normA = 0;
       let normB = 0;
       for (let i = 0; i < queryEmbedding.length; i++) {
-        dot += queryEmbedding[i] * chunk.embedding[i];
+        dot += queryEmbedding[i] * chunkVec[i];
         normA += queryEmbedding[i] * queryEmbedding[i];
-        normB += chunk.embedding[i] * chunk.embedding[i];
+        normB += chunkVec[i] * chunkVec[i];
       }
       const denom = Math.sqrt(normA) * Math.sqrt(normB);
       score = denom > 0 ? dot / denom : 0;

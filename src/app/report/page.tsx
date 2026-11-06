@@ -8,7 +8,7 @@ import { GeoLocation } from "@/engine/types";
 
 function ReportContent() {
   const searchParams = useSearchParams();
-  const { setLocation, setDate, setGender, saveProfile } = useAstroStore();
+  const { setLocation, setDate, setGender, saveProfile, savedProfiles } = useAstroStore();
 
   useEffect(() => {
     const name = searchParams.get("name");
@@ -43,12 +43,21 @@ function ReportContent() {
         setLocation(newLoc);
         setDate(targetUtcDate);
         setGender(finalGender);
-        saveProfile(finalName, false, finalGender);
+
+        const alreadyExists = savedProfiles.some(
+          (p) =>
+            p.name.toLowerCase() === finalName.toLowerCase() &&
+            Math.abs(new Date(p.dateIso).getTime() - targetUtcDate.getTime()) < 60000 &&
+            p.location.cityName.toLowerCase() === newLoc.cityName.toLowerCase()
+        );
+        if (!alreadyExists) {
+          saveProfile(finalName, false, finalGender);
+        }
       } catch (err) {
         console.error("Failed to parse URL report query parameters:", err);
       }
     }
-  }, [searchParams, setLocation, setDate, setGender, saveProfile]);
+  }, [searchParams, setLocation, setDate, setGender, saveProfile, savedProfiles]);
 
   return <ComprehensiveReportView />;
 }

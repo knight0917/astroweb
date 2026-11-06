@@ -4,15 +4,14 @@ import { retrieveGroundedAstroKnowledge } from "@/lib/ragRetriever";
 import { arbitratePredictiveQuery } from "@/engine/predictiveArbitrator";
 import { buildConsultationState, formatConsultationStateBlock } from "@/engine/consultationState";
 import { formatClientMemoryPromptContext } from "@/engine/clientMemoryVault";
-import { checkRateLimit } from "@/lib/rateLimiter";
+import { checkRateLimit, extractClientIp } from "@/lib/rateLimiter";
 import { detectPromptInjection, sanitizeUserMessage } from "@/lib/promptGuard";
 
 export async function POST(req: NextRequest) {
   try {
     // ── Rate Limiting ─────────────────────────────────────────────────────────
-    const clientIp =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const rateLimit = checkRateLimit(clientIp, 12, 60_000); // 12 msgs/min per IP
+    const clientIp = extractClientIp(req.headers);
+    const rateLimit = checkRateLimit(`astro-chat:${clientIp}`, 12, 60_000); // 12 msgs/min per IP
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {
@@ -43,16 +42,42 @@ export async function POST(req: NextRequest) {
       consultationDepth = "seeker",
     } = body;
 
-    if (!messages || !Array.isArray(messages)) {
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
         { error: "Messages array is required." },
         { status: 400 }
       );
     }
 
+    // Bound dossier length to prevent upstream token-flooding DoS
+    const safeAstroDossier =
+      typeof astroDossier === "string" ? astroDossier.slice(0, 120_000) : "";
+
+    // Sanitize bounded message window & scan every user turn for prompt injection
+    const recentMessages = messages.slice(-30).map((m: any) => {
+      const isUser = m?.role === "user" || m?.sender === "user";
+      const rawContent = typeof m?.content === "string" ? m.content : "";
+      return {
+        ...m,
+        content: isUser ? sanitizeUserMessage(rawContent) : rawContent.replace(/\0/g, "").slice(0, 12_000),
+      };
+    });
+
+    const hasInjectionAttempt = recentMessages.some(
+      (m: any) => (m.role === "user" || m.sender === "user") && m.content && detectPromptInjection(m.content)
+    );
+
+    if (hasInjectionAttempt) {
+      return NextResponse.json({
+        reply: "I can only provide Vedic astrological guidance based on your birth chart. Please ask an astrology-related question.",
+        model: "guard",
+        provider: "local",
+      });
+    }
+
     // ── Resolve API key: user-supplied → server env (never hardcoded fallback) ─
     const apiKey =
-      userApiKey?.trim() ||
+      (typeof userApiKey === "string" ? userApiKey.trim() : "") ||
       process.env.GEMINI_API_KEY ||
       "";
 
@@ -67,23 +92,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Extract user-confirmed facts from conversation history
-    const userConfirmedFacts = extractUserConfirmedFacts(messages);
+    // Extract user-confirmed facts from sanitized conversation history
+    const userConfirmedFacts = extractUserConfirmedFacts(recentMessages);
 
     // Find the latest user query to perform grounded vector retrieval
-    // Sanitize content and enforce max length before any further processing
-    const lastUserMessage = sanitizeUserMessage(
-      ([...messages].reverse().find((m: any) => m.role === "user" || m.sender === "user")?.content || "")
-    );
-
-    // ── Prompt Injection Guard ────────────────────────────────────────────────
-    if (lastUserMessage && detectPromptInjection(lastUserMessage)) {
-      return NextResponse.json({
-        reply: "I can only provide Vedic astrological guidance based on your birth chart. Please ask an astrology-related question.",
-        model: "guard",
-        provider: "local",
-      });
-    }
+    const lastUserMessage =
+      [...recentMessages].reverse().find((m: any) => m.role === "user" || m.sender === "user")?.content || "";
     
     // 1. Retrieve grounded Shastric & Nadi rules from Neon pgvector using Astrological HyDE
     let groundingCitations = "";
@@ -93,7 +107,7 @@ export async function POST(req: NextRequest) {
       try {
         const ragRes = await retrieveGroundedAstroKnowledge(lastUserMessage, {
           userApiKey: apiKey,
-          chartDossier: astroDossier,
+          chartDossier: safeAstroDossier,
           limit: 4,
         });
         groundingCitations = ragRes.groundingText;
@@ -129,12 +143,12 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Track Multi-Turn Consultation State Graph (including active human corrections)
-    const consultationState = buildConsultationState(messages, lastUserMessage, prescribedUpaya, activeCorrections);
+    const consultationState = buildConsultationState(recentMessages, lastUserMessage, prescribedUpaya, activeCorrections);
     const consultationStateBlock = formatConsultationStateBlock(consultationState);
     const clientMemoryBlock = clientMemory ? formatClientMemoryPromptContext(clientMemory) : "";
 
     const systemInstruction = buildChatSystemInstruction(
-      astroDossier,
+      safeAstroDossier,
       userConfirmedFacts,
       groundingCitations,
       arbitrationProof,
@@ -144,7 +158,7 @@ export async function POST(req: NextRequest) {
     );
 
     // Filter chat history to retain rich conversation memory without runaway token bloat
-    const filteredHistory = messages
+    const filteredHistory = recentMessages
       .filter((msg: any) => msg.id !== "welcome" && msg.content && msg.content.trim())
       .slice(-24);
 
@@ -273,7 +287,6 @@ export async function POST(req: NextRequest) {
 
       const siliconCandidateModels = [
         "deepseek-ai/DeepSeek-V3",
-        "deepseek-ai/DeepSeek-V4-Pro",
         "deepseek-ai/DeepSeek-R1",
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
         "Qwen/Qwen2.5-7B-Instruct",
@@ -297,6 +310,7 @@ export async function POST(req: NextRequest) {
               max_tokens: 4096,
               stream: false,
             }),
+            signal: AbortSignal.timeout(30_000),
           });
 
           if (sfRes.ok) {
@@ -327,6 +341,16 @@ export async function POST(req: NextRequest) {
       ? process.env.GEMINI_API_KEY || ""
       : apiKey;
 
+    if (!geminiApiKey) {
+      return NextResponse.json(
+        {
+          error: "AI_PROVIDER_UNAVAILABLE",
+          message: "The configured provider could not complete the request and no fallback Gemini key is configured.",
+        },
+        { status: 502 }
+      );
+    }
+
     const contents: any[] = mapHistoryWithAnchors(filteredHistory, true);
 
     if (contents.length === 0) {
@@ -336,14 +360,11 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // List of model candidates in priority order (fastest first)
+    // Valid production Gemini models in priority order (no non-existent 404 aliases)
     const candidateModels = [
       "gemini-2.5-flash",
       "gemini-2.0-flash",
-      "gemini-3.6-flash",
-      "gemini-3.5-flash",
       "gemini-flash-latest",
-      "gemini-3.1-flash-lite",
     ];
 
     let lastError = "";
@@ -352,10 +373,13 @@ export async function POST(req: NextRequest) {
     if (stream && geminiApiKey) {
       for (const modelName of candidateModels) {
         try {
-          const streamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${geminiApiKey}`;
+          const streamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse`;
           const streamRes = await fetch(streamUrl, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": geminiApiKey,
+            },
             body: JSON.stringify({
               system_instruction: {
                 parts: [{ text: systemInstruction }],
@@ -367,14 +391,25 @@ export async function POST(req: NextRequest) {
                 maxOutputTokens: 4096,
               },
             }),
+            signal: AbortSignal.timeout(45_000),
           });
 
           if (streamRes.ok && streamRes.body) {
             const encoder = new TextEncoder();
             const decoder = new TextDecoder();
             const upstreamReader = streamRes.body.getReader();
+            let streamCancelled = false;
 
-            const readable = new ReadableStream({
+            const safeEnqueue = (controller: ReadableStreamDefaultController<Uint8Array>, payload: string) => {
+              if (streamCancelled) return;
+              try {
+                controller.enqueue(encoder.encode(payload));
+              } catch {
+                streamCancelled = true;
+              }
+            };
+
+            const readable = new ReadableStream<Uint8Array>({
               async start(controller) {
                 // 1. Immediately emit Neuro-Symbolic Arbitration & RAG Grounding metadata
                 const metaPayload = JSON.stringify({
@@ -385,13 +420,13 @@ export async function POST(req: NextRequest) {
                   arbitration: arbitrationResult,
                   ragSources,
                 });
-                controller.enqueue(encoder.encode(`data: ${metaPayload}\n\n`));
+                safeEnqueue(controller, `data: ${metaPayload}\n\n`);
 
                 let buffer = "";
                 try {
-                  while (true) {
+                  while (!streamCancelled) {
                     const { done, value } = await upstreamReader.read();
-                    if (done) break;
+                    if (done || streamCancelled) break;
                     buffer += decoder.decode(value, { stream: true });
                     const lines = buffer.split("\n");
                     buffer = lines.pop() || "";
@@ -405,10 +440,9 @@ export async function POST(req: NextRequest) {
                         const parsed = JSON.parse(jsonStr);
                         const deltaText = parsed.candidates?.[0]?.content?.parts?.[0]?.text || "";
                         if (deltaText) {
-                          controller.enqueue(
-                            encoder.encode(
-                              `data: ${JSON.stringify({ type: "chunk", text: deltaText, model: modelName })}\n\n`
-                            )
+                          safeEnqueue(
+                            controller,
+                            `data: ${JSON.stringify({ type: "chunk", text: deltaText, model: modelName })}\n\n`
                           );
                         }
                       } catch {
@@ -417,13 +451,26 @@ export async function POST(req: NextRequest) {
                     }
                   }
                 } catch (readErr) {
-                  console.warn("[AstroChat SSE] Stream read warning:", readErr);
+                  if (!streamCancelled) {
+                    console.warn("[AstroChat SSE] Stream read warning:", readErr);
+                  }
                 } finally {
-                  controller.enqueue(
-                    encoder.encode(`data: ${JSON.stringify({ type: "done", model: modelName })}\n\n`)
-                  );
-                  controller.close();
+                  if (!streamCancelled) {
+                    safeEnqueue(
+                      controller,
+                      `data: ${JSON.stringify({ type: "done", model: modelName })}\n\n`
+                    );
+                    try {
+                      controller.close();
+                    } catch {
+                      // Controller already closed
+                    }
+                  }
                 }
+              },
+              cancel() {
+                streamCancelled = true;
+                upstreamReader.cancel().catch(() => {});
               },
             });
 
@@ -446,10 +493,14 @@ export async function POST(req: NextRequest) {
     // 3B. NON-STREAMING JSON ROUTE (FALLBACK / DIRECT JSON CALLERS)
     for (const modelName of candidateModels) {
       try {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiApiKey}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
+        const geminiHeaders = {
+          "Content-Type": "application/json",
+          "x-goog-api-key": geminiApiKey,
+        };
         const res = await fetch(geminiUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: geminiHeaders,
           body: JSON.stringify({
             system_instruction: {
               parts: [{ text: systemInstruction }],
@@ -461,6 +512,7 @@ export async function POST(req: NextRequest) {
               maxOutputTokens: 4096,
             },
           }),
+          signal: AbortSignal.timeout(35_000),
         });
 
         if (res.ok) {
@@ -479,7 +531,7 @@ export async function POST(req: NextRequest) {
           // Fallback if system_instruction is not supported on this specific model
           const fallbackRes = await fetch(geminiUrl, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: geminiHeaders,
             body: JSON.stringify({
               contents: [
                 { role: "user", parts: [{ text: systemInstruction }] },
@@ -492,6 +544,7 @@ export async function POST(req: NextRequest) {
                 maxOutputTokens: 4096,
               },
             }),
+            signal: AbortSignal.timeout(35_000),
           });
           if (fallbackRes.ok) {
             const data = await fallbackRes.json();
@@ -513,14 +566,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    console.error("[AstroChat] Upstream provider failure:", lastError);
     return NextResponse.json(
-      { error: "AI API Error", details: lastError },
-      { status: 500 }
+      { error: "AI API Error", message: "Unable to generate astrological reading right now. Please try again shortly." },
+      { status: 502 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Astro Chat API Error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error", message: error?.message || "Unknown error" },
+      { error: "Internal Server Error", message: "An unexpected error occurred." },
       { status: 500 }
     );
   }

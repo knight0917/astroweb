@@ -80,78 +80,100 @@ export default function DashaView() {
     return () => window.removeEventListener("astro-switch-tab" as any, handleSwitchTab);
   }, []);
 
-  const annualReport: AnnualActivationMasterReport = useMemo(() => {
+  const annualReport: AnnualActivationMasterReport | null = useMemo(() => {
+    if (activeTab !== "annual_progression") return null;
     return generateAnnualActivationMasterSummary(ephemeris, birthDate, simulatedAge);
-  }, [ephemeris, birthDate, simulatedAge]);
+  }, [activeTab, ephemeris, birthDate, simulatedAge]);
 
   const transitEphemeris = useMemo(() => {
+    const needsTransit = [
+      "medhaj_gochara", "medhaj_arudha", "medhaj_baadhak", "medhaj_indu",
+      "medhaj_nodal", "agni_lineage", "bhagya_secret_code", "uchha_neecha"
+    ].includes(activeTab);
+    if (!needsTransit) return null;
     return calculateVedicEphemeris(new Date(), location, ayanamsha, houseSystem, nodeType);
-  }, [location, ayanamsha, houseSystem, nodeType]);
+  }, [activeTab, location, ayanamsha, houseSystem, nodeType]);
 
   const medhajReport = useMemo(() => {
+    if (activeTab !== "medhaj_gochara" || !transitEphemeris) return null;
     return generateMedhajGocharaMasterReport(ephemeris, transitEphemeris, birthDate, new Date());
-  }, [ephemeris, transitEphemeris, birthDate]);
+  }, [activeTab, ephemeris, transitEphemeris, birthDate]);
 
   const medhajActivationReport = useMemo(() => {
+    if (activeTab !== "medhaj_activation") return null;
     return generateMedhajActivationMasterReport(ephemeris, birthDate, new Date());
-  }, [ephemeris, birthDate]);
+  }, [activeTab, ephemeris, birthDate]);
 
   const medhajArudhaReport = useMemo(() => {
+    if (activeTab !== "medhaj_arudha" || !transitEphemeris) return null;
     return generateMedhajArudhaMasterReport(ephemeris, transitEphemeris, birthDate, new Date());
-  }, [ephemeris, transitEphemeris, birthDate]);
+  }, [activeTab, ephemeris, transitEphemeris, birthDate]);
 
   const medhajBaadhakReport = useMemo(() => {
+    if (activeTab !== "medhaj_baadhak" || !transitEphemeris) return null;
     return generateMedhajBaadhakMasterReport(ephemeris, transitEphemeris, birthDate, new Date());
-  }, [ephemeris, transitEphemeris, birthDate]);
+  }, [activeTab, ephemeris, transitEphemeris, birthDate]);
 
   const medhajInduReport = useMemo(() => {
+    if (activeTab !== "medhaj_indu" || !transitEphemeris) return null;
     return generateMedhajInduLagnaMasterReport(ephemeris, transitEphemeris, birthDate, new Date());
-  }, [ephemeris, transitEphemeris, birthDate]);
+  }, [activeTab, ephemeris, transitEphemeris, birthDate]);
 
   const medhajMksReport = useMemo(() => {
+    if (activeTab !== "medhaj_mks") return null;
     return generateMedhajMksPastLifeMasterReport(ephemeris, birthDate, new Date());
-  }, [ephemeris, birthDate]);
+  }, [activeTab, ephemeris, birthDate]);
 
   const medhajNodalReport = useMemo(() => {
+    if (activeTab !== "medhaj_nodal" || !transitEphemeris) return null;
     return generateMedhajRahuKetuTransitMasterReport(ephemeris, transitEphemeris, birthDate, new Date());
-  }, [ephemeris, transitEphemeris, birthDate]);
+  }, [activeTab, ephemeris, transitEphemeris, birthDate]);
 
   const agniReport = useMemo(() => {
+    if (activeTab !== "agni_lineage" || !transitEphemeris) return null;
     return generateAgniTransitLineageReport(ephemeris, transitEphemeris);
-  }, [ephemeris, transitEphemeris]);
+  }, [activeTab, ephemeris, transitEphemeris]);
 
   const bhagyaSecretCodeReport = useMemo(() => {
+    if (activeTab !== "bhagya_secret_code" || !transitEphemeris) return null;
     return generateBhagyaBinduSecretCodeReport(ephemeris, transitEphemeris);
-  }, [ephemeris, transitEphemeris]);
+  }, [activeTab, ephemeris, transitEphemeris]);
 
   const deepPanchangaReport = useMemo(() => {
+    if (activeTab !== "natal_panchanga_deep") return null;
     return evaluateNatalPanchangaDeep(ephemeris);
-  }, [ephemeris]);
+  }, [activeTab, ephemeris]);
 
   const lifestyleRemediesReport = useMemo(() => {
+    if (activeTab !== "lifestyle_remedies") return null;
     const currentLord = active?.mahadasha?.name || "Sun";
     return generateLifestyleRemediesReport(ephemeris, currentLord);
-  }, [ephemeris, active]);
+  }, [activeTab, ephemeris, active]);
 
   const makaraKurmaReport = useMemo(() => {
+    if (activeTab !== "makara_kurma") return null;
     return generateMakaraKurmaMasterReport(ephemeris, birthDate.toISOString());
-  }, [ephemeris, birthDate]);
+  }, [activeTab, ephemeris, birthDate]);
 
   const kumbhaAquariusReport = useMemo(() => {
+    if (activeTab !== "kumbha_aquarius") return null;
     return generateKumbhaAquariusMasterReport(ephemeris);
-  }, [ephemeris]);
+  }, [activeTab, ephemeris]);
 
   const meenaKalapurushaReport = useMemo(() => {
+    if (activeTab !== "meena_kalapurusha") return null;
     return generateMeenaKalapurushaDrishtiMasterReport(ephemeris);
-  }, [ephemeris]);
+  }, [activeTab, ephemeris]);
 
   const uchhaNeechaReport = useMemo(() => {
+    if (activeTab !== "uchha_neecha" || !transitEphemeris) return null;
     return generateUchhaNeechaAwarenessMasterReport(ephemeris, transitEphemeris);
-  }, [ephemeris, transitEphemeris]);
+  }, [activeTab, ephemeris, transitEphemeris]);
 
   const rishiDrekkanaReport = useMemo(() => {
+    if (activeTab !== "rishi_drekkana") return null;
     return generateRishiDrekkanaMasterReport(ephemeris, currentDate);
-  }, [ephemeris, currentDate]);
+  }, [activeTab, ephemeris, currentDate]);
 
   const formatDate = (d: Date) => {
     return d.toLocaleDateString("en-US", {
@@ -161,11 +183,11 @@ export default function DashaView() {
     });
   };
 
-  const paka = annualReport.pakaLagna;
-  const ann = annualReport.annualProgression;
-  const bomb = annualReport.nuclearBomb;
-  const tri = annualReport.trikonaResonance;
-  const bhagya = annualReport.bhagyodaya;
+  const paka = annualReport?.pakaLagna;
+  const ann = annualReport?.annualProgression;
+  const bomb = annualReport?.nuclearBomb;
+  const tri = annualReport?.trikonaResonance;
+  const bhagya = annualReport?.bhagyodaya;
 
   return (
     <div id="dasha-deck-container" className="space-y-6">
@@ -662,7 +684,7 @@ export default function DashaView() {
       )}
 
       {/* TAB 2: ANNUAL PROGRESSION & PAKA LAGNA */}
-      {activeTab === "annual_progression" && (
+      {activeTab === "annual_progression" && annualReport && paka && ann && bomb && tri && bhagya && (
         <div className="space-y-6">
           {/* Age Simulator Control Bar */}
           <div className="glass-panel p-4 rounded-2xl border border-purple-500/30 bg-slate-950/90 shadow-xl space-y-3">
@@ -1172,7 +1194,7 @@ export default function DashaView() {
       )}
 
       {/* TAB 3: CLASSICAL GOCHARA & PLANETARY TRANSITS */}
-      {activeTab === "medhaj_gochara" && (
+      {activeTab === "medhaj_gochara" && medhajReport && (
         <div className="space-y-6">
           {/* Executive Overview Banner */}
           <div className="p-5 rounded-3xl bg-gradient-to-r from-emerald-950/40 via-teal-950/30 to-slate-900 border border-emerald-500/40 shadow-xl space-y-3">
@@ -1487,7 +1509,7 @@ export default function DashaView() {
       )}
 
       {/* TAB 4: PLANETARY ACTIVATIONS & SAMBANDHAS (SESSIONS 68–70) */}
-      {activeTab === "medhaj_activation" && (() => {
+      {activeTab === "medhaj_activation" && medhajActivationReport && (() => {
         const act = medhajActivationReport;
         const sunSaturn = act.sunSaturn;
         const jupKetu = act.jupiterKetuTwelfth;
@@ -2044,7 +2066,7 @@ export default function DashaView() {
       })()}
 
       {/* TAB 5: MEDHAJ ASTRO ARUDHA LAGNA & JYOTIRLINGA (SESSIONS 75–79) */}
-      {activeTab === "medhaj_arudha" && (() => {
+      {activeTab === "medhaj_arudha" && medhajArudhaReport && (() => {
         const p = medhajArudhaReport.perceptionVsReality;
         const j = medhajArudhaReport.presidingJyotirlinga;
         const s = medhajArudhaReport.supportAndOpposition;
@@ -2534,7 +2556,7 @@ export default function DashaView() {
       })()}
 
       {/* TAB 6: BAADHAK THEORY & NODAL TRANSITS (SESSIONS 82, 84, 85) */}
-      {activeTab === "medhaj_baadhak" && (() => {
+      {activeTab === "medhaj_baadhak" && medhajBaadhakReport && (() => {
         const b = medhajBaadhakReport;
         const p = b.baadhakaPrimary;
         const ml = b.multiLagnaAudit;
@@ -3028,7 +3050,7 @@ export default function DashaView() {
       })()}
 
       {/* TAB 7: INDU LAGNA WEALTH SHASTRA (इन्दु लग्न) */}
-      {activeTab === "medhaj_indu" && (() => {
+      {activeTab === "medhaj_indu" && medhajInduReport && (() => {
         const core = medhajInduReport.core;
         const dy = medhajInduReport.dhanaYogas;
         const ss = medhajInduReport.sustainedSupport;
@@ -3502,7 +3524,7 @@ export default function DashaView() {
       })()}
 
       {/* TAB 8: MKS & PAST LIFE ROOTS (मरण कारक व पूर्वजन्म) */}
-      {activeTab === "medhaj_mks" && (() => {
+      {activeTab === "medhaj_mks" && medhajMksReport && (() => {
         const mks = medhajMksReport.mks;
         const auto = medhajMksReport.automobileCockpit;
         const ketu = medhajMksReport.ketuPastLife;
@@ -3880,7 +3902,7 @@ export default function DashaView() {
       })()}
 
       {/* TAB 9: RAHU-KETU TRANSIT, ROHINI BHEDANA & REMEDIES */}
-      {activeTab === "medhaj_nodal" && (() => {
+      {activeTab === "medhaj_nodal" && medhajNodalReport && (() => {
         const dAxis = medhajNodalReport.destinyAxis;
         const gConj = medhajNodalReport.greatConjunction;
         const nasal = medhajNodalReport.nasalProtocol;
@@ -4168,7 +4190,7 @@ export default function DashaView() {
       })()}
 
       {/* TAB 10: AGNI TRANSITS, DIVINE LINEAGE & TEMPERAMENT (SYLLABUS UNITS 90–92) */}
-      {activeTab === "agni_lineage" && (() => {
+      {activeTab === "agni_lineage" && agniReport && (() => {
         const a = agniReport.agniTrines;
         const g = agniReport.zodiacGunas;
         const w = agniReport.waterSignTears;
@@ -4539,7 +4561,7 @@ export default function DashaView() {
       })()}
 
       {/* TAB 11: BHAGYA BINDU & SECRET CODE OF PLANETS (SYLLABUS UNITS 97 & 99) */}
-      {activeTab === "bhagya_secret_code" && (() => {
+      {activeTab === "bhagya_secret_code" && bhagyaSecretCodeReport && (() => {
         const bb = bhagyaSecretCodeReport.bhagyaBindu;
         const sc = bhagyaSecretCodeReport.secretCodeManifestations;
         const ms = bhagyaSecretCodeReport.mercurySpeech;
@@ -4811,7 +4833,7 @@ export default function DashaView() {
       })()}
 
       {/* TAB 12: LIFESTYLE REMEDIES AS A WAY OF LIFE (SYLLABUS UNIT 41) */}
-      {activeTab === "lifestyle_remedies" && (() => {
+      {activeTab === "lifestyle_remedies" && lifestyleRemediesReport && (() => {
         const lr = lifestyleRemediesReport;
         const cp = lr.corePhilosophy;
         const prio = lr.personalizedPriorityHabits;
@@ -5033,7 +5055,7 @@ export default function DashaView() {
       })()}
 
       {/* TAB 13: CLASSICAL NATAL PANCHANGA DEEP BLUEPRINT, DAGDHA RASHIS & YOGI/AVAYOGI */}
-      {activeTab === "natal_panchanga_deep" && (() => {
+      {activeTab === "natal_panchanga_deep" && deepPanchangaReport && (() => {
         const dp = deepPanchangaReport;
         const dagdha = dp.dagdhaAnalysis;
         const ya = dp.yogiAvayogi;
@@ -5393,7 +5415,7 @@ export default function DashaView() {
       })()}
 
       {/* TAB 14: MAKARA RASHI (CAPRICORN), KURMA AVATARA & SATURN'S 5-FOLD REACH (SESSIONS 36, 37, 38) */}
-      {activeTab === "makara_kurma" && (() => {
+      {activeTab === "makara_kurma" && makaraKurmaReport && (() => {
         const mk = makaraKurmaReport;
         const ka = mk.kurmaArchetype;
         const sr = mk.saturnReach;
@@ -5773,7 +5795,7 @@ export default function DashaView() {
       })()}
 
       {/* TAB 15: KUMBHA RASHI (AQUARIUS), BHRIGU BINDU & RAHU-SATURN TRIAD (SESSIONS 39 & 40) */}
-      {activeTab === "kumbha_aquarius" && (() => {
+      {activeTab === "kumbha_aquarius" && kumbhaAquariusReport && (() => {
         const kb = kumbhaAquariusReport;
         const bb = kb.bhriguBinduAxis;
         const kw = kb.kumbhaWaterBearer;
@@ -6114,7 +6136,7 @@ export default function DashaView() {
       })()}
 
       {/* TAB 16: MEENA RASHI & KALAPURUSHA SCRIPT OVERLAY (SESSIONS 42-45) */}
-      {activeTab === "meena_kalapurusha" && (() => {
+      {activeTab === "meena_kalapurusha" && meenaKalapurushaReport && (() => {
         const mr = meenaKalapurushaReport;
         const pa = mr.piscesArchetype;
         const ko = mr.kalapurushaScriptOverlay;
@@ -6369,7 +6391,7 @@ export default function DashaView() {
       })()}
 
       {/* TAB 17: UCHHA, NEECHA & TRANSIT DYNAMICS (SESSIONS 80 & 81) */}
-      {activeTab === "uchha_neecha" && (() => {
+      {activeTab === "uchha_neecha" && uchhaNeechaReport && (() => {
         const un = uchhaNeechaReport;
         const na = un.natalDignityAwareness;
         const ls = un.lagneshaShield;
@@ -6753,7 +6775,7 @@ export default function DashaView() {
       })()}
 
       {/* TAB 18: THREE RISHIS, SACRED LINEAGE DEITIES & SIGN LORD BLIND SPOTS (SESSIONS 93, 94 & 95) */}
-      {activeTab === "rishi_drekkana" && (() => {
+      {activeTab === "rishi_drekkana" && rishiDrekkanaReport && (() => {
         const rd = rishiDrekkanaReport;
         const rishiAlloc = rd.drekkanaRishiAllocations;
         const lineage = rd.sacredLineageDeities;
