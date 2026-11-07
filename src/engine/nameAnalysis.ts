@@ -11,15 +11,6 @@
 import { EphemerisResult } from "./types";
 import { RASHI_NAMES } from "./constants";
 
-export interface NakshatraPadaSyllable {
-  nakshatraIndex: number;
-  nakshatraName: string;
-  pada: number;
-  sanskritSyllable: string;
-  englishSyllable: string;
-  exampleNames: string[];
-}
-
 export interface PlanetaryVarnaGroup {
   planet: string;
   sanskritVarga: string;

@@ -2,7 +2,7 @@
 
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Html, Stars } from "@react-three/drei";
+import { OrbitControls, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { useAstroStore } from "../store/useAstroStore";
 import { eclipticToCartesian } from "../engine/skyCoordinates";
@@ -1785,7 +1785,6 @@ export default function SkyDome() {
   }, []);
 
   // Fine-grained Zustand selectors to prevent re-rendering SkyDome on ephemeris clock ticks
-  const isPlaying = useAstroStore((s) => s.isPlaying);
   const setSelectedEntityId = useAstroStore((s) => s.setSelectedEntityId);
   const zoomFactor = (65 / fov).toFixed(1);
 

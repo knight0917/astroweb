@@ -49,7 +49,6 @@
  */
 
 import { EphemerisResult, CelestialBodyPosition, SpecialPoint } from "./types";
-import { RASHI_NAMES } from "./constants";
 
 /**
  * Robustly extracts the 0-11 zodiac sign index from any CelestialBodyPosition or SpecialPoint.
@@ -738,7 +737,6 @@ export function evaluateNodalBaadhakaTransits(
 
   // Angular distance between natal and transit Rahu
   const rahuDelta = getAngularDistance(tRahuLon, nRahuLon);
-  const ketuDelta = getAngularDistance(tKetuLon, nKetuLon);
 
   // 18.59-year nodal return (orb ~15° or same sign)
   const isNodalReturnActive = rahuDelta <= 15 || (tRahuSignIdx === nRahuSignIdx);

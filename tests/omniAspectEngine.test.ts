@@ -1,13 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { calculateVedicEphemeris } from "./ephemeris";
+import { calculateVedicEphemeris } from "../src/engine/ephemeris";
 import {
   calculateOmniAspectMatrix,
   evaluateNeechaVakriPlanets,
   evaluateCombustionNuances,
   evaluateJaiminiArgalaSynthesis,
   evaluateDoubleTransitGates,
-} from "./omniAspectEngine";
+} from "../src/engine/omniAspectEngine";
 
 test("Phase 18: Omniscient 360° Multi-Aspect Astrological Intelligence Engine Verification", async (t) => {
   // 17 Sept 1999, 18:32 IST, Allahabad (25.4358 N, 81.8463 E)

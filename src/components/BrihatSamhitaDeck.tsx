@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { evaluateBrihatSamhita } from "../engine/brihatSamhita";
-import { BrihatSamhitaAnalysis, KurmaChakraDirection, GrahaYuddhaEvent, RatnaParikshaGem } from "../engine/types";
+import { BrihatSamhitaAnalysis, KurmaChakraDirection, RatnaParikshaGem } from "../engine/types";
 
 export default function BrihatSamhitaDeck() {
   const { ephemeris } = useAstroStore();

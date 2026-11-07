@@ -9,7 +9,7 @@ export default function GocharView() {
   const { ephemeris: natalEphemeris, location, ayanamsha, houseSystem, nodeType } = useAstroStore();
 
   const [chartType, setChartType] = useState<"north" | "south">("north");
-  const [transitDate, setTransitDate] = useState<Date>(new Date());
+  const [transitDate] = useState<Date>(() => new Date());
 
   // Compute live real-time transit ephemeris
   const transitEphemeris = useMemo(() => {

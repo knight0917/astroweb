@@ -4,7 +4,6 @@
  * live active period indicator with countdown, and 24 planetary horas.
  */
 
-import * as Astronomy from "astronomy-engine";
 import { GeoLocation } from "./types";
 import { resolveLocalSolarDayBounds } from "./upagrahas";
 

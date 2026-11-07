@@ -1096,13 +1096,6 @@ export interface BhriguSamhitaAnalysis {
   masterSamhitaSynthesis: string;
 }
 
-export interface BhriguPrashnaDirection {
-  directionName: "East (पूर्व - Dharma)" | "South (दक्षिण - Artha)" | "West (पश्चिम - Kama)" | "North (उत्तर - Moksha)";
-  houses: number[];
-  planets: string[];
-  karakaSignificance: string;
-}
-
 export interface BhriguPrashnaAnalysis {
   queryKaraka: string;
   queryDomain: string;

@@ -65,11 +65,6 @@ export function evaluatePrasnaMarga(
   };
 
   // 2. Pancha Sutras Diagnostics (Adhyaya 8)
-  const udayaLord = SIGN_LORDS[udayaSignIdx];
-  const arudhaLord = SIGN_LORDS[arudhaSignIdx];
-
-  const uLordPlanet = natalEphemeris.planets[udayaLord];
-  const aLordPlanet = natalEphemeris.planets[arudhaLord];
   const jupPlanet = natalEphemeris.planets.Jupiter;
   const venPlanet = natalEphemeris.planets.Venus;
 

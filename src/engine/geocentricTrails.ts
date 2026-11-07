@@ -50,12 +50,6 @@ export function getTrailConfig(bodyId: string): TrailConfig | undefined {
   return Object.prototype.hasOwnProperty.call(TRAIL_CONFIGS, bodyId) ? TRAIL_CONFIGS[bodyId] : undefined;
 }
 
-export function getTrailWindowMs(bodyId: string): number {
-  const cfg = getTrailConfig(bodyId);
-  if (!cfg) throw new RangeError(`No geocentric trail configured for body "${bodyId}"`);
-  return cfg.windowDays * DAY_MS;
-}
-
 // Scene-radius mapping constants (Earth globe radius in the scene is 2.6).
 export const SCENE_EARTH_RADIUS = 2.6;
 

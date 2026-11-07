@@ -6,9 +6,8 @@
  * - Brihat Jataka (Varahamihira on Loka of Descent & Next Life)
  */
 
-import { EphemerisResult, RashiInfo } from "./types";
+import { EphemerisResult } from "./types";
 import { RASHI_NAMES } from "./constants";
-import { calculateShodashavargaChart } from "./shodashavarga";
 
 export interface QuadKarmaReport {
   sanchita: {
@@ -195,7 +194,6 @@ export function evaluateKarmaRebirth(ephem: EphemerisResult): KarmaRebirthReport
   const moonLon = planets.Moon?.siderealLongitude || 0;
   // Determine stronger luminary by house placement & dignity
   const sunHouse = getHouse("Sun");
-  const moonHouse = getHouse("Moon");
   const isSunStronger = [1, 4, 5, 9, 10, 11].includes(sunHouse) && ![6, 8, 12].includes(sunHouse);
   const strongerLuminary: "Sun" | "Moon" = isSunStronger ? "Sun" : "Moon";
   const lumLon = strongerLuminary === "Sun" ? sunLon : moonLon;

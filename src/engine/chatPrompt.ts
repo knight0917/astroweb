@@ -3,17 +3,6 @@
  * Synchronizes client-side streaming and server-side API routes with 100% fidelity.
  */
 
-export interface UserFactExtraction {
-  maritalStatus?: "Married" | "Single" | "Divorced" | "Committed";
-  hasChildren?: boolean;
-  childrenDetails?: string;
-  birthOrder?: "Eldest" | "Youngest" | "Middle" | "Only Child";
-  residenceStatus?: "Relocated" | "Living in Birth Region";
-  educationMilestones?: string[];
-  careerMilestones?: string[];
-  userStatedNotes?: string[];
-}
-
 /**
  * Automatically extracts real-life milestones and ground truths confirmed by the user
  * across the entire conversation history to prevent context amnesia and contradictory readings.

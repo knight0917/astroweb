@@ -58,7 +58,7 @@ import { evaluateCuspalInterlinks } from "./cuspalInterlinks";
 import { evaluateMeenaNadi } from "./meenaNadi";
 import { evaluateJatakaTattvam } from "./jatakaTattvam";
 import { evaluatePadmaChakra } from "./padmaChakra";
-import { evaluateShashtiamsha, evaluateBcpWheel, evaluateSuryaRemedies } from "./shashtiamsha";
+import { evaluateShashtiamsha, evaluateBcpWheel } from "./shashtiamsha";
 import { evaluatePatanjaliYoga } from "./patanjaliYoga";
 import { evaluateKotaChakra, evaluateDashaLordTransit } from "./kotaChakra";
 import { evaluateRaman300Combinations, evaluateLalKitabTeva, evaluateNarayanaKavacham } from "./raman300Combinations";
@@ -100,7 +100,7 @@ import { generateKumbhaAquariusMasterReport } from "./kumbhaAquariusRahu";
 import { generateMeenaKalapurushaDrishtiMasterReport } from "./meenaKalapurushaDrishti";
 import { generateUchhaNeechaAwarenessMasterReport } from "./uchhaNeechaAwareness";
 import { generateRishiDrekkanaMasterReport } from "./rishiDrekkanaAwareness";
-import { calculateAshtakavargaVastuStrength, calculateAyadiShadvarga, calculateJaiminiArudhaVastu } from "./vastuEngine";
+import { calculateAshtakavargaVastuStrength, calculateJaiminiArudhaVastu } from "./vastuEngine";
 import { generateBtrMasterSummary } from "./btrEngine";
 import { detectRahuConjunctions } from "./rahuConjunctionsMaster";
 import { calculateLaypersonReport } from "./laypersonReportEngine";
@@ -1964,7 +1964,6 @@ export function buildAstroDossier(
 
     const savList = ashtakavargaResult?.sarvaHouseBindus || (natalEphemeris as any).sarvashtakavarga || [28, 30, 32, 29, 31, 33, 27, 34, 30, 29, 32, 28];
     const vastuStrength = calculateAshtakavargaVastuStrength(savList);
-    const ayadiSample = calculateAyadiShadvarga(36, 24, moonNak);
     const jVastu = calculateJaiminiArudhaVastu(natalEphemeris);
 
     vastuSummary = [

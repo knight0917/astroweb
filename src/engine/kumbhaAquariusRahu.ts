@@ -23,7 +23,7 @@
  *   Warning: Never Exploit the Domain of Rahu (H1-H12 non-exploitation law and selfless service pathways).
  */
 
-import { EphemerisResult, CelestialBodyPosition } from "./types";
+import { EphemerisResult } from "./types";
 import { RASHI_NAMES, NAKSHATRAS } from "./constants";
 
 // ==========================================

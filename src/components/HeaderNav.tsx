@@ -82,17 +82,6 @@ export default function HeaderNav() {
     }
   }, [showLocationModal, location]);
 
-  // Filtered cities based on search
-  const filteredCities = useMemo(() => {
-    if (!citySearch.trim()) return POPULAR_CITIES;
-    const query = citySearch.toLowerCase();
-    return POPULAR_CITIES.filter(
-      (c) =>
-        c.cityName.toLowerCase().includes(query) ||
-        (c.country && c.country.toLowerCase().includes(query))
-    );
-  }, [citySearch]);
-
   const handleSelectCity = (c: GeoLocation) => {
     setCityName(c.cityName);
     setCountryName(c.country || "");

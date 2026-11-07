@@ -2,10 +2,9 @@
 
 import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
-import { calculateVimshottariDasha, MahadashaNode, AntardashaNode } from "../engine/dasha";
+import { calculateVimshottariDasha } from "../engine/dasha";
 import {
   generateAnnualActivationMasterSummary,
-  calculateAnnualHouseProgression,
   AnnualActivationMasterReport
 } from "../engine/annualHouseProgression";
 import { calculateVedicEphemeris } from "../engine/ephemeris";
@@ -4835,7 +4834,6 @@ export default function DashaView() {
       {/* TAB 12: LIFESTYLE REMEDIES AS A WAY OF LIFE (SYLLABUS UNIT 41) */}
       {activeTab === "lifestyle_remedies" && lifestyleRemediesReport && (() => {
         const lr = lifestyleRemediesReport;
-        const cp = lr.corePhilosophy;
         const prio = lr.personalizedPriorityHabits;
         const allProtocols = Object.values(lr.allGrahaProtocols);
 

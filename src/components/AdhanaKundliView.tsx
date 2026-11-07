@@ -3,15 +3,12 @@
 import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { calculateAdhanaKundali, GestationalMonthEvaluation } from "../engine/adhanaKundali";
-import { RASHI_NAMES } from "../engine/constants";
 
 export default function AdhanaKundliView() {
   const {
     currentDate,
     location,
     ephemeris: natalEphemeris,
-    gender,
-    activeProfileName,
   } = useAstroStore();
 
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
@@ -27,10 +24,8 @@ export default function AdhanaKundliView() {
     gestationDurationDays,
     gestationDurationWeeks,
     adhanaEphemeris,
-    adhanaLagnaSign,
     adhanaLagnaLord,
     adhanaLagnaDegreeStr,
-    adhanaMoonSign,
     adhanaMoonNakshatra,
     adhanaMoonDegreeStr,
     gestationalMonths,
@@ -38,7 +33,6 @@ export default function AdhanaKundliView() {
     btrHarmonicRelationship,
     btrConfidenceScore,
     btrSummary,
-    executiveSummary,
   } = adhanaResult;
 
   // Active selected gestational month (defaults to Month 1 or clicked)

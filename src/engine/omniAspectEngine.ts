@@ -14,14 +14,14 @@
  * 8. Deterministic Weighted Probability Scoring across 5 core life vectors.
  */
 
-import { EphemerisResult, CelestialBodyPosition } from "./types";
+import { EphemerisResult } from "./types";
 import { RASHI_NAMES } from "./constants";
 import { calculateVedicEphemeris } from "./ephemeris";
-import { calculateShodashavargaChart, calculateVargaSign } from "./shodashavarga";
+import { calculateVargaSign } from "./shodashavarga";
 import { calculateVimshottariDasha, VimshottariDashaResult } from "./dasha";
-import { calculateJaiminiKarakas, calculateArgala, ArgalaReport } from "./jaimini";
+import { calculateArgala, ArgalaReport } from "./jaimini";
 import { calculateAshtakavarga, AshtakavargaResult } from "./ashtakavarga";
-import { calculateGochar, PlanetTransitInfo } from "./gochar";
+import { calculateGochar } from "./gochar";
 
 // ============================================================================
 // 1. DATA STRUCTURES & INTERFACES
@@ -359,7 +359,6 @@ export function evaluateDoubleTransitGates(
   transitEphemerisOrDate?: EphemerisResult | Date,
   evaluationDate: Date = new Date()
 ): DoubleTransitGateInfo {
-  const ascRashi = Math.floor(ephem.ascendant.siderealLongitude / 30);
   let transitEphem: EphemerisResult;
   let evalDate = evaluationDate;
 
@@ -439,7 +438,6 @@ export function calculateWeightedProbabilityScores(
   ashtakavarga: AshtakavargaResult
 ): Record<"career" | "wealth" | "relationships" | "health" | "spirituality", LifeVectorScore> {
   const ascRashi = Math.floor(ephem.ascendant.siderealLongitude / 30);
-  const activePd = dasha.activeDasha?.pratyantardasha.name || "";
   const activeMd = dasha.activeDasha?.mahadasha.name || "Jupiter";
   const activeAd = dasha.activeDasha?.antardasha.name || "Mercury";
 

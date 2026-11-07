@@ -32,7 +32,7 @@
  *     * Rahu 5th/9th Aspect (Material Magnification & Obsession) & Ketu 5th/9th Aspect (Spiritual Detachment & Contraction).
  */
 
-import { EphemerisResult, CelestialBodyPosition } from "./types";
+import { EphemerisResult } from "./types";
 import { RASHI_NAMES } from "./constants";
 
 // ==========================================

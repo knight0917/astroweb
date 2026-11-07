@@ -10,7 +10,6 @@ import {
 import {
   analyzeNameVibrationalEnergy,
   evaluateChartNameCongruence,
-  SIGNATURE_NAME_RULES,
 } from "../engine/lunarAstroNameEnergy";
 import { calculatePlanetaryMaturationTimeline } from "../engine/planetaryAgeActivation";
 

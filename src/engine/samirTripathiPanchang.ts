@@ -411,22 +411,6 @@ const YOGA_META_MAP: Record<number, { nature: YogaDetail["nature"]; deity: strin
   26: { nature: "Ashubha (Inauspicious)", deity: "Diti", desc: "Vaidhriti — malefic cosmic vortex; strictly avoid auspicious starts.", favorable: "Maha Mrityunjaya Japa, charity to leprosy/blind homes.", prohibited: "All worldly auspicious beginnings and journey." },
 };
 
-// Vedic Month Names corresponding to Sun's Sidereal Transit
-const VEDIC_MONTH_NAMES = [
-  "Mesha (वैशाख / Vaishakha)",
-  "Vrishabha (ज्येष्ठ / Jyeshtha)",
-  "Mithuna (आषाढ़ / Ashadha)",
-  "Karka (श्रावण / Shravana)",
-  "Simha (भाद्रपद / Bhadrapada)",
-  "Kanya (आश्विन / Ashwina)",
-  "Tula (कार्तिक / Kartika)",
-  "Vrishchika (मार्गशीर्ष / Margashirsha)",
-  "Dhanu (पौष / Pausha)",
-  "Makara (माघ / Magha)",
-  "Kumbha (फाल्गुन / Phalguna)",
-  "Meena (चैत्र / Chaitra)",
-];
-
 const AMANTA_MONTH_LIST = [
   "Vaishakha (वैशाख)",
   "Jyeshtha (ज्येष्ठ)",

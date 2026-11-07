@@ -109,7 +109,7 @@ export function evaluateCuspalInterlinks(natalEphemeris: EphemerisResult): Cuspa
   }
 
   const positionalStatus: Record<string, boolean> = {};
-  for (const [pName, pData] of Object.entries(planets)) {
+  for (const pName of Object.keys(planets)) {
     const ownStar = planetStarLords[pName] === pName;
     // Count how many other planets are in pName's star
     const planetsInMyStar = Object.entries(planetStarLords).filter(([otherP, starL]) => otherP !== pName && starL === pName);

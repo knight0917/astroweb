@@ -33,11 +33,6 @@ export function detectVedicYogas(ephemeris: EphemerisResult): DetectedYoga[] {
   const ascLon = ephemeris.ascendant.siderealLongitude;
   const ascSign = Math.floor(ascLon / 30);
 
-  // Helper to get house from Lagna (1..12) for any sign index (0..11)
-  const getHouseFromSign = (signIdx: number): number => {
-    return ((signIdx - ascSign + 12) % 12) + 1;
-  };
-
   // Helper to get sign index where a specific house lord is sitting
   const getHouseLord = (houseNum: number): string => {
     const signIdx = (ascSign + houseNum - 1) % 12;

@@ -135,7 +135,6 @@ export default function BhriguNadiDeck() {
             const isAgni = cluster.element === "Agni";
             const isPrithvi = cluster.element === "Prithvi";
             const isVayu = cluster.element === "Vayu";
-            const isJala = cluster.element === "Jala";
 
             const borderCol = isAgni
               ? "border-rose-500/30 bg-rose-950/10"

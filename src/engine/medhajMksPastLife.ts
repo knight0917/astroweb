@@ -47,7 +47,7 @@
  *   - The Supreme Cosmic Role of Saturn (The Ultimate Law across 12 signs).
  */
 
-import { EphemerisResult, CelestialBodyPosition, SpecialPoint } from "./types";
+import { EphemerisResult } from "./types";
 import { ZODIAC_SIGNS, RASHI_SANSKRIT, SIGN_LORDS, getBodySignIndex } from "./medhajInduLagna";
 
 // =========================================================================

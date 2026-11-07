@@ -11,8 +11,8 @@
  */
 
 import { EphemerisResult } from "./types";
-import { RASHI_NAMES, NAKSHATRAS } from "./constants";
-import { calculateShodashavargaChart, calculateVargaSign } from "./shodashavarga";
+import { RASHI_NAMES } from "./constants";
+import { calculateVargaSign } from "./shodashavarga";
 import { calculateAshtakavarga } from "./ashtakavarga";
 
 export interface SpecialLagnaInfo {

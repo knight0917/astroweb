@@ -5,7 +5,7 @@
  */
 
 import * as Astronomy from "astronomy-engine";
-import { EphemerisResult, CelestialBodyPosition } from "./types";
+import { EphemerisResult } from "./types";
 import { RASHI_NAMES } from "./constants";
 import { getAyanamsha } from "./ayanamsha";
 

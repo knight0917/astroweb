@@ -1,7 +1,6 @@
 import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/neon";
-import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -27,8 +26,6 @@ export async function GET(request: Request) {
   }
 
   let neonStatus = "not_configured";
-  let supabaseStatus = "not_configured";
-  let recordsFound = 0;
 
   if (sql) {
     try {
@@ -40,30 +37,12 @@ export async function GET(request: Request) {
     }
   }
 
-  if (supabase) {
-    try {
-      const { data, error } = await supabase.from("reviews").select("id").limit(1);
-      if (!error) {
-        supabaseStatus = "active";
-        recordsFound = data?.length || 0;
-      } else {
-        console.error("[keep-alive] Supabase query error:", error.message);
-        supabaseStatus = "query_error";
-      }
-    } catch (err) {
-      console.error("[keep-alive] Supabase exception:", err);
-      supabaseStatus = "exception";
-    }
-  }
-
   const latencyMs = Date.now() - startTime;
 
   return NextResponse.json({
     status: "ok",
     job: "database_keep_alive",
     neon: neonStatus,
-    supabase: supabaseStatus,
-    recordsFound,
     latencyMs,
     timestamp: new Date().toISOString(),
   });

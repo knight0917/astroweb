@@ -6,7 +6,6 @@ import { useAstroStore } from "../store/useAstroStore";
 import {
   getMonthlyTithiCalendar,
   DailyTithiPanchanga,
-  FestivalEvent,
 } from "../engine/tithiCalendar";
 
 export default function TithiCalendarView() {
@@ -47,16 +46,6 @@ export default function TithiCalendarView() {
     setSelectedYear(today.getFullYear());
     setSelectedMonth(today.getMonth() + 1);
   };
-
-  // Filter days for list view or grid highlight
-  const filteredDays = useMemo(() => {
-    return calendarData.days.filter((d) => {
-      if (filterType === "festivals") return d.festivals.length > 0;
-      if (filterType === "vrats") return d.isEkadashi || d.isPradosh || d.isShivaratri || d.festivals.some((f) => f.category === "vrat");
-      if (filterType === "purnima_amavasya") return d.isPurnima || d.isAmavasya;
-      return true;
-    });
-  }, [calendarData, filterType]);
 
   const weekDayHeaders = [
     { short: "Sun", hindi: "रवि", lord: "☉ Sun" },

@@ -179,7 +179,6 @@ export function analyzeCareerJobBusiness(ephem: EphemerisResult): CareerJobBusin
   const hLord6 = pLord6 ? getHouse(pLord6.siderealLongitude) : 6;
   const hLord7 = pLord7 ? getHouse(pLord7.siderealLongitude) : 7;
   const hLord10 = pLord10 ? getHouse(pLord10.siderealLongitude) : 10;
-  const hLord3 = pLord3 ? getHouse(pLord3.siderealLongitude) : 3;
   const hLord1 = pLord1 ? getHouse(pLord1.siderealLongitude) : 1;
 
   // D-10 Dasamsa Chart calculations

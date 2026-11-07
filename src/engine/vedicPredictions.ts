@@ -13,7 +13,6 @@ import {
   EphemerisResult,
   VedicPredictiveAnalysis,
   VedicMilestonePrediction,
-  VedicTierValidation,
 } from "./types";
 
 const SIGN_LORDS = ["Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter"];

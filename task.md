@@ -1882,3 +1882,37 @@
 - [x] **Phase 67.4: Automated Regression Tests, Benchmarks & Production Build Verification**
   - [x] Add Subtest 157 in `tests/engine.test.mjs` covering UTC+0 timezone preservation, `"career"` vs `"car"` arbitration, non-zero-age `omniAspectEngine`, Western-hemisphere/pre-sunrise `upagrahas`, interrogative-safe fact extraction, Vastu 337-SAV integration, exact Varga boundaries, and `buildAstroDossier` intent-slicing speedup.
   - [x] Verify `npx tsc --noEmit`, `npm test`, `npx tsx --test src/engine/omniAspectEngine.test.ts`, and `npm run build` pass with 0 errors.
+
+
+---
+
+# Phase 68: Full-Codebase Dead-Code Elimination, Dependency Pruning & Strict Compiler Lock
+
+## Status: Complete & Verified (All 163 Tests Passing, 0 TS Errors with `noUnusedLocals: true` & Clean Production Build)
+- **Trigger Keywords**: `audit-code-review`, `systematic-debugging`, `dead-code-elimination`, `dependency-pruning`, `bundle-shrinkage`, `no-unused-locals`
+- **Single Source of Truth**: Tracking the systematic removal of unreachable components, duplicate PWA assets, unused npm dependencies, legacy Supabase fallback code, 41 one-off scratch scripts, dead exports/store slices, and 171 unused TypeScript locals/imports.
+
+## Phases & Milestones
+
+- [x] **Phase 68.1: Unreachable Components, Duplicate Assets & Stale Scratch Files Removal**
+  - [x] Delete `src/components/AstroDatePicker.tsx`, `src/components/QuickHighlightsBar.tsx`, and `public/manifest.json`.
+  - [x] Consolidate byte-identical `public/icons/icon-192.svg` & `public/icons/icon-512.svg` onto `/icons/icon.svg` in `src/app/manifest.ts`, `src/app/layout.tsx`, and `public/sw.js`.
+  - [x] Delete 36 single-use scratch/debug/scraper scripts in `scripts/` (retaining the 6 active CLI & DB utility scripts).
+  - [x] Delete 5 unwired manual scratch scripts in `tests/` and relocate `src/engine/omniAspectEngine.test.ts` to `tests/omniAspectEngine.test.ts` wired into `npm test`.
+  - [x] Delete 4 generated snapshots in `reports/` (adding `/reports/` to `.gitignore`), 4 stale root `*AUDIT.md` / `WALKTHROUGH.md` files, local `db_cluster-*.backup.gz`, and empty `books/` directory.
+
+- [x] **Phase 68.2: Unused NPM Dependencies & Legacy Supabase Removal**
+  - [x] Delete `src/lib/supabase.ts` and remove the 6 legacy `if (supabase)` fallback blocks from `src/lib/db.ts`.
+  - [x] Uninstall `clsx`, `lucide-react`, `tailwind-merge`, `pg`, `@types/pg`, and `@supabase/supabase-js` from `package.json` & `package-lock.json`.
+
+- [x] **Phase 68.3: Dead Exports, Dead Zustand Store Slices & Unused Styling Cleanup**
+  - [x] Prune 9 dead Devanagari exports from `src/components/skydome/devanagari.ts`, dead functions/constants (`NORTH_HOUSE_POLYGONS`, `clearEphemerisCache`, `getTrailWindowMs`, `horizontalToCartesian`), and 5 dead exported interfaces (`BtrMasterReport`, `UserFactExtraction`, `FortyDayHabitTrackerItem`, `NakshatraPadaSyllable`, `BhriguPrashnaDirection`).
+  - [x] Remove dead Zustand store state/actions (`SkyViewType`, `skyViewType`, `setSkyViewType`, `showConstellations`, `setShowConstellations`, `setMatchmakingState`, `lastCacheCleanupTime`) in `src/store/useAstroStore.ts`.
+  - [x] Clean unused `./src/pages/**` glob and 8 `vedic.*` color tokens in `tailwind.config.ts`, plus 6 unused CSS classes in `src/app/globals.css`.
+
+- [x] **Phase 68.4: Unused Imports, Dead `useMemo` Computations & Strict `noUnusedLocals` Lock**
+  - [x] Prune all unused imports, dead `useMemo` hooks, unused Zustand subscriptions, dead local functions, and wasted engine lookups across all flagged `src/` files.
+  - [x] Enable `"noUnusedLocals": true` in `tsconfig.json`.
+
+- [x] **Phase 68.5: Verification Gates**
+  - [x] Verify `npx tsc --noEmit`, `npm test`, and `npm run build` pass with 0 errors.

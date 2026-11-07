@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/icons/icon-512.svg",
+        url: "/icons/icon.svg",
         width: 512,
         height: 512,
         alt: "PurohitJI AI Logo",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     title: "PurohitJI AI — Precision Jyotish & Classical Engines",
     description:
       "Explore 21 classical Vedic astrology engines, real-time 3D SkyDome, D-10 Dasamsa Career Secrets, and Vāstu Studio 81.",
-    images: ["/icons/icon-512.svg"],
+    images: ["/icons/icon.svg"],
   },
   manifest: "/manifest.webmanifest",
   appleWebApp: {
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/icons/icon.svg",
-    apple: "/icons/icon-192.svg",
+    apple: "/icons/icon.svg",
   },
 };
 

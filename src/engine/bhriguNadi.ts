@@ -265,7 +265,6 @@ export function evaluateBhriguNadi(
     const cycleHouse = ((a - 1) % 12) + 1;
     const isCurrent = a === runningAge;
     const triggers = (SPECIFIC_BSP_RULES[a] || []).map((t) => {
-      const pSign = getSign(t.planet);
       const actHouse = ((getHouse(t.planet) + t.relHouse - 2) % 12) + 1;
       return {
         ruleName: t.rule,
@@ -307,7 +306,6 @@ export function evaluateBhriguPrashna(
   queryDomain: "Career" | "Finance" | "Marriage" | "Health" | "Travel" | "Property" = "Career"
 ): import("./types").BhriguPrashnaAnalysis {
   const planets = ephemeris.planets;
-  const ascSignIdx = Math.floor(ephemeris.ascendant.siderealLongitude / 30);
 
   const domainKarakaMap: Record<string, { karaka: string; targetDirIndex: number }> = {
     Career: { karaka: "Saturn", targetDirIndex: 1 }, // South / Artha

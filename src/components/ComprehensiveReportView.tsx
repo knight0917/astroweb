@@ -6,7 +6,6 @@ import { useAstroStore } from "../store/useAstroStore";
 import { calculateLaypersonReport } from "../engine/laypersonReportEngine";
 import { calculateOmniAspectMatrix } from "../engine/omniAspectEngine";
 import BirthDetailsModal from "./BirthDetailsModal";
-import { RASHI_NAMES } from "../engine/constants";
 
 export default function ComprehensiveReportView() {
   const {

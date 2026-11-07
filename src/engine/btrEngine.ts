@@ -6,7 +6,7 @@
  */
 
 import { EphemerisResult } from "./types";
-import { calculateVimshottariDasha, VimshottariDashaResult, ActiveDashaPeriod } from "./dasha";
+import { calculateVimshottariDasha } from "./dasha";
 import { calculateShodashavargaChart, calculateVargaSign } from "./shodashavarga";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { RASHI_NAMES } from "./constants";
@@ -161,20 +161,6 @@ export interface ChronologicalDashaWindow {
   nativeAgeEnd: number;
   lifePhaseTitle: string;
   primaryHouseActivations: number[];
-}
-
-export interface BtrMasterReport {
-  recordedLocalTime: string;
-  recordedDateStr: string;
-  cityName: string;
-  kundaShodhana: KundaShodhanaResult;
-  pranapada: PranapadaResult;
-  tattvaShodhana: TattvaShodhanaResult;
-  chitkaraBtrTriad: ChitkaraBtrTriadResult;
-  vargaSensitivities: VargaSensitivityNode[];
-  fullLifeDashaTimeline: ChronologicalDashaWindow[];
-  dashaToClockSensitivityRule: string;
-  masterBtrVerdict: string;
 }
 
 const NAKSHATRA_NAMES = [
@@ -901,8 +887,6 @@ export function buildFullChronologicalDashaTimeline(
     return Array.from(new Set([occupiedHouse, ...getHousesRuledBy(planetName)]));
   };
 
-  const fifthSignIdx = (ascSign + 4) % 12;
-  const fifthLord = SIGN_RULERS[fifthSignIdx];
   const eighthSignIdx = (ascSign + 7) % 12;
   const eighthLord = SIGN_RULERS[eighthSignIdx];
   const eleventhSignIdx = (ascSign + 10) % 12;

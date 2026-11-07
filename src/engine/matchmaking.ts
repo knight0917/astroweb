@@ -763,9 +763,7 @@ export function calculateMatchmaking(
   };
 
   // 5. D-1 and D-9 Multi-Varga Cross-Synastry (Handwritten Notes & Stri Jataka)
-  const boyD1Chart = calculateShodashavargaChart(boyEphem, "D1");
   const boyD9Chart = calculateShodashavargaChart(boyEphem, "D9");
-  const girlD1Chart = calculateShodashavargaChart(girlEphem, "D1");
   const girlD9Chart = calculateShodashavargaChart(girlEphem, "D9");
 
   const boyD9AscSign = boyD9Chart.ascendant.vargaSignIndex;

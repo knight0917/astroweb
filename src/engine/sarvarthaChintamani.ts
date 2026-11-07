@@ -46,7 +46,6 @@ export function evaluateSarvarthaChintamani(natalEphemeris: EphemerisResult): Sa
   const marsPlanet = natalEphemeris.planets.Mars;
   const satPlanet = natalEphemeris.planets.Saturn;
   const rahuPlanet = natalEphemeris.planets.Rahu;
-  const ketuPlanet = natalEphemeris.planets.Ketu;
 
   // 1. 12 Bhavas Wish-Fulfilling Predictive Matrix (Adhyayas 1-12)
   const bhavaPredictions: ChintamaniBhavaPrediction[] = [];

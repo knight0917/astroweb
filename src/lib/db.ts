@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import { sql } from "./neon";
-import { supabase } from "./supabase";
 
 export interface StoredBirthChart {
   id: string;
@@ -109,7 +108,7 @@ function normalizeDateIsoString(raw: unknown): string {
 
 /**
  * Get all charts belonging to a specific email (case-insensitive)
- * Checks Neon Postgres primary, falls back to Supabase, then local DB.
+ * Checks Neon Postgres primary, falls back to local DB.
  */
 export async function getChartsByEmail(email: string): Promise<StoredBirthChart[]> {
   const norm = normalizeEmail(email);
@@ -154,46 +153,7 @@ export async function getChartsByEmail(email: string): Promise<StoredBirthChart[
     }
   }
 
-  // 2. Supabase Legacy Fallback
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("birth_charts")
-        .select("*")
-        .eq("user_email", norm)
-        .order("updated_at", { ascending: false });
-
-      if (!error && data && data.length > 0) {
-        return data.map((row: any) => ({
-          id: row.id,
-          userEmail: row.user_email,
-          name: row.name,
-          gender: row.gender === "female" ? "female" : "male",
-          dateIso: normalizeDateIsoString(row.date_iso),
-          dob: row.dob,
-          time: row.time,
-          location: {
-            cityName: row.city_name || "Unknown City",
-            country: row.country || "India",
-            latitude: Number(row.latitude),
-            longitude: Number(row.longitude),
-            elevation: Number(row.elevation || 0),
-            timezoneOffsetHours: resolveSafeTimezoneOffset(row.timezone_offset_hours, 5.5),
-          },
-          ayanamsha: row.ayanamsha || "Lahiri",
-          houseSystem: row.house_system || "WholeSign",
-          isDefault: Boolean(row.is_default),
-          notes: row.notes,
-          createdAt: normalizeDateIsoString(row.created_at),
-          updatedAt: normalizeDateIsoString(row.updated_at),
-        }));
-      }
-    } catch (err) {
-      console.warn("Supabase query fallback to local DB:", err);
-    }
-  }
-
-  // 3. Fallback to local DB
+  // 2. Fallback to local DB
   const all = readAllChartsLocal();
   return all
     .filter((c) => normalizeEmail(c.userEmail) === norm)
@@ -260,7 +220,7 @@ export async function findExistingChartByEmailAndData(
 }
 
 /**
- * Save or update a birth chart in Neon, Supabase, and local cache
+ * Save or update a birth chart in Neon and local cache
  */
 export async function saveChart(
   chart: Omit<StoredBirthChart, "createdAt" | "updatedAt"> & { id?: string }
@@ -333,48 +293,7 @@ export async function saveChart(
     }
   }
 
-  // 2. Fallback to Supabase
-  if (supabase) {
-    try {
-      const { data: existingRow } = await supabase
-        .from("birth_charts")
-        .select("user_email")
-        .eq("id", record.id)
-        .maybeSingle();
-
-      if (existingRow && normalizeEmail(existingRow.user_email) !== normEmail) {
-        throw new Error("Forbidden: chart ID ownership mismatch.");
-      }
-
-      await supabase.from("birth_charts").upsert({
-        id: record.id,
-        user_email: record.userEmail,
-        name: record.name,
-        gender: record.gender,
-        date_iso: record.dateIso,
-        dob: record.dob,
-        time: record.time,
-        city_name: record.location.cityName,
-        country: record.location.country,
-        latitude: record.location.latitude,
-        longitude: record.location.longitude,
-        elevation: record.location.elevation || 0,
-        timezone_offset_hours: safeTzOffset,
-        ayanamsha: record.ayanamsha || "Lahiri",
-        house_system: record.houseSystem || "WholeSign",
-        is_default: Boolean(record.isDefault),
-        notes: record.notes,
-        updated_at: nowIso,
-      });
-    } catch (err) {
-      if (err instanceof Error && err.message.includes("ownership")) {
-        throw err;
-      }
-      console.warn("Supabase save exception:", err);
-    }
-  }
-
-  // 3. Save to local fallback cache
+  // 2. Save to local fallback cache
   try {
     const all = readAllChartsLocal();
     const existingIdx = all.findIndex((c) => c.id === id);
@@ -419,24 +338,7 @@ export async function deleteChart(id: string, email: string): Promise<boolean> {
     }
   }
 
-  // 2. Supabase
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("birth_charts")
-        .delete()
-        .eq("id", id)
-        .eq("user_email", normEmail)
-        .select("id");
-      if (!error && Array.isArray(data) && data.length > 0) {
-        deletedFromCloud = true;
-      }
-    } catch (err) {
-      console.warn("Supabase delete exception:", err);
-    }
-  }
-
-  // 3. Local fallback cleanup
+  // 2. Local fallback cleanup
   const all = readAllChartsLocal();
   const filtered = all.filter((c) => !(c.id === id && normalizeEmail(c.userEmail) === normEmail));
   if (filtered.length !== all.length) {
@@ -514,31 +416,6 @@ export async function getReviews(limit = 100): Promise<StoredReview[]> {
     }
   }
 
-  // 2. Supabase Fallback
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("reviews")
-        .select("id, name, email, subject, description, rating, created_at")
-        .order("created_at", { ascending: false })
-        .limit(safeLimit);
-
-      if (!error && data && data.length > 0) {
-        return data.map((row: any) => ({
-          id: row.id,
-          name: row.name,
-          email: row.email,
-          subject: row.subject,
-          description: row.description,
-          rating: Number(row.rating) || 5,
-          createdAt: normalizeDateIsoString(row.created_at),
-        }));
-      }
-    } catch (err) {
-      console.warn("Supabase fetch reviews exception, using local DB:", err);
-    }
-  }
-
   const local = readAllReviewsLocal();
   return local
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -594,26 +471,7 @@ export async function saveReview(reviewData: {
     }
   }
 
-  // 2. Supabase Fallback
-  if (supabase) {
-    try {
-      await supabase.from("reviews").insert([
-        {
-          id: newReview.id,
-          name: newReview.name,
-          email: newReview.email,
-          subject: newReview.subject,
-          description: newReview.description,
-          rating: newReview.rating,
-          created_at: newReview.createdAt,
-        },
-      ]);
-    } catch (err) {
-      console.warn("Supabase save review exception, saving locally:", err);
-    }
-  }
-
-  // 3. Local fallback
+  // 2. Local fallback
   try {
     const all = readAllReviewsLocal();
     all.unshift(newReview);
@@ -651,25 +509,7 @@ export async function hasRecentReviewByEmail(email: string, hours: number = 24):
     }
   }
 
-  // 2. Supabase
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from("reviews")
-        .select("created_at")
-        .eq("email", norm)
-        .gte("created_at", thresholdIso)
-        .limit(1);
-
-      if (!error && data && data.length > 0) {
-        return true;
-      }
-    } catch (err) {
-      console.warn("Supabase check recent review exception:", err);
-    }
-  }
-
-  // 3. Local fallback
+  // 2. Local fallback
   const local = readAllReviewsLocal();
   const recent = local.find(
     (r) => normalizeEmail(r.email) === norm && new Date(r.createdAt).getTime() >= thresholdMs

@@ -24,11 +24,8 @@ export function evaluateRaman300Combinations(ephemeris: EphemerisResult): Raman3
   const l2Lord = getLordOfHouse(2);
   const l4Lord = getLordOfHouse(4);
   const l5Lord = getLordOfHouse(5);
-  const l6Lord = getLordOfHouse(6);
   const l7Lord = getLordOfHouse(7);
   const l9Lord = getLordOfHouse(9);
-  const l10Lord = getLordOfHouse(10);
-  const l11Lord = getLordOfHouse(11);
 
   const allYogas: RamanCombinationYoga[] = [
     {

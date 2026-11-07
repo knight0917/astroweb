@@ -8,7 +8,7 @@
 
 import { EphemerisResult } from "./types";
 import { RASHI_NAMES } from "./constants";
-import { calculateShodashavargaChart, calculateVargaSign } from "./shodashavarga";
+import { calculateShodashavargaChart } from "./shodashavarga";
 
 export interface AcademicHouseInfo {
   houseNum: number;

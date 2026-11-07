@@ -6,7 +6,7 @@
  * - Structural Sambandhas, Divine Lineage of Houses & Dual Sign Degree Bifurcation (Syllabus Unit 92)
  */
 
-import { EphemerisResult, CelestialBodyPosition } from "./types";
+import { EphemerisResult } from "./types";
 import { RASHI_NAMES } from "./constants";
 
 // ============================================================================

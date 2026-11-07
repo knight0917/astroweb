@@ -7,7 +7,7 @@
 
 import { EphemerisResult } from "./types";
 import { RASHI_NAMES } from "./constants";
-import { calculateShodashavargaChart, VargaChartResult, VargaEntityPosition } from "./shodashavarga";
+import { calculateShodashavargaChart, VargaChartResult } from "./shodashavarga";
 import { synthesizeBphsKarmicShanti } from "./bphsKarmicShanti";
 
 export interface SphutaAnalysis {

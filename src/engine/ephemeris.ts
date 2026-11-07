@@ -6,7 +6,6 @@ import type {
   GeoLocation,
   HouseSystem,
   NodeType,
-  SpecialPoint,
 } from "./types";
 import { getAyanamsha, toSiderealLongitude } from "./ayanamsha";
 import { getRashi, getNakshatra, getHouse } from "./rashiNakshatra";
@@ -70,10 +69,6 @@ function eclipticLonToHorizon(
 
 const EPHEMERIS_CACHE_MAX = 500;
 const ephemerisCache = new Map<string, EphemerisResult>();
-
-export function clearEphemerisCache(): void {
-  ephemerisCache.clear();
-}
 
 export function calculateVedicEphemeris(
   date: Date,

@@ -49,9 +49,8 @@
  *   - Transit Portals: Transiting benefics crossing Indu Lagna or its Kendra/Trikona axes unlock liquidity.
  */
 
-import { EphemerisResult, CelestialBodyPosition, SpecialPoint, RashiInfo } from "./types";
-import { RASHI_NAMES } from "./constants";
-import { calculateArudhaPadas, ArudhaPada } from "./jaimini";
+import { EphemerisResult, CelestialBodyPosition, SpecialPoint } from "./types";
+import { calculateArudhaPadas } from "./jaimini";
 
 // =========================================================================
 // 1. FUNDAMENTAL CONSTANTS & KALA RAY VALUES (SESSION 86)
@@ -526,8 +525,6 @@ export function calculateInduPlanetaryAgeActivations(
   if (activeMilestonesNow.length > 0) {
     executiveGuidance = `🔥 Active Indu Wealth Portal at Age ${currentAge}! Planet ${activeMilestonesNow.map(m => m.planet).join(", ")} is currently triggering its Indu Lagna activation window (${activeMilestonesNow[0].significance}). Focus capital and effort on these domains.`;
   } else {
-    // Find closest upcoming
-    const upcoming = allMilestones.filter(m => m.activationStatus === "Upcoming Milestone");
     executiveGuidance = `Native is currently Age ${currentAge}. Upcoming Indu Lagna maturation milestones will awaken key financial channels as designated in the planetary radar.`;
   }
 

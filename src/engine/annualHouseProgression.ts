@@ -572,7 +572,6 @@ export function calculateAnnualHouseProgression(
   }
 
   const kalapurushaData = KALAPURUSHA_ARCHETYPES[activeHouse];
-  const primarySignifications = `House ${activeHouse} (${rashiName}): ${kalapurushaData.domain}. Focuses life spotlight on ${kalapurushaData.operatingTrait}`;
   const practicalManifestationGuidance = `During your ${lifeYear}th Year of life (Cycle ${cycleNumber}, Age ${completedAge}), House ${activeHouse} is activated. ${deliveryExplanation}`;
 
   return {

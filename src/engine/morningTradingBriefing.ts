@@ -211,7 +211,6 @@ export function generateMorningTradingBriefing(year: number, month1Based: number
   const venLong = eph.planets.Venus.siderealLongitude;
   const marsLong = eph.planets.Mars.siderealLongitude;
   const jupLong = eph.planets.Jupiter.siderealLongitude;
-  const moonLong = eph.planets.Moon.siderealLongitude;
   const rahLong = eph.planets.Rahu.siderealLongitude;
 
   // Combustion check

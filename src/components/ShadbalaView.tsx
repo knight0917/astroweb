@@ -426,8 +426,6 @@ export default function ShadbalaView() {
                   const naisargR = p.naisargikaBala / 60;
                   const drikR = Math.max(0, p.drikBala / 60);
 
-                  const totalR = p.totalRupas;
-
                   return (
                     <button
                       key={p.planetId}

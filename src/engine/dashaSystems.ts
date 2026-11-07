@@ -254,7 +254,6 @@ export function evaluateMultiDashaSystems(
 ): MultiDashaReport {
   const birthDate = new Date(natalEphem.utcDate);
   const moonLon = natalEphem.planets.Moon?.siderealLongitude || 0;
-  const sunLon = natalEphem.planets.Sun?.siderealLongitude || 0;
   const ascLon = natalEphem.ascendant.siderealLongitude;
   const ascSign = Math.floor(ascLon / 30);
 

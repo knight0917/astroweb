@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { calculateSukaNadi } from "../engine/sukaNadi";
-import { SukaNadiAnalysis, SukaNadiKarakaBlend, SukaDirectionalTrine } from "../engine/types";
+import { SukaNadiAnalysis, SukaNadiKarakaBlend } from "../engine/types";
 
 export default function SukaNadiDeck() {
   const { ephemeris } = useAstroStore();

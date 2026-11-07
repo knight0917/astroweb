@@ -703,7 +703,6 @@ export function calculateNodalHelixAndInvertedReturns(
   birthDate: Date,
   targetDate: Date = new Date()
 ): NodalGocharaInfo {
-  const d1AscIdx = Math.floor(natalEphem.ascendant.siderealLongitude / 30);
   const diffMs = targetDate.getTime() - birthDate.getTime();
   const completedAge = Math.max(0, Math.floor(diffMs / (365.25 * 24 * 60 * 60 * 1000)));
   const currentLifeYear = completedAge + 1;

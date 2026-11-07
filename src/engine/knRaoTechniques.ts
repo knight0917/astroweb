@@ -91,8 +91,6 @@ function calculateNavamshaSign(lon: number): { signIndex: number; signName: stri
 
 export function evaluateKnRaoTechniques(natalEphem: EphemerisResult): KnRaoTechniquesReport {
   const planets = natalEphem.planets;
-  const ascLon = natalEphem.ascendant.siderealLongitude;
-  const ascSign = Math.floor(ascLon / 30);
 
   const sunLon = planets.Sun?.siderealLongitude || 0;
   const moonLon = planets.Moon?.siderealLongitude || 0;

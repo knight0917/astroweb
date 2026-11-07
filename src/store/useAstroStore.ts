@@ -33,7 +33,6 @@ export type ViewMode =
   | "table"
   | "dual"
   | "vastu";
-export type SkyViewType = "ecliptic" | "horizontal";
 
 export interface BirthProfile {
   id: string;
@@ -228,9 +227,7 @@ interface AstroState {
   gender: "male" | "female";
   showModernPlanets: boolean;
   showUpagrahas: boolean;
-  showConstellations: boolean;
   viewMode: ViewMode;
-  skyViewType: SkyViewType;
   selectedEntityId: string | null;
   inspectorEntityId: string | null;
   ephemeris: EphemerisResult;
@@ -240,7 +237,6 @@ interface AstroState {
   activeProfileName: string | null;
   userEmail: string | null;
   isSyncingDb: boolean;
-  lastCacheCleanupTime: number | null;
   run24HourCacheCleanup: (force?: boolean) => Promise<{ cleaned: boolean; message: string }>;
   check15DayEmptyVaultPruning: () => { pruned: boolean; message: string };
 
@@ -259,16 +255,13 @@ interface AstroState {
   syncChartsWithDb: (customEmail?: string, autoLoad?: boolean) => Promise<BirthProfile[]>;
   setMatchmakingBoy: (data: Partial<MatchmakingProfileData>) => void;
   setMatchmakingGirl: (data: Partial<MatchmakingProfileData>) => void;
-  setMatchmakingState: (state: MatchmakingStoreState) => void;
   togglePlay: () => void;
   setPlaySpeed: (speed: number) => void;
   setShowModernPlanets: (show: boolean) => void;
   setShowUpagrahas: (show: boolean) => void;
-  setShowConstellations: (show: boolean) => void;
   setViewMode: (mode: ViewMode) => void;
   activeVargaId: string;
   setActiveVargaId: (vargaId: string) => void;
-  setSkyViewType: (type: SkyViewType) => void;
   setSelectedEntityId: (id: string | null) => void;
   setInspectorEntityId: (id: string | null) => void;
   chartRotationHouse: number;
@@ -350,11 +343,9 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   gender: "male",
   showModernPlanets: false,
   showUpagrahas: true,
-  showConstellations: true,
   viewMode: "kundli-north",
   activeVargaId: "D9",
   setActiveVargaId: (vargaId: string) => set({ activeVargaId: vargaId }),
-  skyViewType: "ecliptic",
   selectedEntityId: null,
   inspectorEntityId: null,
   chartRotationHouse: 1,
@@ -363,7 +354,6 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   activeProfileName: null,
   userEmail: null,
   isSyncingDb: false,
-  lastCacheCleanupTime: null,
   matchmaking: defaultMatchmakingState,
   ephemeris: calculateVedicEphemeris(
     defaultDate,
@@ -452,7 +442,6 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     const isDue = force || !lastTime || (now - lastTime >= TWENTY_FOUR_HOURS_MS);
 
     if (!isDue) {
-      set({ lastCacheCleanupTime: lastTime });
       return {
         cleaned: false,
         message: `Cache is fresh. Next 24h cleanup in ${Math.round((TWENTY_FOUR_HOURS_MS - (now - lastTime)) / (60 * 1000))} minutes.`,
@@ -489,7 +478,6 @@ export const useAstroStore = create<AstroState>((set, get) => ({
 
       // 5. Update timestamp
       localStorage.setItem(STORAGE_LAST_CACHE_CLEANUP_KEY, String(now));
-      set({ lastCacheCleanupTime: now });
 
       console.log("[PurohitJI AI] 24-Hour Cache Invalidation successfully executed across all connected device storage.");
       return {
@@ -716,11 +704,6 @@ export const useAstroStore = create<AstroState>((set, get) => ({
     set({ matchmaking: updated });
   },
 
-  setMatchmakingState: (state) => {
-    saveMatchmakingToStorage(state);
-    set({ matchmaking: state });
-  },
-
   togglePlay: () => {
     const nextPlaying = !get().isPlaying;
     set({
@@ -732,9 +715,7 @@ export const useAstroStore = create<AstroState>((set, get) => ({
   setPlaySpeed: (playSpeed) => set({ playSpeed }),
   setShowModernPlanets: (showModernPlanets) => set({ showModernPlanets }),
   setShowUpagrahas: (showUpagrahas) => set({ showUpagrahas }),
-  setShowConstellations: (showConstellations) => set({ showConstellations }),
   setViewMode: (viewMode) => set({ viewMode }),
-  setSkyViewType: (skyViewType) => set({ skyViewType }),
   setSelectedEntityId: (selectedEntityId) => set({ selectedEntityId }),
   setInspectorEntityId: (inspectorEntityId) => set({ inspectorEntityId }),
   setChartRotationHouse: (chartRotationHouse) => {

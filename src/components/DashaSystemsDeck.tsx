@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
-import { evaluateMultiDashaSystems, MultiDashaReport, YoginiMahadasha } from "../engine/dashaSystems";
+import { evaluateMultiDashaSystems, MultiDashaReport } from "../engine/dashaSystems";
 
 export default function DashaSystemsDeck() {
   const { ephemeris, currentDate } = useAstroStore();

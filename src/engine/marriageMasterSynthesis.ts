@@ -8,7 +8,7 @@
  */
 
 import { EphemerisResult } from "./types";
-import { calculateShodashavargaChart, calculateVargaSign } from "./shodashavarga";
+import { calculateShodashavargaChart } from "./shodashavarga";
 import { calculateJaiminiKarakas } from "./jaimini";
 import { RASHI_NAMES } from "./constants";
 
@@ -89,9 +89,6 @@ export function evaluateMarriageMasterSynthesis(ephem: EphemerisResult, gender: 
   const getPlanet = (name: string) => ephem.planets[name];
 
   const sun = getPlanet("Sun");
-  const moon = getPlanet("Moon");
-  const mars = getPlanet("Mars");
-  const merc = getPlanet("Mercury");
   const jup = getPlanet("Jupiter");
   const ven = getPlanet("Venus");
   const sat = getPlanet("Saturn");
@@ -147,7 +144,6 @@ export function evaluateMarriageMasterSynthesis(ephem: EphemerisResult, gender: 
   }
 
   // 2. Separation & Divorce Risk Assessment
-  const d9OccupantsH7 = d9Chart.entities.filter((e) => e.house === 7).map((e) => e.name);
   const malefics = ["Mars", "Saturn", "Rahu", "Ketu", "Sun"];
   const benefics = ["Jupiter", "Venus", "Mercury"];
 

@@ -7,7 +7,7 @@ import { evaluatePanchadaMaitri } from "../engine/panchadaMaitri";
 import { calculateIshtaKashta } from "../engine/ishtaKashta";
 import { calculateBadhakaAvasthas } from "../engine/badhakaAvasthas";
 import { evaluateNatalPanchangaDeep } from "../engine/natalPanchangaDeep";
-import { calculateAllLagnas, UnifiedLagnaInfo, LagnaSystem } from "../engine/allLagnas";
+import { calculateAllLagnas } from "../engine/allLagnas";
 
 export default function PositionsTable() {
   const [activeTab, setActiveTab] = useState<"planets" | "lagnas" | "upagrahas" | "panchanga">("planets");
@@ -18,7 +18,6 @@ export default function PositionsTable() {
     selectedEntityId,
     setSelectedEntityId,
     setInspectorEntityId,
-    chartRotationHouse,
     chartReferenceLagna,
     setChartReferenceLagna,
     resetChartRotation,

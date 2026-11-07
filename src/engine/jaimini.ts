@@ -430,7 +430,6 @@ export function calculateJaiminiCharaDasha(
 
   // Fixed classical dasha year lengths or distance-based
   signOrder.forEach((signIdx) => {
-    const lordName = RASHI_LORD_NAMES[signIdx];
     // Distance from Sign to Lord
     const lordSignIdx = (signIdx + 4) % 12; // Standard representative position
     const distance = ((lordSignIdx - signIdx + 12) % 12) + 1;

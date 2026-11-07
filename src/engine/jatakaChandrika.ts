@@ -22,7 +22,6 @@ import { RASHI_NAMES } from "./constants";
 const SIGN_LORDS = ["Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter"];
 
 const NATURAL_BENEFICS = ["Jupiter", "Venus", "Mercury", "Moon"];
-const NATURAL_MALEFICS = ["Saturn", "Mars", "Sun", "Rahu", "Ketu"];
 
 export function evaluateJatakaChandrika(natalEphemeris: EphemerisResult): JatakaChandrikaAnalysis {
   const ascSignIdx = Math.floor(natalEphemeris.ascendant.siderealLongitude / 30);
@@ -60,7 +59,6 @@ export function evaluateJatakaChandrika(natalEphemeris: EphemerisResult): Jataka
   for (const pName of traditionalPlanets) {
     const houses = planetHouses[pName] || [];
     const isNatBenefic = NATURAL_BENEFICS.includes(pName);
-    const isNatMalefic = NATURAL_MALEFICS.includes(pName);
 
     const hasKendra = houses.some((h) => [1, 4, 7, 10].includes(h));
     const hasTrikona = houses.some((h) => [1, 5, 9].includes(h));

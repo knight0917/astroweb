@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
-import { buildAstroDossier, detectConsultationIntent, AstroConsultationIntent } from "../engine/chatContext";
+import { buildAstroDossier, detectConsultationIntent } from "../engine/chatContext";
 import { buildChatSystemInstruction, extractUserConfirmedFacts } from "../engine/chatPrompt";
 import { calculateVedicEphemeris } from "../engine/ephemeris";
 import { calculateVimshottariDasha } from "../engine/dasha";
@@ -38,10 +38,7 @@ import { generateMedhajBaadhakMasterReport } from "../engine/medhajBaadhak";
 import { generateMedhajInduLagnaMasterReport } from "../engine/medhajInduLagna";
 import { generateMedhajMksPastLifeMasterReport } from "../engine/medhajMksPastLife";
 import { generateMedhajRahuKetuTransitMasterReport } from "../engine/medhajRahuKetuTransit";
-import { generateAgniTransitLineageReport } from "../engine/agniTransitLineage";
-import { generateBhagyaBinduSecretCodeReport } from "../engine/bhagyaBinduSecretCode";
 import { generateLifestyleRemediesReport } from "../engine/lifestyleRemediesWayOfLife";
-import { evaluateNatalPanchangaDeep } from "../engine/natalPanchangaDeep";
 import { generateMakaraKurmaMasterReport } from "../engine/makaraKurmaSaturn";
 import { generateKumbhaAquariusMasterReport } from "../engine/kumbhaAquariusRahu";
 import { generateMeenaKalapurushaDrishtiMasterReport } from "../engine/meenaKalapurushaDrishti";
@@ -53,12 +50,9 @@ import { arbitratePredictiveQuery, PredictiveArbitrationResult } from "../engine
 import { EphemerisResult } from "../engine/types";
 import {
   loadClientMemoryVault,
-  saveClientMemoryVault,
   syncMessagesToMemoryVault,
   recordSadhanaProgress,
   buildReturningClientWelcome,
-  ClientMemoryVault,
-  ActiveSadhanaItem,
 } from "../engine/clientMemoryVault";
 
 interface Message {
@@ -647,20 +641,6 @@ function getLocalCivilDateTime(natalEphem: EphemerisResult) {
   };
 }
 
-function getShiftedLocalTime(natalEphem: EphemerisResult, minuteOffset: number): string {
-  const birthDateObj = new Date(natalEphem.utcDate);
-  const tzOffset = natalEphem.location?.timezoneOffsetHours ?? 0;
-  const localBirthDate = new Date(birthDateObj.getTime() + tzOffset * 3600 * 1000 + minuteOffset * 60 * 1000);
-  const rawHours = localBirthDate.getUTCHours();
-  const rawMinutes = String(localBirthDate.getUTCMinutes()).padStart(2, "0");
-  const rawSecNum = localBirthDate.getUTCSeconds();
-  const secSuffix = rawSecNum > 0 ? `:${String(rawSecNum).padStart(2, "0")}` : "";
-  const hour12 = rawHours % 12 || 12;
-  const ampm = rawHours >= 12 ? "PM" : "AM";
-  const formattedHours = String(rawHours).padStart(2, "0");
-  return `${hour12}:${rawMinutes}${secSuffix} ${ampm} (${formattedHours}:${rawMinutes}${secSuffix})`;
-}
-
 function formatHumanReadableError(err: any): string {
   const raw = err?.message || String(err || "");
 
@@ -938,7 +918,6 @@ ${activeDasha ? `- **Current Running Period:** **${activeDasha.mahadasha.name} M
     (q.includes("blind spot") && (q.includes("lagna") || q.includes("moon") || q.includes("sign lord")))
   ) {
     const rd = generateRishiDrekkanaMasterReport(natalEphem);
-    const un = generateUchhaNeechaAwarenessMasterReport(natalEphem);
     const blindSpots = rd.nativeSignLordDiagnostics;
     const lagnaDiag = blindSpots.lagnaSignDiagnostic;
     const moonDiag = blindSpots.moonSignDiagnostic;
@@ -2894,7 +2873,6 @@ ${sr.specialDrishtis.map(d => `  - **${d.aspectLabel} -> House ${d.targetHouse} 
     const bb = kb.bhriguBinduAxis;
     const kw = kb.kumbhaWaterBearer;
     const rn = kb.rahuNonExploitation;
-    const tr = kb.triadRulership;
     const fa = kb.friendshipAlliances;
     const ss = kb.spiritualShieldAndRemedies;
 
@@ -5088,7 +5066,7 @@ export default function AstroChatbot({ initialOpen = false, initialPrompt = "" }
     }
   }, [profileThreadKey]);
 
-  // Listen for global open-astro-chat event from QuickHighlightsBar and 3D Sky Dome HUD
+  // Listen for global open-astro-chat event from 3D Sky Dome HUD
   useEffect(() => {
     const handleOpenChat = (e?: Event) => {
       setIsOpen(true);
@@ -5163,9 +5141,6 @@ export default function AstroChatbot({ initialOpen = false, initialPrompt = "" }
     a.click();
     URL.revokeObjectURL(url);
   };
-
-  // Session-level query cache for instantaneous 0ms responses on repeat questions
-  const queryCache = useRef<Map<string, string>>(new Map());
 
   // Direct Gemini API Call with Real-Time SSE Token Streaming & Speed Fallback
   const executeStreamingGeminiCall = async (

@@ -160,22 +160,6 @@ export const NORTH_HOUSE_CENTERS: Record<number, { x: number; y: number }> = {
   12: { x: 297.5, y: 37.5 },
 };
 
-// North Indian Chart House Polygons for Background Auras
-export const NORTH_HOUSE_POLYGONS: Record<number, string> = {
-  1: "200,5 297.5,102.5 200,200 102.5,102.5",
-  2: "5,5 200,5 102.5,102.5",
-  3: "5,5 102.5,102.5 5,200",
-  4: "5,200 102.5,102.5 200,200 102.5,297.5",
-  5: "5,200 102.5,297.5 5,395",
-  6: "5,395 102.5,297.5 200,395",
-  7: "200,395 297.5,297.5 200,200 102.5,297.5",
-  8: "200,395 297.5,297.5 395,395",
-  9: "395,395 297.5,297.5 395,200",
-  10: "395,200 297.5,297.5 200,200 297.5,102.5",
-  11: "395,200 297.5,102.5 395,5",
-  12: "200,5 395,5 297.5,102.5",
-};
-
 // South Indian Chart Rashi Cell Centers (viewBox 0 0 400 400)
 export const SOUTH_RASHI_CENTERS: Record<number, { x: number; y: number }> = {
   11: { x: 50, y: 50 }, // Pisces (Col 1, Row 1)

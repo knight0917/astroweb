@@ -6,7 +6,6 @@
  * - Brihat Samhita (बृहत् संहिता)
  */
 
-import * as Astronomy from "astronomy-engine";
 import { GeoLocation } from "./types";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { resolveLocalSolarDayBounds } from "./upagrahas";

@@ -86,11 +86,9 @@ export function evaluateSaravali(natalEphemeris: EphemerisResult): SaravaliAnaly
   const ascSignIdx = Math.floor(natalEphemeris.ascendant.siderealLongitude / 30);
   const lagnaLordName = SIGN_LORDS[ascSignIdx];
   const lagnaLordPlanet = natalEphemeris.planets[lagnaLordName];
-  const lagnaLordHouse = lagnaLordPlanet ? lagnaLordPlanet.house : 1;
 
   const moonPlanet = natalEphemeris.planets.Moon;
   const moonHouse = moonPlanet ? moonPlanet.house : 1;
-  const moonSignIdx = moonPlanet ? Math.floor(moonPlanet.siderealLongitude / 30) : 0;
 
   const jupiterPlanet = natalEphemeris.planets.Jupiter;
   const venusPlanet = natalEphemeris.planets.Venus;

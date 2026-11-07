@@ -46,8 +46,8 @@
  *      * Shelter for seekers of genuine occult wisdom, selfless service, and divine surrender.
  */
 
-import { EphemerisResult, CelestialBodyPosition, SpecialPoint } from "./types";
-import { ZODIAC_SIGNS, RASHI_SANSKRIT, SIGN_LORDS, getBodySignIndex } from "./medhajInduLagna";
+import { EphemerisResult } from "./types";
+import { ZODIAC_SIGNS, RASHI_SANSKRIT, getBodySignIndex } from "./medhajInduLagna";
 
 // =========================================================================
 // 1. SESSION 83: NADI DESTINY BREAKERS & TAURUS-SCORPIO AXIS

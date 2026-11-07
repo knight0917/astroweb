@@ -44,7 +44,6 @@ export interface UnifiedLagnaInfo {
  */
 export function calculateAllLagnas(ephem: EphemerisResult): UnifiedLagnaInfo[] {
   const ascLon = ephem.ascendant.siderealLongitude;
-  const ascSignIdx = Math.floor(ascLon / 30);
   const ascDegreeInSign = ascLon % 30;
 
   const sunLon = ephem.planets.Sun?.siderealLongitude || 0;

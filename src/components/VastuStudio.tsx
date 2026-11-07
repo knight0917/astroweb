@@ -5,24 +5,18 @@ import { useAstroStore } from "@/store/useAstroStore";
 import {
   VastuRoomType,
   VastuRoomPlacement,
-  VastuDirection,
 } from "@/engine/types";
 import {
-  VASTU_81_GRID_MAP,
   getVastuPada,
-  getDirectionFromCoords,
   evaluateRoomPlacement,
-  calculateAyadiShadvarga,
-  calculateAshtakavargaVastuStrength,
   calculateVastuSynthesis,
   ROOM_COMPATIBILITY_RULES,
   ROOM_OPTIONS,
-  VastuRoomOption,
 } from "@/engine/vastuEngine";
 import { calculateAshtakavarga } from "@/engine/ashtakavarga";
 
 export default function VastuStudio() {
-  const { ephemeris: natalEphem, location } = useAstroStore();
+  const { ephemeris: natalEphem } = useAstroStore();
 
   const [activeTab, setActiveTab] = useState<"mandala" | "ayadi" | "ashtakavarga" | "remedies">("mandala");
   const [selectedRoomType, setSelectedRoomType] = useState<VastuRoomType>("pooja_room");
@@ -44,7 +38,6 @@ export default function VastuStudio() {
   const [plotBreadth, setPlotBreadth] = useState<number>(30);
 
   const nativeMoonNak = natalEphem?.planets?.Moon?.nakshatra?.sanskritName || "Ashwini";
-  const ascSign = natalEphem?.ascendant?.rashi?.englishName || "Aries";
   const savList = useMemo(() => {
     if (!natalEphem) return [28, 30, 32, 29, 31, 33, 27, 34, 30, 29, 32, 28];
     return calculateAshtakavarga(natalEphem).sarvaHouseBindus;

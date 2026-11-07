@@ -17,7 +17,6 @@ import {
   SamhitaSeismicMandala,
   SamhitaCommodityTrend,
 } from "./types";
-import { RASHI_NAMES } from "./constants";
 
 export function evaluateSamhitaSkandha(natalEphemeris: EphemerisResult): SamhitaSkandhaAnalysis {
   // 1. Planetary Cabinet

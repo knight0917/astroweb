@@ -13,7 +13,6 @@ export default function JatakaChandrikaDeck() {
     return evaluateJatakaChandrika(ephemeris);
   }, [ephemeris]);
 
-  const ykCount = report.yogakarakas.length;
   const ryCount = report.sambandhas.filter((s) => s.isRajaYoga).length;
 
   return (

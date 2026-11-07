@@ -69,10 +69,6 @@ export default function MuhurtaView() {
     );
   }, [nakshatraSearch]);
 
-  const formatTime = (d: Date) => {
-    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  };
-
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-200">
       {/* 1. Header Hero Banner */}

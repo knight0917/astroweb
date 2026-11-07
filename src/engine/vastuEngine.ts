@@ -11,7 +11,7 @@ import {
   JaiminiVastuReport,
   EphemerisResult,
 } from "./types";
-import { NAKSHATRAS, RASHIS, RASHI_NAMES } from "./constants";
+import { NAKSHATRAS, RASHI_NAMES } from "./constants";
 import { calculateArudhaPadas } from "./jaimini";
 
 

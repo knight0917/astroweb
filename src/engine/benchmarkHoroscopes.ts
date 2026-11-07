@@ -7,7 +7,6 @@
  */
 
 import { EphemerisResult, BenchmarkAnalysis, BenchmarkHoroscopeItem, ArchetypeResonanceScore } from "./types";
-import { RASHI_NAMES } from "./constants";
 
 export const BENCHMARK_TITANS: BenchmarkHoroscopeItem[] = [
   {
@@ -102,9 +101,6 @@ export const BENCHMARK_TITANS: BenchmarkHoroscopeItem[] = [
 
 export function evaluateBenchmarkResonance(ephemeris: EphemerisResult): BenchmarkAnalysis {
   const planets = ephemeris.planets;
-  const ascLon = ephemeris.ascendant.siderealLongitude;
-  const ascSignIdx = Math.floor(ascLon / 30);
-  const ascSignName = RASHI_NAMES[ascSignIdx].englishName;
 
   const moonHouse = planets.Moon?.house || 1;
   const sunHouse = planets.Sun?.house || 1;

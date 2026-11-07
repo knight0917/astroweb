@@ -35,18 +35,6 @@ export default function AshtakavargaView() {
   const activeDetail: GrahaBAVDetail | null =
     selectedGraha === "SAV" ? null : avResult.bav[selectedGraha];
 
-  // Points for 12 houses or 12 signs
-  const currentPoints =
-    selectedGraha === "SAV"
-      ? viewModeTab === "signs"
-        ? avResult.sarvaRashiBindus
-        : avResult.sarvaHouseBindus
-      : activeDetail
-      ? viewModeTab === "signs"
-        ? activeDetail.rashiBindus
-        : activeDetail.houseBindus
-      : [];
-
   const getStrengthColor = (pts: number, isSAV: boolean) => {
     if (isSAV) {
       if (pts >= 30) return "text-emerald-400 bg-emerald-950/80 border-emerald-600";
@@ -58,23 +46,6 @@ export default function AshtakavargaView() {
       if (pts === 4) return "text-amber-300 bg-amber-950/80 border-amber-600";
       return "text-rose-400 bg-rose-950/80 border-rose-700";
     }
-  };
-
-  // North Indian Chart House Coordinates & Points Mapping
-  // Diamond polygon vertices for 12 houses
-  const HOUSE_POINTS: Record<number, string> = {
-    1: "150,0 225,75 150,150 75,75", // Center Top Diamond (H1)
-    2: "75,0 150,0 75,75", // Top Left Triangle (H2)
-    3: "0,0 75,0 0,75", // Far Top-Left Corner (H3)
-    4: "0,75 75,75 150,150 75,225 0,150", // Left Diamond (H4)
-    5: "0,225 0,300 75,300", // Far Bottom-Left Corner (H5)
-    6: "75,225 75,300 150,300", // Bottom Left Triangle (H6)
-    7: "150,150 225,225 150,300 75,225", // Center Bottom Diamond (H7)
-    8: "150,300 225,300 225,225", // Bottom Right Triangle (H8)
-    9: "225,300 300,300 300,225", // Far Bottom-Right Corner (H9)
-    10: "150,150 225,75 300,75 300,150 225,225", // Right Diamond (H10)
-    11: "225,0 300,0 300,75", // Far Top-Right Corner (H11)
-    12: "150,0 225,0 225,75", // Top Right Triangle (H12)
   };
 
   // Precise geometric centroid and text layout for all 12 North Indian houses (300x300 box)

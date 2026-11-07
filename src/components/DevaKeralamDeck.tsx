@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { evaluateDevaKeralam, NADI_AMSHA_METAS } from "../engine/devaKeralam";
-import { DevaKeralamAnalysis, DevaKeralamPlanetNadi, NadiAmshaInfo } from "../engine/types";
+import { DevaKeralamAnalysis, DevaKeralamPlanetNadi } from "../engine/types";
 
 function renderMarkdownBold(text: string) {
   const parts = text.split(/(\*\*.*?\*\*)/g);

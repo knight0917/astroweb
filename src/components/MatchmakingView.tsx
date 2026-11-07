@@ -4,7 +4,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useAstroStore } from "../store/useAstroStore";
 import { calculateVedicEphemeris } from "../engine/ephemeris";
 import { calculateMatchmaking, CompatibilityResult, KootaScore } from "../engine/matchmaking";
-import { POPULAR_CITIES } from "../engine/constants";
 import { EXTENDED_LOCAL_PLACES } from "../engine/geocoding";
 import { GeoLocation } from "../engine/types";
 import MatchmakingChartsDeck from "./MatchmakingChartsDeck";

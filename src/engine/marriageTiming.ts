@@ -98,7 +98,6 @@ export function evaluateMarriageTiming(
   });
 
   const venusHouse = getHouse("Venus");
-  const venusSignIdx = getSign("Venus");
   const isVenusAfflicted = [6, 8, 12].includes(venusHouse) || (natalPlanets.Venus?.isRetrograde ?? false);
 
   // D9 Navamsha Analysis

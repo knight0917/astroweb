@@ -8,7 +8,7 @@
  */
 
 import { EphemerisResult } from "./types";
-import { calculateShadbala, ShadbalaPlanetId } from "./shadbala";
+import { calculateShadbala } from "./shadbala";
 import { calculateAshtakavarga } from "./ashtakavarga";
 import { evaluatePanchadaMaitri } from "./panchadaMaitri";
 import { calculateIshtaKashta } from "./ishtaKashta";
@@ -151,11 +151,6 @@ export function evaluate12BhavasJudgement(ephemeris: EphemerisResult): TwelveBha
 
   const getPlanetHouse = (pName: string): number => {
     return (planets as any)[pName]?.house || 1;
-  };
-
-  const getPlanetSign = (pName: string): number => {
-    const lon = (planets as any)[pName]?.siderealLongitude || 0;
-    return Math.floor(lon / 30);
   };
 
   // Find occupants for each house

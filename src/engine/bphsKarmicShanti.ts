@@ -17,7 +17,7 @@
  */
 
 import { EphemerisResult } from "./types";
-import { RASHI_NAMES, NAKSHATRAS } from "./constants";
+import { RASHI_NAMES } from "./constants";
 
 export interface ClassicalRemedyInfo {
   title: string;
@@ -320,7 +320,6 @@ export function evaluateBphsKarmicCurses(natal: EphemerisResult): BphsKarmicCurs
   const isMoonDebilitated = moonSignIdx === 7; // Scorpio
   const moonWithSat = isSameSign(moonLong, satLong);
   const moonWithRahu = isSameSign(moonLong, rahuLong);
-  const moonWithMars = isSameSign(moonLong, marsLong);
   const h4Lord = getBhavaLord(ascLong, 4);
   const h4LordLong = p[h4Lord]?.siderealLongitude ?? 0;
   const h4LordWithH5Lord = isSameSign(h4LordLong, h5LordLong);
@@ -382,7 +381,6 @@ export function evaluateBphsKarmicCurses(natal: EphemerisResult): BphsKarmicCurs
   const h3Lord = getBhavaLord(ascLong, 3);
   const h3LordLong = p[h3Lord]?.siderealLongitude ?? 0;
   const marsIn5 = getHouseFromLagna(marsLong, ascLong) === 5;
-  const h3WithH5InTrik = isSameSign(h3LordLong, h5LordLong) && [6, 8, 12].includes(getHouseFromLagna(h5LordLong, ascLong));
   const marsAfflicted = isSameSign(marsLong, satLong) || isSameSign(marsLong, rahuLong);
 
   if (isSameSign(h3LordLong, h5LordLong) && marsIn5 && marsAfflicted) {

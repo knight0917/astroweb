@@ -11,10 +11,10 @@ import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { Html, Line } from "@react-three/drei";
 import * as THREE from "three";
 import { eclipticToCartesian } from "../../engine/skyCoordinates";
-import { RASHIS, NAKSHATRAS } from "../../engine/constants";
+import { RASHIS } from "../../engine/constants";
 import { getGlowTexture, getNebulaSkyTexture, getPlanetTexture, getRaysTexture, getTextTexture } from "./textures";
 import { SD_FONT_MONO, SD_FONT_SERIF } from "./devanagari";
-import { NAKSHATRA_COLORS, getNakshatraColor } from "./nakshatraColors";
+import { NAKSHATRA_COLORS } from "./nakshatraColors";
 
 export const SD_COLORS = Object.freeze({
   background: "#140818",

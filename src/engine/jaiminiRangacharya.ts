@@ -87,7 +87,6 @@ export function evaluateJaiminiRangacharya(natalEphemeris: EphemerisResult): Jai
 
   // 3. Shoola Dasha Calculation (9 Years per sign Ayurdaya)
   // Stronger of 1st or 7th sign initiates Shoola Dasha
-  const seventhSign = (ascSign + 6) % 12;
   const startSign = ascSign; // Standard default or strongest
   const isStartOdd = startSign % 2 === 0;
 

@@ -1,11 +1,9 @@
 // PurohitJI AI Progressive Web App Service Worker
-const CACHE_NAME = 'vedic-sky-cache-v2';
+const CACHE_NAME = 'vedic-sky-cache-v3';
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.webmanifest',
   '/icons/icon.svg',
-  '/icons/icon-192.svg',
-  '/icons/icon-512.svg',
 ];
 
 // Install: Pre-cache basic app shell

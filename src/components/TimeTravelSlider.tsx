@@ -25,7 +25,6 @@ export default function TimeTravelSlider() {
     deleteProfile,
     resetToLiveTransit,
     isLive,
-    setIsLive,
     gender,
     setGender,
     userEmail,
@@ -51,7 +50,7 @@ export default function TimeTravelSlider() {
   const [syncEmailInput, setSyncEmailInput] = useState("");
   const [isSavingChart, setIsSavingChart] = useState(false);
   const [syncConflictMsg, setSyncConflictMsg] = useState<string | null>(null);
-  const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+  const [, setSaveSuccessMsg] = useState<string | null>(null);
   const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
   const [saveToast, setSaveToast] = useState("");
 
@@ -1379,7 +1378,7 @@ export default function TimeTravelSlider() {
                           const loaded = profiles.find((p) => p.isDefault) || profiles[0];
                           setSyncStatusMsg(`✅ Connected & Synced! Loaded "${loaded.name}" (${loaded.dob || ""} ${loaded.time || ""}, ${loaded.location?.cityName || ""}).`);
                         } else {
-                          const pruneStatus = check15DayEmptyVaultPruning();
+                          check15DayEmptyVaultPruning();
                           setSyncStatusMsg(`⚠️ Connected to Vault, but 0 charts found under "${userEmail}". Empty email vaults are automatically deleted after 15 days.`);
                         }
                       } catch (err: any) {

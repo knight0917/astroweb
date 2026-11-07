@@ -79,6 +79,7 @@ next-env.d.ts
 data/*.tmp.*
 
 # Scratch scripts, temporary scrap files & backups
+/reports/
 scratch/
 *.tmp
 *.temp

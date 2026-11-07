@@ -8,7 +8,7 @@
  * - Jataka Parijata (Vaidyanatha Dikshita)
  */
 
-import { EphemerisResult, GeoLocation, RashiInfo } from "./types";
+import { EphemerisResult, GeoLocation } from "./types";
 import { RASHI_NAMES } from "./constants";
 import { calculateVedicEphemeris } from "./ephemeris";
 

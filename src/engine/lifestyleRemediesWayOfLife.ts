@@ -34,12 +34,6 @@ export interface GrahaLifestyleProtocol {
   personalizationReason: string;
 }
 
-export interface FortyDayHabitTrackerItem {
-  dayNumber: number;
-  habitsChecked: string[];
-  milestoneNote?: string;
-}
-
 export interface PersonalizedLifestyleRemediesDossier {
   corePhilosophy: {
     title: string;

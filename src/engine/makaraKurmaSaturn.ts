@@ -26,7 +26,7 @@
  *   and Male vs Female Zodiac Signs (Purusha Odd Fire/Air vs Stri Even Earth/Water).
  */
 
-import { EphemerisResult, CelestialBodyPosition } from "./types";
+import { EphemerisResult } from "./types";
 import { RASHI_NAMES } from "./constants";
 import { calculateArudhaPadas } from "./jaimini";
 

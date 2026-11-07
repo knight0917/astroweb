@@ -8,7 +8,6 @@
 
 import { EphemerisResult } from "./types";
 import { calculateShodashavargaChart } from "./shodashavarga";
-import { calculateJaiminiKarakas, calculateJaiminiCharaDasha } from "./jaimini";
 import { RASHI_NAMES } from "./constants";
 
 export interface YoginiDashaEntry {
@@ -79,30 +78,20 @@ export function evaluateRelationshipAffairs(ephem: EphemerisResult, gender: "mal
 
   const getPlanet = (name: string) => ephem.planets[name];
 
-  const sun = getPlanet("Sun");
-  const moon = getPlanet("Moon");
   const mars = getPlanet("Mars");
-  const merc = getPlanet("Mercury");
-  const jup = getPlanet("Jupiter");
   const ven = getPlanet("Venus");
-  const sat = getPlanet("Saturn");
   const rahu = getPlanet("Rahu");
-  const ketu = getPlanet("Ketu");
 
   // Lords in D1
-  const lord1Name = RASHI_NAMES[ascSignIdx].lord;
   const lord3Name = RASHI_NAMES[(ascSignIdx + 2) % 12].lord;
   const lord5Name = RASHI_NAMES[(ascSignIdx + 4) % 12].lord;
   const lord7Name = RASHI_NAMES[(ascSignIdx + 6) % 12].lord;
   const lord8Name = RASHI_NAMES[(ascSignIdx + 7) % 12].lord;
-  const lord12Name = RASHI_NAMES[(ascSignIdx + 11) % 12].lord;
 
-  const pLord1 = getPlanet(lord1Name);
   const pLord3 = getPlanet(lord3Name);
   const pLord5 = getPlanet(lord5Name);
   const pLord7 = getPlanet(lord7Name);
   const pLord8 = getPlanet(lord8Name);
-  const pLord12 = getPlanet(lord12Name);
 
   // 1. Love Marriage vs Arranged Marriage
   const is5th7thLordConjunctD1 = Boolean(

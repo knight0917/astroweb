@@ -66,8 +66,6 @@ export function evaluateBhriguNadiMarriageTiming(
   const rahu = getPlanet(natalEphem, "Rahu");
   const mars = getPlanet(natalEphem, "Mars");
   const ven = getPlanet(natalEphem, "Venus");
-  const jup = getPlanet(natalEphem, "Jupiter");
-  const sat = getPlanet(natalEphem, "Saturn");
 
   const trJup = getPlanet(transitEphem, "Jupiter");
   const trSat = getPlanet(transitEphem, "Saturn");
@@ -107,7 +105,6 @@ export function evaluateBhriguNadiMarriageTiming(
   const isRahuOppositeMars = rahuSignIdx === (marsSignIdx + 6) % 12;
 
   // Sign exchange (Parivartana) with Mars
-  const marsOwnedSigns = [0, 7]; // Aries, Scorpio
   const isMarsInParivartana = false; // standard baseline
 
   let sensitiveNadiSignIndex = marsSignIdx;
