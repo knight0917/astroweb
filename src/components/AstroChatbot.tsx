@@ -5,7 +5,7 @@ import { useAstroStore } from "../store/useAstroStore";
 import { buildAstroDossier, detectConsultationIntent } from "../engine/chatContext";
 import { buildChatSystemInstruction, extractUserConfirmedFacts } from "../engine/chatPrompt";
 import { calculateVedicEphemeris } from "../engine/ephemeris";
-import { calculateVimshottariDasha } from "../engine/dasha";
+import { calculateVimshottariDasha, formatChatbotSixLevelSchedule } from "../engine/dasha";
 import { calculateJaiminiKarakas, analyzeKarakamsha } from "../engine/jaimini";
 import { calculateGochar } from "../engine/gochar";
 import { evaluateProgenyMaster } from "../engine/progenyMaster";
@@ -261,6 +261,7 @@ export function buildPersonalizedWelcomeMessage(
       JSON.stringify([
         { id: "j1", label: "💼 Career & Wealth Master Audit", prompt: "Conduct a comprehensive Career & Wealth Master Audit across my D10, Indu Lagna, and 10th Lord Drekkana Sage." },
         { id: "j2", label: "⏳ Life Pivots & 12-Year Change Wave", prompt: "Explain my 3rd House 12-Year Change Wave (Age = 3 + 12k), upcoming milestone threshold, and Dasha timing." },
+        { id: "j6", label: "👑 6-Level Dasha Timings (MD→Deha)", prompt: "Give me my complete 6-level Vimshottari Dasha timings (Mahadasha, Antardasha, Pratyantardasha, Sookshma, Prana, and Deha Dasha) with exact sub-period schedules." },
         { id: "j3", label: "🪷 Sacred Lineage & Elemental Remedies", prompt: "What are my Sacred Lineage Deities (4th Kula, 9th Dharma, 12th Ishta) and my daily elemental propitiation ritual?" },
         { id: "j4", label: "⚖️ Superpowers & Subconscious Blind Spots", prompt: "What are my chart's high conscious awareness superpowers versus subconscious blind spots according to sign lord dignities?" },
         { id: "j5", label: "🛡️ Lagnesha Sovereign Shield", prompt: "How does my Lagnesha actively protect my chart even if functionally challenged or debilitated?" }
@@ -301,8 +302,8 @@ const CONSULTATION_CATEGORIES: CategoryMeta[] = [
       },
       {
         icon: "👑",
-        title: "Current Dasha Reading",
-        prompt: "What are the specific planetary effects of my currently active Mahadasha and Antardasha? What precautions and remedies should I take?",
+        title: "6-Level Dasha & Micro-Timings (MD→Deha)",
+        prompt: "Give me my complete 6-level Vimshottari Dasha timings (Mahadasha, Antardasha, Pratyantardasha, Sookshma, Prana, and Deha Dasha) with exact sub-period schedules.",
       },
       {
         icon: "✨",
@@ -1046,32 +1047,89 @@ ${deepDignities}
 *⚡ Instant Classical Computation (0ms)*`;
   }
 
-  // 4. Current Running Dasha
-  if (/^(what is my current dasha|what is my running dasha|current dasha|my dasha|running dasha|mahadasha)\??$/i.test(q)) {
+  // 4. Current Running Dasha & Complete 6-Level ("Until Last") Dasha Schedule / Date Lookup
+  const isDomainSpecificTimingQuery =
+    /\b(marri\w*|spouse|wedding|wife|husband|career|job|promotion|business|wealth|money|salary|property|plot|house|home|car|vehicle|child\w*|progeny|baby|health|disease|exam|education|foreign|visa|abroad)\b/i.test(
+      q
+    );
+  const isDirectDashaTimingQuery =
+    !isDomainSpecificTimingQuery &&
+    (/^(what is my current dasha|what is my running dasha|current dasha|my dasha|running dasha|mahadasha|antardasha|pratyantardasha|pratyantar dasha|sookshma dasha|prana dasha|deha dasha|dasha timings|my dasha timings|6-level dasha|6 level dasha|dasha schedule|my dasha schedule)\??$/i.test(
+      q
+    ) ||
+      /\b(6-?level\s+(?:vimshottari\s+)?dasha|sookshma\s+dasha|prana\s+dasha|deha\s+dasha|complete\s+.*dasha\s+timings|dasha\s+(?:on|for|at)\s+\d{4}-\d{2}-\d{2}|exact\s+sub-?period\s+schedules)\b/i.test(
+        q
+      ));
+
+  if (isDirectDashaTimingQuery) {
     const birthDate = new Date(natalEphem.utcDate);
     const moonLon = natalEphem.planets.Moon?.siderealLongitude || 0;
-    const dasha = calculateVimshottariDasha(birthDate, moonLon, evaluationDate);
+    const explicitDateMatch = q.match(/\b(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}(?::\d{2})?))?\b/);
+    const targetEvalDate = explicitDateMatch
+      ? new Date(
+          explicitDateMatch[2]
+            ? `${explicitDateMatch[1]}T${explicitDateMatch[2]}Z`
+            : `${explicitDateMatch[1]}T12:00:00Z`
+        )
+      : evaluationDate;
+    const safeEvalDate = isNaN(targetEvalDate.getTime()) ? evaluationDate : targetEvalDate;
+
+    const dasha = calculateVimshottariDasha(birthDate, moonLon, safeEvalDate);
     const active = dasha.activeDasha;
     if (!active) return null;
 
-    const endStr = new Date(active.adEnd).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-    const mahaEndStr = new Date(active.mdEnd).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    const fmtDate = (d: Date) =>
+      new Date(d).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    const fmtDateTime = (d: Date) =>
+      new Date(d).toISOString().slice(0, 16).replace("T", " ") + " UTC";
+    const fmtDateTimeSec = (d: Date) =>
+      new Date(d).toISOString().slice(0, 19).replace("T", " ") + " UTC";
 
-    return `### 👑 **Your Current Running Vimshottari Dasha:**
-- **Mahadasha (MD):** **${active.mahadasha.name}** (Active until **${mahaEndStr}**)
-- **Antardasha (AD / Bhukti):** **${active.antardasha.name}** (Active until **${endStr}**)
-- **Pratyantardasha (PD):** **${active.pratyantardasha.name}**
-- **Lagna Functional Lord:** ${active.mahadasha.name} operating for your ${natalEphem.ascendant.rashi.englishName} Lagna.
+    const scheduleBlock = formatChatbotSixLevelSchedule(dasha);
 
-*⚡ Instant Classical Computation (0ms)*`;
+    return (
+      `### 👑 **Your Complete 6-Level ("Until Last") Vimshottari Dasha Timings**\n` +
+      `*(Classical Recursive Formula: $T_{n} = (T_{n-1} \\times Y_{\\text{lord}}) / 120$ — BPHS Ch. 61–63 & Pt. Sanjay Rath's Udu Dasas Sec. 1.1.1 & 5.4.4)*\n\n` +
+      `- **1. Mahadasha (MD • Level 1):** **${active.mahadasha.name} (${active.mahadasha.hindiName})** — \`${fmtDate(active.mdStart)}\` → \`${fmtDate(active.mdEnd)}\` (**${active.percentageCompleteMD}%** elapsed)\n` +
+      `- **2. Antardasha (AD • Level 2):** **${active.antardasha.name} (${active.antardasha.hindiName})** — \`${fmtDate(active.adStart)}\` → \`${fmtDate(active.adEnd)}\` (**${active.percentageCompleteAD}%** elapsed)\n` +
+      `- **3. Pratyantardasha (PD • Level 3, BPHS Ch. 61):** **${active.pratyantardasha.name} (${active.pratyantardasha.hindiName})** — \`${fmtDate(active.pdStart)}\` → \`${fmtDate(active.pdEnd)}\` (**${active.percentageCompletePD}%** elapsed)\n` +
+      `  * *Classical Effect:* ${active.bphsPdEffect}\n` +
+      `- **4. Sookshma Dasha (SD • Level 4, BPHS Ch. 62):** **${active.sookshmadasha.name} (${active.sookshmadasha.hindiName})** — \`${fmtDateTime(active.sdStart)}\` → \`${fmtDateTime(active.sdEnd)}\` (**${active.percentageCompleteSD}%** elapsed)\n` +
+      `  * *Classical Effect:* ${active.bphsSdEffect}\n` +
+      `- **5. Prana Dasha (PrD • Level 5, BPHS Ch. 63):** **${active.pranadasha.name} (${active.pranadasha.hindiName})** — \`${fmtDateTime(active.prdStart)}\` → \`${fmtDateTime(active.prdEnd)}\` (**${active.percentageCompletePrD}%** elapsed)\n` +
+      `  * *Classical Effect:* ${active.bphsPrdEffect}\n` +
+      `- **6. Deha Dasha (DD • Level 6 Final, Udu Dasas Sec. 5.4.4):** **${active.dehadasha.name} (${active.dehadasha.hindiName})** — \`${fmtDateTimeSec(active.ddStart)}\` → \`${fmtDateTimeSec(active.ddEnd)}\` (**${active.percentageCompleteDD}%** elapsed)\n` +
+      `  * *Classical Effect:* ${active.bphsDdEffect}\n\n` +
+      `#### 📅 **Exact 9-Sub-Period Schedules (Level 3 PD → Level 4 Sookshma → Level 5 Prana → Level 6 Deha):**\n` +
+      `\`\`\`text\n${scheduleBlock}\n\`\`\`\n\n` +
+      `*⚡ Instant Classical 6-Level Computation (0ms)*\n\n` +
+      `\`\`\`deeplinks\n` +
+      JSON.stringify([{ tabId: "dasha", label: "👑 Open Interactive 6-Level Dasha Tree" }]) +
+      `\n\`\`\`\n\n` +
+      `\`\`\`chips\n` +
+      JSON.stringify([
+        {
+          id: "d_career",
+          label: "💼 Career Timing in 6-Level Dasha",
+          prompt: "When is my next career breakthrough or promotion window using my 6-level Dasha (PD, Sookshma, Prana, Deha)?",
+        },
+        {
+          id: "d_wealth",
+          label: "💰 Wealth Trigger Window",
+          prompt: "When are my strongest wealth and financial gain windows across my upcoming Pratyantardasha and Sookshma Dasha periods?",
+        },
+        {
+          id: "d_marriage",
+          label: "💍 Relationship / Marriage Timing",
+          prompt: "What are the exact upcoming 6-level Dasha trigger windows for marriage and relationship milestones in my chart?",
+        },
+      ]) +
+      `\n\`\`\``
+    );
   }
 
   // 5. Atmakaraka & Jaimini Karakas
@@ -4754,6 +4812,43 @@ export function NeuroSymbolicArbitrationCard({
         })}
       </div>
 
+      {/* 6-Level ("Until Last") Dasha Timing Trigger Strip */}
+      {arbitration.sixLevelTimingWindows && (
+        <div className="px-2 py-1.5 rounded-xl bg-amber-950/20 border border-amber-500/25 text-[9.5px] text-slate-300 space-y-0.5">
+          <div className="flex flex-wrap items-center justify-between gap-1">
+            <span className="font-black text-amber-300 uppercase tracking-wider">
+              ⏳ 6-Level Dasha Timing (MD→AD→PD→Sookshma→Prana→Deha)
+            </span>
+            <button
+              type="button"
+              onClick={() => switchDashboardTab("dasha")}
+              className="text-[9px] font-bold text-amber-400 hover:underline cursor-pointer"
+            >
+              Open 6-Level Tree →
+            </button>
+          </div>
+          <div className="text-slate-300 font-mono text-[9px] truncate" title={arbitration.sixLevelTimingWindows.activeChainSummary}>
+            {arbitration.sixLevelTimingWindows.activeChainSummary}
+          </div>
+          {arbitration.sixLevelTimingWindows.upcomingPratyantardashaWindow && (
+            <div className="text-emerald-300/95 font-medium">
+              • L3 Pratyantardasha ({arbitration.sixLevelTimingWindows.upcomingPratyantardashaWindow.lord}):{" "}
+              <span className="font-mono">
+                {arbitration.sixLevelTimingWindows.upcomingPratyantardashaWindow.startDate} → {arbitration.sixLevelTimingWindows.upcomingPratyantardashaWindow.endDate}
+              </span>
+            </div>
+          )}
+          {arbitration.sixLevelTimingWindows.upcomingSookshmadashaWindow && (
+            <div className="text-cyan-300/95 font-medium">
+              • L4 Sookshma ({arbitration.sixLevelTimingWindows.upcomingSookshmadashaWindow.lord}):{" "}
+              <span className="font-mono">
+                {arbitration.sixLevelTimingWindows.upcomingSookshmadashaWindow.startDateTime} → {arbitration.sixLevelTimingWindows.upcomingSookshmadashaWindow.endDateTime}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       {expanded && (
         <div className="pt-2 border-t border-slate-800/80 space-y-1.5 text-[10px]">
           {gateList.map((g) => (
@@ -4775,6 +4870,31 @@ export function NeuroSymbolicArbitrationCard({
               <span className="text-slate-400 leading-snug">{g.classicalRationale}</span>
             </div>
           ))}
+          {arbitration.sixLevelTimingWindows && (
+            <div className="p-1.5 rounded-xl bg-amber-950/30 border border-amber-500/30 space-y-0.5 text-[9.5px]">
+              <div className="font-bold text-amber-300">
+                ⏱️ Micro-Level Prana (L5) & Deha (L6 Final) Trigger Windows
+              </div>
+              {arbitration.sixLevelTimingWindows.upcomingPranadashaWindow && (
+                <div className="text-slate-300">
+                  • <strong>L5 Prana ({arbitration.sixLevelTimingWindows.upcomingPranadashaWindow.lord}):</strong>{" "}
+                  <span className="font-mono">
+                    {arbitration.sixLevelTimingWindows.upcomingPranadashaWindow.startDateTime} → {arbitration.sixLevelTimingWindows.upcomingPranadashaWindow.endDateTime}
+                  </span>{" "}
+                  ({arbitration.sixLevelTimingWindows.upcomingPranadashaWindow.durationFormatted})
+                </div>
+              )}
+              {arbitration.sixLevelTimingWindows.upcomingDehadashaWindow && (
+                <div className="text-slate-300">
+                  • <strong>L6 Deha ({arbitration.sixLevelTimingWindows.upcomingDehadashaWindow.lord}):</strong>{" "}
+                  <span className="font-mono">
+                    {arbitration.sixLevelTimingWindows.upcomingDehadashaWindow.startDateTimeSec} → {arbitration.sixLevelTimingWindows.upcomingDehadashaWindow.endDateTimeSec}
+                  </span>{" "}
+                  ({arbitration.sixLevelTimingWindows.upcomingDehadashaWindow.durationFormatted})
+                </div>
+              )}
+            </div>
+          )}
           {ragSources && ragSources.length > 0 && (
             <div className="pt-1 flex flex-wrap items-center gap-1">
               <span className="text-[9px] font-bold text-cyan-400 uppercase">📜 Grounded Shastras:</span>
@@ -5542,6 +5662,9 @@ export default function AstroChatbot({ initialOpen = false, initialPrompt = "" }
           mahadashaLord: activeDashaTree.activeDasha.mahadasha.name,
           antardashaLord: activeDashaTree.activeDasha.antardasha.name,
           pratyantardashaLord: activeDashaTree.activeDasha.pratyantardasha.name,
+          sookshmadashaLord: activeDashaTree.activeDasha.sookshmadasha.name,
+          pranadashaLord: activeDashaTree.activeDasha.pranadasha.name,
+          dehadashaLord: activeDashaTree.activeDasha.dehadasha.name,
         }
       : undefined;
     const localArbitration = arbitratePredictiveQuery(

@@ -1916,3 +1916,34 @@
 
 - [x] **Phase 68.5: Verification Gates**
   - [x] Verify `npx tsc --noEmit`, `npm test`, and `npm run build` pass with 0 errors.
+
+---
+
+# Phase 69: Classical 6-Level ("Until Last") Vimshottari Dasha Hierarchy (MD → AD → PD → Sookshma → Prana → Deha Dasha)
+
+## Status: Complete & Verified (All 164 Tests Passing & 0 TS Errors)
+- **Trigger Keywords**: `astrological-calculation`, `mathematical-calculation`, `sookshma-dasha`, `prana-dasha`, `deha-dasha`, `bphs-ch61-63`, `six-level-vimshottari`
+- **Single Source of Truth**: Tracking the classical book extraction (*BPHS* Ch. 61–63, Dr. Shanker Adawal's *Encyclopedia of Vedic Astrology: Dasha Systems*, and Pt. Sanjay Rath's *Vimsottari and Udu Dasas*) and full-stack implementation of the 6-level Vimshottari Dasha engine and UI drill-down.
+
+## Phases & Milestones
+
+- [x] **Phase 69.1: 6-Level Vimshottari Dasha Engine & BPHS Ch. 61–63 Effects (`src/engine/dasha.ts`)**
+  - [x] Add `SookshmadashaNode` (Level 4), `PranadashaNode` (Level 5), and `DehadashaNode` (Level 6) interfaces.
+  - [x] Implement deterministic calculators `calculateSookshmadashas`, `calculatePranadashas`, and `calculateDehadashas` using exact recursive division by 120 ($\text{Duration}_{L} = \frac{\text{Duration}_{L-1} \times Y_{\text{lord}}}{120}$).
+  - [x] Implement `getBphsSubPeriodEffect` encoding classical BPHS Chapters 61 (Pratyantar), 62 (Sukshmantar/Sookshma), and 63 (Prana) plus Sanjay Rath's Deha Dasha somatic manifestation rules.
+  - [x] Upgrade `ActiveDashaPeriod` and `calculateVimshottariDasha` to resolve all 6 active levels (`MD -> AD -> PD -> SD -> PrD -> DD`) with percentage progress and exact start/end timestamps.
+- [x] **Phase 69.2: Interactive 6-Level Dasha UI & Drill-Down Accordion (`src/components/DashaView.tsx` & `src/components/HeaderNav.tsx`)**
+  - [x] Upgrade the Active Dasha Hero Card to display all 6 levels (Mahadasha, Antardasha, Pratyantardasha, Sookshma Dasha, Prana Dasha, and Deha Dasha) with exact date/time stamps and BPHS Ch. 61–63 classical micro-effects.
+  - [x] Add Classical Book Formula Reference Card documenting the 6-level recursive reduction from *BPHS* Ch. 61–63, *Encyclopedia of Dasha Systems*, and *Vimsottari and Udu Dasas*.
+  - [x] Extend the expandable 120-year hierarchy accordion from Level 3 (Pratyantardasha) down through Level 4 (Sookshma Dasha), Level 5 (Prana Dasha), and Level 6 (Deha Dasha).
+- [x] **Phase 69.3: Chatbot Context & Instant Interceptor Upgrade (`src/engine/chatContext.ts` & `src/components/AstroChatbot.tsx`)**
+  - [x] Inject active Level 4 (Sookshma), Level 5 (Prana), and Level 6 (Deha) Dasha telemetry and BPHS micro-effects into `src/engine/chatContext.ts`.
+  - [x] Upgrade the instant Dasha interceptor in `src/components/AstroChatbot.tsx` to display all 6 running Dasha levels down to Deha Dasha.
+- [x] **Phase 69.4: Automated Unit Tests & Production Build Verification (`tests/engine.test.mjs`)**
+  - [x] Add Subtest 164 in `tests/engine.test.mjs` verifying the 6-level mathematical invariants ($\sum \text{SD} = \text{PD}$, $\sum \text{PrD} = \text{SD}$, $\sum \text{DD} = \text{PrD}$, exact $120^5$ scaling, starting lord sequences, and BPHS Ch. 61–63 effects).
+  - [x] Verify `npx tsc --noEmit`, `npm test`, and `npm run build` pass with 0 errors.
+- [x] **Phase 69.5: Chatbot 6-Level Timing Schedule & Neuro-Symbolic Arbitrator Trigger Windows (`src/engine/dasha.ts`, `src/engine/predictiveArbitrator.ts`, `src/engine/chatContext.ts`, `src/engine/chatPrompt.ts`, `src/components/AstroChatbot.tsx`)**
+  - [x] Implement `findDashaTriggerWindowsForPlanets` and `formatChatbotSixLevelSchedule` in `src/engine/dasha.ts` to compute exact Level 3 (PD), Level 4 (Sookshma), Level 5 (Prana), and Level 6 (Deha) sub-period schedules and target-lord trigger windows.
+  - [x] Upgrade `arbitratePredictiveQuery` (`src/engine/predictiveArbitrator.ts`) and `NeuroSymbolicArbitrationCard` (`src/components/AstroChatbot.tsx`) with `sixLevelTimingWindows` so every predictive question automatically resolves exact PD, Sookshma, Prana, and Deha trigger dates/hours/minutes.
+  - [x] Inject complete 9-period schedules for PD, Sookshma, Prana, and Deha into `buildAstroDossier` (`src/engine/chatContext.ts`) and add `Rule 0AX` (6-Level Vimshottari Dasha Micro-Timing Protocol) in `src/engine/chatPrompt.ts`.
+  - [x] Upgrade Chatbot Interceptor #4 and quick-action chips in `src/components/AstroChatbot.tsx` to support full 6-level schedule output and target-date (`YYYY-MM-DD`) Dasha lookup.

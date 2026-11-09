@@ -7,7 +7,7 @@
  */
 
 import { EphemerisResult } from "./types";
-import { calculateVimshottariDasha } from "./dasha";
+import { calculateVimshottariDasha, formatChatbotSixLevelSchedule } from "./dasha";
 import { calculateGochar } from "./gochar";
 import { calculateShodashavargaChart } from "./shodashavarga";
 import { calculateShadbala } from "./shadbala";
@@ -468,12 +468,16 @@ export function buildAstroDossier(
 
   const activeDashaSection = activeDasha
     ? [
-        "- **Active Mahadasha (MD):** " + activeDasha.mahadasha.name + " (" + activeDasha.mahadasha.hindiName + ") [" + activeDasha.mdStart.toLocaleDateString() + " to " + activeDasha.mdEnd.toLocaleDateString() + "]",
-        "- **Active Antardasha (AD):** " + activeDasha.antardasha.name + " (" + activeDasha.antardasha.hindiName + ") [" + activeDasha.adStart.toLocaleDateString() + " to " + activeDasha.adEnd.toLocaleDateString() + "]",
-        "- **Active Pratyantardasha (PD):** " + activeDasha.pratyantardasha.name + " (" + activeDasha.pratyantardasha.hindiName + ") [" + activeDasha.pdStart.toLocaleDateString() + " to " + activeDasha.pdEnd.toLocaleDateString() + "]",
+        "- **Active Mahadasha (MD • Level 1):** " + activeDasha.mahadasha.name + " (" + activeDasha.mahadasha.hindiName + ") [" + activeDasha.mdStart.toLocaleDateString() + " to " + activeDasha.mdEnd.toLocaleDateString() + "]",
+        "- **Active Antardasha (AD • Level 2):** " + activeDasha.antardasha.name + " (" + activeDasha.antardasha.hindiName + ") [" + activeDasha.adStart.toLocaleDateString() + " to " + activeDasha.adEnd.toLocaleDateString() + "]",
+        "- **Active Pratyantardasha (PD • Level 3, BPHS Ch. 61):** " + activeDasha.pratyantardasha.name + " (" + activeDasha.pratyantardasha.hindiName + ") [" + activeDasha.pdStart.toLocaleDateString() + " to " + activeDasha.pdEnd.toLocaleDateString() + "] -> " + activeDasha.bphsPdEffect,
+        "- **Active Sookshma Dasha (SD • Level 4, BPHS Ch. 62):** " + activeDasha.sookshmadasha.name + " (" + activeDasha.sookshmadasha.hindiName + ") [" + activeDasha.sdStart.toLocaleString() + " to " + activeDasha.sdEnd.toLocaleString() + "] -> " + activeDasha.bphsSdEffect,
+        "- **Active Prana Dasha (PrD • Level 5, BPHS Ch. 63):** " + activeDasha.pranadasha.name + " (" + activeDasha.pranadasha.hindiName + ") [" + activeDasha.prdStart.toLocaleString() + " to " + activeDasha.prdEnd.toLocaleString() + "] -> " + activeDasha.bphsPrdEffect,
+        "- **Active Deha Dasha (DD • Level 6 Final, Udu Dasas Sec. 5.4.4):** " + activeDasha.dehadasha.name + " (" + activeDasha.dehadasha.hindiName + ") [" + activeDasha.ddStart.toLocaleTimeString() + " to " + activeDasha.ddEnd.toLocaleTimeString() + "] -> " + activeDasha.bphsDdEffect,
         "- **Recent Past Dasha Windows (For BTR & Past Event Verification):** " + (recentPastPeriods || "Early childhood"),
-        "- **Dasha Progress:** " + activeDasha.percentageCompleteMD + "% of MD and " + activeDasha.percentageCompleteAD + "% of AD completed.",
+        "- **Dasha Progress:** " + activeDasha.percentageCompleteMD + "% of MD, " + activeDasha.percentageCompleteAD + "% of AD, " + activeDasha.percentageCompletePD + "% of PD, " + activeDasha.percentageCompleteSD + "% of SD, " + activeDasha.percentageCompletePrD + "% of PrD, " + activeDasha.percentageCompleteDD + "% of DD completed.",
         "- **Dominant Operational Theme:** " + yogaActivation.dominantLifeTheme,
+        "- **Complete 6-Level ('Until Last') Sub-Period Schedules (PD → Sookshma → Prana → Deha):**\n" + formatChatbotSixLevelSchedule(dasha),
       ].join("\n")
     : "- Dasha calculated.";
 

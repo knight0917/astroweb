@@ -1,6 +1,7 @@
 import { EphemerisResult, CelestialBodyPosition } from "./types";
 import { calculateD1D9RootFruitProjections } from "./rootFruitProjection";
 import { calculateAshtakavarga } from "./ashtakavarga";
+import { findDashaTriggerWindowsForPlanets, DashaTargetTriggerWindows } from "./dasha";
 
 export type PredictiveVerdictCategory =
   | "DESTINED_FRUITFUL"
@@ -24,6 +25,7 @@ export interface PredictiveArbitrationResult {
   verdictDescription: string;
   clarityPercent: number;
   activeTimingWindow: string;
+  sixLevelTimingWindows?: DashaTargetTriggerWindows;
   primaryPositiveDriver: string;
   primaryFrictionFactor: string;
   recommendedUpaya: string;
@@ -108,7 +110,14 @@ export function arbitratePredictiveQuery(
   domain: string,
   natalEphemeris: EphemerisResult,
   transitEphemeris?: EphemerisResult,
-  runningDasha?: { mahadashaLord: string; antardashaLord: string; pratyantardashaLord?: string }
+  runningDasha?: {
+    mahadashaLord: string;
+    antardashaLord: string;
+    pratyantardashaLord?: string;
+    sookshmadashaLord?: string;
+    pranadashaLord?: string;
+    dehadashaLord?: string;
+  }
 ): PredictiveArbitrationResult {
   // 1. Determine Target House and Karaka by Domain (10 Classical Life Domains)
   let targetHouse = 10; // default career
@@ -270,36 +279,71 @@ export function arbitratePredictiveQuery(
   }
   gate2Score = Math.max(0, Math.min(25, gate2Score));
 
-  // 4. Gate 3: Dasha Temporal Permission (Max 20 points)
+  // 4. Gate 3: Dasha Temporal Permission (Max 20 points) — Classical 6-Level (MD -> AD -> PD -> Sookshma -> Prana -> Deha)
   let gate3Score = 12;
   let gate3Rationale = "Standard Dasha progression active.";
+  const evalDateObj = transitEphemeris?.utcDate ? new Date(transitEphemeris.utcDate) : new Date();
+  const moonSidLon = natalEphemeris.planets["Moon"]?.siderealLongitude;
+  const sixLevelTimingWindows: DashaTargetTriggerWindows | undefined =
+    natalEphemeris.utcDate && typeof moonSidLon === "number"
+      ? findDashaTriggerWindowsForPlanets(
+          new Date(natalEphemeris.utcDate),
+          moonSidLon,
+          [targetLordName, naturalKaraka],
+          evalDateObj
+        )
+      : undefined;
+
   const md = runningDasha?.mahadashaLord || "";
   const ad = runningDasha?.antardashaLord || "";
   const pd = runningDasha?.pratyantardashaLord || "";
+  const sd = runningDasha?.sookshmadashaLord || "";
+  const prd = runningDasha?.pranadashaLord || "";
+  const dd = runningDasha?.dehadashaLord || "";
 
   if (md && ad) {
     const activeLordsLower = [md.toLowerCase(), ad.toLowerCase(), pd.toLowerCase()].filter(Boolean);
+    const microLordsLower = [sd.toLowerCase(), prd.toLowerCase(), dd.toLowerCase()].filter(Boolean);
     const isLordActive = activeLordsLower.includes(targetLordName.toLowerCase());
     const isKarakaActive = activeLordsLower.includes(naturalKaraka.toLowerCase());
+    const isMicroTargetActive =
+      microLordsLower.includes(targetLordName.toLowerCase()) ||
+      microLordsLower.includes(naturalKaraka.toLowerCase()) ||
+      Boolean(sixLevelTimingWindows && sixLevelTimingWindows.activeTargetLevels.length > 0);
     const mdPlanet = natalEphemeris.planets[md];
     const adPlanet = natalEphemeris.planets[ad];
     const occupiesTarget = mdPlanet?.house === targetHouse || adPlanet?.house === targetHouse;
+    const chainLabel = [md, ad, pd, sd, prd, dd].filter(Boolean).join("-");
 
     if ((isLordActive && isKarakaActive) || (isLordActive && occupiesTarget)) {
       gate3Score = 20;
-      gate3Rationale = `Both target lord (${targetLordName}) and Karaka/Bhava (${naturalKaraka}) activated under ${md}-${ad}${pd ? `-${pd}` : ""} Dasha!`;
+      gate3Rationale = `Both target lord (${targetLordName}) and Karaka/Bhava (${naturalKaraka}) activated under ${chainLabel} Dasha!`;
     } else if (isLordActive || isKarakaActive || occupiesTarget) {
       gate3Score = 17;
-      gate3Rationale = `Dasha ${md}-${ad}${pd ? `-${pd}` : ""} directly activates ${isLordActive ? targetLordName : isKarakaActive ? naturalKaraka : `House ${targetHouse} occupant`}.`;
+      gate3Rationale = `Dasha ${chainLabel} directly activates ${isLordActive ? targetLordName : isKarakaActive ? naturalKaraka : `House ${targetHouse} occupant`}.`;
+    } else if (isMicroTargetActive && sixLevelTimingWindows) {
+      gate3Score = 14;
+      gate3Rationale = `Running ${chainLabel} Dasha activates target significators in micro-levels (${sixLevelTimingWindows.activeTargetLevels.join(", ")}).`;
     } else {
       gate3Score = 11;
-      gate3Rationale = `Running ${md}-${ad}${pd ? `-${pd}` : ""} Dasha provides neutral ambient activation.`;
+      gate3Rationale = `Running ${chainLabel} Dasha provides neutral ambient activation.`;
+    }
+
+    if (sixLevelTimingWindows?.upcomingPratyantardashaWindow) {
+      const w = sixLevelTimingWindows.upcomingPratyantardashaWindow;
+      gate3Rationale += ` Next L3 PD trigger (${w.lord}): ${w.startDate} to ${w.endDate}.`;
+    }
+    if (sixLevelTimingWindows?.upcomingSookshmadashaWindow) {
+      const sw = sixLevelTimingWindows.upcomingSookshmadashaWindow;
+      gate3Rationale += ` Next L4 Sookshma trigger (${sw.lord}): ${sw.startDateTime} to ${sw.endDateTime}.`;
     }
 
     if (md.toLowerCase() === eighthLordName.toLowerCase() && targetHouse !== 8) {
       gate3Score -= 2;
       gate3Rationale += ` Note: Mahadasha lord ${md} rules the 8th House (Randhresha), enforcing an initial break/restructuring or non-linear delay before delivering full results.`;
     }
+  } else if (sixLevelTimingWindows) {
+    gate3Rationale = sixLevelTimingWindows.formattedSummary;
   }
   gate3Score = Math.max(0, Math.min(20, gate3Score));
 
@@ -454,6 +498,25 @@ export function arbitratePredictiveQuery(
     recommendedUpaya = "Light a mustard oil lamp under a sacred tree on Saturdays and practice selfless workplace duty.";
   }
 
+  const evalYear = transitEphemeris?.utcDate
+    ? new Date(transitEphemeris.utcDate).getUTCFullYear()
+    : new Date().getUTCFullYear();
+  const baseMacroWindow = runningDasha
+    ? `${evalYear}–${evalYear + 1} (${[
+        runningDasha.mahadashaLord,
+        runningDasha.antardashaLord,
+        runningDasha.pratyantardashaLord,
+        runningDasha.sookshmadashaLord,
+        runningDasha.pranadashaLord,
+        runningDasha.dehadashaLord,
+      ]
+        .filter(Boolean)
+        .join("–")} Window)`
+    : `${evalYear}–${evalYear + 1} (Upcoming 6 to 12 Months)`;
+  const dynamicTimingWindow = sixLevelTimingWindows
+    ? `${baseMacroWindow} | ${sixLevelTimingWindows.formattedSummary}`
+    : baseMacroWindow;
+
   const conciseSummaryProof = [
     `### NEURO-SYMBOLIC ARBITRATION VERDICT: ${title.toUpperCase()} (${clampedScore}% FULFILLMENT)`,
     `- Category: ${category}`,
@@ -463,17 +526,13 @@ export function arbitratePredictiveQuery(
     `- Gate 4 (Double Transit): ${gate4Score}/15 | ${gate4Rationale}`,
     `- Gate 5 (Ashtakavarga): ${gate5Score}/10 | ${gate5Rationale}`,
     `- Gate 6 (Neutralization): ${gate6Score}/5 | ${gate6Rationale}`,
+    ...(sixLevelTimingWindows
+      ? [`- 6-Level Dasha Trigger Windows (MD→AD→PD→Sookshma→Prana→Deha): ${sixLevelTimingWindows.formattedSummary}`]
+      : []),
     `- Primary Positive Driver: ${primaryDriver}`,
     `- Primary Karmic Constraint: ${primaryFriction}`,
     `- Recommended Classical Upaya: ${recommendedUpaya}`,
   ].join("\n");
-
-  const evalYear = transitEphemeris?.utcDate
-    ? new Date(transitEphemeris.utcDate).getUTCFullYear()
-    : new Date().getUTCFullYear();
-  const dynamicTimingWindow = runningDasha
-    ? `${evalYear}–${evalYear + 1} (${runningDasha.mahadashaLord}–${runningDasha.antardashaLord} Window)`
-    : `${evalYear}–${evalYear + 1} (Upcoming 6 to 12 Months)`;
 
   return {
     domain,
@@ -483,6 +542,7 @@ export function arbitratePredictiveQuery(
     verdictDescription: description,
     clarityPercent: Math.round(clampedScore * 0.95 + 5),
     activeTimingWindow: dynamicTimingWindow,
+    sixLevelTimingWindows,
     primaryPositiveDriver: primaryDriver,
     primaryFrictionFactor: primaryFriction,
     recommendedUpaya,

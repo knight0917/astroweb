@@ -210,9 +210,9 @@ export default function HeaderNav() {
       items: [
         {
           mode: "dasha",
-          label: "Vimshottari Dasha (120 Yrs)",
-          desc: "Complete Mahadasha, Antardasha & Pratyantardasha hierarchy with live active tracker",
-          badge: "120 Yrs",
+          label: "Vimshottari Dasha (120 Yrs • 6 Levels)",
+          desc: "Complete 6-level hierarchy: Mahadasha, Antardasha, Pratyantardasha, Sookshma, Prana & Deha Dasha",
+          badge: "6-Level",
         },
         {
           mode: "gochar",

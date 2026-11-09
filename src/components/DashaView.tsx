@@ -2,7 +2,13 @@
 
 import React, { useState, useMemo } from "react";
 import { useAstroStore } from "../store/useAstroStore";
-import { calculateVimshottariDasha } from "../engine/dasha";
+import {
+  calculateVimshottariDasha,
+  calculateSookshmadashas,
+  calculatePranadashas,
+  calculateDehadashas,
+  getBphsSubPeriodEffect,
+} from "../engine/dasha";
 import {
   generateAnnualActivationMasterSummary,
   AnnualActivationMasterReport
@@ -32,6 +38,9 @@ export default function DashaView() {
   const [sambandhaFilter, setSambandhaFilter] = useState<string>("all");
   const [expandedMD, setExpandedMD] = useState<string | null>(null);
   const [expandedAD, setExpandedAD] = useState<string | null>(null);
+  const [expandedPD, setExpandedPD] = useState<string | null>(null);
+  const [expandedSD, setExpandedSD] = useState<string | null>(null);
+  const [expandedPrD, setExpandedPrD] = useState<string | null>(null);
 
   const moonLon = ephemeris.planets.Moon.siderealLongitude;
   const birthDate = currentDate;
@@ -42,11 +51,19 @@ export default function DashaView() {
 
   const active = dashaData.activeDasha;
 
-  // Auto-expand current active MD on initial render
+  // Auto-expand current active 6-level Dasha chain (MD -> AD -> PD -> SD -> PrD) on initial render
   React.useEffect(() => {
     if (active && !expandedMD) {
-      setExpandedMD(active.mahadasha.id);
-      setExpandedAD(`${active.mahadasha.id}-${active.antardasha.id}`);
+      const mdKey = active.mahadasha.id;
+      const adKey = `${mdKey}-${active.antardasha.id}`;
+      const pdKey = `${adKey}-${active.pratyantardasha.id}`;
+      const sdKey = `${pdKey}-${active.sookshmadasha.id}`;
+      const prdKey = `${sdKey}-${active.pranadasha.id}`;
+      setExpandedMD(mdKey);
+      setExpandedAD(adKey);
+      setExpandedPD(pdKey);
+      setExpandedSD(sdKey);
+      setExpandedPrD(prdKey);
     }
   }, [active, expandedMD]);
 
@@ -179,6 +196,28 @@ export default function DashaView() {
       year: "numeric",
       month: "short",
       day: "numeric",
+    });
+  };
+
+  const formatDateTime = (d: Date) => {
+    return d.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  };
+
+  const formatTimePrecision = (d: Date) => {
+    return d.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
     });
   };
 
@@ -434,31 +473,34 @@ export default function DashaView() {
         </div>
       </div>
 
-      {/* TAB 1: VIMSHOTTARI DASHA */}
+      {/* TAB 1: VIMSHOTTARI DASHA (COMPLETE 6-LEVEL CLASSICAL HIERARCHY) */}
       {activeTab === "vimshottari" && (
         <div className="space-y-6">
-          {/* Active Dasha Hero Card */}
+          {/* Active 6-Level Dasha Hero Card */}
           {active && (
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/40 via-purple-950/30 to-slate-900 border border-amber-500/40 shadow-xl space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-950/40 via-purple-950/30 to-slate-900 border border-amber-500/40 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   <span className="text-xs font-black uppercase tracking-wider text-amber-300">
-                    Currently Active Dasha Period (वर्तमान सक्रिय दशा):
+                    Currently Active 6-Level Dasha Hierarchy (महादशा → अन्तर्दशा → प्रत्यन्तर्दशा → सूक्ष्म → प्राण → देह दशा):
                   </span>
                 </div>
-                <span className="text-[11px] font-mono text-slate-400">
-                  Today: {formatDate(new Date())}
+                <span className="text-[11px] font-mono text-slate-300 bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800">
+                  {active.mahadasha.name} / {active.antardasha.name} / {active.pratyantardasha.name} / {active.sookshmadasha.name} / {active.pranadasha.name} / {active.dehadasha.name}
                 </span>
               </div>
 
-              {/* MD - AD - PD Flow Badges */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {/* Mahadasha */}
-                <div className="p-3 rounded-xl bg-slate-950/80 border border-amber-400/50 space-y-1">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-                    Mahadasha (महादशा)
-                  </span>
+              {/* 6-Level Flow Badges (MD -> AD -> PD -> SD -> PrD -> DD) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* Level 1: Mahadasha */}
+                <div className="p-3 rounded-xl bg-slate-950/85 border border-amber-400/50 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-amber-300 font-bold uppercase tracking-wider">
+                      1. Mahadasha (महादशा)
+                    </span>
+                    <span className="text-[9px] font-mono text-slate-400">Level 1 • Years</span>
+                  </div>
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{active.mahadasha.symbol}</span>
                     <span className="text-sm font-black text-slate-100">{active.mahadasha.name}</span>
@@ -478,11 +520,14 @@ export default function DashaView() {
                   </span>
                 </div>
 
-                {/* Antardasha */}
-                <div className="p-3 rounded-xl bg-slate-950/80 border border-purple-400/50 space-y-1">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-                    Antardasha (अन्तर्दशा)
-                  </span>
+                {/* Level 2: Antardasha */}
+                <div className="p-3 rounded-xl bg-slate-950/85 border border-purple-400/50 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-purple-300 font-bold uppercase tracking-wider">
+                      2. Antardasha / Bhukti (अन्तर्दशा)
+                    </span>
+                    <span className="text-[9px] font-mono text-slate-400">Level 2 • MD×Y/120</span>
+                  </div>
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{active.antardasha.symbol}</span>
                     <span className="text-sm font-black text-slate-100">{active.antardasha.name}</span>
@@ -502,11 +547,14 @@ export default function DashaView() {
                   </span>
                 </div>
 
-                {/* Pratyantardasha */}
-                <div className="p-3 rounded-xl bg-slate-950/80 border border-cyan-400/50 space-y-1">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-                    Pratyantardasha (प्रत्यन्तर्दशा)
-                  </span>
+                {/* Level 3: Pratyantardasha */}
+                <div className="p-3 rounded-xl bg-slate-950/85 border border-cyan-400/50 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-cyan-300 font-bold uppercase tracking-wider">
+                      3. Pratyantardasha (प्रत्यन्तर्दशा)
+                    </span>
+                    <span className="text-[9px] font-mono text-slate-400">BPHS Ch. 61 • AD×Y/120</span>
+                  </div>
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{active.pratyantardasha.symbol}</span>
                     <span className="text-sm font-black text-slate-100">{active.pratyantardasha.name}</span>
@@ -525,9 +573,162 @@ export default function DashaView() {
                     {active.percentageCompletePD}% Elapsed
                   </span>
                 </div>
+
+                {/* Level 4: Sookshma Dasha */}
+                <div className="p-3 rounded-xl bg-slate-950/85 border border-emerald-400/50 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-emerald-300 font-bold uppercase tracking-wider">
+                      4. Sookshma Dasha (सूक्ष्म दशा)
+                    </span>
+                    <span className="text-[9px] font-mono text-slate-400">BPHS Ch. 62 • PD×Y/120</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{active.sookshmadasha.symbol}</span>
+                    <span className="text-sm font-black text-slate-100">{active.sookshmadasha.name}</span>
+                    <span className="text-xs text-emerald-300 font-semibold">({active.sookshmadasha.hindiName})</span>
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-400">
+                    {formatDateTime(active.sdStart)} → {formatDateTime(active.sdEnd)}
+                  </div>
+                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                    <div
+                      className="bg-emerald-400 h-full rounded-full transition-all"
+                      style={{ width: `${active.percentageCompleteSD}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-[9px] text-emerald-300 font-mono block text-right">
+                    {active.percentageCompleteSD}% Elapsed
+                  </span>
+                </div>
+
+                {/* Level 5: Prana Dasha */}
+                <div className="p-3 rounded-xl bg-slate-950/85 border border-rose-400/50 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-rose-300 font-bold uppercase tracking-wider">
+                      5. Prana Dasha (प्राण दशा)
+                    </span>
+                    <span className="text-[9px] font-mono text-slate-400">BPHS Ch. 63 • SD×Y/120</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{active.pranadasha.symbol}</span>
+                    <span className="text-sm font-black text-slate-100">{active.pranadasha.name}</span>
+                    <span className="text-xs text-rose-300 font-semibold">({active.pranadasha.hindiName})</span>
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-400">
+                    {formatDateTime(active.prdStart)} → {formatDateTime(active.prdEnd)}
+                  </div>
+                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                    <div
+                      className="bg-rose-400 h-full rounded-full transition-all"
+                      style={{ width: `${active.percentageCompletePrD}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-[9px] text-rose-300 font-mono block text-right">
+                    {active.percentageCompletePrD}% Elapsed
+                  </span>
+                </div>
+
+                {/* Level 6 (Final): Deha Dasha */}
+                <div className="p-3 rounded-xl bg-slate-950/85 border border-indigo-400/50 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">
+                      6. Deha Dasha (देह दशा • Final)
+                    </span>
+                    <span className="text-[9px] font-mono text-slate-400">Udu Dasas • PrD×Y/120</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{active.dehadasha.symbol}</span>
+                    <span className="text-sm font-black text-slate-100">{active.dehadasha.name}</span>
+                    <span className="text-xs text-indigo-300 font-semibold">({active.dehadasha.hindiName})</span>
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-400">
+                    {formatTimePrecision(active.ddStart)} → {formatTimePrecision(active.ddEnd)}
+                  </div>
+                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                    <div
+                      className="bg-indigo-400 h-full rounded-full transition-all"
+                      style={{ width: `${active.percentageCompleteDD}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-[9px] text-indigo-300 font-mono block text-right">
+                    {active.percentageCompleteDD}% Elapsed
+                  </span>
+                </div>
+              </div>
+
+              {/* Classical BPHS Ch. 61-63 & Udu Dasas Active Micro-Period Synthesis */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-2 border-t border-slate-800/80 text-xs">
+                <div className="p-2.5 rounded-xl bg-slate-950/70 border border-cyan-500/20">
+                  <span className="text-[10px] font-bold text-cyan-300 uppercase tracking-wider block">
+                    📜 Level 3 Pratyantardasha ({active.antardasha.name}-{active.pratyantardasha.name} • BPHS Ch. 61):
+                  </span>
+                  <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">{active.bphsPdEffect}</p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-950/70 border border-emerald-500/20">
+                  <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider block">
+                    🔬 Level 4 Sookshma Dasha ({active.pratyantardasha.name}-{active.sookshmadasha.name} • BPHS Ch. 62):
+                  </span>
+                  <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">{active.bphsSdEffect}</p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-950/70 border border-rose-500/20">
+                  <span className="text-[10px] font-bold text-rose-300 uppercase tracking-wider block">
+                    🌬️ Level 5 Prana Dasha ({active.sookshmadasha.name}-{active.pranadasha.name} • BPHS Ch. 63):
+                  </span>
+                  <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">{active.bphsPrdEffect}</p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-950/70 border border-indigo-500/20">
+                  <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-wider block">
+                    🧬 Level 6 Deha Dasha ({active.pranadasha.name}-{active.dehadasha.name} • Vimsottari &amp; Udu Dasas):
+                  </span>
+                  <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">{active.bphsDdEffect}</p>
+                </div>
               </div>
             </div>
           )}
+
+          {/* Classical Books 6-Level Recursive Formula Reference Banner */}
+          <div className="glass-panel p-4 rounded-2xl border border-slate-800 bg-slate-950/70 shadow-lg space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <span className="text-xs font-black text-amber-300 uppercase tracking-wider">
+                📚 Classical Shastra 6-Level ("Until Last") Recursive Reduction Law
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">
+                BPHS Ch. 61–63 • Dr. Shanker Adawal (pp. 242–348) • Pt. Sanjay Rath, Vimsottari &amp; Udu Dasas (Sec. 1.1.1f &amp; 5.4.4)
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-[10px]">
+              <div className="p-2 rounded-lg bg-slate-900/80 border border-amber-500/30">
+                <div className="font-bold text-amber-300">1. Mahadasha (MD)</div>
+                <div className="font-mono text-slate-300 mt-0.5">T₁ = Y₁ yrs (6y–20y)</div>
+                <div className="text-slate-400 text-[9px]">Macro life chapter</div>
+              </div>
+              <div className="p-2 rounded-lg bg-slate-900/80 border border-purple-500/30">
+                <div className="font-bold text-purple-300">2. Antardasha (AD)</div>
+                <div className="font-mono text-slate-300 mt-0.5">T₂ = (T₁ × Y₂) / 120</div>
+                <div className="text-slate-400 text-[9px]">3.6 mo – 3.33 yrs</div>
+              </div>
+              <div className="p-2 rounded-lg bg-slate-900/80 border border-cyan-500/30">
+                <div className="font-bold text-cyan-300">3. Pratyantar (PD)</div>
+                <div className="font-mono text-slate-300 mt-0.5">T₃ = (T₂ × Y₃) / 120</div>
+                <div className="text-slate-400 text-[9px]">5.48 d – 202.9 d</div>
+              </div>
+              <div className="p-2 rounded-lg bg-slate-900/80 border border-emerald-500/30">
+                <div className="font-bold text-emerald-300">4. Sookshma (SD)</div>
+                <div className="font-mono text-slate-300 mt-0.5">T₄ = (T₃ × Y₄) / 120</div>
+                <div className="text-slate-400 text-[9px]">6.57 h – 33.82 d</div>
+              </div>
+              <div className="p-2 rounded-lg bg-slate-900/80 border border-rose-500/30">
+                <div className="font-bold text-rose-300">5. Prana (PrD)</div>
+                <div className="font-mono text-slate-300 mt-0.5">T₅ = (T₄ × Y₅) / 120</div>
+                <div className="text-slate-400 text-[9px]">19.72 m – 5.64 d</div>
+              </div>
+              <div className="p-2 rounded-lg bg-slate-900/80 border border-indigo-500/30">
+                <div className="font-bold text-indigo-300">6. Deha (DD • Last)</div>
+                <div className="font-mono text-slate-300 mt-0.5">T₆ = (T₅ × Y₆) / 120</div>
+                <div className="text-slate-400 text-[9px]">59.2 s – 22.55 h</div>
+              </div>
+            </div>
+          </div>
 
           {/* 120-Year Lifetime Visual Bar */}
           <div className="glass-panel p-4 rounded-3xl border border-slate-800 bg-slate-950/60 shadow-lg space-y-2">
@@ -559,11 +760,16 @@ export default function DashaView() {
             </div>
           </div>
 
-          {/* Expandable Dasha Hierarchy Accordion */}
+          {/* Expandable 6-Level Dasha Hierarchy Accordion */}
           <div className="space-y-3">
-            <span className="text-xs font-black text-slate-400 uppercase tracking-wider block">
-              Full 120-Year Planetary Cycles (Expandable):
-            </span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <span className="text-xs font-black text-slate-300 uppercase tracking-wider block">
+                Full 120-Year 6-Level Planetary Cycles (Click MD → AD → PD → Sookshma → Prana → Deha):
+              </span>
+              <span className="text-[10px] text-amber-400 font-semibold">
+                Tap any Pratyantardasha, Sookshma, or Prana period to drill down to Level 6 Deha Dasha
+              </span>
+            </div>
             <div className="space-y-2">
               {dashaData.mahadashas.map((md) => {
                 const isMDExpanded = expandedMD === md.lord.id;
@@ -606,7 +812,7 @@ export default function DashaView() {
 
                     {isMDExpanded && (
                       <div className="px-3.5 pb-3.5 pt-1 border-t border-slate-800/60 space-y-2">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                        <div className="grid grid-cols-1 gap-2.5">
                           {md.antardashas.map((ad) => {
                             const adKey = `${md.lord.id}-${ad.lord.id}`;
                             const isADExpanded = expandedAD === adKey;
@@ -615,9 +821,9 @@ export default function DashaView() {
                             return (
                               <div
                                 key={ad.lord.id}
-                                className={`p-2.5 rounded-xl border transition-all ${
+                                className={`p-3 rounded-xl border transition-all ${
                                   isCurrentAD
-                                    ? "bg-purple-950/40 border-purple-400/60"
+                                    ? "bg-purple-950/30 border-purple-400/60"
                                     : "bg-slate-900/50 border-slate-800"
                                 }`}
                               >
@@ -625,43 +831,232 @@ export default function DashaView() {
                                   onClick={() => setExpandedAD(isADExpanded ? null : adKey)}
                                   className="flex items-center justify-between cursor-pointer"
                                 >
-                                  <div>
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-xs">{ad.lord.symbol}</span>
-                                      <span className="text-xs font-semibold text-slate-200">
-                                        {md.lord.name.substring(0, 3)}-{ad.lord.name}
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-sm">{ad.lord.symbol}</span>
+                                    <span className="text-xs font-bold text-slate-100">
+                                      Level 2 Antardasha: {md.lord.name} – {ad.lord.name} ({ad.lord.hindiName})
+                                    </span>
+                                    {isCurrentAD && (
+                                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-200 border border-purple-400/40">
+                                        ACTIVE AD
                                       </span>
-                                    </div>
-                                    <span className="text-[10px] font-mono text-slate-400 block">
-                                      {formatDate(ad.startDate)} → {formatDate(ad.endDate)}
+                                    )}
+                                    <span className="text-[10px] font-mono text-slate-400">
+                                      {formatDate(ad.startDate)} → {formatDate(ad.endDate)} ({ad.durationDays}d)
                                     </span>
                                   </div>
                                   <span className="text-[10px] text-slate-400">{isADExpanded ? "▲" : "▼"}</span>
                                 </div>
 
                                 {isADExpanded && (
-                                  <div className="mt-2 pt-2 border-t border-slate-800 space-y-1">
-                                    <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider block">
-                                      Pratyantardashas (प्रत्यन्तर्दशा):
+                                  <div className="mt-2.5 pt-2.5 border-t border-slate-800 space-y-1.5">
+                                    <span className="text-[10px] font-bold text-cyan-300 uppercase tracking-wider block">
+                                      Level 3: Pratyantardashas (प्रत्यन्तर्दशा • BPHS Ch. 61 — Click any row to expand Level 4 Sookshma):
                                     </span>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                       {ad.pratyantardashas.map((pd) => {
+                                        const pdKey = `${adKey}-${pd.lord.id}`;
+                                        const isPDExpanded = expandedPD === pdKey;
                                         const isCurrentPD = isCurrentAD && active?.pratyantardasha.id === pd.lord.id;
+                                        const sookshmaList = isPDExpanded ? calculateSookshmadashas(pd) : [];
+
                                         return (
                                           <div
                                             key={pd.lord.id}
-                                            className={`flex items-center justify-between text-[10px] px-2 py-1 rounded ${
+                                            className={`rounded-lg border transition-all ${
                                               isCurrentPD
-                                                ? "bg-cyan-950/50 border border-cyan-400 text-cyan-200 font-bold"
-                                                : "bg-slate-900/60 text-slate-300"
+                                                ? "bg-cyan-950/35 border-cyan-400/60"
+                                                : "bg-slate-950/60 border-slate-800/80 hover:border-slate-700"
                                             }`}
                                           >
-                                            <span>
-                                              {pd.lord.symbol} {md.lord.name.substring(0, 2)}-{ad.lord.name.substring(0, 2)}-{pd.lord.name}
-                                            </span>
-                                            <span className="font-mono text-[9px] text-slate-400">
-                                              {formatDate(pd.startDate)} → {formatDate(pd.endDate)}
-                                            </span>
+                                            <div
+                                              onClick={() => setExpandedPD(isPDExpanded ? null : pdKey)}
+                                              className="flex items-center justify-between text-[11px] px-2.5 py-1.5 cursor-pointer"
+                                            >
+                                              <div className="flex items-center gap-2 flex-wrap">
+                                                <span>{pd.lord.symbol}</span>
+                                                <span className={isCurrentPD ? "text-cyan-200 font-bold" : "text-slate-200 font-semibold"}>
+                                                  {md.lord.name.substring(0, 2)}-{ad.lord.name.substring(0, 2)}-{pd.lord.name} ({pd.lord.hindiName})
+                                                </span>
+                                                {isCurrentPD && (
+                                                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-200 border border-cyan-400/40">
+                                                    ACTIVE PD
+                                                  </span>
+                                                )}
+                                                <span className="text-[10px] text-slate-400 font-mono">
+                                                  ({pd.durationDays}d)
+                                                </span>
+                                              </div>
+                                              <div className="flex items-center gap-2">
+                                                <span className="font-mono text-[10px] text-slate-400">
+                                                  {formatDate(pd.startDate)} → {formatDate(pd.endDate)}
+                                                </span>
+                                                <span className="text-[9px] text-cyan-400 font-bold">
+                                                  {isPDExpanded ? "▲ Hide Sookshma" : "▼ 9 Sookshma"}
+                                                </span>
+                                              </div>
+                                            </div>
+
+                                            {/* Level 4: Sookshma Dashas (BPHS Ch. 62) */}
+                                            {isPDExpanded && (
+                                              <div className="px-2.5 pb-2.5 pt-1.5 border-t border-slate-800/80 bg-slate-950/90 space-y-1.5">
+                                                <div className="text-[10px] text-slate-400 italic">
+                                                  <strong className="text-cyan-300 not-italic">BPHS Ch. 61 ({ad.lord.name}-{pd.lord.name}):</strong>{" "}
+                                                  {getBphsSubPeriodEffect("PD", ad.lord.name, pd.lord.name)}
+                                                </div>
+                                                <span className="text-[9px] font-bold text-emerald-300 uppercase tracking-wider block">
+                                                  Level 4: Sookshma Dashas (सूक्ष्म दशा • BPHS Ch. 62 — Click any row to expand Level 5 Prana):
+                                                </span>
+                                                <div className="space-y-1">
+                                                  {sookshmaList.map((sd) => {
+                                                    const sdKey = `${pdKey}-${sd.lord.id}`;
+                                                    const isSDExpanded = expandedSD === sdKey;
+                                                    const isCurrentSD = isCurrentPD && active?.sookshmadasha.id === sd.lord.id;
+                                                    const pranaList = isSDExpanded ? calculatePranadashas(sd) : [];
+
+                                                    return (
+                                                      <div
+                                                        key={sd.lord.id}
+                                                        className={`rounded border transition-all ${
+                                                          isCurrentSD
+                                                            ? "bg-emerald-950/40 border-emerald-400/60"
+                                                            : "bg-slate-900/70 border-slate-800/70"
+                                                        }`}
+                                                      >
+                                                        <div
+                                                          onClick={() => setExpandedSD(isSDExpanded ? null : sdKey)}
+                                                          className="flex items-center justify-between text-[10px] px-2 py-1 cursor-pointer"
+                                                        >
+                                                          <div className="flex items-center gap-1.5 flex-wrap">
+                                                            <span>{sd.lord.symbol}</span>
+                                                            <span className={isCurrentSD ? "text-emerald-200 font-bold" : "text-slate-200 font-medium"}>
+                                                              {md.lord.name.substring(0, 2)}-{ad.lord.name.substring(0, 2)}-{pd.lord.name.substring(0, 2)}-{sd.lord.name} ({sd.lord.hindiName})
+                                                            </span>
+                                                            {isCurrentSD && (
+                                                              <span className="text-[8px] font-bold px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-200 border border-emerald-400/40">
+                                                                ACTIVE SD
+                                                              </span>
+                                                            )}
+                                                            <span className="text-[9px] font-mono text-emerald-400">
+                                                              [{sd.durationFormatted}]
+                                                            </span>
+                                                          </div>
+                                                          <div className="flex items-center gap-2">
+                                                            <span className="font-mono text-[9px] text-slate-400">
+                                                              {formatDateTime(sd.startDate)} → {formatDateTime(sd.endDate)}
+                                                            </span>
+                                                            <span className="text-[9px] text-emerald-400 font-bold">
+                                                              {isSDExpanded ? "▲ Hide Prana" : "▼ 9 Prana"}
+                                                            </span>
+                                                          </div>
+                                                        </div>
+
+                                                        {/* Level 5: Prana Dashas (BPHS Ch. 63) */}
+                                                        {isSDExpanded && (
+                                                          <div className="px-2 pb-2 pt-1.5 border-t border-slate-800/80 bg-slate-950 space-y-1">
+                                                            <div className="text-[9px] text-slate-400 italic">
+                                                              <strong className="text-emerald-300 not-italic">BPHS Ch. 62 ({pd.lord.name}-{sd.lord.name}):</strong>{" "}
+                                                              {getBphsSubPeriodEffect("SD", pd.lord.name, sd.lord.name)}
+                                                            </div>
+                                                            <span className="text-[9px] font-bold text-rose-300 uppercase tracking-wider block">
+                                                              Level 5: Prana Dashas (प्राण दशा • BPHS Ch. 63 — Click any row to expand Level 6 Deha Dasha):
+                                                            </span>
+                                                            <div className="space-y-1">
+                                                              {pranaList.map((prd) => {
+                                                                const prdKey = `${sdKey}-${prd.lord.id}`;
+                                                                const isPrDExpanded = expandedPrD === prdKey;
+                                                                const isCurrentPrD = isCurrentSD && active?.pranadasha.id === prd.lord.id;
+                                                                const dehaList = isPrDExpanded ? calculateDehadashas(prd) : [];
+
+                                                                return (
+                                                                  <div
+                                                                    key={prd.lord.id}
+                                                                    className={`rounded border transition-all ${
+                                                                      isCurrentPrD
+                                                                        ? "bg-rose-950/40 border-rose-400/60"
+                                                                        : "bg-slate-900/60 border-slate-800/60"
+                                                                    }`}
+                                                                  >
+                                                                    <div
+                                                                      onClick={() => setExpandedPrD(isPrDExpanded ? null : prdKey)}
+                                                                      className="flex items-center justify-between text-[10px] px-2 py-1 cursor-pointer"
+                                                                    >
+                                                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                                                        <span>{prd.lord.symbol}</span>
+                                                                        <span className={isCurrentPrD ? "text-rose-200 font-bold" : "text-slate-200"}>
+                                                                          {md.lord.name.substring(0, 2)}-{ad.lord.name.substring(0, 2)}-{pd.lord.name.substring(0, 2)}-{sd.lord.name.substring(0, 2)}-{prd.lord.name} ({prd.lord.hindiName})
+                                                                        </span>
+                                                                        {isCurrentPrD && (
+                                                                          <span className="text-[8px] font-bold px-1 py-0.2 rounded bg-rose-500/20 text-rose-200 border border-rose-400/40">
+                                                                            ACTIVE PRANA
+                                                                          </span>
+                                                                        )}
+                                                                        <span className="text-[9px] font-mono text-rose-300">
+                                                                          [{prd.durationFormatted}]
+                                                                        </span>
+                                                                      </div>
+                                                                      <div className="flex items-center gap-2">
+                                                                        <span className="font-mono text-[9px] text-slate-400">
+                                                                          {formatDateTime(prd.startDate)} → {formatDateTime(prd.endDate)}
+                                                                        </span>
+                                                                        <span className="text-[9px] text-indigo-300 font-bold">
+                                                                          {isPrDExpanded ? "▲ Hide Deha" : "▼ 9 Deha (Last)"}
+                                                                        </span>
+                                                                      </div>
+                                                                    </div>
+
+                                                                    {/* Level 6 (Final): Deha Dashas (Vimsottari & Udu Dasas Sec. 5.4.4) */}
+                                                                    {isPrDExpanded && (
+                                                                      <div className="px-2 pb-2 pt-1.5 border-t border-slate-800/80 bg-slate-950/95 space-y-1">
+                                                                        <div className="text-[9px] text-slate-400 italic">
+                                                                          <strong className="text-rose-300 not-italic">BPHS Ch. 63 ({sd.lord.name}-{prd.lord.name}):</strong>{" "}
+                                                                          {getBphsSubPeriodEffect("PrD", sd.lord.name, prd.lord.name)}
+                                                                        </div>
+                                                                        <span className="text-[9px] font-bold text-indigo-300 uppercase tracking-wider block">
+                                                                          Level 6 (Final Level): Deha Dashas (देह दशा • Vimsottari &amp; Udu Dasas Sec. 5.4.4):
+                                                                        </span>
+                                                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1">
+                                                                          {dehaList.map((dd) => {
+                                                                            const isCurrentDD = isCurrentPrD && active?.dehadasha.id === dd.lord.id;
+                                                                            return (
+                                                                              <div
+                                                                                key={dd.lord.id}
+                                                                                className={`p-1.5 rounded border text-[9px] flex flex-col justify-between ${
+                                                                                  isCurrentDD
+                                                                                    ? "bg-indigo-950/60 border-indigo-400 text-indigo-100 font-bold"
+                                                                                    : "bg-slate-900/80 border-slate-800 text-slate-300"
+                                                                                }`}
+                                                                                title={getBphsSubPeriodEffect("DD", prd.lord.name, dd.lord.name)}
+                                                                              >
+                                                                                <div className="flex items-center justify-between">
+                                                                                  <span>
+                                                                                    {dd.lord.symbol} {prd.lord.name.substring(0, 2)}-{dd.lord.name} ({dd.lord.hindiName})
+                                                                                  </span>
+                                                                                  <span className="font-mono text-indigo-300">
+                                                                                    {dd.durationFormatted}
+                                                                                  </span>
+                                                                                </div>
+                                                                                <div className="font-mono text-[8px] text-slate-400 mt-0.5">
+                                                                                  {formatTimePrecision(dd.startDate)} → {formatTimePrecision(dd.endDate)}
+                                                                                </div>
+                                                                              </div>
+                                                                            );
+                                                                          })}
+                                                                        </div>
+                                                                      </div>
+                                                                    )}
+                                                                  </div>
+                                                                );
+                                                              })}
+                                                            </div>
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                    );
+                                                  })}
+                                                </div>
+                                              </div>
+                                            )}
                                           </div>
                                         );
                                       })}

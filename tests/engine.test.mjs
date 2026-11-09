@@ -9839,3 +9839,96 @@ test("Subtest 157: Phase 67 Production Hardening, Engine Precision, Interrogativ
   assert.ok(careerDossierCold.includes("Ascendant (Lagna) Bhinnashtakavarga (49 Bindus) by Sign:"), "Career dossier must contain Lagna BAV");
   assert.ok(careerDossierCold.includes("Best Direction to Buy Plot / Land / Property:"), "Career dossier must contain Plot Direction");
 });
+
+test("Phase 69: Classical 6-Level ('Until Last') Vimshottari Dasha Hierarchy (MD -> AD -> PD -> Sookshma -> Prana -> Deha) Verification", async () => {
+  const {
+    calculateVimshottariDasha,
+    calculateSookshmadashas,
+    calculatePranadashas,
+    calculateDehadashas,
+    getBphsSubPeriodEffect,
+    findDashaTriggerWindowsForPlanets,
+    formatChatbotSixLevelSchedule,
+  } = await import("../src/engine/dasha.ts");
+  const { arbitratePredictiveQuery } = await import("../src/engine/predictiveArbitrator.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+  const { buildAstroDossier } = await import("../src/engine/chatContext.ts");
+
+  const birthDate = new Date("1995-10-15T06:30:00Z");
+  const evalDate = new Date("2026-11-09T12:00:00Z");
+  const dasha = calculateVimshottariDasha(birthDate, 65.0, evalDate);
+
+  assert.ok(dasha.activeDasha, "Active Dasha must be resolved");
+  const active = dasha.activeDasha;
+
+  // 1. Verify all 6 active levels are present and populated
+  assert.ok(active.mahadasha?.name, "Level 1 Mahadasha must be populated");
+  assert.ok(active.antardasha?.name, "Level 2 Antardasha must be populated");
+  assert.ok(active.pratyantardasha?.name, "Level 3 Pratyantardasha must be populated");
+  assert.ok(active.sookshmadasha?.name, "Level 4 Sookshma Dasha must be populated");
+  assert.ok(active.pranadasha?.name, "Level 5 Prana Dasha must be populated");
+  assert.ok(active.dehadasha?.name, "Level 6 Deha Dasha must be populated");
+
+  // 2. Verify activeSookshmadashas, activePranadashas, activeDehadashas each have 9 planetary sub-periods
+  assert.strictEqual(active.activeSookshmadashas.length, 9, "Each PD must contain 9 Sookshma Dashas");
+  assert.strictEqual(active.activePranadashas.length, 9, "Each SD must contain 9 Prana Dashas");
+  assert.strictEqual(active.activeDehadashas.length, 9, "Each PrD must contain 9 Deha Dashas");
+
+  // 3. Verify classical starting-lord sequence rule: first sub-period lord equals parent lord
+  const sampleMD = dasha.mahadashas[1]; // Full unscaled Mahadasha
+  const sampleAD = sampleMD.antardashas[0];
+  const samplePD = sampleAD.pratyantardashas[0];
+  const sookshmas = calculateSookshmadashas(samplePD);
+  assert.strictEqual(sookshmas[0].lord.id, samplePD.lord.id, "First Sookshma Dasha must start with PD lord");
+  const pranas = calculatePranadashas(sookshmas[0]);
+  assert.strictEqual(pranas[0].lord.id, sookshmas[0].lord.id, "First Prana Dasha must start with SD lord");
+  const dehas = calculateDehadashas(pranas[0]);
+  assert.strictEqual(dehas[0].lord.id, pranas[0].lord.id, "First Deha Dasha must start with PrD lord");
+
+  // 4. Verify boundary continuity & duration conservation across Levels 4, 5, and 6
+  assert.strictEqual(sookshmas[0].startDate.getTime(), samplePD.startDate.getTime(), "SD[0] start must match PD start");
+  assert.strictEqual(sookshmas[8].endDate.getTime(), samplePD.endDate.getTime(), "SD[8] end must match PD end");
+  assert.strictEqual(pranas[0].startDate.getTime(), sookshmas[0].startDate.getTime(), "PrD[0] start must match SD[0] start");
+  assert.strictEqual(pranas[8].endDate.getTime(), sookshmas[0].endDate.getTime(), "PrD[8] end must match SD[0] end");
+  assert.strictEqual(dehas[0].startDate.getTime(), pranas[0].startDate.getTime(), "DD[0] start must match PrD[0] start");
+  assert.strictEqual(dehas[8].endDate.getTime(), pranas[0].endDate.getTime(), "DD[8] end must match PrD[0] end");
+
+  // 5. Verify BPHS Ch. 61-63 & Udu Dasas effect strings
+  assert.ok(getBphsSubPeriodEffect("PD", "Sun", "Jupiter").includes("BPHS Ch. 61"), "PD effect must cite BPHS Ch. 61");
+  assert.ok(getBphsSubPeriodEffect("SD", "Jupiter", "Mercury").includes("BPHS Ch. 62"), "SD effect must cite BPHS Ch. 62");
+  assert.ok(getBphsSubPeriodEffect("PrD", "Venus", "Mercury").includes("BPHS Ch. 63"), "PrD effect must cite BPHS Ch. 63");
+  assert.ok(getBphsSubPeriodEffect("DD", "Saturn", "Mercury").includes("Udu Dasas"), "DD effect must cite Udu Dasas");
+
+  // 6. Verify Chatbot 6-Level Schedule formatter & Target-Lord Trigger Window Scanner
+  const scheduleStr = formatChatbotSixLevelSchedule(dasha);
+  assert.ok(scheduleStr.includes("[LEVEL 3 — ALL 9 PRATYANTARDASHAS"), "Schedule must include all 9 Pratyantardashas");
+  assert.ok(scheduleStr.includes("[LEVEL 4 — ALL 9 SOOKSHMA DASHAS"), "Schedule must include all 9 Sookshma Dashas");
+  assert.ok(scheduleStr.includes("[LEVEL 5 — ALL 9 PRANA DASHAS"), "Schedule must include all 9 Prana Dashas");
+  assert.ok(scheduleStr.includes("[LEVEL 6 (FINAL) — ALL 9 DEHA DASHAS"), "Schedule must include all 9 Deha Dashas");
+
+  const triggerWindows = findDashaTriggerWindowsForPlanets(birthDate, 65.0, ["Sun", "Venus"], evalDate);
+  assert.ok(triggerWindows.activeChainSummary.includes("Deha:"), "Trigger windows must include active 6-level chain");
+  assert.ok(triggerWindows.upcomingPratyantardashaWindow, "Must locate upcoming L3 PD window for target planets");
+  assert.ok(triggerWindows.upcomingSookshmadashaWindow, "Must locate upcoming L4 Sookshma window for target planets");
+  assert.ok(triggerWindows.upcomingPranadashaWindow, "Must locate upcoming L5 Prana window for target planets");
+  assert.ok(triggerWindows.upcomingDehadashaWindow, "Must locate upcoming L6 Deha window for target planets");
+
+  // 7. Verify Predictive Arbitrator & Chatbot Dossier 6-Level Timing integration
+  const loc = { cityName: "Varanasi", country: "India", latitude: 25.3176, longitude: 82.9739, timezoneOffsetHours: 5.5 };
+  const natalEphem = calculateVedicEphemeris(birthDate, loc, "Lahiri", "WholeSign", "Mean");
+  const transitEphem = calculateVedicEphemeris(evalDate, loc, "Lahiri", "WholeSign", "Mean");
+  const arb = arbitratePredictiveQuery("career promotion", natalEphem, transitEphem, {
+    mahadashaLord: active.mahadasha.name,
+    antardashaLord: active.antardasha.name,
+    pratyantardashaLord: active.pratyantardasha.name,
+    sookshmadashaLord: active.sookshmadasha.name,
+    pranadashaLord: active.pranadasha.name,
+    dehadashaLord: active.dehadasha.name,
+  });
+  assert.ok(arb.sixLevelTimingWindows, "Arbitration result must include 6-level timing windows");
+  assert.ok(arb.activeTimingWindow.includes("L3 Pratyantardasha Trigger"), "Active timing window must include L3 PD trigger");
+  assert.ok(arb.conciseSummaryProof.includes("6-Level Dasha Trigger Windows"), "Concise proof must include 6-level Dasha triggers");
+
+  const dossier = buildAstroDossier(natalEphem, transitEphem, evalDate, "male", undefined, "dasha");
+  assert.ok(dossier.includes("[LEVEL 6 (FINAL) — ALL 9 DEHA DASHAS"), "Chatbot Dossier must include Level 6 Deha Dasha schedule");
+});
