@@ -686,50 +686,6 @@ export default function DashaView() {
             </div>
           )}
 
-          {/* Classical Books 6-Level Recursive Formula Reference Banner */}
-          <div className="glass-panel p-4 rounded-2xl border border-slate-800 bg-slate-950/70 shadow-lg space-y-2">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <span className="text-xs font-black text-amber-300 uppercase tracking-wider">
-                📚 Classical Shastra 6-Level ("Until Last") Recursive Reduction Law
-              </span>
-              <span className="text-[10px] text-slate-400 font-mono">
-                BPHS Ch. 61–63 • Dr. Shanker Adawal (pp. 242–348) • Pt. Sanjay Rath, Vimsottari &amp; Udu Dasas (Sec. 1.1.1f &amp; 5.4.4)
-              </span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-[10px]">
-              <div className="p-2 rounded-lg bg-slate-900/80 border border-amber-500/30">
-                <div className="font-bold text-amber-300">1. Mahadasha (MD)</div>
-                <div className="font-mono text-slate-300 mt-0.5">T₁ = Y₁ yrs (6y–20y)</div>
-                <div className="text-slate-400 text-[9px]">Macro life chapter</div>
-              </div>
-              <div className="p-2 rounded-lg bg-slate-900/80 border border-purple-500/30">
-                <div className="font-bold text-purple-300">2. Antardasha (AD)</div>
-                <div className="font-mono text-slate-300 mt-0.5">T₂ = (T₁ × Y₂) / 120</div>
-                <div className="text-slate-400 text-[9px]">3.6 mo – 3.33 yrs</div>
-              </div>
-              <div className="p-2 rounded-lg bg-slate-900/80 border border-cyan-500/30">
-                <div className="font-bold text-cyan-300">3. Pratyantar (PD)</div>
-                <div className="font-mono text-slate-300 mt-0.5">T₃ = (T₂ × Y₃) / 120</div>
-                <div className="text-slate-400 text-[9px]">5.48 d – 202.9 d</div>
-              </div>
-              <div className="p-2 rounded-lg bg-slate-900/80 border border-emerald-500/30">
-                <div className="font-bold text-emerald-300">4. Sookshma (SD)</div>
-                <div className="font-mono text-slate-300 mt-0.5">T₄ = (T₃ × Y₄) / 120</div>
-                <div className="text-slate-400 text-[9px]">6.57 h – 33.82 d</div>
-              </div>
-              <div className="p-2 rounded-lg bg-slate-900/80 border border-rose-500/30">
-                <div className="font-bold text-rose-300">5. Prana (PrD)</div>
-                <div className="font-mono text-slate-300 mt-0.5">T₅ = (T₄ × Y₅) / 120</div>
-                <div className="text-slate-400 text-[9px]">19.72 m – 5.64 d</div>
-              </div>
-              <div className="p-2 rounded-lg bg-slate-900/80 border border-indigo-500/30">
-                <div className="font-bold text-indigo-300">6. Deha (DD • Last)</div>
-                <div className="font-mono text-slate-300 mt-0.5">T₆ = (T₅ × Y₆) / 120</div>
-                <div className="text-slate-400 text-[9px]">59.2 s – 22.55 h</div>
-              </div>
-            </div>
-          </div>
-
           {/* 120-Year Lifetime Visual Bar */}
           <div className="glass-panel p-4 rounded-3xl border border-slate-800 bg-slate-950/60 shadow-lg space-y-2">
             <span className="text-xs font-black text-amber-400 uppercase tracking-wider block">

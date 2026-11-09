@@ -1471,78 +1471,23 @@ ${gochar.obstructedCount} transit(s) obstructed by Vedha, ${gochar.shieldedCount
     const triEpoch = evaluateTriEpochBirthMoment(natalEphem);
     const chitkara = triEpoch.chitkaraBtrTriad || evaluateChitkaraBtrTriad(natalEphem, true);
     const candidate = chitkara?.rectificationCandidate;
-
-    const vargaWindowsStr = sensitivities
-      .slice(0, 7)
-      .map((s) => {
-        const isBoundaryClose =
-          (s.remainingSecondsInCurrentSign !== undefined && s.remainingSecondsInCurrentSign <= 180) ||
-          (s.elapsedSecondsInCurrentSign !== undefined && s.elapsedSecondsInCurrentSign <= 180);
-        const transitionNote = isBoundaryClose
-          ? s.remainingSecondsInCurrentSign !== undefined && s.remainingSecondsInCurrentSign <= (s.elapsedSecondsInCurrentSign ?? 999)
-            ? ` ⚠️ **[CUSP PROXIMITY: Only ${s.remainingSecondsInCurrentSign}s before flipping ${s.currentAscendantSign} ➔ ${s.nextAscendantSign} at ${s.windowEndLocalTime}]**`
-            : ` ⚠️ **[CUSP PROXIMITY: Only ${s.elapsedSecondsInCurrentSign}s after flipping ${s.previousAscendantSign} ➔ ${s.currentAscendantSign} at ${s.windowStartLocalTime}]**`
-          : "";
-        return `- **${s.vargaName}:** Cusp in **${s.currentAscendantSign}** (${s.currentAscendantDegrees.toFixed(2)}°) • Valid **${s.windowStartLocalTime} to ${s.windowEndLocalTime}** (Span: ${s.timeSpanMinutesTotal}m • Buffer: *${s.boundaryCountdownFormatted || `${s.remainingMinutesInCurrentSign}m rem`}*)${transitionNote}`;
-      })
-      .join("\n");
-
-    const chitkaraSection = chitkara
-      ? `#### 🔬 **1. Classical 3-Point BTR Harmonization (Navamsha & Shashtiamsha):**
-- 🐍 *Metaphysical Law:* Humans reincarnate through Rahu's karmic umbilical cord. True astrological birth freezes at physical cord severance (*Naala-Chhedana*).
-- 1️⃣ **Condition 1 (D-9 Moon vs D-9 Pranapada):** ${chitkara.condition1D9MoonPP.passed || (candidate && candidate.c1Passed) ? "🟢 **PASS**" : "🟡 **CALIBRATED**"} — ${chitkara.condition1D9MoonPP.explanation}
-- 2️⃣ **Condition 2 (D-60 Pranapada vs D-60 Venus):** ${chitkara.condition2D60VenusPP.passed || (candidate && candidate.c2Passed) ? "🟢 **PASS**" : "🟡 **CALIBRATED**"} — ${chitkara.condition2D60VenusPP.explanation}
-- 3️⃣ **Condition 3 (D-60 Ketu Dispositor -> D-60 Lagna):** ${chitkara.condition3D60KetuDispositorLagna.passed || (candidate && candidate.c3Passed) ? "🟢 **PASS**" : "🟢 **LOCKED AT RECTIFIED TIME**"} — ${chitkara.condition3D60KetuDispositorLagna.explanation}
-- 🎯 **Master Triad Convergence:** At **${candidate && candidate.deltaSeconds !== 0 ? candidate.rectifiedLocalTime : timeStr}**, harmonic coordinates synchronize into the physical vehicle.`
-      : "";
+    const shodhanaSummaryLine = `- 📐 **Shodhana & Triad Lock:** BTR Triad **${chitkara ? `${chitkara.passedCount}/3` : "3/3"}** • Kunda **${kunda.harmonyScorePercent}%** (${kunda.kundaRashi}) • Pranapada **${pranapada.pranapadaRashi}** • Tattva **${tattva.primaryTattva}**`;
 
     // NEWBORN / INFANT VERIFICATION RESPONSE
     if (isInfant) {
       const isCSection = /c-section|caesarean/i.test(q);
       const isSensitive = /sensitive|special care/i.test(q);
 
-      return `### 🎯 **Newborn Multi-Divisional & Classical Birth Calibration (Bala Jataka — बाल जातक)**
+      return `### 🎯 **Newborn Birth Time Calibration (Bala Jataka — बाल जातक)**
 
-- 📍 **Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${cityName}, ${countryName}**
-- ⏱️ **Calibrated Birth Moment (*Bhūpatana Lagna*):** **${candidate && candidate.deltaSeconds !== 0 ? candidate.rectifiedLocalTime : timeStr}** (Delta: **${candidate && candidate.deltaSeconds !== 0 ? candidate.deltaFormatted : "0s (Exact)"}**)
-- 🌟 **Verification Status:** **✅ 100% Precision Alignment (Classical BTR Triad, Classical Shodhanas & Delivery Matrices Locked)**
-- 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
-- 👶 **Native Status:** **Newborn / Infant (${nativeAge < 1 ? "< 1 Year Old" : `${Math.floor(nativeAge)} Year(s) Old`})**
+- 📍 **Recorded Birth:** **${timeStr}** on **${dateStr}** (${cityName}, ${countryName})
+- ⏱️ **Calibrated Birth Moment:** **${candidate && candidate.deltaSeconds !== 0 ? candidate.rectifiedLocalTime : timeStr}** (${candidate && candidate.deltaSeconds !== 0 ? candidate.deltaFormatted : "Exact"})
+- 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • **Nakshatra:** **${moonNak}**
+${shodhanaSummaryLine}
+- ✅ **Confirmed Anchors:** ${isCSection ? "C-Section delivery" : "Natural delivery"} • ${siblingText} (D-3) • ${isSensitive ? "Sensitive care shield" : "Strong vitality"} (D-60)
 
----
-
-${chitkaraSection}
-
----
-
-#### 📐 **2. Mathematical Shodhana Proofs (Brihat Parashara Hora Shastra Ch. 4 & 5):**
-- 📐 **Kunda Shodhana (कुण्ड शोधन):** Kunda in **${kunda.kundaRashi} (${kunda.kundaDegrees.toFixed(2)}°)** in **${kunda.kundaNakshatra}** ──► **${kunda.harmonyScorePercent}% Match** (${kunda.classicalVerdict})
-- 🫁 **Pranapada Lagna (प्राणपद लग्न):** Pranapada in **${pranapada.pranapadaRashi}** (House ${pranapada.pranapadaHouseFromLagna} from Lagna) ──► **${pranapada.classicalVerdict}**
-- 🌿 **Tattva Shodhana (तत्व शोधन):** Primary: **${tattva.primaryTattva}** | Active Antar-Tattva: **${tattva.antarTattva} (${tattva.antarTattvaGender})** ──► **${tattva.classicalVerdict}**
-
----
-
-#### 👶 **3. Birth Delivery & Early Life Matrix:**
-- 👶 **Birth Delivery Mode (D-1 / Lagna Axis):** ${isCSection ? "✅ Mars/Ketu surgical axis calibrated with exact Lagna degree." : "✅ Natural spontaneous delivery moment calibrated with Lagna degree."}
-- 🌿 **D-3 Drekkana (${siblingText}):** ✅ Locks 3rd house and D-3 Drekkana lagna alignment with birth order in the family.
-- 🫁 **Pranapada & D-60 (Vitality & Health Shield):** ${isSensitive ? "✅ Moon/Lagna protection activated for constitutional sensitivity." : "✅ Robust vitality and life-breath synchronization confirmed."}
-- 🏡 **D-4 & D-12 (Parental & Domestic Foundation):** ✅ Parental lineage and birth location anchors verified in D-12 Dvadasamsa.
-
----
-
-#### ⏳ **4. Divisional Clock Sensitivity Windows:**
-${vargaWindowsStr}
-
----
-💡 **The infant's chart clock is 100% mathematically calibrated!** All future readings will now operate on this verified birth chart.
-
-What would you like to explore for the child?
-- 🌟 **Child Health & Protection:** *"Balarishta protection, health constitution, and longevity?"*
-- 🎓 **Innate Talents & Learning:** *"Innate cognitive strengths, academic aptitude (D-24), and creative genius?"*
-- 👨‍👩‍👦 **Family & Parental Harmony:** *"Connection with mother (4th/Moon), father (9th/Sun), and family harmony?"*
-- ⭐ **Janma Nakshatra & Auspicious Syllable:** *"Auspicious naming sounds, deity, and life direction?"*
-
-*⚡ Instant Classical Computation (0ms)*`;
+💡 **The infant's chart clock is 100% calibrated!** What would you like to explore next?
+- 🌟 **Child Health & Protection** • 🎓 **Innate Talents (D-24)** • 👨‍👩‍👦 **Family Harmony** • ⭐ **Auspicious Naming Syllables**`;
     }
 
     // CHILD / MINOR VERIFICATION RESPONSE
@@ -1554,54 +1499,23 @@ What would you like to explore for the child?
       const isMinorMark = /noticeable mark|sensitive/i.test(q);
 
       const minorLearningNote = isMinorNeverSchooled
-        ? "🌱 **Life-Taught / Outside Formal Schooling Confirmed:** D-24 & 3rd/5th house intelligence calibrated with observational wisdom, practical hands-on skill, and real-world adaptability (zero classroom/exam assumptions)."
+        ? "Life-taught / practical hands-on skill"
         : isMinorInBoardSchool
-        ? `🏫 **Currently in School (8th–10th / 12th Foundation Phase, Age ${Math.floor(nativeAge)}):** 4th house (schooling foundation) and 5th house (memory & exam concentration) calibrated with active Dasha.`
+        ? `School foundation phase (Age ${Math.floor(nativeAge)})`
         : isMinorCreativeSports
-        ? "🎨 **Creative, Artistic & Practical/Sports Inclination:** 3rd/5th house talent vectors calibrated with expressive and kinesthetic intelligence."
-        : "📚 **Analytical & Foundational Learning Focus:** 4th/5th house learning vectors calibrated with Mercury/Jupiter intellect axis.";
+        ? "Creative, artistic & sports inclination"
+        : "Analytical & foundational learning focus";
 
-      return `### 🎯 **Childhood & School-Age Multi-Divisional Calibration (Kishora Jataka — किशोर जातक)**
+      return `### 🎯 **Youth Birth Time Calibration (Kishora Jataka — किशोर जातक)**
 
-- 📍 **Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${cityName}, ${countryName}**
-- ⏱️ **Calibrated Birth Moment (*Bhūpatana Lagna*):** **${candidate && candidate.deltaSeconds !== 0 ? candidate.rectifiedLocalTime : timeStr}** (Delta: **${candidate && candidate.deltaSeconds !== 0 ? candidate.deltaFormatted : "0s (Exact)"}**)
-- 🌟 **Verification Status:** **✅ 100% Precision Alignment (Classical BTR Triad, Classical Shodhanas & Youth Cusps Locked)**
-- 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
-- 🎒 **Native Status:** **Youth / Minor (Age ${Math.floor(nativeAge)})**
+- 📍 **Recorded Birth:** **${timeStr}** on **${dateStr}** (${cityName}, ${countryName})
+- ⏱️ **Calibrated Birth Moment:** **${candidate && candidate.deltaSeconds !== 0 ? candidate.rectifiedLocalTime : timeStr}** (${candidate && candidate.deltaSeconds !== 0 ? candidate.deltaFormatted : "Exact"})
+- 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • **Nakshatra:** **${moonNak}**
+${shodhanaSummaryLine}
+- ✅ **Confirmed Anchors:** ${minorLearningNote} (D-24) • ${siblingText} (D-3) • ${isMinorRelocated ? "Relocated" : "Birth region"} (D-4) • ${isMinorMark ? "Distinct mark" : "Strong resilience"} (D-60)
 
----
-
-${chitkaraSection}
-
----
-
-#### 📐 **2. Mathematical Shodhana Proofs (Brihat Parashara Hora Shastra Ch. 4 & 5):**
-- 📐 **Kunda Shodhana (कुण्ड शोधन):** Kunda in **${kunda.kundaRashi} (${kunda.kundaDegrees.toFixed(2)}°)** in **${kunda.kundaNakshatra}** ──► **${kunda.harmonyScorePercent}% Match** (${kunda.classicalVerdict})
-- 🫁 **Pranapada Lagna (प्राणपद लग्न):** Pranapada in **${pranapada.pranapadaRashi}** (House ${pranapada.pranapadaHouseFromLagna} from Lagna) ──► **${pranapada.classicalVerdict}**
-- 🌿 **Tattva Shodhana (तत्व शोधन):** Primary: **${tattva.primaryTattva}** | Active Antar-Tattva: **${tattva.antarTattva} (${tattva.antarTattvaGender})** ──► **${tattva.classicalVerdict}**
-
----
-
-#### 🎒 **3. Youth & School-Age Milestone Confirmations:**
-- 🧭 **D-24 Siddhamsha (Learning / Skill Path):** ${minorLearningNote}
-- 🌿 **D-3 Drekkana (${siblingText}):** ✅ Locks 3rd house and D-3 Drekkana lagna alignment with sibling order.
-- 🏡 **D-4 Chaturthamsha (${isMinorRelocated ? "Relocated with Family" : "Birth Region Stability"}):** ✅ 4th/12th house childhood domestic environment verified.
-- 🛡️ **D-60 Shashtiamsha (${isMinorMark ? "Distinct Mark / Sensitive Phase" : "Strong Childhood Resilience"}):** ✅ Childhood vitality and protective drishti confirmed.
-
----
-
-#### ⏳ **4. Divisional Clock Sensitivity Windows:**
-${vargaWindowsStr}
-
----
-💡 **The youth chart clock is 100% mathematically calibrated!** All future predictions will now operate on this verified birth chart.
-
-What would you like to explore next?
-- 🧭 **Study, Focus & Skill Path:** *"Best subjects, practical skills, or concentration remedies for my current age?"*
-- 🌟 **Health & Energy:** *"Physical vitality, immunity, and daily routines?"*
-- 🎨 **Natural Talents:** *"Innate strengths, creative talents, and future direction?"*
-
-*⚡ Instant Classical Computation (0ms)*`;
+💡 **The youth chart clock is 100% calibrated!** What would you like to explore next?
+- 🧭 **Study, Focus & Skill Path** • 🌟 **Health & Energy** • 🎨 **Natural Talents**`;
     }
 
     // ADULT VERIFICATION RESPONSE
@@ -1621,7 +1535,7 @@ What would you like to explore next?
     const isQ2StillStudying = /2\.\s*still studying|not working full-time/i.test(q);
     const isQ2EarlyWork = /2\.\s*early work|family trade|working since early/i.test(q);
     const isQ2Yes = !isQ2StillStudying && !isQ2EarlyWork && /2\.\s*yes\b|2:\s*yes\b|q2\s*:\s*yes\b/i.test(q);
-    
+
     // 3. D-9 Navamsha (Relationship / Marriage Anchor)
     let d9Status = "Single / Self-Focus";
     if (/married|committed/i.test(q)) {
@@ -1636,180 +1550,58 @@ What would you like to explore next?
     // 6. D-60 Shashtiamsha (Karmic Pivot / Physical Resilience)
     const isQ6Yes = /6\.\s*yes|6:\s*yes|q6\s*:\s*yes|4\.\s*yes|4:\s*yes/i.test(q);
 
-    // Compute dynamic chart & Dasha diagnostics for all Q1 / Q2 paths (no placebo rubber-stamping)
     const ascSignIdx = Math.floor(natalEphem.ascendant.siderealLongitude / 30);
     const SIGN_RULERS = [
       "Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury",
       "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter",
     ];
-    const thirdLord = SIGN_RULERS[(ascSignIdx + 2) % 12];
-    const fourthLord = SIGN_RULERS[(ascSignIdx + 3) % 12];
     const fifthLord = SIGN_RULERS[(ascSignIdx + 4) % 12];
-    const eighthLord = SIGN_RULERS[(ascSignIdx + 7) % 12];
     const eleventhLord = SIGN_RULERS[(ascSignIdx + 10) % 12];
     const twelfthLord = SIGN_RULERS[(ascSignIdx + 11) % 12];
-
-    const fifthOccupants = Object.values(natalEphem.planets)
-      .filter((p) => !p.isModernPlanet && p.house === 5)
-      .map((p) => p.name);
-    const fifthLordObj = (natalEphem.planets as Record<string, any>)[fifthLord];
-    const fifthLordLon = fifthLordObj?.siderealLongitude || 0;
-    const fifthLordSignIdx = Math.floor(fifthLordLon / 30);
-    const fifthLordDegNum = fifthLordLon % 30;
-    const isFifthLordGandanta =
-      ([3, 7, 11].includes(fifthLordSignIdx) && fifthLordDegNum >= 26.666) ||
-      ([0, 4, 8].includes(fifthLordSignIdx) && fifthLordDegNum <= 3.333);
-    const isFifthLordDebilitated =
-      (fifthLord === "Sun" && fifthLordSignIdx === 6) ||
-      (fifthLord === "Moon" && fifthLordSignIdx === 7) ||
-      (fifthLord === "Mars" && fifthLordSignIdx === 3) ||
-      (fifthLord === "Mercury" && fifthLordSignIdx === 11) ||
-      (fifthLord === "Jupiter" && fifthLordSignIdx === 9) ||
-      (fifthLord === "Venus" && fifthLordSignIdx === 5) ||
-      (fifthLord === "Saturn" && fifthLordSignIdx === 0);
 
     const dashaTimeline = buildFullChronologicalDashaTimeline(natalEphem);
     const currentRunningPeriod = dashaTimeline.find((t) => t.nativeAgeStart <= nativeAge && t.nativeAgeEnd >= nativeAge) || dashaTimeline[0];
     const currentRunningDashaStr = currentRunningPeriod
-      ? `${currentRunningPeriod.mahadashaLord}–${currentRunningPeriod.antardashaLord} (${currentRunningPeriod.startFormatted} – ${currentRunningPeriod.endFormatted})`
-      : "Current Active Dasha";
-    const nodalReturnPeriod = dashaTimeline.find((t) => t.nativeAgeStart <= 19 && t.nativeAgeEnd >= 18.5);
-    const nodalReturnDashaStr = nodalReturnPeriod
-      ? `${nodalReturnPeriod.mahadashaLord}–${nodalReturnPeriod.antardashaLord} (${nodalReturnPeriod.startFormatted} – ${nodalReturnPeriod.endFormatted})`
-      : `Age 18–19 (${birthYear + 18}–${birthYear + 19})`;
-    const shiftedCompletionPeriod =
-      dashaTimeline.find((t) => t.nativeAgeStart <= 24 && t.nativeAgeEnd >= 23 && (t.antardashaLord === eleventhLord || t.primaryHouseActivations.includes(11))) ||
-      dashaTimeline.find((t) => t.nativeAgeStart <= 24 && t.nativeAgeEnd >= 23);
-    const shiftedCompletionDashaStr = shiftedCompletionPeriod
-      ? `${shiftedCompletionPeriod.mahadashaLord}–${shiftedCompletionPeriod.antardashaLord} (${shiftedCompletionPeriod.startFormatted} – ${shiftedCompletionPeriod.endFormatted})`
-      : `${birthYear + 23}–${birthYear + 24}`;
+      ? `${currentRunningPeriod.mahadashaLord}–${currentRunningPeriod.antardashaLord}`
+      : "Active Dasha";
 
-    const vidhyaBhangaFactors: string[] = [];
-    if (fifthOccupants.length > 0) {
-      vidhyaBhangaFactors.push(`5th house occupied by **${fifthOccupants.join(" + ")}**${fifthOccupants.includes(eighthLord) ? ` (with **${eighthLord}** as 8th lord of sudden breaks)` : ""}`);
-    }
-    if (isFifthLordDebilitated || isFifthLordGandanta) {
-      vidhyaBhangaFactors.push(`5th lord **${fifthLord}** ${isFifthLordDebilitated ? "debilitated" : ""}${isFifthLordDebilitated && isFifthLordGandanta ? " & " : ""}${isFifthLordGandanta ? `in the **Gandānta knot (${fifthLordDegNum.toFixed(2)}°)**` : ""}`);
-    }
-    const factorSummary = vidhyaBhangaFactors.length > 0
-      ? vidhyaBhangaFactors.join("; ")
-      : `5th lord **${fifthLord}** and 8th lord **${eighthLord}** restructuring axis`;
+    const q1Short = isQ1Yes
+      ? `Graduated on schedule (${birthYear + 21}–${birthYear + 23})`
+      : isQ1NeverSchooled
+      ? "Life-taught / non-school path"
+      : isQ1SchoolOnly
+      ? "School foundation (10th/12th) -> practical path"
+      : isQ1StillStudying
+      ? `Currently studying under ${currentRunningDashaStr}`
+      : isQ1SelfTaught
+      ? "Self-taught / practical mastery"
+      : `Non-linear / delayed milestone (5th lord ${fifthLord} -> 11th lord ${eleventhLord})`;
 
-    let q1DiagnosticText = "";
-    if (isQ1Yes) {
-      q1DiagnosticText = `✅ Confirmed aligned with D-24 4th/5th/9th learning gateway in the **${birthYear + 21}–${birthYear + 23}** window.`;
-    } else if (isQ1NeverSchooled) {
-      q1DiagnosticText = `🌱 **Never Attended Formal School / Life-Taught Path Confirmed:** In classical Jyotish (*Desha-Kaala-Paatra*), the 5th house (*Buddhi*) and D-24 *Siddhamsha* measure raw intelligence, street-smart intuition, and practical mastery—never mere paper degrees. Your 3rd lord (**${thirdLord}**) and 5th house (${fifthOccupants.length > 0 ? `occupied by **${fifthOccupants.join(" + ")}**` : `ruled by **${fifthLord}**`}) channel wisdom directly into real-world survival, hands-on craft, and independent livelihood outside formal classrooms.`;
-    } else if (isQ1SchoolOnly) {
-      q1DiagnosticText = `🏫 **School-Level Foundation Only (10th/12th) / Non-Collegiate Path Confirmed:** Your 4th lord (**${fourthLord}**) completed foundational schooling, while your 5th-house configuration (${factorSummary}) deliberately redirected your life energy after school (around **${birthYear + 16}–${birthYear + 19}** under **${nodalReturnDashaStr}**) directly into practical work, skill, or independent trade rather than university theory.`;
-    } else if (isQ1StillStudying) {
-      q1DiagnosticText = `📖 **Still Studying / Not Graduated Yet (In-Progress Path at Age ${Math.floor(nativeAge)}):** Your learning/skill journey is actively in progress under **${currentRunningDashaStr}**. ${vidhyaBhangaFactors.length > 0 ? `Note that your chart carries a non-linear *Vidhya-Bhanga* pace (${factorSummary}), explaining why your study timeline has required extra patience or a non-linear route; your strongest completion/fulfillment window aligns with **${shiftedCompletionDashaStr}** (11th lord **${eleventhLord}**).` : `Your 4th lord (**${fourthLord}**) and 5th lord (**${fifthLord}**) support steady ongoing completion.`}`;
-    } else if (isQ1SelfTaught) {
-      q1DiagnosticText = `🛠️ **Self-Taught / Non-Academic Mastery Confirmed:** Your 5th house (${fifthOccupants.length > 0 ? `occupied by **${fifthOccupants.join(" + ")}**` : `ruled by **${fifthLord}**`}) channels intelligence directly into hands-on street-smart craft, independent trade, and real-world skill rather than conventional classroom conveyor-belt schooling.`;
-    } else {
-      q1DiagnosticText = `🔄 **Non-Linear / Shifted Timeline Confirmed (Rejected Standard ${birthYear + 21}–${birthYear + 23} Template):** Answering **No** directly validates your chart's *Vidhya-Bhanga* (non-linear interruption) signature (${factorSummary}). At your **1st Nodal Return (~Age 18.6, ${birthYear + 18}–${birthYear + 19})** under **${nodalReturnDashaStr}**, a sudden exam setback/break occurred (**${birthYear + 19}**), shifting foundation recovery/entry to **${birthYear + 20}** and pushing the primary completion/fulfillment window to **${nativeAge >= 23 ? `${birthYear + 24}` : "the upcoming 11th-lord window"}** under **${shiftedCompletionDashaStr}** (11th-house fulfillment via **${eleventhLord}**).`;
-    }
+    const q2Short = isQ2Yes
+      ? `Career shift in ${birthYear + 24}–${birthYear + 26}`
+      : isQ2StillStudying
+      ? "Ongoing study / preparation phase"
+      : isQ2EarlyWork
+      ? "Early livelihood / family trade (< Age 20)"
+      : `Non-linear / independent path (12th lord ${twelfthLord})`;
 
-    let q2DiagnosticText = "";
-    if (isQ2Yes) {
-      q2DiagnosticText = `✅ Confirmed aligned with D-10 Karma cusp and Saturn/10th-house responsibility shift in **${birthYear + 24}–${birthYear + 26}**.`;
-    } else if (isQ2StillStudying) {
-      q2DiagnosticText = `📚 **Focus on Ongoing Study / Preparation Confirmed:** Rather than a conventional full-time job entry, your current Dasha (**${currentRunningDashaStr}**) is channeling energy into preparation and skill building before your primary D-10 livelihood launch.`;
-    } else if (isQ2EarlyWork) {
-      q2DiagnosticText = `🛠️ **Early Livelihood / Practical Hustle (Started Before Age 20) Confirmed:** Your 3rd lord (**${thirdLord}**) and 10th-house Karma axis initiated real-world earning, family duty, or practical trade early in youth rather than waiting for a mid-20s corporate conveyor belt.`;
-    } else {
-      q2DiagnosticText = `🔄 **Non-Linear 11th/12th House Split Confirmed (Rejected Standard ${birthYear + 24}–${birthYear + 26} Office Conveyor Belt):** Answering **No** confirms that **${shiftedCompletionDashaStr}** (with **${twelfthLord}** ruling the 12th house of foreign lands/uprooting and **${eleventhLord}** ruling 11th-house fulfillment) split into two distinct real-world phases: **(a) ${birthYear + 24}** resolved your delayed foundational milestone first, while **(b) ${birthYear + 25}** (reinforced by Transit Saturn in the 12th house and Transit Rahu over the 1st-house Lagna) manifested as **12th-house cross-border/long-distance relocation** (${isQ5Relocated ? "matching your confirmed **5. Relocated** anchor" : "restructuring your environment"}) and independent/speculative pursuit rather than a conventional domestic job shift.`;
-    }
-
-    // Check for critical cusp proximity across D-3, D-9, D-10, D-24 (within 180 seconds = 3 minutes)
     const d3Node = sensitivities.find((s) => s.vargaId === "D3");
     const d9Node = sensitivities.find((s) => s.vargaId === "D9");
-    const d10Node = sensitivities.find((s) => s.vargaId === "D10");
-    const d24Node = sensitivities.find((s) => s.vargaId === "D24");
-    const criticalVargas = [d3Node, d9Node, d10Node, d24Node].filter(
-      (s): s is NonNullable<typeof d3Node> =>
-        Boolean(
-          s &&
-            ((s.remainingSecondsInCurrentSign !== undefined && s.remainingSecondsInCurrentSign <= 180) ||
-              (s.elapsedSecondsInCurrentSign !== undefined && s.elapsedSecondsInCurrentSign <= 180))
-        )
-    );
 
-    const cuspAlertSection =
-      criticalVargas.length > 0
-        ? `---
+    return `### 🎯 **Birth Time Calibration Complete**
 
-#### ⚠️ **Critical Divisional Cusp Boundary Alert (Razor-Thin Multi-Varga Junction):**
-Your recorded Ascendant (**${ascRashi} ${ascDeg}**) sits within **seconds** of a major divisional sign boundary. A shift of just **18 to 90 seconds** on the hospital clock flips the following divisional charts:
-${criticalVargas
-  .map((s) => {
-    const isNearEnd = (s.remainingSecondsInCurrentSign ?? 999) <= (s.elapsedSecondsInCurrentSign ?? 999);
-    const boundaryClock = isNearEnd ? s.windowEndLocalTime : s.windowStartLocalTime;
-    const secAway = isNearEnd ? s.remainingSecondsInCurrentSign : s.elapsedSecondsInCurrentSign;
-    const signBefore = isNearEnd ? s.currentAscendantSign : s.previousAscendantSign;
-    const signAfter = isNearEnd ? s.nextAscendantSign : s.currentAscendantSign;
-    let domainCrossCheck = "";
-    if (s.vargaId === "D3") {
-      domainCrossCheck = ` ──► *Cross-Check with your confirmed **4. ${siblingText}** status: Before **${boundaryClock}** locks **D-3 ${signBefore}**; after **${boundaryClock}** (+${secAway}s) flips to **D-3 ${signAfter}** (governing younger sibling/courage dynamics).*`;
-    } else if (s.vargaId === "D9") {
-      domainCrossCheck = ` ──► *Cross-Check with your confirmed **3. ${d9Status}** & **5. ${isQ5Relocated ? "Relocated" : "Ancestral Soil"}** anchors: Before **${boundaryClock}** holds **D-9 ${signBefore}**; after **${boundaryClock}** (+${secAway}s) flips to **D-9 ${signAfter}** (shifting the D-9 7th/12th dharma & foreign settlement axis).*`;
-    } else if (s.vargaId === "D24") {
-      domainCrossCheck = ` ──► *Cross-Check with **1. Non-Linear Learning/Skill Path**: Flips **D-24 ${signBefore} ➔ ${signAfter}** at **${boundaryClock}**.*`;
-    }
-    return `- 🚨 **${s.vargaName}:** Only **${secAway}s** from boundary at **${boundaryClock}** • **<= ${boundaryClock}: ${signBefore}** vs. **> ${boundaryClock}: ${signAfter}**${domainCrossCheck}`;
-  })
-  .join("\n")}`
-        : "";
+- 📍 **Recorded Time:** **${timeStr}** on **${dateStr}** (${cityName}, ${countryName})
+- ⏱️ **Calibrated True Birth Moment:** **${candidate && candidate.deltaSeconds !== 0 ? candidate.rectifiedLocalTime : timeStr}** (Delta: **${candidate && candidate.deltaSeconds !== 0 ? candidate.deltaFormatted : "0s (Exact)"}**)
+- 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • **Nakshatra:** **${moonNak}** • **D-9:** **${d9Node?.currentAscendantSign || ascRashi}** • **D-60:** **${triEpoch.d60VulnerabilityStatus.d60Sign}**
+${shodhanaSummaryLine}
+- 🔒 **Verified Life Anchors:**
+  * **D-24 & D-10:** ${q1Short} • ${q2Short}
+  * **D-9, D-3, D-4 & D-60:** ${d9Status} • ${siblingText} (${d3Node?.currentAscendantSign || ascRashi}) • ${isQ5Relocated ? "Relocated" : "Home Region"} • ${isQ6Yes ? "Major Karmic Pivot/Mark" : "Smooth Shield"}
 
-    return `### 🎯 **Multi-Divisional & Classical 3-Point Birth Time Calibration (D-1, D-3, D-4, D-9, D-10, D-24, D-60)**
-
-- 📍 **Hospital Recorded Birth Time:** **${timeStr}** on **${dateStr}** in **${cityName}, ${countryName}**
-- ⏱️ **Calibrated True Birth Moment (*Bhūpatana Lagna*):** **${candidate && candidate.deltaSeconds !== 0 ? candidate.rectifiedLocalTime : timeStr}** (Delta: **${candidate && candidate.deltaSeconds !== 0 ? candidate.deltaFormatted : "0s (Exact)"}** • D-60 Lagna: **${candidate && candidate.deltaSeconds !== 0 ? candidate.d60LagnaSign : chitkara ? chitkara.condition3D60KetuDispositorLagna.secondarySign : "Calibrated"}**)
-- 🌟 **Verification Status:** **✅ 100% Calibrated & Synchronized (Classical 3-Point BTR Triad & Non-Linear Milestones Verified)**
-- 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
-- 🏥 **Clinical Delivery Latency:** *${candidate && candidate.deltaSeconds !== 0 ? candidate.clinicalNote : "Recorded birth time aligns directly with the umbilical severance moment."}*
-
----
-
-${chitkaraSection}
-
----
-
-#### 📐 **2. Mathematical Shodhana Proofs (Brihat Parashara Hora Shastra Ch. 5):**
-- 📐 **Kunda Shodhana (कुण्ड शोधन):** Kunda in **${kunda.kundaRashi} (${kunda.kundaDegrees.toFixed(2)}°)** in **${kunda.kundaNakshatra}** ──► **${kunda.harmonyScorePercent}% Match** (${kunda.classicalVerdict})
-- 🫁 **Pranapada Lagna (प्राणपद लग्न):** Pranapada in **${pranapada.pranapadaRashi}** (House ${pranapada.pranapadaHouseFromLagna} from Lagna) ──► **${pranapada.classicalVerdict}**
-- 🌿 **Tattva Shodhana (तत्व शोधन):** Primary: **${tattva.primaryTattva}** | Active Antar-Tattva: **${tattva.antarTattva} (${tattva.antarTattvaGender})** ──► **${tattva.classicalVerdict}**
-
----
-
-#### 🔒 **3. 6-Point Multi-Divisional & Non-Linear Milestone Diagnostics:**
-- 🎓 **D-24 Siddhamsha (Learning, Skill & Foundation Axis):** ${q1DiagnosticText}
-- 💼 **D-10 Dasamsa (Livelihood, Action & Responsibility Axis):** ${q2DiagnosticText}
-- 💍 **D-9 Navamsha (${d9Status}):** ✅ Synchronized with D-9 Navamsha (**${d9Node?.currentAscendantSign || "Virgo"}** Lagna; ${d9Node && (d9Node.remainingSecondsInCurrentSign ?? 999) <= 180 ? `note **${d9Node.nextAscendantSign}** cusp only ${d9Node.remainingSecondsInCurrentSign}s away at ${d9Node.windowEndLocalTime}` : "7th-house partnership axis locked"}).
-- 🌿 **D-3 Drekkana (${siblingText}):** ✅ Calibrated with 3rd-house sibling/courage axis and D-3 Drekkana (**${d3Node?.currentAscendantSign || ascRashi}**${d3Node && (d3Node.remainingSecondsInCurrentSign ?? 999) <= 180 ? ` ➔ flips to **${d3Node.nextAscendantSign}** at **${d3Node.windowEndLocalTime}**, only ${d3Node.remainingSecondsInCurrentSign}s away` : ""}).
-- 🏡 **D-4 Chaturthamsha (${isQ5Relocated ? "Relocated from Ancestral Roots" : "Ancestral Soil Stability"}):** ✅ ${isQ5Relocated ? `12th-lord (**${twelfthLord}**) & Rahu/Saturn displacement vector verified across D-1 and D-4 Chaturthamsha.` : "4th-house ancestral foundation stability verified in D-4 Chaturthamsha."}
-- 🛡️ **D-60 Shashtiamsha (${isQ6Yes ? "Karmic Pivot / Shock-to-Breakthrough" : "Protective Shield"}):** ✅ ${isQ6Yes ? `Validates high-voltage 5th/8th/12th transformation pivots and D-60 (**${triEpoch.d60VulnerabilityStatus.d60Sign}**) resilience.` : "Protective benefic drishti shielding confirmed in D-60."}
-
-${cuspAlertSection}
-
----
-
-#### ⏳ **4. Divisional Clock Sensitivity Windows (Tolerance Boundaries):**
-${vargaWindowsStr}
-
----
-💡 **Your chart clock is 100% mathematically, divisionally, and harmonically calibrated!** All future predictions, dasha timings, and varga readings will now operate on your true verified birth moment and non-linear life trajectory.
-
-What would you like to explore first?
-- 💼 **Career, Trading & Wealth:** *"Independent business/trading vs. job, wealth timing, or Indu Lagna potential?"*
-- 🌍 **Relocation & Timeline:** *"Year-by-year past and future event verification across my active Dasha?"*
-- 💍 **Marriage & Partnerships:** *"Marriage timing, spouse characteristics, or compatibility?"*
-- ⭐ **27 Nakshatras Activation:** *"Which Nakshatra is active for my age?"*
-
-*⚡ Instant Classical Computation (0ms)*`;
+💡 **Your birth chart clock is 100% calibrated!** What would you like to ask about now?`;
   }
 
-  // 15. Unified Classical Birth Time Rectification (BTR) & 3-Point Tri-Epoch Diagnostic Interceptor
+  // 15. Unified Classical Birth Time Rectification (BTR) Step 1 Onboarding Interceptor
   if (
     /\b(exact moment of birth|moment of birth|when is birth moment|cord cut|umbilical|first breath|first cry|bhupatana|shirodarshana|adhana lagna|is my birth time accurate|is my birth time correct|check my birth time accuracy|birth time rectification)\b/i.test(q) ||
     /\b(btr|rectification)\b/i.test(q) ||
@@ -1832,135 +1624,17 @@ What would you like to explore first?
     const isInfant = nativeAge < 3;
     const isMinor = !isInfant && nativeAge < 18;
 
-    const triEpoch = evaluateTriEpochBirthMoment(natalEphem);
-    const d60 = triEpoch.d60VulnerabilityStatus;
-    const sensitivities = calculateVargaSensitivities(natalEphem);
-    const d9Node = sensitivities.find((s) => s.vargaId === "D9");
-    const chitkara = triEpoch.chitkaraBtrTriad || evaluateChitkaraBtrTriad(natalEphem, true);
-    const candidate = chitkara?.rectificationCandidate;
-
-    const kunda = calculateKundaShodhana(natalEphem);
-    const pranapada = calculatePranapada(natalEphem);
-    const tattva = calculateTattvaShodhana(natalEphem, gender);
-
-    const vulnBadge =
-      d60.vulnerabilityLevel === "CRITICAL_SENSITIVE"
-        ? "🔴 **[CRITICAL BOUNDARY SENSITIVITY]**"
-        : d60.vulnerabilityLevel === "MODERATE_SENSITIVE"
-        ? "🟡 **[MODERATE BOUNDARY SENSITIVITY]**"
-        : "🟢 **[SECURE D-60 WINDOW]**";
-
-    const chitkaraBadge = chitkara
-      ? chitkara.passedCount === 3
-        ? "🟢 **[100% VERIFIED — PERFECT HARMONY]**"
-        : chitkara.passedCount === 2
-        ? "🟡 **[67% HIGH PROXIMITY — MINOR RECTIFICATION]**"
-        : "🔴 **[RECTIFICATION REQUIRED — HOSPITAL CLOCK DELAY]**"
-      : "";
-
-    const candidateStr = candidate && candidate.deltaSeconds !== 0
-      ? `* **⏱️ Rectified Cord-Cutting Moment (*Bhūpatana Lagna*):** **${candidate.rectifiedLocalTime}** (Delta: **${candidate.deltaFormatted}**, D-60 Lagna: **${candidate.d60LagnaSign}** • 3/3 Convergence) — *${candidate.clinicalNote}*`
-      : "* **⏱️ Rectification Status:** Current civil birth time is 100% verified (3/3 conditions met).";
-
-    const chitkaraSection = chitkara
-      ? `---
-
-### 🔬 Classical 3-Point BTR Verification & Umbilical Severance Telemetry
-
-* **🐍 Rahu & Umbilical Cord Metaphysics:** Humans reincarnate driven by Rahu (unfulfilled karmic desire). The umbilical cord attached to the navel represents Rahu's serpent tethering the soul to maternal circulation. Individual Prana initiates only upon cord severance (*Naala-Chhedana*), which forces pulmonary inflation and the first cry (*Prathama Shwasa / Rodana*).
-* **1️⃣ Condition 1 (D-9 Moon vs D-9 Pranapada):** ${chitkara.condition1D9MoonPP.passed ? "🟢 **PASS**" : "🔴 **FAIL**"} — ${chitkara.condition1D9MoonPP.explanation}
-* **2️⃣ Condition 2 (D-60 Pranapada vs D-60 Venus):** ${chitkara.condition2D60VenusPP.passed ? "🟢 **PASS**" : "🔴 **FAIL**"} — ${chitkara.condition2D60VenusPP.explanation}
-* **3️⃣ Condition 3 (D-60 Ketu Dispositor -> D-60 Lagna):** ${chitkara.condition3D60KetuDispositorLagna.passed ? "🟢 **PASS**" : "🔴 **FAIL**"} — ${chitkara.condition3D60KetuDispositorLagna.explanation}
-* **🎯 Master Harmonic Score:** **${chitkara.passedCount} / 3 (${chitkara.scorePercent}%)** • ${chitkaraBadge}
-${candidateStr}`
-      : "";
-
-    const shodhanaSection = `---
-
-### 📐 Mathematical Shodhana Baselines (Brihat Parashara Hora Shastra Ch. 4 & 5)
-* 📐 **Kunda Shodhana (कुण्ड शोधन):** Kunda in **${kunda.kundaRashi} (${kunda.kundaDegrees.toFixed(2)}°)** in **${kunda.kundaNakshatra}** ──► **${kunda.harmonyScorePercent}% Match** (${kunda.classicalVerdict})
-* 🫁 **Pranapada Lagna (प्राणपद लग्न):** Pranapada in **${pranapada.pranapadaRashi}** (House ${pranapada.pranapadaHouseFromLagna} from Lagna) ──► **${pranapada.classicalVerdict}**
-* 🌿 **Tattva Shodhana (तत्व शोधन):** Primary: **${tattva.primaryTattva}** | Active Antar-Tattva: **${tattva.antarTattva} (${tattva.antarTattvaGender})** ──► **${tattva.classicalVerdict}**`;
-
-    const d3NodeStep1 = sensitivities.find((s) => s.vargaId === "D3");
-    const d24NodeStep1 = sensitivities.find((s) => s.vargaId === "D24");
-    const step1CuspAlerts = [d3NodeStep1, d9Node, d24NodeStep1]
-      .filter(
-        (s): s is NonNullable<typeof d9Node> =>
-          Boolean(
-            s &&
-              ((s.remainingSecondsInCurrentSign !== undefined && s.remainingSecondsInCurrentSign <= 180) ||
-                (s.elapsedSecondsInCurrentSign !== undefined && s.elapsedSecondsInCurrentSign <= 180))
-          )
-      )
-      .map((s) => {
-        const isNearEnd = (s.remainingSecondsInCurrentSign ?? 999) <= (s.elapsedSecondsInCurrentSign ?? 999);
-        const boundaryClock = isNearEnd ? s.windowEndLocalTime : s.windowStartLocalTime;
-        const secAway = isNearEnd ? s.remainingSecondsInCurrentSign : s.elapsedSecondsInCurrentSign;
-        const signBefore = isNearEnd ? s.currentAscendantSign : s.previousAscendantSign;
-        const signAfter = isNearEnd ? s.nextAscendantSign : s.currentAscendantSign;
-        return `**${s.vargaId}** (${signBefore} ➔ ${signAfter} at ${boundaryClock}, only ${secAway}s buffer)`;
-      });
-
-    const d60RadarSection = `---
-
-### 🚨 Real-Time Divisional & D-60 (Shashtiamsha) Boundary Radar for Your Chart
-Because hospital clocks carry a 2–15 minute margin of error (clerical delay or post-delivery Apgar scoring), divisional boundary analysis reveals your exact clock sensitivity:
-* ${vulnBadge}
-* **Active D-60 Sign:** **${d60.d60Sign}** (Span: 120 seconds / 2.0 mins)
-* **Real-Time Buffer:** **${d60.bufferDescription}**
-* **D-9 Navamsha Window:** **${d9Node ? `${d9Node.windowStartLocalTime} to ${d9Node.windowEndLocalTime} (${d9Node.currentAscendantSign}${d9Node.nextAscendantSign && (d9Node.remainingSecondsInCurrentSign ?? 999) <= 180 ? ` ➔ flips to ${d9Node.nextAscendantSign} in ${d9Node.remainingSecondsInCurrentSign}s!` : ""})` : "Active"}**${step1CuspAlerts.length > 0 ? `\n* **⚠️ Critical Multi-Varga Cusp Alert:** ${step1CuspAlerts.join(" • ")}` : ""}
-* **Diagnostic Verdict:** ${d60.recommendation}`;
-
     const lifeStageNote = isInfant
-      ? `Please review and select the answers in the interactive **4-Point Newborn & Delivery Matrix (D-1, D-3, D-4, D-12, D-60)** below to calibrate the birth moment in 1 tap:`
+      ? `Select the infant's details below to lock the exact birth moment:`
       : isMinor
-      ? `Please review and select the answers in the interactive **4-Point Childhood & Vidya Matrix (D-1, D-3, D-4, D-24, D-60)** below to calibrate your birth minute in 1 tap:`
-      : `Please review and select your answers in the interactive **6-Point Multi-Divisional Checklist (D-1, D-3, D-4, D-9, D-10, D-24, D-60)** below to verify your physical life milestones and lock your birth minute in 1 tap:`;
+      ? `Select the child's milestones below to lock the exact birth minute:`
+      : `Select your life milestones below to verify and lock your exact birth minute:`;
 
-    return `[PROBABILITY: 92% Favorable • 8% Friction]
+    return `### 🎯 **Step 1: Classical Birth Time Rectification**
+- 📅 **Recorded Birth:** **${dateStr}** at **${timeStr}** (${cityName}, ${countryName})
+- 🏛️ **Ascendant (Lagna):** **${ascRashi} (${ascDeg})** • **Nakshatra:** **${moonNak}**
 
-### 🎯 **Step 1: Classical Birth Time Rectification & 3-Point Triad Diagnostic**
-- 📅 **Recorded Date of Birth:** **${dateStr}** • **Civil Time:** **${timeStr}**
-- 📍 **Place:** **${cityName}, ${countryName}**
-- 🏛️ **Primary Ascendant:** **${ascRashi} (${ascDeg})** • Moon Nakshatra: **${moonNak}**
-- ⏳ **Native Life Stage:** **${isInfant ? `Newborn / Infant (< 3 Years)` : isMinor ? `Child / Minor (Age ${Math.floor(nativeAge)})` : `Adult (${Math.floor(nativeAge)} Years Old)`}**
-
----
-
-### 🧬 The 3 Classical Birth Epochs in Your Horoscope
-In classical Vedic Jyotish (*Brihat Jataka* Ch. 4 & *Brihat Parashara Hora Shastra*), determining the exact moment of birth is governed by three biological phases:
-
-1. **Adhana Lagna (आधान लग्न — Conception Inception):**
-   * **Calculated Conception Date:** **${triEpoch.adhanaEpoch.conceptionDateStr}** (Gestation: **${triEpoch.adhanaEpoch.gestationDays} days**)
-   * **Conception Ascendant:** **${triEpoch.adhanaEpoch.adhanaLagnaSign}** (Lord: ${triEpoch.adhanaEpoch.adhanaLagnaLord}) • Moon in **${triEpoch.adhanaEpoch.adhanaMoonSign} (${triEpoch.adhanaEpoch.adhanaMoonNakshatra})**
-   * *Significance:* The exact instant the karmic and biological seed packet was sealed in the maternal womb.
-
-2. **Shirodarshana Lagna (शिरोदर्शन लग्न — Crown Emergence):**
-   * **Estimated Window:** **${triEpoch.shirodarshanaEpoch.estimatedTimeRange}**
-   * **Ascendant during Crowning:** **${triEpoch.shirodarshanaEpoch.estimatedLagnaSign}** (${triEpoch.shirodarshanaEpoch.isLagnaSignSameAsBhupatana ? "Same sign as delivery" : "Sign transitioned before delivery"})
-   * *Significance:* The moment the crown first emerges. Fetus is still tethered to maternal circulation and respiration via the umbilical cord.
-
-3. **Bhupatana Lagna (भूपतन लग्न — Umbilical Severance & First Breath):**
-   * **Recorded Civil Time:** **${timeStr}** on **${dateStr}** in **${cityName}, ${countryName}**
-   * **Recorded Civil Ascendant:** **${triEpoch.bhupatanaEpoch.civilLagnaSign} (${triEpoch.bhupatanaEpoch.civilLagnaDegrees}°)**
-   * *Significance:* **Universal Operational Benchmark.** Physical clamping and cutting of the umbilical cord (*Naala-Chhedana*) forces pulmonary inflation, triggering the first cry (*Prathama Shwasa / Rodana*), freezing the individual planetary coordinates.
-
-${chitkaraSection}
-
-${shodhanaSection}
-
-${d60RadarSection}
-
----
-
-💡 **Next Step:** ${lifeStageNote}
-
-*⚡ Instant Classical Computation (0ms)*
-
-\`\`\`chips
-[{"id":"chip-1","label":"🧬 Classical 3-Point BTR","prompt":"Explain the classical 3-point Navamsha, D-60 and Ketu dispositor BTR algorithm for my chart"},{"id":"chip-2","label":"⏱️ Verify My Birth Clock","prompt":"Verify my birth time with multi-divisional milestones [btr_adult_verified]"},{"id":"chip-3","label":"⏳ D-60 Past Life Karma","prompt":"What does my D-60 Shashtiamsha reveal about my past life karmic root causes?"}]
-\`\`\``;
+${lifeStageNote}`;
   }
 
   // 16. Astro-Phonetic Name Vibrational Energy & Age 36 Maturation (Classical Shastric Tradition)
@@ -5598,11 +5272,16 @@ export default function AstroChatbot({ initialOpen = false, initialPrompt = "" }
         timestamp: new Date(),
         category: activeCategory,
       };
+      const isBtrFlowMsg =
+        instantAnswer.includes("Step 1: Classical Birth Time Rectification") ||
+        instantAnswer.includes("Birth Time Calibration");
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content: instantAnswer,
-        arbitration: arbitratePredictiveQuery(`${activeCategory} ${query}`, natalEphemeris, transitEphemeris),
+        arbitration: isBtrFlowMsg
+          ? undefined
+          : arbitratePredictiveQuery(`${activeCategory} ${query}`, natalEphemeris, transitEphemeris),
         timestamp: new Date(),
         category: activeCategory,
       };
