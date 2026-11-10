@@ -8,10 +8,12 @@
  */
 
 import * as Astronomy from "astronomy-engine";
-import { GeoLocation, AyanamshaType } from "./types";
+import { GeoLocation, AyanamshaType, EphemerisResult } from "./types";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { getRashi } from "./rashiNakshatra";
-import { TITHI_NAMES, YOGA_NAMES, RASHIS } from "./constants";
+import { TITHI_NAMES, YOGA_NAMES, RASHIS, NAKSHATRA_NAMES } from "./constants";
+import { calculateTithiEndTime, calculateNakshatraEndTime } from "./tithiCalendar";
+import { DAGDHA_RASHIS_BY_TITHI } from "./natalPanchangaDeep";
 
 export interface TithiSpanStatus {
   isKshaya: boolean;
@@ -25,6 +27,9 @@ export interface LunarMonthDetail {
   purnimantaMonth: string; // e.g. "Ashwina (आश्विन)"
   vikramSamvat: number; // e.g. 2083
   shakaSamvat: number; // e.g. 1948
+  samvatsaraNumber: number; // 1 to 60
+  samvatsaraName: string; // e.g. "Parabhava"
+  samvatsaraHindi: string; // e.g. "पराभव संवत्सर"
   ayanam: "Uttarayana (उत्तरायण)" | "Dakshinayana (दक्षिणायन)";
   ritu: "Vasanta (वसन्त)" | "Grishma (ग्रीष्म)" | "Varsha (वर्षा)" | "Sharad (शरद्)" | "Hemanta (हेमन्त)" | "Shishira (शिशिर)";
   rituHindi: string;
@@ -39,11 +44,14 @@ export interface TithiDetail {
   sanskritName: string;
   paksha: "Shukla" | "Krishna";
   pakshaHindi: string;
+  tithiLord: string; // Classical 8-planet Tithi Lord (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu)
   category: "Nanda" | "Bhadra" | "Jaya" | "Rikta" | "Purna";
   categoryHindi: string;
   deity: string;
   tatva: "Agni" | "Prithvi" | "Vayu" | "Jala" | "Akasha";
   tatvaHindi: string;
+  panchangaPhala: string; // Classical Phaladeepika / Muhurta Chintamani limb fruit
+  dagdhaRashis: string[]; // Burnt signs for this Tithi
   significance: string;
   spanStatus: TithiSpanStatus;
   endTime: Date;
@@ -62,6 +70,7 @@ export interface VaraDetail {
   planetHindi: string;
   deity: string;
   tatva: string;
+  panchangaPhala: string;
   auspiciousColors: string[];
   inauspiciousColors: string[];
   exitRemedy: string; // What to eat/do before leaving home (घर से निकलने से पूर्व उपाय)
@@ -81,6 +90,8 @@ export interface NakshatraDetail {
   gana: "Deva" | "Manushya" | "Rakshasa";
   yoni: string;
   nadi: "Adi" | "Madhya" | "Antya";
+  tatva: string;
+  panchangaPhala: string;
   nature: "Kshipra (Laghu)" | "Dhruva (Sthira)" | "Chara (Chala)" | "Mridu (Maitra)" | "Ugra (Kroora)" | "Mishra (Sadharana)" | "Tikshna (Daruna)";
   natureHindi: string;
   favorableActivities: string;
@@ -96,11 +107,20 @@ export interface YogaDetail {
   sanskritName: string;
   nature: "Shubha (Auspicious)" | "Ashubha (Inauspicious)" | "Ati-Shubha (Highly Auspicious)";
   deity: string;
+  tatva: string;
+  panchangaPhala: string;
+  shunnedPortion: string; // Classical Tyajya Ghatis for malefic yogas
+  yogiNakshatra: string;
+  yogiPlanet: string;
+  sahayogiPlanet: string;
+  avayogiNakshatra: string;
+  avayogiPlanet: string;
   description: string;
   favorableActs: string;
   prohibitedActs: string;
   endTime: Date;
   endTimeFormatted: string;
+  remainingHoursFormatted: string;
 }
 
 export interface KaranaDetail {
@@ -108,13 +128,98 @@ export interface KaranaDetail {
   name: string;
   hindiName: string;
   type: "Chara (Movable)" | "Sthira (Fixed)";
+  karanaLord: string;
   rulingDeity: string;
+  tatva: string;
+  panchangaPhala: string;
   isBhadra: boolean;
   bhadraVaas?: "Swarga Loka" | "Patala Loka" | "Bhu Loka (Mrityu Loka)";
   bhadraVaasHindi?: string;
   bhadraImpact?: string;
   endTime: Date;
   endTimeFormatted: string;
+  remainingHoursFormatted: string;
+}
+
+export interface PlanetaryHoraSlot {
+  horaNumber: number; // 1 to 24 from Sunrise
+  isDayHora: boolean;
+  lord: string;
+  lordHindi: string;
+  startFormatted: string;
+  endFormatted: string;
+  favorableActivities: string;
+}
+
+export interface ChoghadiyaSlot {
+  name: "Amrit" | "Shubh" | "Labh" | "Char" | "Udveg" | "Kaal" | "Rog";
+  hindiName: string;
+  rulingPlanet: string;
+  quality: "Ati-Shubha (Nectar)" | "Shubha (Auspicious)" | "Madhyama (Movable)" | "Ashubha (Avoid)";
+  isDaySlot: boolean;
+  startFormatted: string;
+  endFormatted: string;
+  recommendation: string;
+}
+
+export interface SiddhiYogaStatus {
+  name: string;
+  hindiName: string;
+  type: "Auspicious" | "Caution";
+  description: string;
+}
+
+export interface PanchakaStatus {
+  isActive: boolean;
+  name: string;
+  hindiName: string;
+  severity: "Shubha (Free)" | "Madhyama (Mild)" | "Caution (Panchaka Active)";
+  guidance: string;
+}
+
+export interface VasaSanctionStatus {
+  agnivasa: {
+    residence: "Prithvi (Earth)" | "Akasha (Sky)" | "Patala (Netherworld)";
+    hindiResidence: string;
+    isHomaSanctioned: boolean;
+    verdict: string;
+  };
+  shivavasa: {
+    residence: string;
+    hindiResidence: string;
+    isRudrabhishekaSanctioned: boolean;
+    verdict: string;
+  };
+}
+
+export interface PersonalPanchangaAlignment {
+  natalNakshatra: string;
+  natalRashi: string;
+  todayNakshatra: string;
+  todayRashi: string;
+  tarabala: {
+    countFromJanma: number; // 1 to 27
+    taraNumber: number; // 1 to 9
+    paryaya: number; // 1, 2, or 3
+    taraName: string;
+    taraHindi: string;
+    rulingPlanet: string;
+    strength: "Ati-Shubha" | "Shubha" | "Madhyama" | "Ashubha";
+    guidance: string;
+  };
+  chandrabala: {
+    houseFromJanmaRashi: number; // 1 to 12
+    strength: "Shubha (Auspicious)" | "Madhyama (Moderate)" | "Ashubha (Chandrashtama / Caution)";
+    isChandrashtama: boolean;
+    guidance: string;
+  };
+  horaHarmony: {
+    activeHoraLord: string;
+    natalHouseOfHoraLord: number;
+    tithiLord: string;
+    natalHouseOfTithiLord: number;
+    verdict: string;
+  };
 }
 
 export interface DishaShoolDetail {
@@ -174,6 +279,15 @@ export interface DailySamirTripathiPanchang {
   yoga: YogaDetail;
   karana: KaranaDetail;
 
+  // Classical Planetary Hora, Choghadiya, Siddhi Yogas, Panchaka & Vasa Sanctions
+  activeHora: PlanetaryHoraSlot;
+  nextHora: PlanetaryHoraSlot;
+  activeChoghadiya: ChoghadiyaSlot;
+  nextChoghadiya: ChoghadiyaSlot;
+  siddhiYogas: SiddhiYogaStatus[];
+  panchakaStatus: PanchakaStatus;
+  vasaSanctions: VasaSanctionStatus;
+
   // Astrological Tips & Guidance
   dishaShool: DishaShoolDetail;
   auspiciousColors: string[];
@@ -197,9 +311,15 @@ export interface DailySamirTripathiPanchang {
   panchangaSummary: string;
 }
 
-// Helper: Format time as "hh:mm AM/PM"
-function formatTime12h(d: Date): string {
-  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+// Helper: Format time as "hh:mm AM/PM" in the target location's timezone
+function formatTime12h(d: Date, tzOffsetHours: number = 5.5): string {
+  const localD = new Date(d.getTime() + tzOffsetHours * 3600 * 1000);
+  return localD.toLocaleTimeString("en-US", {
+    timeZone: "UTC",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
 // Tithi Categories & Tatvas
@@ -426,14 +546,185 @@ const AMANTA_MONTH_LIST = [
   "Chaitra (चैत्र)",
 ];
 
+const SAMVATSARA_60_LIST: Array<{ name: string; hindi: string }> = [
+  { name: "Prabhava", hindi: "प्रभव" },
+  { name: "Vibhava", hindi: "विभव" },
+  { name: "Shukla", hindi: "शुक्ल" },
+  { name: "Pramodoota", hindi: "प्रमोदूत" },
+  { name: "Prajotpatti", hindi: "प्रजोत्पत्ति" },
+  { name: "Angirasa", hindi: "अंगिरस" },
+  { name: "Shrimukha", hindi: "श्रीमुख" },
+  { name: "Bhava", hindi: "भाव" },
+  { name: "Yuva", hindi: "युवा" },
+  { name: "Dhata", hindi: "धाता" },
+  { name: "Ishvara", hindi: "ईश्वर" },
+  { name: "Bahudhanya", hindi: "बहुधान्य" },
+  { name: "Pramathi", hindi: "प्रमाथी" },
+  { name: "Vikrama", hindi: "विक्रम" },
+  { name: "Vrisha", hindi: "वृष" },
+  { name: "Chitrabhanu", hindi: "चित्रभानु" },
+  { name: "Subhanu", hindi: "सुभानु" },
+  { name: "Tarana", hindi: "तारण" },
+  { name: "Parthiva", hindi: "पार्थिव" },
+  { name: "Vyaya", hindi: "व्यय" },
+  { name: "Sarvajit", hindi: "सर्वजित्" },
+  { name: "Sarvadharin", hindi: "सर्वधारी" },
+  { name: "Virodhin", hindi: "विरोधी" },
+  { name: "Vikriti", hindi: "विकृति" },
+  { name: "Khara", hindi: "खर" },
+  { name: "Nandana", hindi: "नन्दन" },
+  { name: "Vijaya", hindi: "विजय" },
+  { name: "Jaya", hindi: "जय" },
+  { name: "Manmatha", hindi: "मन्मथ" },
+  { name: "Durmukha", hindi: "दुर्मुख" },
+  { name: "Hemalamba", hindi: "हेमलम्ब" },
+  { name: "Vilamba", hindi: "विलम्ब" },
+  { name: "Vikarin", hindi: "विकारी" },
+  { name: "Sharvari", hindi: "शार्वरी" },
+  { name: "Plava", hindi: "प्लव" },
+  { name: "Shubhakrit", hindi: "शुभकृत्" },
+  { name: "Shobhakrit", hindi: "शोभकृत्" },
+  { name: "Krodhin", hindi: "क्रोधी" },
+  { name: "Vishvavasu", hindi: "विश्वावसु" },
+  { name: "Parabhava", hindi: "पराभव" },
+  { name: "Plavanga", hindi: "प्लवंग" },
+  { name: "Kilaka", hindi: "कीलक" },
+  { name: "Saumya", hindi: "सौम्य" },
+  { name: "Sadharana", hindi: "साधारण" },
+  { name: "Virodhikrit", hindi: "विरोधिकृत्" },
+  { name: "Paridhavin", hindi: "परिधावी" },
+  { name: "Pramadicha", hindi: "प्रमादीच" },
+  { name: "Ananda", hindi: "आनन्द" },
+  { name: "Rakshasa", hindi: "राक्षस" },
+  { name: "Nala (Anala)", hindi: "नल (अनल)" },
+  { name: "Pingala", hindi: "पिंगल" },
+  { name: "Kalayukti", hindi: "कालयुक्ति" },
+  { name: "Siddharthi", hindi: "सिद्धार्थी" },
+  { name: "Raudri", hindi: "रौद्री" },
+  { name: "Durmati", hindi: "दुर्मति" },
+  { name: "Dundubhi", hindi: "दुन्दुभि" },
+  { name: "Rudhirodgarin", hindi: "रुधिरोद्गारी" },
+  { name: "Raktaksha", hindi: "रक्ताक्ष" },
+  { name: "Krodhana", hindi: "क्रोधन" },
+  { name: "Akshaya", hindi: "अक्षय" },
+];
+
+// Classical Tithi Planetary Lords (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu cycle for 1..14; Purnima=Saturn, Amavasya=Rahu)
+const TITHI_LORD_8_CYCLE = [
+  "Sun (सूर्य)",
+  "Moon (चन्द्र)",
+  "Mars (मंगल)",
+  "Mercury (बुध)",
+  "Jupiter (बृहस्पति)",
+  "Venus (शुक्र)",
+  "Saturn (शनि)",
+  "Rahu (राहु)",
+];
+
+// Classical Muhurta Chintamani shunned ghatis for the 9 malefic Nitya Yogas
+const YOGA_SHUNNED_PORTIONS: Record<number, string> = {
+  0: "First 3 Ghatis (72 mins) shunned", // Vishkambha
+  5: "First 6 Ghatis (2h 24m) shunned", // Atiganda
+  8: "First 5 Ghatis (2h 00m) shunned", // Shula
+  9: "First 6 Ghatis (2h 24m) shunned", // Ganda
+  12: "First 9 Ghatis (3h 36m) shunned", // Vyaghata
+  14: "First 3 Ghatis (72 mins) shunned", // Vajra
+  16: "Entire Yoga shunned for auspicious starts", // Vyatipata
+  18: "First 30 Ghatis (first half) shunned", // Parigha
+  26: "Entire Yoga shunned for auspicious starts", // Vaidhriti
+};
+
+// Decreasing orbital speed order for Planetary Horas (Surya Siddhanta)
+const HORA_SPEED_ORDER: Array<{ lord: string; hindi: string; activities: string }> = [
+  { lord: "Sun", hindi: "सूर्य होरा", activities: "Government dealings, executive decisions, authority, vitality & administrative leadership." },
+  { lord: "Venus", hindi: "शुक्र होरा", activities: "Travel, luxury purchases, jewellery, arts, romance, vehicles & financial diplomacy." },
+  { lord: "Mercury", hindi: "बुध होरा", activities: "Commercial trade, contracts, education, software, writing, accounting & negotiations." },
+  { lord: "Moon", hindi: "चन्द्र होरा", activities: "Public relations, food/liquid trade, gardening, short journeys & domestic harmony." },
+  { lord: "Saturn", hindi: "शनि होरा", activities: "Foundations, heavy machinery, mining, long-term discipline, agriculture & iron/oil work." },
+  { lord: "Jupiter", hindi: "गुरु होरा", activities: "All auspicious beginnings, marriage, banking, wealth investment, higher study & temple rituals." },
+  { lord: "Mars", hindi: "मंगल होरा", activities: "Engineering, real estate, competitive sports, litigation defense, surgery & bold action." },
+];
+
+const WEEKDAY_START_HORA_INDEX: Record<number, number> = {
+  0: 0, // Sunday -> Sun
+  1: 3, // Monday -> Moon
+  2: 6, // Tuesday -> Mars
+  3: 2, // Wednesday -> Mercury
+  4: 5, // Thursday -> Jupiter
+  5: 1, // Friday -> Venus
+  6: 4, // Saturday -> Saturn
+};
+
+const CHOGHADIYA_CYCLE: Array<{
+  name: ChoghadiyaSlot["name"];
+  hindiName: string;
+  rulingPlanet: string;
+  quality: ChoghadiyaSlot["quality"];
+  recommendation: string;
+}> = [
+  { name: "Udveg", hindiName: "उद्वेग चौघड़िया", rulingPlanet: "Sun (सूर्य)", quality: "Ashubha (Avoid)", recommendation: "Avoid new personal starts; suitable only for routine government or official tasks." },
+  { name: "Char", hindiName: "चर चौघड़िया", rulingPlanet: "Venus (शुक्र)", quality: "Madhyama (Movable)", recommendation: "Favorable for travel, logistics, vehicle movement, and dynamic commercial dispatch." },
+  { name: "Labh", hindiName: "लाभ चौघड़िया", rulingPlanet: "Mercury (बुध)", quality: "Shubha (Auspicious)", recommendation: "Highly favorable for starting businesses, financial investments, trade, and skill learning." },
+  { name: "Amrit", hindiName: "अमृत चौघड़िया", rulingPlanet: "Moon (चन्द्र)", quality: "Ati-Shubha (Nectar)", recommendation: "Supreme nectarine window for all auspicious ceremonies, contracts, and major beginnings." },
+  { name: "Kaal", hindiName: "काल चौघड़िया", rulingPlanet: "Saturn (शनि)", quality: "Ashubha (Avoid)", recommendation: "Inauspicious for new beginnings; avoid financial lending or launching ventures." },
+  { name: "Shubh", hindiName: "शुभ चौघड़िया", rulingPlanet: "Jupiter (बृहस्पति)", quality: "Shubha (Auspicious)", recommendation: "Auspicious for sacred ceremonies, marriage talks, education, and spiritual sadhana." },
+  { name: "Rog", hindiName: "रोग चौघड़िया", rulingPlanet: "Mars (मंगल)", quality: "Ashubha (Avoid)", recommendation: "Inauspicious for peaceful starts; suitable only for overcoming adversaries or medical procedures." },
+];
+
+// Daytime Choghadiya starting index into CHOGHADIYA_CYCLE by dayOfWeek (0=Sun..6=Sat)
+const DAY_CHOGHADIYA_START: Record<number, number> = {
+  0: 0, // Sun -> Udveg
+  1: 3, // Mon -> Amrit
+  2: 6, // Tue -> Rog
+  3: 2, // Wed -> Labh
+  4: 5, // Thu -> Shubh
+  5: 1, // Fri -> Char
+  6: 4, // Sat -> Kaal
+};
+
+// Nighttime Choghadiya sequence order
+const NIGHT_CHOGHADIYA_SEQUENCE: number[] = [5, 3, 1, 6, 4, 2, 0]; // Shubh, Amrit, Char, Rog, Kaal, Labh, Udveg
+const NIGHT_CHOGHADIYA_START: Record<number, number> = {
+  0: 0, // Sun night starts with Shubh
+  1: 2, // Mon night starts with Char
+  2: 4, // Tue night starts with Kaal
+  3: 5, // Wed night starts with Labh
+  4: 6, // Thu night starts with Udveg
+  5: 1, // Fri night starts with Amrit
+  6: 3, // Sat night starts with Rog
+};
+
+// Classical Amrita Siddhi & Sarvartha Siddhi Vara-Nakshatra tables
+const AMRITA_SIDDHI_NAK: Record<number, number> = {
+  0: 12, // Sunday + Hasta
+  1: 4,  // Monday + Mrigashira
+  2: 0,  // Tuesday + Ashwini
+  3: 16, // Wednesday + Anuradha
+  4: 7,  // Thursday + Pushya
+  5: 26, // Friday + Revati
+  6: 3,  // Saturday + Rohini
+};
+
+const SARVARTHA_SIDDHI_NAKS: Record<number, number[]> = {
+  0: [0, 7, 11, 12, 18, 20, 25], // Sun: Ashwini, Pushya, U.Phalguni, Hasta, Mula, U.Ashadha, U.Bhadrapada
+  1: [3, 4, 7, 16, 21],          // Mon: Rohini, Mrigashira, Pushya, Anuradha, Shravana
+  2: [0, 2, 8, 25],              // Tue: Ashwini, Krittika, Ashlesha, U.Bhadrapada
+  3: [2, 3, 4, 12, 16],          // Wed: Krittika, Rohini, Mrigashira, Hasta, Anuradha
+  4: [0, 6, 7, 16, 26],          // Thu: Ashwini, Punarvasu, Pushya, Anuradha, Revati
+  5: [0, 6, 16, 21, 26],         // Fri: Ashwini, Punarvasu, Anuradha, Shravana, Revati
+  6: [3, 14, 21],                // Sat: Rohini, Swati, Shravana
+};
+
 /**
- * Main Function: Calculate Complete Dr. Samir Tripathi Daily Panchanga
+ * Main Function: Calculate Complete Classical Daily Panchanga
  */
 export function calculateSamirTripathiPanchang(
   date: Date,
   location: GeoLocation,
   ayanamshaType: AyanamshaType = "Lahiri"
 ): DailySamirTripathiPanchang {
+  const tzOffset = location.timezoneOffsetHours ?? 5.5;
+  const fmtTime = (d: Date) => formatTime12h(d, tzOffset);
   const ephem = calculateVedicEphemeris(date, location, ayanamshaType);
   const observer = new Astronomy.Observer(location.latitude, location.longitude, location.elevation || 0);
   const astroTime = Astronomy.MakeTime(date);
@@ -470,7 +761,7 @@ export function calculateSamirTripathiPanchang(
   const sunRashi = ephem.planets.Sun?.rashi || getRashi(sunSidLon);
   const moonRashi = ephem.planets.Moon?.rashi || getRashi(moonSidLon);
 
-  // 3. Tithi Calculation
+  // 3. Tithi Calculation (with exact astronomical root-finding)
   let tithiDiff = ((moonTropLon - sunTropLon + 360) % 360);
   const tithiIdx = Math.floor(tithiDiff / 12) % 30;
   const tithiNum = (tithiIdx % 15) + 1;
@@ -480,15 +771,25 @@ export function calculateSamirTripathiPanchang(
   const tithiCatIdx = (tithiNum - 1) % 5;
   const tithiCat = TITHI_CATEGORIES[tithiCatIdx];
 
-  // Tithi End Time approximation
+  // Exact Tithi End Time via binary root-finding
+  const exactTithiEnd = calculateTithiEndTime(date, location, ayanamshaType, date);
   const degIntoTithi = tithiDiff % 12;
-  const degRemainingInTithi = 12 - degIntoTithi;
-  const hoursToTithiEnd = (degRemainingInTithi / 12.19) * 24;
-  const tithiEndTime = new Date(date.getTime() + hoursToTithiEnd * 3600 * 1000);
+  const hoursToTithiEnd = exactTithiEnd.hoursRemaining;
+  const tithiEndTime = exactTithiEnd.endTime;
 
-  // Tithi Vriddhi / Kshaya Determination (Dr. Samir Tripathi Shastra)
-  // Tithi Kshaya: Tithi ends before next sunrise without touching the next sunrise.
-  // Tithi Vriddhi: Tithi spans across two sunrises (duration > 24 hours).
+  // Classical Tithi Planetary Lord (Table 3: Sun..Rahu cycle for 1..14, Purnima=Saturn, Amavasya=Rahu)
+  const tithiLord =
+    tithiIdx === 14
+      ? "Saturn (शनि)"
+      : tithiIdx === 29
+      ? "Rahu (राहु)"
+      : TITHI_LORD_8_CYCLE[(tithiNum - 1) % 8];
+
+  // Classical Dagdha Rashis (Burnt Signs) for this Tithi
+  const effectiveDagdhaIndices = tithiIdx === 14 || tithiIdx === 29 ? [] : DAGDHA_RASHIS_BY_TITHI[tithiNum] || [];
+  const dagdhaRashis = effectiveDagdhaIndices.map((rIdx) => `${RASHIS[rIdx].englishName} (${RASHIS[rIdx].sanskritName})`);
+
+  // Tithi Vriddhi / Kshaya Determination
   const isKshaya = hoursToTithiEnd < 20 && (tithiEndTime.getTime() < nextSunrise.getTime()) && (degIntoTithi > 6);
   const isVriddhi = hoursToTithiEnd > 24.5;
 
@@ -509,7 +810,7 @@ export function calculateSamirTripathiPanchang(
 
   const illum = Astronomy.Illumination(Astronomy.Body.Moon, astroTime);
   const moonEmoji = tithiIdx === 14 ? "🌕" : tithiIdx === 29 ? "🌑" : tithiIdx < 14 ? "🌓" : "🌘";
-  const tithiNameStr = TITHI_NAMES[tithiIdx % 15] || "Pratipada";
+  const tithiNameStr = tithiIdx === 14 ? "Purnima" : tithiIdx === 29 ? "Amavasya" : TITHI_NAMES[tithiIdx % 15] || "Pratipada";
 
   const tithiDetail: TithiDetail = {
     index: tithiIdx,
@@ -519,50 +820,53 @@ export function calculateSamirTripathiPanchang(
     sanskritName: tithiNameStr,
     paksha,
     pakshaHindi,
+    tithiLord,
     category: tithiCat.category,
     categoryHindi: tithiCat.categoryHindi,
     deity: tithiCat.deity,
     tatva: tithiCat.tatva,
     tatvaHindi: tithiCat.tatvaHindi,
+    panchangaPhala: "तिथेः श्रियमाप्नोति — Bestows wealth, Lakshmi grace & emotional harmony",
+    dagdhaRashis,
     significance: tithiCat.significance,
     spanStatus,
     endTime: tithiEndTime,
-    endTimeFormatted: formatTime12h(tithiEndTime),
-    remainingHoursFormatted: `${Math.floor(hoursToTithiEnd)}h ${Math.floor((hoursToTithiEnd % 1) * 60)}m remaining`,
+    endTimeFormatted: exactTithiEnd.endTimeFormatted || fmtTime(tithiEndTime),
+    remainingHoursFormatted: exactTithiEnd.remainingHoursFormatted || `${Math.floor(hoursToTithiEnd)}h ${Math.floor((hoursToTithiEnd % 1) * 60)}m left`,
     moonPhaseEmoji: moonEmoji,
     illuminationPercent: Math.round(illum.phase_fraction * 100),
   };
 
-  // 4. Vedic Lunar Month, Samvat, Ayanam & Ritu
+  // 4. Vedic Lunar Month, 60-Year Samvatsara, Samvat, Ayanam & Ritu
   const sunRashiIdx = sunRashi.index;
   const amantaMonthName = AMANTA_MONTH_LIST[sunRashiIdx] || "Chaitra (चैत्र)";
-  // In Krishna Paksha, Purnimanta month is 1 month ahead of Amanta
   const purnimantaMonthIdx = paksha === "Krishna" ? (sunRashiIdx + 1) % 12 : sunRashiIdx;
   const purnimantaMonthName = AMANTA_MONTH_LIST[purnimantaMonthIdx] || "Chaitra (चैत्र)";
 
-  // Vikram Samvat & Shaka Samvat
   const civilYear = date.getFullYear();
   const isAfterChaitra = date.getMonth() >= 3;
   const vikramSamvat = isAfterChaitra ? civilYear + 57 : civilYear + 56;
   const shakaSamvat = isAfterChaitra ? civilYear - 78 : civilYear - 79;
 
-  // Ayanam: Uttarayana when Sun in Makara to Mithuna (9 to 2)
+  // 60-Year Jovian Samvatsara cycle: (Shaka + 11) % 60
+  const samvatsaraIdx = ((shakaSamvat + 11) % 60 + 60) % 60;
+  const samvatsaraMeta = SAMVATSARA_60_LIST[samvatsaraIdx] || SAMVATSARA_60_LIST[0];
+
   const isUttarayana = [9, 10, 11, 0, 1, 2].includes(sunRashiIdx);
   const ayanam = isUttarayana ? "Uttarayana (उत्तरायण)" : "Dakshinayana (दक्षिणायन)";
 
-  // 6 Ritus
   const RITU_LIST: Array<{ ritu: LunarMonthDetail["ritu"]; hindi: string }> = [
-    { ritu: "Vasanta (वसन्त)", hindi: "वसन्त ऋतु (Spring — नवीनीकरण एवं उल्लास)" }, // Chaitra / Vaishakha (Pisces/Aries)
+    { ritu: "Vasanta (वसन्त)", hindi: "वसन्त ऋतु (Spring — नवीनीकरण एवं उल्लास)" },
     { ritu: "Vasanta (वसन्त)", hindi: "वसन्त ऋतु (Spring)" },
-    { ritu: "Grishma (ग्रीष्म)", hindi: "ग्रीष्म ऋतु (Summer — तेज एवं ऊर्जा)" }, // Taurus/Gemini
+    { ritu: "Grishma (ग्रीष्म)", hindi: "ग्रीष्म ऋतु (Summer — तेज एवं ऊर्जा)" },
     { ritu: "Grishma (ग्रीष्म)", hindi: "ग्रीष्म ऋतु (Summer)" },
-    { ritu: "Varsha (वर्षा)", hindi: "वर्षा ऋतु (Monsoon — नवजीवन व समृद्धि)" }, // Cancer/Leo
+    { ritu: "Varsha (वर्षा)", hindi: "वर्षा ऋतु (Monsoon — नवजीवन व समृद्धि)" },
     { ritu: "Varsha (वर्षा)", hindi: "वर्षा ऋतु (Monsoon)" },
-    { ritu: "Sharad (शरद्)", hindi: "शरद् ऋतु (Autumn — निर्मलता व स्वास्थ्य)" }, // Virgo/Libra
+    { ritu: "Sharad (शरद्)", hindi: "शरद् ऋतु (Autumn — निर्मलता व स्वास्थ्य)" },
     { ritu: "Sharad (शरद्)", hindi: "शरद् ऋतु (Autumn)" },
-    { ritu: "Hemanta (हेमन्त)", hindi: "हेमन्त ऋतु (Pre-Winter — पुष्टि व शक्ति)" }, // Scorpio/Sagittarius
+    { ritu: "Hemanta (हेमन्त)", hindi: "हेमन्त ऋतु (Pre-Winter — पुष्टि व शक्ति)" },
     { ritu: "Hemanta (हेमन्त)", hindi: "हेमन्त ऋतु (Pre-Winter)" },
-    { ritu: "Shishira (शिशिर)", hindi: "शिशिर ऋतु (Winter — साधना व तपस्या)" }, // Capricorn/Aquarius
+    { ritu: "Shishira (शिशिर)", hindi: "शिशिर ऋतु (Winter — साधना व तपस्या)" },
     { ritu: "Shishira (शिशिर)", hindi: "शिशिर ऋतु (Winter)" },
   ];
   const rituInfo = RITU_LIST[sunRashiIdx] || RITU_LIST[0];
@@ -572,14 +876,18 @@ export function calculateSamirTripathiPanchang(
     purnimantaMonth: purnimantaMonthName,
     vikramSamvat,
     shakaSamvat,
+    samvatsaraNumber: samvatsaraIdx + 1,
+    samvatsaraName: samvatsaraMeta.name,
+    samvatsaraHindi: `${samvatsaraMeta.hindi} संवत्सर`,
     ayanam,
     ritu: rituInfo.ritu,
     rituHindi: rituInfo.hindi,
     isAdhikaMasa: false,
   };
 
-  // 5. Vara (Weekday) Detail
-  const dayOfWeek = date.getDay();
+  // 5. Vara (Weekday) Detail (evaluated in target city's local date)
+  const localEvaluationDate = new Date(date.getTime() + tzOffset * 3600 * 1000);
+  const dayOfWeek = localEvaluationDate.getUTCDay();
   const varaInfo = VARA_DATA[dayOfWeek];
 
   const varaDetail: VaraDetail = {
@@ -591,6 +899,7 @@ export function calculateSamirTripathiPanchang(
     planetHindi: varaInfo.planetHindi,
     deity: varaInfo.deity,
     tatva: varaInfo.tatva,
+    panchangaPhala: "वारादायुष्यवर्धनम् — Enhances longevity, Prana & physical vitality",
     auspiciousColors: varaInfo.auspiciousColors,
     inauspiciousColors: varaInfo.inauspiciousColors,
     exitRemedy: varaInfo.exitRemedy,
@@ -599,7 +908,7 @@ export function calculateSamirTripathiPanchang(
     activitiesFavorable: varaInfo.activitiesFavorable,
   };
 
-  // 6. Nakshatra Detail
+  // 6. Nakshatra Detail (with exact astronomical root-finding)
   const nak = ephem.planets.Moon?.nakshatra || { index: 0, name: "Ashwini", sanskritName: "Ashwini", lord: "Ketu", deity: "Ashwini Kumaras" };
   const nakNature = NAKSHATRA_NATURES[nak.index] || {
     nature: "Kshipra (Laghu)",
@@ -607,17 +916,16 @@ export function calculateSamirTripathiPanchang(
     favorable: "General auspicious activities",
   };
 
-  const nakSpan = 360 / 27; // 13.3333 deg
+  const exactNakEnd = calculateNakshatraEndTime(date, location, ayanamshaType, date);
+  const nakSpan = 360 / 27;
   const degIntoNak = moonSidLon % nakSpan;
   const degRemInNak = nakSpan - degIntoNak;
   const hoursToNakEnd = (degRemInNak / 13.17) * 24;
-  const nakEndTime = new Date(date.getTime() + hoursToNakEnd * 3600 * 1000);
+  const nakEndTime = exactNakEnd.endTime;
 
-  // Pada (1 to 4)
-  const padaSpan = nakSpan / 4; // 3.3333 deg
+  const padaSpan = nakSpan / 4;
   const pada = Math.floor(degIntoNak / padaSpan) + 1;
 
-  // Gana, Yoni, Nadi
   const DEVA_NAKSHATRAS = [0, 4, 6, 7, 12, 14, 16, 21, 26];
   const MANUSHYA_NAKSHATRAS = [1, 3, 5, 10, 11, 19, 20, 24, 25];
   const gana: "Deva" | "Manushya" | "Rakshasa" = DEVA_NAKSHATRAS.includes(nak.index)
@@ -647,15 +955,17 @@ export function calculateSamirTripathiPanchang(
     gana,
     yoni: YONI_NAMES[nak.index] || "Unknown",
     nadi: NADI_TYPES[nak.index] || "Madhya",
+    tatva: "Vayu (Air — Праण प्रवाह)",
+    panchangaPhala: "नक्षत्राद्धरते पापम् — Removes karmic obstacles & purifies intentions",
     nature: nakNature.nature,
     natureHindi: nakNature.natureHindi,
     favorableActivities: nakNature.favorable,
     endTime: nakEndTime,
-    endTimeFormatted: formatTime12h(nakEndTime),
-    remainingHoursFormatted: `${Math.floor(hoursToNakEnd)}h ${Math.floor((hoursToNakEnd % 1) * 60)}m remaining`,
+    endTimeFormatted: exactNakEnd.endTimeFormatted || fmtTime(nakEndTime),
+    remainingHoursFormatted: exactNakEnd.remainingHoursFormatted || `${Math.floor(hoursToNakEnd)}h ${Math.floor((hoursToNakEnd % 1) * 60)}m left`,
   };
 
-  // 7. Yoga Detail with Actionable Guide
+  // 7. Yoga Detail + Yogi / Sahayogi / Avayogi Planet of the Day
   let yogaSum = (sunSidLon + moonSidLon) % 360;
   const yogaIdx = Math.floor(yogaSum / (360 / 27)) % 27;
   const yogaMeta = YOGA_META_MAP[yogaIdx] || {
@@ -670,6 +980,16 @@ export function calculateSamirTripathiPanchang(
   const degRemInYoga = 360 / 27 - degIntoYoga;
   const hoursToYogaEnd = (degRemInYoga / (13.17 + 0.98)) * 24;
   const yogaEndTime = new Date(date.getTime() + hoursToYogaEnd * 3600 * 1000);
+  const yogaRemainingFormatted = `${Math.floor(hoursToYogaEnd)}h ${Math.floor((hoursToYogaEnd % 1) * 60)}m left`;
+
+  // Yogi Point = (Sun Sidereal + Moon Sidereal + 93°20') % 360
+  const yogiPointLon = (sunSidLon + moonSidLon + (93 + 20 / 60)) % 360;
+  const yogiNakIdx = Math.floor(yogiPointLon / (360 / 27)) % 27;
+  const yogiSignIdx = Math.floor(yogiPointLon / 30) % 12;
+  const avayogiNakIdx = (yogiNakIdx + 6) % 27;
+  const yogiNakMeta = NAKSHATRA_NAMES[yogiNakIdx] || NAKSHATRA_NAMES[0];
+  const avayogiNakMeta = NAKSHATRA_NAMES[avayogiNakIdx] || NAKSHATRA_NAMES[6];
+  const sahayogiPlanet = RASHIS[yogiSignIdx]?.lord || "Moon";
 
   const yogaDetail: YogaDetail = {
     index: yogaIdx,
@@ -678,26 +998,60 @@ export function calculateSamirTripathiPanchang(
     sanskritName: YOGA_NAMES[yogaIdx] || "Vishkambha",
     nature: yogaMeta.nature,
     deity: yogaMeta.deity,
+    tatva: "Akasha (Ether — आकाश तत्व)",
+    panchangaPhala: "योगाद्रोगनिवारणम् — Grants immunity, healing & spiritual integration",
+    shunnedPortion: YOGA_SHUNNED_PORTIONS[yogaIdx] || "None (Entire Yoga is pure)",
+    yogiNakshatra: yogiNakMeta.sanskritName,
+    yogiPlanet: yogiNakMeta.lord,
+    sahayogiPlanet,
+    avayogiNakshatra: avayogiNakMeta.sanskritName,
+    avayogiPlanet: avayogiNakMeta.lord,
     description: yogaMeta.desc,
     favorableActs: yogaMeta.favorable,
     prohibitedActs: yogaMeta.prohibited,
     endTime: yogaEndTime,
-    endTimeFormatted: formatTime12h(yogaEndTime),
+    endTimeFormatted: fmtTime(yogaEndTime),
+    remainingHoursFormatted: yogaRemainingFormatted,
   };
 
   // 8. Karana Detail
   const karanaIdx = Math.floor(tithiDiff / 6) % 60;
   let karanaName = "";
+  let karanaLord = "Sun (सूर्य)";
+  let karanaDeity = "Indra (इन्द्र)";
   let isBhadra = false;
-  if (karanaIdx === 0) karanaName = "Kintughna (किन्तुघ्न)";
-  else if (karanaIdx >= 57) {
-    if (karanaIdx === 57) karanaName = "Shakuni (शकुनि)";
-    else if (karanaIdx === 58) karanaName = "Chatushpada (चतुष्पाद)";
-    else karanaName = "Naga (नाग)";
+  if (karanaIdx === 0) {
+    karanaName = "Kintughna (किन्तुघ्न)";
+    karanaLord = "Ketu (केतु)";
+    karanaDeity = "Kubera / Maruta (कुबेर)";
+  } else if (karanaIdx >= 57) {
+    if (karanaIdx === 57) {
+      karanaName = "Shakuni (शकुनि)";
+      karanaLord = "Rahu (राहु)";
+      karanaDeity = "Kali / Garuda (काली)";
+    } else if (karanaIdx === 58) {
+      karanaName = "Chatushpada (चतुष्पाद)";
+      karanaLord = "Rahu (राहु)";
+      karanaDeity = "Vrishabha / Rudra (वृषभ)";
+    } else {
+      karanaName = "Naga (नाग)";
+      karanaLord = "Ketu (केतु)";
+      karanaDeity = "Naga Devatas (नाग)";
+    }
   } else {
     const cycleIdx = (karanaIdx - 1) % 7;
-    const charaKaranas = ["Bava (बव)", "Balava (बालव)", "Kaulava (कौलव)", "Taitila (तैतिल)", "Gara (गर)", "Vanija (वणिज)", "Vishti / Bhadra (विष्टि / भद्रा)"];
-    karanaName = charaKaranas[cycleIdx];
+    const charaKaranas = [
+      { name: "Bava (बव)", lord: "Sun (सूर्य)", deity: "Indra (इन्द्र)" },
+      { name: "Balava (बालव)", lord: "Moon (चन्द्र)", deity: "Brahma (ब्रह्मा)" },
+      { name: "Kaulava (कौलव)", lord: "Mars (मंगल)", deity: "Mitra (मित्र)" },
+      { name: "Taitila (तैतिल)", lord: "Mercury (बुध)", deity: "Aryama (अर्यमा)" },
+      { name: "Gara (गर)", lord: "Jupiter (बृहस्पति)", deity: "Bhumi / Prithvi (पृथ्वी)" },
+      { name: "Vanija (वणिज)", lord: "Venus (शुक्र)", deity: "Goddess Lakshmi (लक्ष्मी)" },
+      { name: "Vishti / Bhadra (विष्टि / भद्रा)", lord: "Saturn (शनि)", deity: "Yama (यम)" },
+    ];
+    karanaName = charaKaranas[cycleIdx].name;
+    karanaLord = charaKaranas[cycleIdx].lord;
+    karanaDeity = charaKaranas[cycleIdx].deity;
     isBhadra = cycleIdx === 6;
   }
 
@@ -705,27 +1059,23 @@ export function calculateSamirTripathiPanchang(
   const degRemInKarana = 6 - degIntoKarana;
   const hoursToKaranaEnd = (degRemInKarana / 12.19) * 24;
   const karanaEndTime = new Date(date.getTime() + hoursToKaranaEnd * 3600 * 1000);
+  const karanaRemainingFormatted = `${Math.floor(hoursToKaranaEnd)}h ${Math.floor((hoursToKaranaEnd % 1) * 60)}m left`;
 
-  // Bhadra Vaas calculation (Dr. Samir Tripathi Shastra)
+  // Bhadra Vaas calculation
   let bhadraVaas: KaranaDetail["bhadraVaas"];
   let bhadraVaasHindi: string | undefined;
   let bhadraImpact: string | undefined;
 
   if (isBhadra) {
-    // Moon in Aries, Taurus, Gemini, Scorpio -> Swarga Loka
     if ([0, 1, 2, 7].includes(moonRashi.index)) {
       bhadraVaas = "Swarga Loka";
       bhadraVaasHindi = "स्वर्ग लोक में वास";
       bhadraImpact = "भद्रा स्वर्ग लोक में स्थित है। यह पृथ्वीवासियों के लिए शुभ फलप्रद एवं कल्याणकारी है।";
-    }
-    // Moon in Virgo, Libra, Sagittarius, Capricorn -> Patala Loka
-    else if ([5, 6, 8, 9].includes(moonRashi.index)) {
+    } else if ([5, 6, 8, 9].includes(moonRashi.index)) {
       bhadraVaas = "Patala Loka";
       bhadraVaasHindi = "पाताल लोक में वास";
       bhadraImpact = "भद्रा पाताल लोक में स्थित है। यह धन-सम्पदा व भूमिगत कार्यों के लिए शुभ मानी जाती है।";
-    }
-    // Moon in Cancer, Leo, Aquarius, Pisces -> Bhu Loka (Mrityu Loka)
-    else {
+    } else {
       bhadraVaas = "Bhu Loka (Mrityu Loka)";
       bhadraVaasHindi = "भूलोक (मृत्युलोक) में वास";
       bhadraImpact = "भद्रा मृत्युलोक (पृथ्वी) पर उपस्थित है। सभी शुभ मांगलिक कार्य, यात्रा व नए अनुबंध इस समय पूर्णतः वर्जित हैं।";
@@ -737,34 +1087,303 @@ export function calculateSamirTripathiPanchang(
     name: karanaName,
     hindiName: karanaName,
     type: karanaIdx === 0 || karanaIdx >= 57 ? "Sthira (Fixed)" : "Chara (Movable)",
-    rulingDeity: isBhadra ? "Yama (यम)" : "Indra / Vishnu",
+    karanaLord,
+    rulingDeity: karanaDeity,
+    tatva: "Prithvi (Earth — पृथ्वी तत्व)",
+    panchangaPhala: "करणात्कार्यसिद्धिः स्यात् — Grants concrete execution & completion of undertakings",
     isBhadra,
     bhadraVaas,
     bhadraVaasHindi,
     bhadraImpact,
     endTime: karanaEndTime,
-    endTimeFormatted: formatTime12h(karanaEndTime),
+    endTimeFormatted: fmtTime(karanaEndTime),
+    remainingHoursFormatted: karanaRemainingFormatted,
+  };
+
+  // 8B. Active Planetary Hora (24 Horas from Sunrise)
+  const dayHoraMs = dayDurationMs / 12;
+  const nightHoraMs = nightDurationMs / 12;
+  const isDaytimeNow = date.getTime() >= sunrise.getTime() && date.getTime() < sunset.getTime();
+  let currentHoraIdx0 = 0; // 0 to 23
+  let horaStartMs = sunrise.getTime();
+  let horaEndMs = sunrise.getTime() + dayHoraMs;
+
+  if (isDaytimeNow) {
+    const idxInDay = Math.min(11, Math.max(0, Math.floor((date.getTime() - sunrise.getTime()) / dayHoraMs)));
+    currentHoraIdx0 = idxInDay;
+    horaStartMs = sunrise.getTime() + idxInDay * dayHoraMs;
+    horaEndMs = horaStartMs + dayHoraMs;
+  } else if (date.getTime() >= sunset.getTime()) {
+    const idxInNight = Math.min(11, Math.max(0, Math.floor((date.getTime() - sunset.getTime()) / nightHoraMs)));
+    currentHoraIdx0 = 12 + idxInNight;
+    horaStartMs = sunset.getTime() + idxInNight * nightHoraMs;
+    horaEndMs = horaStartMs + nightHoraMs;
+  } else {
+    // Before sunrise: belongs to late night Hora of prior Vedic day
+    const prevSunsetMs = sunrise.getTime() - nightDurationMs;
+    const idxInNight = Math.min(11, Math.max(0, Math.floor((date.getTime() - prevSunsetMs) / nightHoraMs)));
+    currentHoraIdx0 = 12 + idxInNight;
+    horaStartMs = prevSunsetMs + idxInNight * nightHoraMs;
+    horaEndMs = horaStartMs + nightHoraMs;
+  }
+
+  const startHoraSeqIdx = WEEKDAY_START_HORA_INDEX[dayOfWeek] ?? 0;
+  const activeHoraMeta = HORA_SPEED_ORDER[(startHoraSeqIdx + currentHoraIdx0) % 7];
+  const nextHoraMeta = HORA_SPEED_ORDER[(startHoraSeqIdx + currentHoraIdx0 + 1) % 7];
+  const nextHoraEndMs = horaEndMs + (currentHoraIdx0 + 1 < 12 ? dayHoraMs : nightHoraMs);
+
+  const activeHora: PlanetaryHoraSlot = {
+    horaNumber: currentHoraIdx0 + 1,
+    isDayHora: currentHoraIdx0 < 12,
+    lord: activeHoraMeta.lord,
+    lordHindi: activeHoraMeta.hindi,
+    startFormatted: fmtTime(new Date(horaStartMs)),
+    endFormatted: fmtTime(new Date(horaEndMs)),
+    favorableActivities: activeHoraMeta.activities,
+  };
+
+  const nextHora: PlanetaryHoraSlot = {
+    horaNumber: ((currentHoraIdx0 + 1) % 24) + 1,
+    isDayHora: ((currentHoraIdx0 + 1) % 24) < 12,
+    lord: nextHoraMeta.lord,
+    lordHindi: nextHoraMeta.hindi,
+    startFormatted: fmtTime(new Date(horaEndMs)),
+    endFormatted: fmtTime(new Date(nextHoraEndMs)),
+    favorableActivities: nextHoraMeta.activities,
+  };
+
+  // 8C. Active Choghadiya (8 Day + 8 Night octants)
+  const dayChoghadiyaMs = dayDurationMs / 8;
+  const nightChoghadiyaMs = nightDurationMs / 8;
+  let activeChoghadiyaMeta = CHOGHADIYA_CYCLE[0];
+  let nextChoghadiyaMeta = CHOGHADIYA_CYCLE[1];
+  let chogStartMs = sunrise.getTime();
+  let chogEndMs = sunrise.getTime() + dayChoghadiyaMs;
+  let nextChogEndMs = chogEndMs + dayChoghadiyaMs;
+  let isDayChoghadiya = true;
+
+  if (isDaytimeNow) {
+    const octIdx = Math.min(7, Math.max(0, Math.floor((date.getTime() - sunrise.getTime()) / dayChoghadiyaMs)));
+    const startIdx = DAY_CHOGHADIYA_START[dayOfWeek] ?? 0;
+    activeChoghadiyaMeta = CHOGHADIYA_CYCLE[(startIdx + octIdx) % 7];
+    nextChoghadiyaMeta = CHOGHADIYA_CYCLE[(startIdx + octIdx + 1) % 7];
+    chogStartMs = sunrise.getTime() + octIdx * dayChoghadiyaMs;
+    chogEndMs = chogStartMs + dayChoghadiyaMs;
+    nextChogEndMs = chogEndMs + (octIdx + 1 < 8 ? dayChoghadiyaMs : nightChoghadiyaMs);
+    isDayChoghadiya = true;
+  } else {
+    const baseNightStart = date.getTime() >= sunset.getTime() ? sunset.getTime() : sunrise.getTime() - nightDurationMs;
+    const octIdx = Math.min(7, Math.max(0, Math.floor((date.getTime() - baseNightStart) / nightChoghadiyaMs)));
+    const startNightSeqPos = NIGHT_CHOGHADIYA_START[dayOfWeek] ?? 0;
+    const curCycleIdx = NIGHT_CHOGHADIYA_SEQUENCE[(startNightSeqPos + octIdx) % 7];
+    const nextCycleIdx = NIGHT_CHOGHADIYA_SEQUENCE[(startNightSeqPos + octIdx + 1) % 7];
+    activeChoghadiyaMeta = CHOGHADIYA_CYCLE[curCycleIdx];
+    nextChoghadiyaMeta = CHOGHADIYA_CYCLE[nextCycleIdx];
+    chogStartMs = baseNightStart + octIdx * nightChoghadiyaMs;
+    chogEndMs = chogStartMs + nightChoghadiyaMs;
+    nextChogEndMs = chogEndMs + nightChoghadiyaMs;
+    isDayChoghadiya = false;
+  }
+
+  const activeChoghadiya: ChoghadiyaSlot = {
+    name: activeChoghadiyaMeta.name,
+    hindiName: activeChoghadiyaMeta.hindiName,
+    rulingPlanet: activeChoghadiyaMeta.rulingPlanet,
+    quality: activeChoghadiyaMeta.quality,
+    isDaySlot: isDayChoghadiya,
+    startFormatted: fmtTime(new Date(chogStartMs)),
+    endFormatted: fmtTime(new Date(chogEndMs)),
+    recommendation: activeChoghadiyaMeta.recommendation,
+  };
+
+  const nextChoghadiya: ChoghadiyaSlot = {
+    name: nextChoghadiyaMeta.name,
+    hindiName: nextChoghadiyaMeta.hindiName,
+    rulingPlanet: nextChoghadiyaMeta.rulingPlanet,
+    quality: nextChoghadiyaMeta.quality,
+    isDaySlot: isDayChoghadiya,
+    startFormatted: fmtTime(new Date(chogEndMs)),
+    endFormatted: fmtTime(new Date(nextChogEndMs)),
+    recommendation: nextChoghadiyaMeta.recommendation,
+  };
+
+  // 8D. Vara-Nakshatra Special Siddhi Yogas (Amrita Siddhi, Sarvartha Siddhi, Pushya, Dwipushkara, Tripushkara, Ravi Yoga)
+  const siddhiYogas: SiddhiYogaStatus[] = [];
+  if (dayOfWeek === 4 && nak.index === 7) {
+    siddhiYogas.push({
+      name: "Guru Pushya Amrita Yoga",
+      hindiName: "गुरु-पुष्य अमृत सिद्धि योग",
+      type: "Auspicious",
+      description: "Supreme classical Muhurta combination (Thursday + Pushya) for wealth, gold investment, mantra diksha, and enduring prosperity.",
+    });
+  } else if (dayOfWeek === 0 && nak.index === 7) {
+    siddhiYogas.push({
+      name: "Ravi Pushya Yoga",
+      hindiName: "रवि-पुष्य योग",
+      type: "Auspicious",
+      description: "Highly auspicious Sunday + Pushya combination for administrative authority, medicine, trade, and spiritual initiation.",
+    });
+  }
+
+  if (AMRITA_SIDDHI_NAK[dayOfWeek] === nak.index) {
+    siddhiYogas.push({
+      name: "Amrita Siddhi Yoga",
+      hindiName: "अमृत सिद्धि योग",
+      type: "Auspicious",
+      description: "Nectarine weekday-constellation union granting unfailing fruition in new beginnings, contracts, and journeys.",
+    });
+  }
+
+  if ((SARVARTHA_SIDDHI_NAKS[dayOfWeek] || []).includes(nak.index)) {
+    siddhiYogas.push({
+      name: "Sarvartha Siddhi Yoga",
+      hindiName: "सर्वार्थ सिद्धि योग",
+      type: "Auspicious",
+      description: "All-accomplishing weekday-nakshatra alignment that neutralizes minor Muhurta blemishes and supports new ventures.",
+    });
+  }
+
+  // Tripushkara & Dwipushkara Yoga check: Bhadra Tithi (2, 7, 12) + Sun/Tue/Sat (0, 2, 6)
+  const isBhadraTithi = [2, 7, 12].includes(tithiNum);
+  const isSolarMarsSatDay = [0, 2, 6].includes(dayOfWeek);
+  const isTriPadaNak = [2, 6, 11, 15, 20, 24].includes(nak.index); // Krittika, Punarvasu, U.Phalguni, Vishakha, U.Ashadha, P.Bhadrapada
+  const isDwiPadaNak = [4, 13, 22].includes(nak.index); // Mrigashira, Chitra, Dhanishta
+
+  if (isBhadraTithi && isSolarMarsSatDay && isTriPadaNak) {
+    siddhiYogas.push({
+      name: "Tripushkara Yoga (3x Multiplier)",
+      hindiName: "त्रिपुष्कर योग (तीन गुना फल)",
+      type: "Auspicious",
+      description: "Classical 3x multiplier combination: wealth investments, asset purchases, and auspicious deeds performed today repeat thrice (avoid borrowing or loss).",
+    });
+  } else if (isBhadraTithi && isSolarMarsSatDay && isDwiPadaNak) {
+    siddhiYogas.push({
+      name: "Dwipushkara Yoga (2x Multiplier)",
+      hindiName: "द्विपुष्कर योग (दो गुना फल)",
+      type: "Auspicious",
+      description: "Classical 2x multiplier combination: auspicious acquisitions and financial gains initiated today repeat twice.",
+    });
+  }
+
+  // Ravi Yoga check: Moon Nakshatra is 4th, 6th, 9th, 10th, 13th, or 20th from Sun Nakshatra
+  const sunNakIdx = ephem.planets.Sun?.nakshatra.index ?? Math.floor(sunSidLon / (360 / 27));
+  const nakDistFromSun = ((nak.index - sunNakIdx + 27) % 27) + 1;
+  if ([4, 6, 9, 10, 13, 20].includes(nakDistFromSun)) {
+    siddhiYogas.push({
+      name: "Ravi Yoga",
+      hindiName: "रवि योग (सूर्य-चन्द्र नक्षत्र सिद्धि)",
+      type: "Auspicious",
+      description: `Moon is in the ${nakDistFromSun}th constellation from Sun's Nakshatra, dissolving malefic stellar obstructions like snow before the Sun.`,
+    });
+  }
+
+  if (siddhiYogas.length === 0) {
+    siddhiYogas.push({
+      name: "Samanya Anandadi Yoga",
+      hindiName: "सामान्य आनन्दादि योग",
+      type: "Auspicious",
+      description: "Standard balanced weekday-constellation flow; rely on Abhijit Muhurta, Shubha Choghadiya, and favorable Planetary Hora.",
+    });
+  }
+
+  // 8E. Panchaka Status (Moon in Aquarius or Pisces: Dhanishta Pada 3-4 through Revati)
+  const isPanchakaActive = moonRashi.index === 10 || moonRashi.index === 11;
+  let panchakaStatus: PanchakaStatus;
+  if (!isPanchakaActive) {
+    panchakaStatus = {
+      isActive: false,
+      name: "Panchaka-Rahita (Free from Panchaka)",
+      hindiName: "पञ्चक-रहित (शुभ)",
+      severity: "Shubha (Free)",
+      guidance: "Moon is outside the 5 Dhanishta-Revati Panchaka constellations. All woodwork, roof-laying, south-facing travel, and domestic purchases are unrestricted.",
+    };
+  } else {
+    const panchakaByDay: Record<number, { name: string; hindi: string; sev: PanchakaStatus["severity"]; guide: string }> = {
+      0: { name: "Roga Panchaka", hindi: "रोग पञ्चक (रविवार)", sev: "Caution (Panchaka Active)", guide: "Sunday Panchaka: take care of physical vitality and avoid initiating high-risk medical or roof-construction tasks." },
+      1: { name: "Raja Panchaka", hindi: "राज पञ्चक (सोमवार)", sev: "Madhyama (Mild)", guide: "Monday Panchaka: auspicious for government, administrative, and property work; observe standard Panchaka precautions for woodwork/South travel." },
+      2: { name: "Agni Panchaka", hindi: "अग्नि पञ्चक (मंगलवार)", sev: "Caution (Panchaka Active)", guide: "Tuesday Panchaka: auspicious for court/machinery tasks, but strictly avoid fire hazards, electrical/furnace construction, and roof work." },
+      3: { name: "Sadharana Panchaka", hindi: "दोषमुक्त साधारण पञ्चक (बुधवार)", sev: "Madhyama (Mild)", guide: "Wednesday Panchaka is mild and free from severe malefic sting; only avoid traditional 5-fold prohibited acts (wood storage, South travel, bed weaving)." },
+      4: { name: "Guru Panchaka", hindi: "दोषमुक्त गुरु पञ्चक (गुरुवार)", sev: "Madhyama (Mild)", guide: "Thursday Panchaka is benign for general auspicious works; observe caution only for roof-casting and Southward journeys." },
+      5: { name: "Chora Panchaka", hindi: "चोर पञ्चक (शुक्रवार)", sev: "Caution (Panchaka Active)", guide: "Friday Panchaka: guard financial valuables, avoid risky nocturnal travel, and postpone major commercial shipments." },
+      6: { name: "Mrityu Panchaka", hindi: "मृत्यु पञ्चक (शनिवार)", sev: "Caution (Panchaka Active)", guide: "Saturday Panchaka carries 5-fold friction: strictly avoid hazardous operations, litigation starts, roof-casting, and South travel." },
+    };
+    const pm = panchakaByDay[dayOfWeek] || panchakaByDay[3];
+    panchakaStatus = {
+      isActive: true,
+      name: pm.name,
+      hindiName: pm.hindi,
+      severity: pm.sev,
+      guidance: pm.guide,
+    };
+  }
+
+  // 8F. Classical Agnivasa (Homa Sanction) & Shivavasa (Rudrabhisheka Sanction)
+  // Agnivasa: (Shukla/Krishna Tithi 1..15 + Vara 1..7 + 1) % 4 -> 0 or 3 = Prithvi (Shubha), 1 = Akasha, 2 = Patala
+  const agniRem = (tithiNum + (dayOfWeek + 1) + 1) % 4;
+  const agnivasa: VasaSanctionStatus["agnivasa"] =
+    agniRem === 0 || agniRem === 3
+      ? {
+          residence: "Prithvi (Earth)",
+          hindiResidence: "पृथ्वी लोक में अग्निवास (शुभ)",
+          isHomaSanctioned: true,
+          verdict: "Sanctioned (शुभ) — Agni resides on Prithvi Loka; Homa, Yajna, and Agnihotra rituals grant full auspicious fruition today.",
+        }
+      : agniRem === 1
+      ? {
+          residence: "Akasha (Sky)",
+          hindiResidence: "आकाश लोक में अग्निवास (अशुभ)",
+          isHomaSanctioned: false,
+          verdict: "Contraindicated — Agni resides in Akasha Loka; postpone Kamya Homa/Yajna (Nitya/daily worship remains permitted).",
+        }
+      : {
+          residence: "Patala (Netherworld)",
+          hindiResidence: "पाताल लोक में अग्निवास (अशुभ)",
+          isHomaSanctioned: false,
+          verdict: "Contraindicated — Agni resides in Patala Loka; postpone Kamya fire sacrifices today.",
+        };
+
+  // Shivavasa: ((Tithi 1..30) * 2 + 5) % 7
+  const tithi1to30 = tithiIdx + 1;
+  const shivaRem = (tithi1to30 * 2 + 5) % 7;
+  const shivaMap: Record<number, { res: string; hindi: string; ok: boolean; verdict: string }> = {
+    1: { res: "Kailasha (Mount Kailash)", hindi: "कैलाश पर शिववास (परम शुभ)", ok: true, verdict: "Sanctioned (सुख-समृद्धिदायक) — Lord Shiva resides on Mount Kailash; Rudrabhisheka grants joy and prosperity." },
+    2: { res: "Gauri-Sannidhana (With Maa Gauri)", hindi: "माँ गौरी के सन्निधि में (शुभ)", ok: true, verdict: "Sanctioned (मंगलकारी) — Lord Shiva is seated with Goddess Gauri; Rudrabhisheka bestows marital harmony and fortune." },
+    3: { res: "Vrishabha-Arudha (Mounted on Nandi)", hindi: "वृषभ (नन्दी) पर सवार (अष्टसिद्धि)", ok: true, verdict: "Sanctioned (अभीष्ट सिद्धिदायक) — Lord Shiva is mounted on Nandi; Rudrabhisheka fulfills desired objectives." },
+    4: { res: "Sabha (In Royal Assembly)", hindi: "सभा में शिववास (मध्यम/सावधानी)", ok: false, verdict: "Caution for Kamya Abhisheka — Shiva is in Sabha; Nitya Shiva Puja and Pradosha/Shravana worship remain always auspicious." },
+    5: { res: "Bhojana (Taking Sustenance)", hindi: "भोजन में शिववास (वर्जित)", ok: false, verdict: "Postpone Kamya Rudrabhisheka (Nitya/Shivalinga archana in temples is exempt from Shivavasa)." },
+    6: { res: "Krida (Divine Sport)", hindi: "क्रीड़ा में शिववास (वर्जित)", ok: false, verdict: "Postpone Kamya Rudrabhisheka today; perform mental mantra japa ('Om Namah Shivaya') instead." },
+    0: { res: "Smashana (Cremation Ground)", hindi: "श्मशान में शिववास (काम्य अभिषेक वर्जित)", ok: false, verdict: "Postpone household Kamya Rudrabhisheka; महामृत्युञ्जय (Maha Mrityunjaya) Japa and temple darshan remain beneficial." },
+  };
+  const sm = shivaMap[shivaRem] || shivaMap[1];
+  const vasaSanctions: VasaSanctionStatus = {
+    agnivasa,
+    shivavasa: {
+      residence: sm.res,
+      hindiResidence: sm.hindi,
+      isRudrabhishekaSanctioned: sm.ok,
+      verdict: sm.verdict,
+    },
   };
 
   // 9. Disha Shool & Chandra Vaas
   const chandraVaasDirections: Record<number, string> = {
-    0: "East (पूर्व)", // Aries
-    4: "East (पूर्व)", // Leo
-    8: "East (पूर्व)", // Sag
-    1: "South (दक्षिण)", // Taurus
-    5: "South (दक्षिण)", // Virgo
-    9: "South (दक्षिण)", // Cap
-    2: "West (पश्चिम)", // Gemini
-    6: "West (पश्चिम)", // Libra
-    10: "West (पश्चिम)", // Aquarius
-    3: "North (उत्तर)", // Cancer
-    7: "North (उत्तर)", // Scorpio
-    11: "North (उत्तर)", // Pisces
+    0: "East (पूर्व)",
+    4: "East (पूर्व)",
+    8: "East (पूर्व)",
+    1: "South (दक्षिण)",
+    5: "South (दक्षिण)",
+    9: "South (दक्षिण)",
+    2: "West (पश्चिम)",
+    6: "West (पश्चिम)",
+    10: "West (पश्चिम)",
+    3: "North (उत्तर)",
+    7: "North (उत्तर)",
+    11: "North (उत्तर)",
   };
 
   const dishaShool: DishaShoolDetail = {
     prohibitedDirection: varaInfo.prohibitedDirection,
-    reason: `Classical Nadi & Samhita principle: Travel towards ${varaInfo.prohibitedDirection} is strictly contraindicated on ${varaInfo.hindiName}.`,
+    reason: `Classical Samhita principle: Travel towards ${varaInfo.prohibitedDirection} is contraindicated on ${varaInfo.hindiName}.`,
     parihara: varaInfo.exitRemedy,
     chandraVaas: chandraVaasDirections[moonRashi.index] || "East (पूर्व)",
     chandraRashi: `${moonRashi.englishName} (${moonRashi.sanskritName})`,
@@ -788,8 +1407,8 @@ export function calculateSamirTripathiPanchang(
       type: "Auspicious",
       startTime: abhijitStart,
       endTime: abhijitEnd,
-      startFormatted: formatTime12h(abhijitStart),
-      endFormatted: formatTime12h(abhijitEnd),
+      startFormatted: fmtTime(abhijitStart),
+      endFormatted: fmtTime(abhijitEnd),
       durationFormatted: `${Math.round(muhurtaMs / 60000)} mins`,
       isActiveNow: now >= abhijitStart && now <= abhijitEnd,
       quality: "Amrit (सर्वकार्य सिद्धिदायक)",
@@ -803,8 +1422,8 @@ export function calculateSamirTripathiPanchang(
       type: "Inauspicious",
       startTime: abhijitStart,
       endTime: abhijitEnd,
-      startFormatted: formatTime12h(abhijitStart),
-      endFormatted: formatTime12h(abhijitEnd),
+      startFormatted: fmtTime(abhijitStart),
+      endFormatted: fmtTime(abhijitEnd),
       durationFormatted: `${Math.round(muhurtaMs / 60000)} mins`,
       isActiveNow: now >= abhijitStart && now <= abhijitEnd,
       quality: "Varjya (निषेध)",
@@ -822,8 +1441,8 @@ export function calculateSamirTripathiPanchang(
     type: "Auspicious",
     startTime: brahmaStart,
     endTime: brahmaEnd,
-    startFormatted: formatTime12h(brahmaStart),
-    endFormatted: formatTime12h(brahmaEnd),
+    startFormatted: fmtTime(brahmaStart),
+    endFormatted: fmtTime(brahmaEnd),
     durationFormatted: "48 mins",
     isActiveNow: now >= brahmaStart && now <= brahmaEnd,
     quality: "Divya (दिव्य साधना काल)",
@@ -840,8 +1459,8 @@ export function calculateSamirTripathiPanchang(
     type: "Auspicious",
     startTime: vijayaStart,
     endTime: vijayaEnd,
-    startFormatted: formatTime12h(vijayaStart),
-    endFormatted: formatTime12h(vijayaEnd),
+    startFormatted: fmtTime(vijayaStart),
+    endFormatted: fmtTime(vijayaEnd),
     durationFormatted: `${Math.round(muhurtaMs / 60000)} mins`,
     isActiveNow: now >= vijayaStart && now <= vijayaEnd,
     quality: "Vijaya (विजय सिद्धि)",
@@ -858,8 +1477,8 @@ export function calculateSamirTripathiPanchang(
     type: "Auspicious",
     startTime: godhuliStart,
     endTime: godhuliEnd,
-    startFormatted: formatTime12h(godhuliStart),
-    endFormatted: formatTime12h(godhuliEnd),
+    startFormatted: fmtTime(godhuliStart),
+    endFormatted: fmtTime(godhuliEnd),
     durationFormatted: "24 mins",
     isActiveNow: now >= godhuliStart && now <= godhuliEnd,
     quality: "Shubha (शुभ काल)",
@@ -877,8 +1496,8 @@ export function calculateSamirTripathiPanchang(
     type: "Auspicious",
     startTime: amritStart,
     endTime: amritEnd,
-    startFormatted: formatTime12h(amritStart),
-    endFormatted: formatTime12h(amritEnd),
+    startFormatted: fmtTime(amritStart),
+    endFormatted: fmtTime(amritEnd),
     durationFormatted: "90 mins",
     isActiveNow: now >= amritStart && now <= amritEnd,
     quality: "Amrit (अमृत फल)",
@@ -896,8 +1515,8 @@ export function calculateSamirTripathiPanchang(
     type: "Auspicious",
     startTime: nishitaStart,
     endTime: nishitaEnd,
-    startFormatted: formatTime12h(nishitaStart),
-    endFormatted: formatTime12h(nishitaEnd),
+    startFormatted: fmtTime(nishitaStart),
+    endFormatted: fmtTime(nishitaEnd),
     durationFormatted: `${Math.round(nightMuhurtaMs / 60000)} mins`,
     isActiveNow: now >= nishitaStart && now <= nishitaEnd,
     quality: "Sadhana (तांत्रिक व शिव साधना)",
@@ -905,15 +1524,14 @@ export function calculateSamirTripathiPanchang(
   });
 
   // --- Inauspicious Kaalas ---
-  // A. Rahu Kaalam (1/8th day segment per weekday)
   const rahuKaalOffsets: Record<number, number> = {
-    0: 7, // Sun: 8th segment
-    1: 1, // Mon: 2nd segment
-    2: 6, // Tue: 7th segment
-    3: 4, // Wed: 5th segment
-    4: 5, // Thu: 6th segment
-    5: 3, // Fri: 4th segment
-    6: 2, // Sat: 3rd segment
+    0: 7,
+    1: 1,
+    2: 6,
+    3: 4,
+    4: 5,
+    5: 3,
+    6: 2,
   };
   const dayOctantMs = dayDurationMs / 8;
   const rahuOffset = rahuKaalOffsets[dayOfWeek];
@@ -927,8 +1545,8 @@ export function calculateSamirTripathiPanchang(
     type: "Inauspicious",
     startTime: rahuStart,
     endTime: rahuEnd,
-    startFormatted: formatTime12h(rahuStart),
-    endFormatted: formatTime12h(rahuEnd),
+    startFormatted: fmtTime(rahuStart),
+    endFormatted: fmtTime(rahuEnd),
     durationFormatted: `${Math.round(dayOctantMs / 60000)} mins`,
     isActiveNow: now >= rahuStart && now <= rahuEnd,
     quality: "Ashubha (पूर्णतः त्याज्य)",
@@ -938,13 +1556,13 @@ export function calculateSamirTripathiPanchang(
 
   // B. Yamagandam
   const yamaOffsets: Record<number, number> = {
-    0: 4, // Sun
-    1: 3, // Mon
-    2: 2, // Tue
-    3: 1, // Wed
-    4: 0, // Thu
-    5: 6, // Fri
-    6: 5, // Sat
+    0: 4,
+    1: 3,
+    2: 2,
+    3: 1,
+    4: 0,
+    5: 6,
+    6: 5,
   };
   const yamaOffset = yamaOffsets[dayOfWeek];
   const yamaStart = new Date(sunrise.getTime() + yamaOffset * dayOctantMs);
@@ -957,8 +1575,8 @@ export function calculateSamirTripathiPanchang(
     type: "Inauspicious",
     startTime: yamaStart,
     endTime: yamaEnd,
-    startFormatted: formatTime12h(yamaStart),
-    endFormatted: formatTime12h(yamaEnd),
+    startFormatted: fmtTime(yamaStart),
+    endFormatted: fmtTime(yamaEnd),
     durationFormatted: `${Math.round(dayOctantMs / 60000)} mins`,
     isActiveNow: now >= yamaStart && now <= yamaEnd,
     quality: "Ashubha (यम का प्रभाव)",
@@ -967,13 +1585,13 @@ export function calculateSamirTripathiPanchang(
 
   // C. Gulika Kaalam
   const gulikaOffsets: Record<number, number> = {
-    0: 6, // Sun
-    1: 5, // Mon
-    2: 4, // Tue
-    3: 3, // Wed
-    4: 2, // Thu
-    5: 1, // Fri
-    6: 0, // Sat
+    0: 6,
+    1: 5,
+    2: 4,
+    3: 3,
+    4: 2,
+    5: 1,
+    6: 0,
   };
   const gulikaOffset = gulikaOffsets[dayOfWeek];
   const gulikaStart = new Date(sunrise.getTime() + gulikaOffset * dayOctantMs);
@@ -986,8 +1604,8 @@ export function calculateSamirTripathiPanchang(
     type: "Inauspicious",
     startTime: gulikaStart,
     endTime: gulikaEnd,
-    startFormatted: formatTime12h(gulikaStart),
-    endFormatted: formatTime12h(gulikaEnd),
+    startFormatted: fmtTime(gulikaStart),
+    endFormatted: fmtTime(gulikaEnd),
     durationFormatted: `${Math.round(dayOctantMs / 60000)} mins`,
     isActiveNow: now >= gulikaStart && now <= gulikaEnd,
     quality: "Ashubha (मन्दपुत्र)",
@@ -1004,8 +1622,8 @@ export function calculateSamirTripathiPanchang(
     type: "Inauspicious",
     startTime: durMuhurtam1,
     endTime: durMuhurtam1End,
-    startFormatted: formatTime12h(durMuhurtam1),
-    endFormatted: formatTime12h(durMuhurtam1End),
+    startFormatted: fmtTime(durMuhurtam1),
+    endFormatted: fmtTime(durMuhurtam1End),
     durationFormatted: `${Math.round(muhurtaMs / 60000)} mins`,
     isActiveNow: now >= durMuhurtam1 && now <= durMuhurtam1End,
     quality: "Varjya (त्याज्य)",
@@ -1064,7 +1682,7 @@ export function calculateSamirTripathiPanchang(
   if (isKshaya) shuddhi -= 10;
   shuddhi = Math.max(20, Math.min(100, shuddhi));
 
-  const summary = `आज ${varaDetail.hindiName} है। मास: ${lunarMonth.purnimantaMonth} (पूर्णिमांत) / ${lunarMonth.amantaMonth} (अमांत), ${lunarMonth.ayanam}, ${lunarMonth.ritu}। संवत्: विक्रम ${lunarMonth.vikramSamvat}। तिथि: ${tithiDetail.hindiName} (${tithiDetail.pakshaHindi}, ${tithiDetail.categoryHindi}), नक्षत्र: ${nakshatraDetail.hindiName} (पद ${nakshatraDetail.pada}), योग: ${yogaDetail.hindiName}, करण: ${karanaDetail.hindiName}। चन्द्रमा ${moonRashi.englishName} (${moonRashi.sanskritName}) राशि में स्थित हैं। आज का दिशाशूल: ${dishaShool.prohibitedDirection}। शुभ रंग: ${varaDetail.auspiciousColors.join(", ")}।`;
+  const summary = `आज ${varaDetail.hindiName} है। संवत्सर: ${lunarMonth.samvatsaraHindi} (विक्रम संवत् ${lunarMonth.vikramSamvat}, शक ${lunarMonth.shakaSamvat})। मास: ${lunarMonth.purnimantaMonth} (पूर्णिमांत) / ${lunarMonth.amantaMonth} (अमांत), ${lunarMonth.ayanam}, ${lunarMonth.ritu}। तिथि: ${tithiDetail.hindiName} (${tithiDetail.pakshaHindi}, ${tithiDetail.categoryHindi}), नक्षत्र: ${nakshatraDetail.hindiName} (पद ${nakshatraDetail.pada}), योग: ${yogaDetail.hindiName}, करण: ${karanaDetail.hindiName}। चन्द्रमा ${moonRashi.englishName} (${moonRashi.sanskritName}) राशि में स्थित हैं। आज का दिशाशूल: ${dishaShool.prohibitedDirection}। शुभ रंग: ${varaDetail.auspiciousColors.join(", ")}।`;
 
   return {
     evaluationDate: date,
@@ -1073,8 +1691,8 @@ export function calculateSamirTripathiPanchang(
     sunrise,
     sunset,
     nextSunrise,
-    sunriseFormatted: formatTime12h(sunrise),
-    sunsetFormatted: formatTime12h(sunset),
+    sunriseFormatted: fmtTime(sunrise),
+    sunsetFormatted: fmtTime(sunset),
     dayDurationFormatted: `${dayHours}h ${dayMins}m`,
     nightDurationFormatted: `${nightHours}h ${nightMins}m`,
     lunarMonth,
@@ -1083,6 +1701,13 @@ export function calculateSamirTripathiPanchang(
     nakshatra: nakshatraDetail,
     yoga: yogaDetail,
     karana: karanaDetail,
+    activeHora,
+    nextHora,
+    activeChoghadiya,
+    nextChoghadiya,
+    siddhiYogas,
+    panchakaStatus,
+    vasaSanctions,
     dishaShool,
     auspiciousColors: varaDetail.auspiciousColors,
     inauspiciousColors: varaDetail.inauspiciousColors,
@@ -1099,3 +1724,92 @@ export function calculateSamirTripathiPanchang(
     panchangaSummary: summary,
   };
 }
+
+const TARA_TABLE: Array<{
+  num: number;
+  name: string;
+  hindi: string;
+  lord: string;
+  strength: PersonalPanchangaAlignment["tarabala"]["strength"];
+  guidance: string;
+}> = [
+  { num: 1, name: "Janma", hindi: "जन्म तारा", lord: "Sun (सूर्य)", strength: "Madhyama", guidance: "1st Tara (Janma): Heightened self-awareness; avoid physical overexertion or hasty ego-driven risks (favorable for spiritual introspection)." },
+  { num: 2, name: "Sampat", hindi: "सम्पत् तारा", lord: "Mercury (बुध)", strength: "Ati-Shubha", guidance: "2nd Tara (Sampat): Supreme auspiciousness for wealth generation, commercial agreements, asset purchases, and career expansion." },
+  { num: 3, name: "Vipat", hindi: "विपत् तारा", lord: "Rahu (राहु)", strength: "Ashubha", guidance: "3rd Tara (Vipat): Caution against sudden obstacles or misunderstandings; postpone high-stakes speculative ventures and long journeys." },
+  { num: 4, name: "Kshema", hindi: "क्षेम तारा", lord: "Jupiter (बृहस्पति)", strength: "Ati-Shubha", guidance: "4th Tara (Kshema): Grants safety, protection, domestic harmony, healing, and steady long-term foundations." },
+  { num: 5, name: "Pratyak", hindi: "प्रत्यक् तारा", lord: "Ketu (केतु)", strength: "Ashubha", guidance: "5th Tara (Pratyak): Indicates temporary resistance or delays; focus on completing existing tasks rather than launching new ones." },
+  { num: 6, name: "Sadhana", hindi: "साधन तारा", lord: "Moon (चन्द्र)", strength: "Ati-Shubha", guidance: "6th Tara (Sadhana): Crown of execution — strenuous efforts bear fruit, goals are realized, and difficult negotiations succeed." },
+  { num: 7, name: "Naidhana (Vadha)", hindi: "नैधन (वध) तारा", lord: "Saturn (शनि)", strength: "Ashubha", guidance: "7th Tara (Naidhana): Strictly avoid initiating major new beginnings, surgeries, or risky travel; chant your Ishta mantra for protection." },
+  { num: 8, name: "Mitra", hindi: "मित्र तारा", lord: "Venus (शुक्र)", strength: "Shubha", guidance: "8th Tara (Mitra): Cooperative alliances, friendly support, diplomatic success, and harmonious partnerships." },
+  { num: 9, name: "Parama Mitra", hindi: "परम मित्र तारा", lord: "Mars (मंगल)", strength: "Ati-Shubha", guidance: "9th Tara (Parama Mitra): Supreme stellar blessing from high authorities, mentors, and allies for major undertakings." },
+];
+
+/**
+ * Computes Personalized Tarabala, Chandrabala, and Hora/Tithi Natal Harmony for the Native
+ */
+export function calculatePersonalPanchangaAlignment(
+  dailyPanchang: DailySamirTripathiPanchang,
+  natalEphem: EphemerisResult
+): PersonalPanchangaAlignment {
+  const natalMoon = natalEphem.planets.Moon;
+  const natalNakIdx = natalMoon?.nakshatra.index ?? 0;
+  const natalNakName = natalMoon?.nakshatra.sanskritName || "Ashwini";
+  const natalRashiIdx = natalMoon?.rashi.index ?? 0;
+  const natalRashiName = `${natalMoon?.rashi.englishName || "Aries"} (${natalMoon?.rashi.sanskritName || "Mesha"})`;
+
+  const todayNakIdx = dailyPanchang.nakshatra.index;
+  const countFromJanma = ((todayNakIdx - natalNakIdx + 27) % 27) + 1;
+  const taraNumber = ((countFromJanma - 1) % 9) + 1;
+  const paryaya = Math.ceil(countFromJanma / 9);
+  const taraMeta = TARA_TABLE[taraNumber - 1] || TARA_TABLE[0];
+
+  const cbEntry = dailyPanchang.chandraBalaList[natalRashiIdx] || dailyPanchang.chandraBalaList[0];
+  const isChandrashtama = cbEntry.houseFromMoon === 8;
+
+  const horaLordClean = dailyPanchang.activeHora.lord.split(" ")[0];
+  const tithiLordClean = dailyPanchang.tithi.tithiLord.split(" ")[0];
+  const horaPlanetBody = natalEphem.planets[horaLordClean as keyof typeof natalEphem.planets];
+  const tithiPlanetBody = natalEphem.planets[tithiLordClean as keyof typeof natalEphem.planets];
+  const natalHouseOfHoraLord = horaPlanetBody?.house || 1;
+  const natalHouseOfTithiLord = tithiPlanetBody?.house || 1;
+
+  const isHoraHouseGood = [1, 2, 3, 4, 5, 7, 9, 10, 11].includes(natalHouseOfHoraLord);
+  const isTithiHouseGood = [1, 2, 3, 4, 5, 7, 9, 10, 11].includes(natalHouseOfTithiLord);
+  const verdict =
+    isHoraHouseGood && isTithiHouseGood
+      ? `Both the running Hora Lord (${horaLordClean} in natal H${natalHouseOfHoraLord}) and Today's Tithi Lord (${tithiLordClean} in natal H${natalHouseOfTithiLord}) occupy auspicious natal houses — strong personal synergy right now.`
+      : isHoraHouseGood
+      ? `Running Hora Lord (${horaLordClean} in natal H${natalHouseOfHoraLord}) is well-placed in your birth chart, supporting immediate actions during this hour.`
+      : `Running Hora Lord (${horaLordClean}) sits in dusthana House ${natalHouseOfHoraLord} of your natal chart; prefer waiting for the next Hora (${dailyPanchang.nextHora.lord}) for major personal commitments.`;
+
+  return {
+    natalNakshatra: natalNakName,
+    natalRashi: natalRashiName,
+    todayNakshatra: dailyPanchang.nakshatra.sanskritName,
+    todayRashi: `${dailyPanchang.chandraRashi} (${dailyPanchang.chandraRashiHindi})`,
+    tarabala: {
+      countFromJanma,
+      taraNumber,
+      paryaya,
+      taraName: taraMeta.name,
+      taraHindi: taraMeta.hindi,
+      rulingPlanet: taraMeta.lord,
+      strength: taraMeta.strength,
+      guidance: taraMeta.guidance,
+    },
+    chandrabala: {
+      houseFromJanmaRashi: cbEntry.houseFromMoon,
+      strength: cbEntry.strength,
+      isChandrashtama,
+      guidance: cbEntry.guidance,
+    },
+    horaHarmony: {
+      activeHoraLord: horaLordClean,
+      natalHouseOfHoraLord,
+      tithiLord: tithiLordClean,
+      natalHouseOfTithiLord,
+      verdict,
+    },
+  };
+}
+

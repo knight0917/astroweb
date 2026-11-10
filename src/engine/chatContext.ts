@@ -78,7 +78,7 @@ import { calculateMatchmaking } from "./matchmaking";
 import { calculateLappingCompatibility } from "./lappingCompatibility";
 import { generateDrSamirTripathiSummary } from "./samirTripathiSuite";
 import { generateRashiTulyaNavamshaSummary } from "./rashiTulyaNavamsha";
-import { calculateSamirTripathiPanchang } from "./samirTripathiPanchang";
+import { calculateSamirTripathiPanchang, calculatePersonalPanchangaAlignment } from "./samirTripathiPanchang";
 import { generateNakshatraActivationSummary } from "./nakshatraActivation";
 import { calculateVedicEphemeris } from "./ephemeris";
 import { calculatePredictiveDecisionGates } from "./predictiveDecisionGates";
@@ -1917,27 +1917,38 @@ export function buildAstroDossier(
   } catch (_) {}
   }
 
-  // 70. Dr. Samir Tripathi Classical Daily Vedic Panchanga & Astro Guidance Dossier
+  // 70. Classical Daily Vedic Panchanga & Astro Guidance Dossier
   let samirPanchangSummary = "";
   if (need("panchang_muhurta")) {
   try {
     const panchangRes = calculateSamirTripathiPanchang(evaluationDate, transitEphemeris.location || location, natalEphemeris.ayanamshaType);
+    const personalPanchang = calculatePersonalPanchangaAlignment(panchangRes, natalEphemeris);
     const cbStrong = panchangRes.chandraBalaList.filter((cb) => cb.strength.includes("Shubha")).map((cb) => cb.rashiName).join(", ");
     const cbCaution = panchangRes.chandraBalaList.filter((cb) => cb.strength.includes("Ashubha")).map((cb) => cb.rashiName).join(", ");
 
     samirPanchangSummary = [
+      `- **Samvatsara & Almanac:** **${panchangRes.lunarMonth.samvatsaraName}** (${panchangRes.lunarMonth.samvatsaraHindi}, #${panchangRes.lunarMonth.samvatsaraNumber}/60) • Vikram Samvat ${panchangRes.lunarMonth.vikramSamvat} • Shaka ${panchangRes.lunarMonth.shakaSamvat} • ${panchangRes.lunarMonth.ayanam} • ${panchangRes.lunarMonth.rituHindi} • Masa: ${panchangRes.lunarMonth.purnimantaMonth} (Purnimanta) / ${panchangRes.lunarMonth.amantaMonth} (Amanta)`,
       `- **Today's 5 Angas (पञ्चाङ्ग):**`,
-      `  - **Tithi:** **${panchangRes.tithi.name} (${panchangRes.tithi.pakshaHindi}, ${panchangRes.tithi.categoryHindi})** • Ends: **${panchangRes.tithi.endTimeFormatted}** (${panchangRes.tithi.remainingHoursFormatted}) • Deity: ${panchangRes.tithi.deity} • Tatva: ${panchangRes.tithi.tatvaHindi}`,
+      `  - **Tithi:** **${panchangRes.tithi.name} (${panchangRes.tithi.pakshaHindi}, ${panchangRes.tithi.categoryHindi})** • Ends: **${panchangRes.tithi.endTimeFormatted}** (${panchangRes.tithi.remainingHoursFormatted}) • Tithi Lord: **${panchangRes.tithi.tithiLord}** • Deity: ${panchangRes.tithi.deity} • Tatva: ${panchangRes.tithi.tatvaHindi} • Dagdha Rashis: ${panchangRes.tithi.dagdhaRashis.join(", ") || "None"}`,
       `  - **Vara:** **${panchangRes.vara.hindiName}** (${panchangRes.vara.dayName}) • Ruling Lord: **${panchangRes.vara.rulingPlanet}** (${panchangRes.vara.planetHindi}) • Deity: ${panchangRes.vara.deity}`,
-      `  - **Nakshatra:** **${panchangRes.nakshatra.name} (Pada ${panchangRes.nakshatra.pada}, ${panchangRes.nakshatra.sanskritName})** • Ends: **${panchangRes.nakshatra.endTimeFormatted}** • Lord: **${panchangRes.nakshatra.lord}** • Gana: ${panchangRes.nakshatra.gana} • Nature: **${panchangRes.nakshatra.natureHindi}**`,
-      `  - **Yoga:** **${panchangRes.yoga.name}** (${panchangRes.yoga.nature}) • Ends: ${panchangRes.yoga.endTimeFormatted} • ${panchangRes.yoga.description}`,
-      `  - **Karana:** **${panchangRes.karana.name}** (${panchangRes.karana.type}) • Ends: ${panchangRes.karana.endTimeFormatted}${panchangRes.karana.isBhadra ? ` • ⚠️ **${panchangRes.karana.bhadraVaasHindi}** (${panchangRes.karana.bhadraImpact})` : ""}`,
+      `  - **Nakshatra:** **${panchangRes.nakshatra.name} (Pada ${panchangRes.nakshatra.pada}, ${panchangRes.nakshatra.sanskritName})** • Ends: **${panchangRes.nakshatra.endTimeFormatted}** (${panchangRes.nakshatra.remainingHoursFormatted}) • Lord: **${panchangRes.nakshatra.lord}** • Gana: ${panchangRes.nakshatra.gana} • Nature: **${panchangRes.nakshatra.natureHindi}**`,
+      `  - **Yoga:** **${panchangRes.yoga.name}** (${panchangRes.yoga.nature}) • Ends: ${panchangRes.yoga.endTimeFormatted} • Shunned: ${panchangRes.yoga.shunnedPortion} • Yogi Planet: **${panchangRes.yoga.yogiPlanet}** (${panchangRes.yoga.yogiNakshatra}) • Avayogi: **${panchangRes.yoga.avayogiPlanet}** (${panchangRes.yoga.avayogiNakshatra})`,
+      `  - **Karana:** **${panchangRes.karana.name}** (${panchangRes.karana.type}, Lord: ${panchangRes.karana.karanaLord}) • Ends: ${panchangRes.karana.endTimeFormatted}${panchangRes.karana.isBhadra ? ` • ⚠️ **${panchangRes.karana.bhadraVaasHindi}** (${panchangRes.karana.bhadraImpact})` : ""}`,
+      `- **🪐 Active Planetary Hora & Choghadiya:**`,
+      `  - Active Hora (#${panchangRes.activeHora.horaNumber}/24): **${panchangRes.activeHora.lord} (${panchangRes.activeHora.lordHindi})** [${panchangRes.activeHora.startFormatted} – ${panchangRes.activeHora.endFormatted}] • Next Hora: **${panchangRes.nextHora.lord}**`,
+      `  - Active Choghadiya: **${panchangRes.activeChoghadiya.name} (${panchangRes.activeChoghadiya.hindiName})** [${panchangRes.activeChoghadiya.quality}, ${panchangRes.activeChoghadiya.startFormatted} – ${panchangRes.activeChoghadiya.endFormatted}]`,
+      `  - Special Siddhi Yogas: ${panchangRes.siddhiYogas.map((y) => `${y.name} (${y.hindiName})`).join(", ")}`,
+      `  - Panchaka Status: **${panchangRes.panchakaStatus.name}** (${panchangRes.panchakaStatus.hindiName})`,
+      `  - Agnivasa: **${panchangRes.vasaSanctions.agnivasa.hindiResidence}** • Shivavasa: **${panchangRes.vasaSanctions.shivavasa.hindiResidence}**`,
+      `- **🎯 Native's Personal Tarabala & Chandrabala Today:**`,
+      `  - Tarabala (${personalPanchang.natalNakshatra} -> ${personalPanchang.todayNakshatra}): **#${personalPanchang.tarabala.taraNumber} ${personalPanchang.tarabala.taraName} (${personalPanchang.tarabala.taraHindi})** [${personalPanchang.tarabala.strength}] — ${personalPanchang.tarabala.guidance}`,
+      `  - Chandrabala (${personalPanchang.natalRashi} -> ${personalPanchang.todayRashi}): **House ${personalPanchang.chandrabala.houseFromJanmaRashi} from Janma Rashi** [${personalPanchang.chandrabala.strength}]`,
       `- **👕 Auspicious Colors of the Day (आज का शुभ रंग):** **${panchangRes.auspiciousColors.join(", ")}** (Avoid: ${panchangRes.inauspiciousColors.join(", ")})`,
       `- **🧭 Disha Shool & Exit Remedy (आज का दिशाशूल एवं घर से निकलने से पूर्व उपाय):**`,
       `  - Prohibited Direction: **${panchangRes.dishaShool.prohibitedDirection}** • Chandra Vaas: **${panchangRes.dishaShool.chandraVaas}** (${panchangRes.chandraRashi})`,
       `  - *Parihara / Upaya:* **${panchangRes.exitRemedy}**`,
       `- **🕉️ Prescribed Mantra of the Day & Sadhana:** **${panchangRes.dayMantra}**`,
-      `- **🎁 Recommended Daily Charity (दान):** ${panchangRes.recommendedCharity}`,
+      `  - **🎁 Recommended Daily Charity (दान):** ${panchangRes.recommendedCharity}`,
       `- **⏱️ Key Muhurta Timelines at ${panchangRes.cityName}:**`,
       `  - Abhijit Muhurta: ${panchangRes.auspiciousMuhurtas.find((m) => m.name === "Abhijit Muhurta") ? `**${panchangRes.auspiciousMuhurtas.find((m) => m.name === "Abhijit Muhurta")?.startFormatted} – ${panchangRes.auspiciousMuhurtas.find((m) => m.name === "Abhijit Muhurta")?.endFormatted}**` : "Prohibited Today (Wednesday)"}`,
       `  - Rahu Kaalam: **${panchangRes.inauspiciousMuhurtas.find((m) => m.name === "Rahu Kaalam")?.startFormatted} – ${panchangRes.inauspiciousMuhurtas.find((m) => m.name === "Rahu Kaalam")?.endFormatted}** (Avoid major agreements/starts)`,

@@ -197,9 +197,9 @@ export default function MuhurtaView() {
             <div className="flex items-center gap-2">
               <span className="text-base">☸️</span>
               <div>
-                <span className="text-slate-400 font-bold block">Samvat (संवत्):</span>
+                <span className="text-slate-400 font-bold block">Samvatsara & Samvat (संवत्सर):</span>
                 <span className="font-extrabold text-slate-200">
-                  विक्रम {panchangData.lunarMonth.vikramSamvat} | शक {panchangData.lunarMonth.shakaSamvat}
+                  {panchangData.lunarMonth.samvatsaraName} ({panchangData.lunarMonth.samvatsaraHindi}) • विक्रम {panchangData.lunarMonth.vikramSamvat} | शक {panchangData.lunarMonth.shakaSamvat}
                 </span>
               </div>
             </div>
@@ -292,8 +292,16 @@ export default function MuhurtaView() {
                   <span className="font-mono">{panchangData.tithi.remainingHoursFormatted}</span>
                 </div>
                 <div className="flex justify-between text-slate-400 text-[11px]">
+                  <span>Tithi Lord (तिथि स्वामी):</span>
+                  <span className="font-bold text-amber-300">{panchangData.tithi.tithiLord}</span>
+                </div>
+                <div className="flex justify-between text-slate-400 text-[11px]">
                   <span>Deity (देवता):</span>
                   <span className="font-bold text-slate-300">{panchangData.tithi.deity}</span>
+                </div>
+                <div className="flex justify-between text-slate-400 text-[11px]">
+                  <span>Dagdha Rashis:</span>
+                  <span className="font-bold text-rose-300">{panchangData.tithi.dagdhaRashis.join(", ") || "None"}</span>
                 </div>
               </div>
 
@@ -482,6 +490,57 @@ export default function MuhurtaView() {
                 <p className="text-slate-300 text-[11px] leading-relaxed font-serif">
                   {panchangData.exitRemedy}
                 </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ACTIVE HORA, CHOGHADIYA, SIDDHI YOGAS, PANCHAKA & VASA SANCTIONS */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="glass-panel p-4 rounded-3xl border border-cyan-500/30 bg-slate-950/85 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-cyan-400">🪐 ACTIVE HORA (#{panchangData.activeHora.horaNumber}/24)</span>
+                <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/70 px-2 py-0.5 rounded-full border border-cyan-500/40">
+                  {panchangData.activeHora.startFormatted} – {panchangData.activeHora.endFormatted}
+                </span>
+              </div>
+              <div className="text-base font-black text-slate-100">
+                {panchangData.activeHora.lord} ({panchangData.activeHora.lordHindi})
+              </div>
+              <p className="text-[11px] text-slate-300">{panchangData.activeHora.favorableActivities}</p>
+              <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-800">
+                Next Hora: <span className="text-cyan-300 font-bold">{panchangData.nextHora.lord}</span> ({panchangData.nextHora.startFormatted} – {panchangData.nextHora.endFormatted})
+              </div>
+            </div>
+
+            <div className="glass-panel p-4 rounded-3xl border border-emerald-500/30 bg-slate-950/85 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-400">⏳ ACTIVE CHOGHADIYA</span>
+                <span className="text-[10px] font-mono text-emerald-300 bg-emerald-950/70 px-2 py-0.5 rounded-full border border-emerald-500/40">
+                  {panchangData.activeChoghadiya.startFormatted} – {panchangData.activeChoghadiya.endFormatted}
+                </span>
+              </div>
+              <div className="text-base font-black text-slate-100">
+                {panchangData.activeChoghadiya.name} ({panchangData.activeChoghadiya.hindiName})
+              </div>
+              <p className="text-[11px] text-slate-300">{panchangData.activeChoghadiya.recommendation}</p>
+              <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-800">
+                Next: <span className="text-emerald-300 font-bold">{panchangData.nextChoghadiya.name}</span> ({panchangData.nextChoghadiya.startFormatted} – {panchangData.nextChoghadiya.endFormatted})
+              </div>
+            </div>
+
+            <div className="glass-panel p-4 rounded-3xl border border-amber-500/30 bg-slate-950/85 space-y-1.5 text-xs">
+              <span className="text-xs font-bold text-amber-400 block">🔱 SIDDHI YOGAS, PANCHAKA & VASA</span>
+              <div className="text-slate-200 font-semibold">
+                🌟 {panchangData.siddhiYogas.map((y) => y.name).join(" • ")}
+              </div>
+              <div className="text-[11px] text-slate-300">
+                🌌 <span className="font-bold text-amber-300">Panchaka:</span> {panchangData.panchakaStatus.hindiName}
+              </div>
+              <div className="text-[11px] text-slate-300">
+                🔥 <span className="font-bold text-orange-300">Agnivasa:</span> {panchangData.vasaSanctions.agnivasa.hindiResidence}
+              </div>
+              <div className="text-[11px] text-slate-300">
+                🔱 <span className="font-bold text-purple-300">Shivavasa:</span> {panchangData.vasaSanctions.shivavasa.hindiResidence}
               </div>
             </div>
           </div>

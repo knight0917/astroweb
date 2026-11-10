@@ -1947,3 +1947,28 @@
   - [x] Upgrade `arbitratePredictiveQuery` (`src/engine/predictiveArbitrator.ts`) and `NeuroSymbolicArbitrationCard` (`src/components/AstroChatbot.tsx`) with `sixLevelTimingWindows` so every predictive question automatically resolves exact PD, Sookshma, Prana, and Deha trigger dates/hours/minutes.
   - [x] Inject complete 9-period schedules for PD, Sookshma, Prana, and Deha into `buildAstroDossier` (`src/engine/chatContext.ts`) and add `Rule 0AX` (6-Level Vimshottari Dasha Micro-Timing Protocol) in `src/engine/chatPrompt.ts`.
   - [x] Upgrade Chatbot Interceptor #4 and quick-action chips in `src/components/AstroChatbot.tsx` to support full 6-level schedule output and target-date (`YYYY-MM-DD`) Dasha lookup.
+
+---
+
+# Phase 70: Complete Classical Daily Panchanga, Hora, Choghadiya, Siddhi Yogas, Agnivasa/Shivavasa & Personalized Tarabala/Chandrabala
+
+## Status: Complete & Verified
+- **Trigger Keywords**: `astrological-calculation`, `mathematical-calculation`, `daily-panchanga`, `samvatsara`, `tithi-lord`, `planetary-hora`, `choghadiya`, `sarvartha-siddhi`, `amrita-siddhi`, `agnivasa`, `shivavasa`, `tarabala`, `chandrabala`
+- **Single Source of Truth**: Tracking the classical Panchanga and Muhurta book extraction (*Vedic Astrology: An Integrated Approach* by P.V.R. Narasimha Rao pp. 24–30 & 483–493, *Muhurta Chintamani*, *Brihat Samhita*, *Phaladeepika*, *Prasna Marga*) across `src/engine/samirTripathiPanchang.ts`, `src/components/AstroChatbot.tsx`, `src/components/MuhurtaView.tsx`, `src/engine/chatContext.ts`, and `tests/engine.test.mjs`.
+
+## Phases & Milestones
+
+- [x] **Phase 70.1: Classical Panchanga Engine Expansion (`src/engine/samirTripathiPanchang.ts`)**
+  - [x] Upgrade Tithi & Nakshatra end-time calculations to use exact binary astronomical root-finding (`calculateTithiEndTime`, `calculateNakshatraEndTime`) and timezone-aware `formatTime12h(d, tzOffsetHours)`.
+  - [x] Implement the 60-Year Jovian Samvatsara cycle (`samvatsaraName`, `samvatsaraHindi`, `samvatsaraNumber`), classical 8-planet Tithi Lords (`Sun..Rahu` cycle + `Purnima: Saturn`, `Amavasya: Rahu`), Tithi Dagdha Rashis, and classical *Phaladeepika* Panchanga Phala for all 5 limbs.
+  - [x] Implement daily Yogi / Sahayogi / Avayogi planets and classical *Muhurta Chintamani* shunned durations (*Tyajya Ghatis*) for malefic Nitya Yogas, plus Karana Planetary Lords.
+  - [x] Implement 24 Planetary Horas (`activeHora`, `nextHora`), 16 Daily Choghadiyas (`activeChoghadiya`, `nextChoghadiya`), Vara-Nakshatra Special Siddhi Yogas (*Amrita Siddhi*, *Sarvartha Siddhi*, *Guru/Ravi Pushya*, *Tripushkara*, *Dwipushkara*, *Ravi Yoga*), Dhanishta-Panchaka status (`panchakaStatus`), and Agnivasa & Shivavasa sanctions (`vasaSanctions`).
+  - [x] Implement `calculatePersonalPanchangaAlignment` for native-personalized **Tarabala** (1–9 Tara & Paryaya from Janma Nakshatra), **Chandrabala** (house from Janma Rashi & Chandrashtama check), and **Natal Hora/Tithi Lord Harmony**.
+- [x] **Phase 70.2: Chatbot `"today panchang"` & `"my panchang"` Upgrade + Arbitration Card Gating (`src/components/AstroChatbot.tsx`, `src/components/MuhurtaView.tsx`, `src/engine/chatContext.ts`)**
+  - [x] Unify Chatbot Interceptors `6B` and `12` so `"today panchang"` renders the complete 5-section classical Panchanga, Active Hora/Choghadiya, Siddhi Yogas, Agnivasa/Shivavasa, Muhurta windows, and the native's personal Tarabala/Chandrabala.
+  - [x] Upgrade Interceptor `6A` (`"my panchang"` / `"janma panchang"`) with complete birth Samvatsara, Tithi Lord, Dagdha Rashis, Vara Lord core desire, Yogi/Avayogi planets, and Karana Mars execution analysis.
+  - [x] Gate `arbitratePredictiveQuery` on instant answers in `handleSendMessage` so factual/almanac queries (`"today panchang"`, `"my panchang"`, `"what is my current dasha"`, etc.) do not attach an unrelated 10th-house Career 6-Gate Shastric Verdict card.
+  - [x] Surface Samvatsara, Tithi Lord, Dagdha Rashis, Active Hora, Active Choghadiya, Siddhi Yogas, Panchaka, and Agnivasa/Shivavasa in `src/components/MuhurtaView.tsx` and `src/engine/chatContext.ts`.
+- [x] **Phase 70.3: Automated Unit Tests & Quality Gates (`tests/engine.test.mjs`)**
+  - [x] Add Subtest 165 in `tests/engine.test.mjs` verifying all Phase 70 classical Panchanga calculations and personal Tarabala/Chandrabala alignment.
+

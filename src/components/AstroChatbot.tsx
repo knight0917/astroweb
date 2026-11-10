@@ -26,7 +26,8 @@ import {
 } from "../engine/btrEngine";
 import { evaluateRashiTulyaNavamsha } from "../engine/rashiTulyaNavamsha";
 import { calculateD1D9RootFruitProjections } from "../engine/rootFruitProjection";
-import { calculateSamirTripathiPanchang } from "../engine/samirTripathiPanchang";
+import { calculateSamirTripathiPanchang, calculatePersonalPanchangaAlignment } from "../engine/samirTripathiPanchang";
+import { evaluateNatalPanchangaDeep } from "../engine/natalPanchangaDeep";
 import { evaluateNakshatraActivation } from "../engine/nakshatraActivation";
 import { analyzeNameVibrationalEnergy, evaluateChartNameCongruence } from "../engine/lunarAstroNameEnergy";
 import { calculatePlanetaryMaturationTimeline } from "../engine/planetaryAgeActivation";
@@ -1147,47 +1148,174 @@ ${deepDignities}
 *⚡ Instant Classical Computation (0ms)*`;
   }
 
-  // 6A. Janma Panchanga (Native's Birth Panchang)
+  // 6A. Janma Panchanga (Native's Birth Panchang — Complete Classical Analysis)
   if (
     /^(what is my panchang|my panchang|birth panchang|janma panchang|read my panchang|tell me my panchang|what was the panchang when i was born|mera panchang|apna panchang|my birth panchang|janma tithi|my tithi|my vara|my yoga|my karana)\??$/i.test(q) ||
     (q.includes("panchang") && (q.includes("my") || q.includes("birth") || q.includes("janma") || q.includes("born") || q.includes("mera") || q.includes("apna") || q.includes("kundli") || q.includes("chart"))) ||
     (q.includes("tithi") && (q.includes("my") || q.includes("birth") || q.includes("janma") || q.includes("born") || q.includes("mera")))
   ) {
-    const p = natalEphem.panchanga;
     const loc = natalEphem.location;
     const bDate = new Date(natalEphem.utcDate);
-    return `### 📜 **Your Classical Janma Panchanga (जन्म पञ्चाङ्ग — Birth Celestial Limbs):**
-- 📍 **Birth Location:** ${loc.cityName || "Birth City"}, ${loc.country || ""}
-- 📅 **Date of Birth:** ${bDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-- ⏰ **Birth Time (UTC):** ${bDate.toUTCString().slice(17, 22)} UTC (${natalEphem.ayanamshaType} Ayanamsha)
+    const janmaPanchang = calculateSamirTripathiPanchang(bDate, loc, natalEphem.ayanamshaType);
+    const deepNatal = evaluateNatalPanchangaDeep(natalEphem);
+    return `### 📜 **Your Complete Classical Janma Panchanga (जन्म पञ्चाङ्ग — Birth Celestial Limbs):**
+- 📍 **Birth Location:** ${loc.cityName || "Birth City"}${loc.country ? `, ${loc.country}` : ""} • 📅 **Date of Birth:** ${bDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+- 🌅 **Birth Sunrise & Sunset:** Sunrise: **${janmaPanchang.sunriseFormatted}** • Sunset: **${janmaPanchang.sunsetFormatted}** • Dinamana: **${janmaPanchang.dayDurationFormatted}**
+- 🗓️ **Samvatsara & Masa:** **${janmaPanchang.lunarMonth.samvatsaraName}** (*${janmaPanchang.lunarMonth.samvatsaraHindi}*, #${janmaPanchang.lunarMonth.samvatsaraNumber}/60) • Vikram Samvat **${janmaPanchang.lunarMonth.vikramSamvat}** (Shaka **${janmaPanchang.lunarMonth.shakaSamvat}**) • **${janmaPanchang.lunarMonth.ayanam}** • **${janmaPanchang.lunarMonth.ritu}** • Masa: **${janmaPanchang.lunarMonth.purnimantaMonth}** (Purnimanta) / **${janmaPanchang.lunarMonth.amantaMonth}** (Amanta)
 
-#### 🕉️ **The 5 Sacred Birth Angas (जन्म पञ्चाङ्ग अङ्ग):**
-- **1. Janma Tithi (जन्म तिथि):** **${p.tithi.name} (${p.tithi.paksha} Paksha, Tithi #${p.tithi.index})**
-  - *Signification:* Governs emotional disposition, relationship capacity, and element (Jala/Water prana).
-- **2. Janma Vara (जन्म वार / Birth Weekday):** **${p.vara.name}** (Ruling Planet / Day Lord: **${p.vara.lord}**)
-  - *Signification:* Governs physical vitality, stamina, and longevity (Agni/Fire prana).
-- **3. Janma Nakshatra (जन्म नक्षत्र):** **${p.nakshatra.sanskritName} (Pada ${p.nakshatra.pada})** • Lord: **${p.nakshatra.lord}** • Deity: **${p.nakshatra.deity}**
-  - *Signification:* Governs mental constitution, karmic trajectory, and subconscious mind (Vayu/Air prana).
-- **4. Janma Nitya Yoga (जन्म नित्य योग):** **${p.yoga.name}** (Yoga #${p.yoga.index})
-  - *Signification:* Governs health, character alignment, and harmony of soul & body (Akasha/Ether prana).
-- **5. Janma Karana (जन्म करण):** **${p.karana.name}** (Karana #${p.karana.index})
-  - *Signification:* Governs professional success, material accomplishments, and actions (Prithvi/Earth prana).
-${p.masa ? `- **Janma Masa (वैदिक मास):** **${p.masa}**` : ""}
+#### 🕉️ **The 5 Sacred Birth Angas (पञ्चाङ्ग अङ्ग एवं शास्त्रीय फल):**
+- **1. Janma Tithi (जन्म तिथि — Jala Tatva | *तिथेः श्रियमाप्नोति*):** **${janmaPanchang.tithi.name}** (${janmaPanchang.tithi.pakshaHindi}, Tithi #${janmaPanchang.tithi.index + 1})
+  - *Category:* **${janmaPanchang.tithi.category}** (${janmaPanchang.tithi.categoryHindi}) • *Tithi Lord:* **${janmaPanchang.tithi.tithiLord}** • *Presiding Deity:* **${deepNatal.tithiDeity.presidingDeity}**
+  - *Dagdha Rashis (Burnt Signs at Birth):* **${deepNatal.dagdhaAnalysis.hasDagdhaSigns ? deepNatal.dagdhaAnalysis.burntSignNames.join(", ") : "None (Purnima/Amavasya Purity)"}**
+  - *Karmic Lesson & Mantra:* ${deepNatal.tithiDeity.karmicLesson} (*${deepNatal.tithiDeity.healingMantra}*)
+- **2. Janma Vara (जन्म वार — Agni Tatva | *वारादायुष्यवर्धनम्*):** **${janmaPanchang.vara.hindiName}** (${janmaPanchang.vara.dayName}) • *Vara Lord:* **${deepNatal.weekdayDesire.weekdayLord}** (Placed in House **${deepNatal.weekdayDesire.lordHouse}** in ${deepNatal.weekdayDesire.lordSign})
+  - *Lifelong Core Desire:* **${deepNatal.weekdayDesire.desireTheme}** — ${deepNatal.weekdayDesire.coreLifelongDesire}
+- **3. Janma Nakshatra (जन्म नक्षत्र — Vayu Tatva | *नक्षत्राद्धरते पापम्*):** **${janmaPanchang.nakshatra.name} (Pada ${janmaPanchang.nakshatra.pada})** • *Lord:* **${janmaPanchang.nakshatra.lord}** • *Deity:* **${janmaPanchang.nakshatra.deity}**
+  - *Nature (Kula):* **${janmaPanchang.nakshatra.nature}** (${janmaPanchang.nakshatra.natureHindi}) • *Gana:* **${janmaPanchang.nakshatra.gana}** • *Yoni:* ${janmaPanchang.nakshatra.yoni} • *Nadi:* **${janmaPanchang.nakshatra.nadi}**
+- **4. Janma Nitya Yoga (जन्म नित्य योग — Akasha Tatva | *योगाद्रोगनिवारणम्*):** **${janmaPanchang.yoga.name}** (Yoga #${janmaPanchang.yoga.index + 1} — **${janmaPanchang.yoga.nature}**)
+  - *Yogi / Sahayogi / Avayogi Planets:* **Yogi Planet (Prosperity Catalyst):** **${deepNatal.yogiAvayogi.yogiPlanet}** (${deepNatal.yogiAvayogi.yogiNakshatra} in ${deepNatal.yogiAvayogi.yogiDegreeFormatted}) • **Sahayogi:** **${deepNatal.yogiAvayogi.sahayogiPlanet}** • **Avayogi (Caution):** **${deepNatal.yogiAvayogi.avayogiPlanet}** (${deepNatal.yogiAvayogi.avayogiNakshatra}, Natal H${deepNatal.yogiAvayogi.avayogiHouse})
+- **5. Janma Karana (जन्म करण — Prithvi Tatva | *करणात्कार्यसिद्धिः स्यात्*):** **${janmaPanchang.karana.name}** (${deepNatal.karanExecution.karanType}) • *Karana Lord:* **${deepNatal.karanExecution.karanLord}** (Natal H${deepNatal.karanExecution.karanLordHouse})
+  - *Work Execution Style:* ${deepNatal.karanExecution.workExecutionStyle}
+- **🌌 Panchaka & Abhijit Birth Check:** ${deepNatal.panchakAbhijit.isPanchakBirth ? `**${deepNatal.panchakAbhijit.panchakCategory}** — ${deepNatal.panchakAbhijit.panchakMultiplier}` : "Free from Panchaka (Standard 1x cycle)"}${deepNatal.panchakAbhijit.isAbhijitZone ? ` • 👑 **Abhijit Constellation Birth!**` : ""}
+- **🛡️ Dominant Pancha-Tatva Balance:** Dominant Element: **${deepNatal.dominantElement}** • Deficient Element: **${deepNatal.deficientElement}**
+
+\`\`\`deeplinks
+[
+  { "tabId": "panchanga_deep", "label": "🕉️ Open Deep Natal Panchanga View" },
+  { "tabId": "muhurta", "label": "📅 Open Daily Panchanga & Muhurta" }
+]
+\`\`\`
+
+\`\`\`chips
+[
+  { "id": "p1", "label": "📅 Today's Live Panchanga", "prompt": "today panchang" },
+  { "id": "p2", "label": "⏳ My 6-Level Dasha Now", "prompt": "what is my current dasha" }
+]
+\`\`\`
 
 *⚡ Instant Classical Computation (0ms)*`;
   }
 
-  // 6B. Real-time Live Panchang Today
-  if (/^(today panchang|aaj ka panchang|panchang today|rahu kalam today|what is today's tithi|today's panchang|live panchang)\??$/i.test(q)) {
-    const p = transitEphem.panchanga;
-    const loc = transitEphem.location;
-    return `### 📅 **Real-Time Live Panchanga for ${loc.cityName || "Current Location"}, ${loc.country || ""}:**
-- 🌖 **Tithi:** **${p.tithi.name}** (${p.tithi.paksha} Paksha)${p.tithi.endTime ? ` • Ends at ${p.tithi.endTime}` : ""}
-- ⭐ **Nakshatra:** **${p.nakshatra.sanskritName}** Pada **${p.nakshatra.pada}** (Lord: ${p.nakshatra.lord})
-- 🌅 **Vara (Weekday):** **${p.vara.name}** (Ruler: ${p.vara.lord})
-- 🧘 **Yoga & Karana:** **${p.yoga.name}** • **${p.karana.name}**
+  // 6B & 12 Unified: Complete Classical Real-Time Daily Panchanga, Muhurta, Hora, Choghadiya & Personal Tarabala/Chandrabala
+  if (
+    /^(today panchang|aaj ka panchang|panchang today|rahu kalam today|what is today's tithi|today's panchang|live panchang|panchang|panchanga|aaj ka muhurat|today muhurta|hora today|choghadiya today|tarabala today|chandrabala today)\??$/i.test(q) ||
+    ((q.includes("panchang") || q.includes("panchanga") || q.includes("panchaang")) && (q.includes("today") || q.includes("aaj") || q.includes("daily") || q.includes("now") || q.includes("current") || (!q.includes("my") && !q.includes("birth") && !q.includes("janma")))) ||
+    (q.includes("muhurta") && (q.includes("today") || q.includes("aaj") || q.includes("now"))) ||
+    (q.includes("choghadiya") && (q.includes("today") || q.includes("aaj") || q.includes("now"))) ||
+    (q.includes("hora") && (q.includes("today") || q.includes("aaj") || q.includes("now") || q.includes("current"))) ||
+    q.includes("lucky color") ||
+    q.includes("shubh rang") ||
+    q.includes("disha shool") ||
+    (q.includes("rahu") && (q.includes("kaal") || q.includes("kalam") || q.includes("today")))
+  ) {
+    const targetLoc = transitEphem.location || natalEphem.location;
+    const panchang = calculateSamirTripathiPanchang(evaluationDate, targetLoc, natalEphem.ayanamshaType);
+    const personal = calculatePersonalPanchangaAlignment(panchang, natalEphem);
 
-*⚡ Instant Real-Time Calculation (0ms)*`;
+    const abhijitSlot = panchang.auspiciousMuhurtas.find((m) => m.name === "Abhijit Muhurta");
+    const brahmaSlot = panchang.auspiciousMuhurtas.find((m) => m.name === "Brahma Muhurta");
+    const amritSlot = panchang.auspiciousMuhurtas.find((m) => m.name === "Amrit Kaal");
+    const vijayaSlot = panchang.auspiciousMuhurtas.find((m) => m.name === "Vijaya Muhurta");
+    const godhuliSlot = panchang.auspiciousMuhurtas.find((m) => m.name === "Godhuli Muhurta");
+    const nishitaSlot = panchang.auspiciousMuhurtas.find((m) => m.name === "Nishita Kaal");
+
+    const rahuSlot = panchang.inauspiciousMuhurtas.find((m) => m.name === "Rahu Kaalam");
+    const yamaSlot = panchang.inauspiciousMuhurtas.find((m) => m.name === "Yamagandam");
+    const gulikaSlot = panchang.inauspiciousMuhurtas.find((m) => m.name === "Gulika Kaal");
+    const durSlot = panchang.inauspiciousMuhurtas.find((m) => m.name === "Dur Muhurtam");
+
+    return `### 📅 **Complete Classical Daily Panchanga (दैनिक पञ्चाङ्ग) for ${panchang.cityName}${targetLoc.country ? `, ${targetLoc.country}` : ""}**
+- 🗓️ **Date:** **${panchang.evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}** • **Panchanga Shuddhi Score:** **${panchang.shuddhiScore}/100**
+- 🌅 **Solar Almanac:** **Sunrise:** **${panchang.sunriseFormatted}** • **Sunset:** **${panchang.sunsetFormatted}** • **Dinamana (Day):** ${panchang.dayDurationFormatted} • **Ratrimana (Night):** ${panchang.nightDurationFormatted}
+- 🕉️ **Samvatsara & Samvat:** **${panchang.lunarMonth.samvatsaraName}** (*${panchang.lunarMonth.samvatsaraHindi}*, Year #${panchang.lunarMonth.samvatsaraNumber}/60) • **Vikram Samvat ${panchang.lunarMonth.vikramSamvat}** • **Shaka Samvat ${panchang.lunarMonth.shakaSamvat}**
+- 🌞 **Ayana, Ritu & Masa:** **${panchang.lunarMonth.ayanam}** • **${panchang.lunarMonth.rituHindi}** • **Masa:** **${panchang.lunarMonth.purnimantaMonth}** (Purnimanta) / **${panchang.lunarMonth.amantaMonth}** (Amanta)
+
+---
+
+#### 🔱 **1. The 5 Classical Limbs (पञ्चाङ्ग के ५ अङ्ग एवं शास्त्रीय फल)**
+1. 🌖 **Tithi (तिथि — ${panchang.tithi.tatvaHindi} | *तिथेः श्रियमाप्नोति*):** **${panchang.tithi.name}** (**${panchang.tithi.pakshaHindi}**, Tithi #${panchang.tithi.index + 1}) ${panchang.tithi.moonPhaseEmoji} (${panchang.tithi.illuminationPercent}% illuminated)
+   - **Ends at:** **${panchang.tithi.endTimeFormatted}** (*${panchang.tithi.remainingHoursFormatted}*) • **Span:** ${panchang.tithi.spanStatus.statusText}
+   - **Category:** **${panchang.tithi.category}** (*${panchang.tithi.categoryHindi}*) • **Tithi Planetary Lord:** **${panchang.tithi.tithiLord}** • **Presiding Deity:** ${panchang.tithi.deity}
+   - **Dagdha Rashis (दग्ध राशि — Burnt Signs Today):** **${panchang.tithi.dagdhaRashis.length > 0 ? panchang.tithi.dagdhaRashis.join(", ") : "None (Purnima/Amavasya Purity)"}**
+   - **Shastric Fruit:** ${panchang.tithi.significance}
+2. 🌅 **Vara (वार — ${panchang.vara.tatva} | *वारादायुष्यवर्धनम्*):** **${panchang.vara.hindiName}** (${panchang.vara.dayName}, *${panchang.vara.sanskritName}*)
+   - **Planetary Lord:** **${panchang.vara.rulingPlanet}** • **Presiding Deity:** ${panchang.vara.deity}
+   - **Favorable Works:** ${panchang.vara.activitiesFavorable.join(", ")}
+3. ⭐ **Nakshatra (नक्षत्र — ${panchang.nakshatra.tatva} | *नक्षत्राद्धरते पापम्*):** **${panchang.nakshatra.name} — Pada ${panchang.nakshatra.pada}**
+   - **Ends at:** **${panchang.nakshatra.endTimeFormatted}** (*${panchang.nakshatra.remainingHoursFormatted}*)
+   - **Vimshottari Lord:** **${panchang.nakshatra.lord}** • **Ruling Deity:** ${panchang.nakshatra.deity} • **Nature (Kula):** **${panchang.nakshatra.nature}** (*${panchang.nakshatra.natureHindi}*)
+   - **Gana:** **${panchang.nakshatra.gana}** • **Yoni:** ${panchang.nakshatra.yoni} • **Nadi:** **${panchang.nakshatra.nadi}**
+   - **Sanctioned Works:** ${panchang.nakshatra.favorableActivities}
+4. 🧘 **Nitya Yoga (नित्य योग — ${panchang.yoga.tatva} | *योगाद्रोगनिवारणम्*):** **${panchang.yoga.name}** (Yoga #${panchang.yoga.index + 1} — **${panchang.yoga.nature}**)
+   - **Ends at:** **${panchang.yoga.endTimeFormatted}** (*${panchang.yoga.remainingHoursFormatted}*) • **Deity:** ${panchang.yoga.deity}
+   - **Effect & Tyajya (Shunned Portion):** ${panchang.yoga.description} • *Shunned:* **${panchang.yoga.shunnedPortion}**
+   - **Yogi / Sahayogi / Avayogi of the Day:** **Yogi Planet:** **${panchang.yoga.yogiPlanet}** (*${panchang.yoga.yogiNakshatra}*) • **Sahayogi:** **${panchang.yoga.sahayogiPlanet}** • **Avayogi (Caution):** **${panchang.yoga.avayogiPlanet}** (*${panchang.yoga.avayogiNakshatra}*)
+5. ⚡ **Karana (करण — ${panchang.karana.tatva} | *करणात्कार्यसिद्धिः स्यात्*):** **${panchang.karana.name}** (${panchang.karana.type})
+   - **Ends at:** **${panchang.karana.endTimeFormatted}** (*${panchang.karana.remainingHoursFormatted}*) • **Karana Lord:** **${panchang.karana.karanaLord}** • **Deity:** ${panchang.karana.rulingDeity}
+   - **Vishti / Bhadra Check:** ${panchang.karana.isBhadra ? `⚠️ **Bhadra Active in ${panchang.karana.bhadraVaas} (${panchang.karana.bhadraVaasHindi})** — ${panchang.karana.bhadraImpact}` : "✅ **Bhadra-Mukta** (Free from Vishti/Bhadra obstruction right now)"}
+
+---
+
+#### 🕰️ **2. Active Planetary Hora, Choghadiya, Siddhi Yogas & Ritual Vasa**
+- **🪐 Running Planetary Hora (#${panchang.activeHora.horaNumber}/24):** **${panchang.activeHora.lord} (${panchang.activeHora.lordHindi})** [**${panchang.activeHora.startFormatted} – ${panchang.activeHora.endFormatted}**]
+  - *Best For:* ${panchang.activeHora.favorableActivities}
+  - *Next Hora:* **${panchang.nextHora.lord} (${panchang.nextHora.lordHindi})** [${panchang.nextHora.startFormatted} – ${panchang.nextHora.endFormatted}]
+- **⏳ Running Choghadiya:** **${panchang.activeChoghadiya.name} (${panchang.activeChoghadiya.hindiName})** — **${panchang.activeChoghadiya.quality}** [**${panchang.activeChoghadiya.startFormatted} – ${panchang.activeChoghadiya.endFormatted}**]
+  - *Guidance:* ${panchang.activeChoghadiya.recommendation} • *Next Choghadiya:* **${panchang.nextChoghadiya.name}** [${panchang.nextChoghadiya.startFormatted} – ${panchang.nextChoghadiya.endFormatted}]
+- **🌟 Special Vara-Nakshatra Siddhi Yogas Today:**
+${panchang.siddhiYogas.map((sy) => `  - **${sy.name} (${sy.hindiName}):** ${sy.description}`).join("\n")}
+- **🌌 Dhanishta-Panchaka Check (पञ्चक विचार):** **${panchang.panchakaStatus.name} (${panchang.panchakaStatus.hindiName})** — ${panchang.panchakaStatus.guidance}
+- **🔥 Agnivasa (हवन/यज्ञ अग्निवास):** **${panchang.vasaSanctions.agnivasa.hindiResidence}** — ${panchang.vasaSanctions.agnivasa.verdict}
+- **🔱 Shivavasa (रुद्राभिषेक शिववास):** **${panchang.vasaSanctions.shivavasa.hindiResidence}** — ${panchang.vasaSanctions.shivavasa.verdict}
+
+---
+
+#### ⏱️ **3. Auspicious Muhurtas vs. Inauspicious Kalas Today**
+- **✅ Auspicious Windows (शुभ मुहूर्त):**
+  - **👑 Abhijit Muhurta:** ${abhijitSlot ? `**${abhijitSlot.startFormatted} – ${abhijitSlot.endFormatted}** (${abhijitSlot.durationFormatted} — Midday Victory Window)` : "⚠️ Contraindicated Today (Wednesday)"}
+  - **🌅 Brahma Muhurta:** **${brahmaSlot?.startFormatted} – ${brahmaSlot?.endFormatted}** (Spiritual Sadhana & Study)
+  - **🍯 Amrit Kaal:** **${amritSlot?.startFormatted} – ${amritSlot?.endFormatted}** (Nectarine Segment)
+  - **🏹 Vijaya Muhurta:** **${vijayaSlot?.startFormatted} – ${vijayaSlot?.endFormatted}** (Afternoon Triumph Window)
+  - **🪔 Godhuli Muhurta:** **${godhuliSlot?.startFormatted} – ${godhuliSlot?.endFormatted}** • **🌙 Nishita Kaal:** **${nishitaSlot?.startFormatted} – ${nishitaSlot?.endFormatted}**
+- **⚠️ Inauspicious Windows to Avoid (अशुभ / त्याज्य काल):**
+  - **🐍 Rahu Kaalam:** **${rahuSlot?.startFormatted} – ${rahuSlot?.endFormatted}** (*Strictly avoid starting new ventures/contracts*)
+  - **⚖️ Yamagandam:** **${yamaSlot?.startFormatted} – ${yamaSlot?.endFormatted}** • **🪐 Gulika Kaal:** **${gulikaSlot?.startFormatted} – ${gulikaSlot?.endFormatted}**
+  - **⛔ Durmuhurtam:** **${durSlot?.startFormatted} – ${durSlot?.endFormatted}**
+
+---
+
+#### 🎯 **4. Personalized Tarabala & Chandrabala for Your Birth Chart**
+- **⭐ Your Personal Tarabala Today** (*Natal Janma Nakshatra:* **${personal.natalNakshatra}** ──► *Today's Nakshatra:* **${personal.todayNakshatra}**, Star #${personal.tarabala.countFromJanma}/27, Paryaya #${personal.tarabala.paryaya}):
+  - **Tara #${personal.tarabala.taraNumber}: ${personal.tarabala.taraName} (${personal.tarabala.taraHindi})** • Ruler: **${personal.tarabala.rulingPlanet}** • Status: **${personal.tarabala.strength}**
+  - *Personal Verdict:* ${personal.tarabala.guidance}
+- **🌙 Your Personal Chandrabala Today** (*Natal Janma Rashi:* **${personal.natalRashi}** ──► *Transit Moon:* **${personal.todayRashi}**):
+  - **${personal.chandrabala.houseFromJanmaRashi}th House from Janma Rashi** • Status: **${personal.chandrabala.strength}**
+  - *Personal Verdict:* ${personal.chandrabala.guidance}
+- **🔗 Natal Hora & Tithi Lord Harmony:** ${personal.horaHarmony.verdict}
+
+---
+
+#### 🧭 **5. Disha Shool, Auspicious Colors & Daily Parihara**
+- **🧭 Disha Shool (दिशाशूल):** Prohibited Travel Direction: **${panchang.dishaShool.prohibitedDirection}** • **Chandra Vaas:** **${panchang.dishaShool.chandraVaas}** (${panchang.chandraRashi})
+- **🍯 Pre-Departure Remedy (घर से निकलने से पूर्व उपाय):** **${panchang.exitRemedy}**
+- **👕 Auspicious Colors Today:** **${panchang.auspiciousColors.join(", ")}** (*Avoid:* ${panchang.inauspiciousColors.join(", ")})
+- **📿 Prescribed Day Mantra:** **${panchang.dayMantra}** • **🎁 Recommended Charity (दान):** ${panchang.recommendedCharity}
+
+\`\`\`deeplinks
+[
+  { "tabId": "muhurta", "label": "🌸 Open Daily Panchanga & Muhurta Suite" },
+  { "tabId": "tithi", "label": "📅 Open Monthly Tithi & Festival Calendar" }
+]
+\`\`\`
+
+\`\`\`chips
+[
+  { "id": "tp1", "label": "📜 My Birth Janma Panchanga", "prompt": "what is my panchang" },
+  { "id": "tp2", "label": "⏳ My 6-Level Dasha Timings", "prompt": "what is my current dasha" }
+]
+\`\`\`
+
+*⚡ Instant Real-Time Shastric Calculation (0ms)*`;
   }
 
   // 7. Indu Lagna (इन्दु लग्न - Moon-Ray Wealth Ascendant)
@@ -1278,49 +1406,6 @@ ${topPlanets}
 - **From Moon:** **${rtn.kharaNavamsha.moon64thNavamshaRashi.englishName}** (RTN House ${rtn.kharaNavamsha.moon64thRtnHouse})
 - **From Lagna:** **${rtn.kharaNavamsha.lagna64thNavamshaRashi.englishName}** (RTN House ${rtn.kharaNavamsha.lagna64thRtnHouse})
 - **Transit Safety:** ${rtn.kharaNavamsha.kharaWarningSummary}
-
-*⚡ Instant Classical Computation (0ms)*`;
-  }
-
-  // 12. Dr. Samir Tripathi Daily Panchanga, Lucky Color & Disha Shool
-  if (
-    ((q.includes("panchang") || q.includes("panchanga") || q.includes("panchaang")) && (q.includes("today") || q.includes("aaj") || q.includes("daily") || q.includes("now") || q.includes("current") || (!q.includes("my") && !q.includes("birth") && !q.includes("janma")))) ||
-    (q.includes("muhurta") && (q.includes("today") || q.includes("aaj") || q.includes("now"))) ||
-    q.includes("lucky color") ||
-    q.includes("shubh rang") ||
-    q.includes("disha shool") ||
-    (q.includes("rahu") && (q.includes("kaal") || q.includes("kalam") || q.includes("today")))
-  ) {
-    const panchang = calculateSamirTripathiPanchang(evaluationDate, transitEphem.location || natalEphem.location, natalEphem.ayanamshaType);
-    return `### 🌸 **Today's Vedic Daily Panchanga & Astro Guidance (Classical Vedic Shastra):**
-- 📍 **Location:** ${panchang.cityName} • 📅 **Date:** ${panchang.evaluationDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-- 🌅 **Sunrise:** ${panchang.sunriseFormatted} • 🌇 **Sunset:** ${panchang.sunsetFormatted}
-
-#### 🕉️ **The 5 Core Angas (पञ्चाङ्ग):**
-- **1. Tithi:** **${panchang.tithi.name} (${panchang.tithi.pakshaHindi}, ${panchang.tithi.categoryHindi})** • Ends: **${panchang.tithi.endTimeFormatted}** (${panchang.tithi.remainingHoursFormatted}) • Deity: ${panchang.tithi.deity} • Tatva: ${panchang.tithi.tatvaHindi}
-- **2. Vara:** **${panchang.vara.hindiName}** (${panchang.vara.dayName}) • Ruler: **${panchang.vara.rulingPlanet}** (${panchang.vara.planetHindi})
-- **3. Nakshatra:** **${panchang.nakshatra.name} (Pada ${panchang.nakshatra.pada}, ${panchang.nakshatra.sanskritName})** • Ends: **${panchang.nakshatra.endTimeFormatted}** • Lord: **${panchang.nakshatra.lord}** • Gana: ${panchang.nakshatra.gana}
-- **4. Yoga:** **${panchang.yoga.name}** (${panchang.yoga.nature}) • Ends: ${panchang.yoga.endTimeFormatted} • ${panchang.yoga.description}
-- **5. Karana:** **${panchang.karana.name}** (${panchang.karana.type}) • Ends: ${panchang.karana.endTimeFormatted}${panchang.karana.isBhadra ? ` • ⚠️ **${panchang.karana.bhadraVaasHindi}** (${panchang.karana.bhadraImpact})` : ""}
-
-#### 👕 **Auspicious Colors & Clothing (आज का शुभ रंग):**
-- **✓ Recommended Auspicious Colors:** **${panchang.auspiciousColors.join(", ")}**
-- **✕ Colors to Avoid Today:** ${panchang.inauspiciousColors.join(", ")}
-
-#### 🧭 **Disha Shool & Exit Remedy (दिशाशूल एवं घर से निकलने से पूर्व उपाय):**
-- **Prohibited Direction:** **${panchang.dishaShool.prohibitedDirection}**
-- **Chandra Vaas:** **${panchang.dishaShool.chandraVaas}** (${panchang.chandraRashi})
-- **🍯 Parihara / Exit Remedy:** **${panchang.exitRemedy}**
-
-#### ⏱️ **Key Auspicious & Inauspicious Muhurtas:**
-- **Abhijit Muhurta:** ${panchang.auspiciousMuhurtas.find((m) => m.name === "Abhijit Muhurta") ? `**${panchang.auspiciousMuhurtas.find((m) => m.name === "Abhijit Muhurta")?.startFormatted} – ${panchang.auspiciousMuhurtas.find((m) => m.name === "Abhijit Muhurta")?.endFormatted}** (Supreme Victory Window)` : "Prohibited Today (Wednesday)"}
-- **Rahu Kaalam:** **${panchang.inauspiciousMuhurtas.find((m) => m.name === "Rahu Kaalam")?.startFormatted} – ${panchang.inauspiciousMuhurtas.find((m) => m.name === "Rahu Kaalam")?.endFormatted}** (Avoid major agreements & starts)
-- **Brahma Muhurta:** ${panchang.auspiciousMuhurtas.find((m) => m.name === "Brahma Muhurta")?.startFormatted} – ${panchang.auspiciousMuhurtas.find((m) => m.name === "Brahma Muhurta")?.endFormatted}
-- **Amrit Kaal:** ${panchang.auspiciousMuhurtas.find((m) => m.name === "Amrit Kaal")?.startFormatted} – ${panchang.auspiciousMuhurtas.find((m) => m.name === "Amrit Kaal")?.endFormatted}
-
-#### 🕉️ **Mantra & Charity of the Day:**
-- **Prescribed Mantra:** **${panchang.dayMantra}**
-- **Recommended Charity (दान):** ${panchang.recommendedCharity}
 
 *⚡ Instant Classical Computation (0ms)*`;
   }
@@ -5272,16 +5357,21 @@ export default function AstroChatbot({ initialOpen = false, initialPrompt = "" }
         timestamp: new Date(),
         category: activeCategory,
       };
-      const isBtrFlowMsg =
-        instantAnswer.includes("Step 1: Classical Birth Time Rectification") ||
-        instantAnswer.includes("Birth Time Calibration");
+      const isPredictiveDomainInstant =
+        /\b(marriage|marry|spouse|wife|husband|wedding|child|children|progeny|baby|conceive|pregnancy|career|job|promotion|business|profession|wealth|money|rich|finance|income|property|house|home|land|vehicle|health|disease|illness|foreign|abroad|visa|settle)\b/i.test(
+          query
+        ) &&
+        !instantAnswer.includes("Step 1: Classical Birth Time Rectification") &&
+        !instantAnswer.includes("Birth Time Calibration") &&
+        !instantAnswer.includes("Complete Classical Daily Panchanga") &&
+        !instantAnswer.includes("Complete Classical Janma Panchanga");
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content: instantAnswer,
-        arbitration: isBtrFlowMsg
-          ? undefined
-          : arbitratePredictiveQuery(`${activeCategory} ${query}`, natalEphemeris, transitEphemeris),
+        arbitration: isPredictiveDomainInstant
+          ? arbitratePredictiveQuery(`${activeCategory} ${query}`, natalEphemeris, transitEphemeris)
+          : undefined,
         timestamp: new Date(),
         category: activeCategory,
       };

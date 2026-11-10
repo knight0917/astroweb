@@ -9932,3 +9932,57 @@ test("Phase 69: Classical 6-Level ('Until Last') Vimshottari Dasha Hierarchy (MD
   const dossier = buildAstroDossier(natalEphem, transitEphem, evalDate, "male", undefined, "dasha");
   assert.ok(dossier.includes("[LEVEL 6 (FINAL) — ALL 9 DEHA DASHAS"), "Chatbot Dossier must include Level 6 Deha Dasha schedule");
 });
+
+test("Phase 70: Complete Classical Daily Panchanga, Samvatsara, Tithi Lord, Hora, Choghadiya, Siddhi Yogas, Agnivasa/Shivavasa & Personal Tarabala/Chandrabala", async () => {
+  const {
+    calculateSamirTripathiPanchang,
+    calculatePersonalPanchangaAlignment,
+  } = await import("../src/engine/samirTripathiPanchang.ts");
+  const { calculateVedicEphemeris } = await import("../src/engine/ephemeris.ts");
+
+  const loc = { cityName: "Patna", country: "India", latitude: 25.5941, longitude: 85.1376, timezoneOffsetHours: 5.5 };
+  const evalDate = new Date("2026-11-10T08:30:00Z");
+  const panchang = calculateSamirTripathiPanchang(evalDate, loc, "Lahiri");
+
+  // 1. Verify 60-Year Samvatsara & Almanac fields
+  assert.ok(panchang.lunarMonth.samvatsaraName, "Samvatsara name must be populated");
+  assert.ok(panchang.lunarMonth.samvatsaraHindi.includes("संवत्सर"), "Samvatsara Hindi must be populated");
+  assert.ok(panchang.lunarMonth.samvatsaraNumber >= 1 && panchang.lunarMonth.samvatsaraNumber <= 60, "Samvatsara number must be in 1..60");
+
+  // 2. Verify Tithi Lord, Dagdha Rashis & Panchanga Phala across all 5 limbs
+  assert.ok(panchang.tithi.tithiLord, "Tithi planetary lord must be populated");
+  assert.ok(Array.isArray(panchang.tithi.dagdhaRashis), "Dagdha Rashis must be an array");
+  assert.ok(panchang.tithi.panchangaPhala.includes("तिथेः"), "Tithi Panchanga Phala must be populated");
+  assert.ok(panchang.vara.panchangaPhala.includes("वारा"), "Vara Panchanga Phala must be populated");
+  assert.ok(panchang.nakshatra.panchangaPhala.includes("नक्षत्रा"), "Nakshatra Panchanga Phala must be populated");
+  assert.ok(panchang.yoga.panchangaPhala.includes("योगा"), "Yoga Panchanga Phala must be populated");
+  assert.ok(panchang.karana.panchangaPhala.includes("करणा"), "Karana Panchanga Phala must be populated");
+  assert.ok(panchang.karana.karanaLord, "Karana planetary lord must be populated");
+
+  // 3. Verify Yogi, Sahayogi, Avayogi & Yoga Shunned Portion
+  assert.ok(panchang.yoga.yogiPlanet, "Yogi planet must be populated");
+  assert.ok(panchang.yoga.sahayogiPlanet, "Sahayogi planet must be populated");
+  assert.ok(panchang.yoga.avayogiPlanet, "Avayogi planet must be populated");
+  assert.ok(panchang.yoga.shunnedPortion, "Yoga shunned portion must be populated");
+
+  // 4. Verify Active Planetary Hora, Choghadiya, Siddhi Yogas, Panchaka & Agnivasa/Shivavasa
+  assert.ok(panchang.activeHora.horaNumber >= 1 && panchang.activeHora.horaNumber <= 24, "Active Hora number must be 1..24");
+  assert.ok(panchang.activeHora.lord, "Active Hora lord must be populated");
+  assert.ok(panchang.nextHora.lord, "Next Hora lord must be populated");
+  assert.ok(panchang.activeChoghadiya.name, "Active Choghadiya name must be populated");
+  assert.ok(panchang.siddhiYogas.length >= 1, "At least one Siddhi/Anandadi yoga status must be returned");
+  assert.ok(panchang.panchakaStatus.name, "Panchaka status must be populated");
+  assert.ok(panchang.vasaSanctions.agnivasa.residence, "Agnivasa residence must be populated");
+  assert.ok(panchang.vasaSanctions.shivavasa.residence, "Shivavasa residence must be populated");
+
+  // 5. Verify Personal Tarabala, Chandrabala & Hora Harmony against a Natal Chart
+  const birthDate = new Date("1998-05-25T09:05:00Z");
+  const natalEphem = calculateVedicEphemeris(birthDate, loc, "Lahiri", "WholeSign", "Mean");
+  const personal = calculatePersonalPanchangaAlignment(panchang, natalEphem);
+
+  assert.ok(personal.tarabala.taraNumber >= 1 && personal.tarabala.taraNumber <= 9, "Tarabala number must be 1..9");
+  assert.ok(personal.tarabala.paryaya >= 1 && personal.tarabala.paryaya <= 3, "Tarabala paryaya must be 1..3");
+  assert.ok(personal.tarabala.taraName, "Tarabala name must be populated");
+  assert.ok(personal.chandrabala.houseFromJanmaRashi >= 1 && personal.chandrabala.houseFromJanmaRashi <= 12, "Chandrabala house must be 1..12");
+  assert.ok(personal.horaHarmony.verdict.length > 10, "Hora harmony verdict must be populated");
+});
