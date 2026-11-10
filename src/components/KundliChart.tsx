@@ -290,7 +290,7 @@ function KundliChart() {
   ];
 
   return (
-    <div className="glass-panel p-3.5 sm:p-5 rounded-2xl border border-slate-800 shadow-2xl flex flex-col items-center max-w-full">
+    <div className="glass-panel p-3.5 sm:p-5 rounded-2xl border border-slate-800 shadow-2xl flex flex-col items-center w-full max-w-full min-w-0">
       {/* Header controls */}
       <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-2.5 text-xs">
         <div className="flex items-center gap-2">
@@ -388,7 +388,7 @@ function KundliChart() {
       </div>
 
       {/* 1–12 Quick House Rotation Selector Pill Bar */}
-      <div className="w-full max-w-[840px] mb-2 p-1.5 bg-slate-950/90 rounded-xl border border-slate-800 flex items-center justify-between gap-1 overflow-x-auto custom-scrollbar">
+      <div className="w-full max-w-[840px] mb-2 p-1.5 bg-slate-950/90 rounded-xl border border-slate-800 flex items-center justify-between gap-1 overflow-x-auto custom-scrollbar min-w-0">
         <div className="flex items-center gap-1 min-w-max">
           <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider px-1.5 flex items-center gap-1">
             <span>🔄</span>
@@ -519,9 +519,9 @@ function KundliChart() {
       </div>
 
       {/* Chart & Side Aspect Inspector Layout */}
-      <div className="w-full max-w-[840px] flex flex-col lg:flex-row items-center lg:items-stretch justify-center gap-3.5">
+      <div className="w-full max-w-[840px] flex flex-col lg:flex-row items-center lg:items-stretch justify-center gap-3.5 min-w-0">
         {/* Left Side: SVG Canvas Container */}
-        <div className="relative w-full max-w-[460px] aspect-square bg-slate-950 rounded-2xl border-2 border-slate-800/80 shadow-2xl p-2 flex items-center justify-center overflow-visible transform-gpu will-change-transform shrink-0">
+        <div className="relative w-full max-w-[340px] xs:max-w-[400px] sm:max-w-[460px] aspect-square bg-slate-950 rounded-2xl border-2 border-slate-800/80 shadow-2xl p-1.5 sm:p-2 flex items-center justify-center overflow-visible transform-gpu will-change-transform shrink-0">
           {chartType === "north" ? (
             // North Indian Diamond Kundli (SVG)
             <div className="relative w-full h-full">

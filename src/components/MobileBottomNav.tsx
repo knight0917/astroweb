@@ -202,7 +202,7 @@ export default function MobileBottomNav() {
       )}
 
       {/* Persistent Bottom Nav Dock (Mobile Only) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-panel bg-slate-950/95 border-t border-slate-800 safe-bottom px-2 py-1.5 shadow-2xl backdrop-blur-xl">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-panel bg-slate-950/95 border-t border-slate-800 safe-bottom px-2 py-1.5 shadow-2xl backdrop-blur-xl w-full max-w-full overflow-hidden">
         <div className="flex items-center justify-around">
           {PRIMARY_TABS.map((tab) => {
             const isActive = viewMode === tab.mode;

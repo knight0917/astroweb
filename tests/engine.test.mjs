@@ -8592,7 +8592,7 @@ Looking at your chart, this is a 85% Favorable • 15% Friction era.
   assert.ok(personalizedWelcome.includes("```chips"), "Welcome must include 1-click consultation chips");
 
   const parsedWelcome = parseMessageContent(personalizedWelcome);
-  assert.strictEqual(parsedWelcome.chips.length, 5, "Personalized welcome must render 5 guided journey chips");
+  assert.strictEqual(parsedWelcome.chips.length, 6, "Personalized welcome must render 6 guided journey chips");
 
   // 3. Fast-Path Interceptor 36 - Guided Master Consultation Journeys
   // Journey 1: Career & Wealth Master Audit

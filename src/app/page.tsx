@@ -149,6 +149,11 @@ export default function HomePage() {
   }, [initFromStorage]);
 
   React.useEffect(() => {
+    // Strictly reset any rogue horizontal scroll displacement on mount or view switch
+    window.scrollTo({ left: 0 });
+  }, [viewMode]);
+
+  React.useEffect(() => {
     const handleOpenChat = (e: any) => {
       setChatMounted(true);
       if (e?.detail?.prompt) {
@@ -160,145 +165,145 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#030712] text-slate-100 pb-16 md:pb-0">
+    <div className="min-h-screen flex flex-col bg-[#030712] text-slate-100 pb-16 md:pb-0 w-full max-w-full min-w-0 overflow-x-clip">
       {/* Top Header & Navigation */}
       <HeaderNav />
 
-      {/* Main Content Workspace - Full Width Layout */}
-      <main className="flex-1 w-full px-2 sm:px-4 md:px-6 py-2 md:py-3 flex flex-col gap-3 md:gap-4">
+      {/* Main Content Workspace - Full Width Responsive Layout */}
+      <main className="flex-1 w-full max-w-full min-w-0 px-2 sm:px-4 md:px-6 py-2 md:py-3 flex flex-col gap-3 md:gap-4 overflow-x-clip">
         {/* Time Travel Control Deck (Shown for 2D charts/tables; 3D view has its own Left Dock) */}
         {viewMode !== "3d" && <TimeTravelSlider />}
 
         {/* View Mode Router */}
         {viewMode === "3d" && (
-          <div className="w-full h-[calc(100vh-130px)] min-h-[700px]">
+          <div className="w-full max-w-full min-w-0 h-[calc(100vh-130px)] min-h-[700px]">
             <SkyDome />
           </div>
         )}
 
         {viewMode === "kundli-north" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          <div className="w-full max-w-full min-w-0 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
             <KundliChart />
             <PositionsTable />
           </div>
         )}
 
         {viewMode === "dasha" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <DashaView />
           </div>
         )}
 
         {viewMode === "gochar" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <GocharView />
           </div>
         )}
 
         {viewMode === "pre-market" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <PreMarketTradingView />
           </div>
         )}
 
         {viewMode === "choghadiya" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <ChoghadiyaHoraView />
           </div>
         )}
 
         {viewMode === "shodashavarga" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <ShodashavargaView />
           </div>
         )}
 
         {viewMode === "shadbala" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <ShadbalaView />
           </div>
         )}
 
         {viewMode === "bhavabala" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <BhavaBalaView />
           </div>
         )}
 
         {viewMode === "ashtakavarga" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <AshtakavargaView />
           </div>
         )}
 
         {viewMode === "numerology" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <NumerologyView />
           </div>
         )}
 
         {viewMode === "tithi-birthday" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <TithiBirthdayView />
           </div>
         )}
 
         {viewMode === "tithi-calendar" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <TithiCalendarView />
           </div>
         )}
 
         {viewMode === "jaimini" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <JaiminiView />
           </div>
         )}
 
         {viewMode === "matchmaking" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <MatchmakingView />
           </div>
         )}
 
         {viewMode === "muhurta" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <MuhurtaView />
           </div>
         )}
 
         {viewMode === "prashna" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <PrashnaView />
           </div>
         )}
 
         {viewMode === "adhana" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <AdhanaKundliView />
           </div>
         )}
 
         {viewMode === "vastu" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <VastuStudio />
           </div>
         )}
 
         {viewMode === "reviews" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <ReviewSection onClose={() => setViewMode("kundli-north")} />
           </div>
         )}
 
         {viewMode === "table" && (
-          <div className="w-full">
+          <div className="w-full max-w-full min-w-0">
             <PositionsTable />
           </div>
         )}
 
         {viewMode === "dual" && (
-          <div className="flex flex-col gap-6">
+          <div className="w-full max-w-full min-w-0 flex flex-col gap-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[560px]">
               <div className="h-full">
                 <SkyDome />
@@ -307,7 +312,7 @@ export default function HomePage() {
                 <KundliChart />
               </div>
             </div>
-            <div className="w-full">
+            <div className="w-full max-w-full min-w-0">
               <PositionsTable />
             </div>
           </div>

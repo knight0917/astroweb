@@ -444,7 +444,7 @@ export default function NumerologyView() {
 
             {/* Letter Breakdown Table */}
             {nameData.letterBreakdown.length > 0 && (
-              <div className="overflow-x-auto custom-scrollbar border border-slate-800 rounded-xl bg-slate-900/50 p-2">
+              <div className="w-full max-w-full min-w-0 overflow-x-auto custom-scrollbar border border-slate-800 rounded-xl bg-slate-900/50 p-2">
                 <div className="flex gap-1.5 min-w-max pb-1">
                   {nameData.letterBreakdown.map((item, idx) => (
                     <div

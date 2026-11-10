@@ -1972,3 +1972,36 @@
 - [x] **Phase 70.3: Automated Unit Tests & Quality Gates (`tests/engine.test.mjs`)**
   - [x] Add Subtest 165 in `tests/engine.test.mjs` verifying all Phase 70 classical Panchanga calculations and personal Tarabala/Chandrabala alignment.
 
+---
+
+# Phase 71: Mobile PWA Responsive Layout Hardening & Horizontal Viewport Containment
+
+## Status: Complete & Verified (All 165 Tests Passing & Next.js Build Clean)
+- **Trigger Keywords**: `pwa-mobile-layout`, `horizontal-overflow-clip`, `responsive-header`, `viewport-displacement-fix`, `mobile-containment`
+- **Single Source of Truth**: Resolving horizontal page blowout and viewport displacement on mobile PWA and small-screen devices.
+
+## Phases & Milestones
+
+- [x] **Phase 71.1: Global Viewport Containment & Scroll Isolation (`src/app/globals.css` & `src/app/page.tsx`)**
+  - [x] Enforce `max-width: 100vw; width: 100%; overflow-x: clip; position: relative;` on both `html` and `body` in `src/app/globals.css` with fallback to `overflow-x: hidden`.
+  - [x] Constrain root page wrapper and `<main>` with `w-full max-w-full min-w-0 overflow-x-clip` in `src/app/page.tsx`.
+  - [x] Add auto-reset hook `window.scrollTo({ left: 0 })` in `HomePage` on mount and view-mode changes to purge any cached horizontal scroll displacement.
+  - [x] Wrap all dynamic view route containers in `<div className="w-full max-w-full min-w-0">`.
+
+- [x] **Phase 71.2: Header & Top Navigation Mobile Responsiveness (`src/components/HeaderNav.tsx`)**
+  - [x] Add `w-full max-w-full min-w-0` to `<header>` and outer flex row.
+  - [x] Make Search bar container `flex-1 min-w-0 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg`.
+  - [x] Truncate search input label to `"Search..."` on mobile screens (`< sm:`) and hide keyboard badge (`Ctrl K`) on touch devices.
+  - [x] Compact right action buttons on mobile screens (`✨ Report` text, compact location pill, tight padding).
+
+- [x] **Phase 71.3: Time Travel Slider & View Components Mobile Isolation (`src/components/TimeTravelSlider.tsx`, `src/components/ShodashavargaView.tsx`, `src/components/KundliChart.tsx`, `src/components/MobileBottomNav.tsx`)**
+  - [x] Add `w-full max-w-full min-w-0` to `TimeTravelSlider` outer container, top bar, and multi-speed scrubbing deck.
+  - [x] Make Date/Time banner and controls in `TimeTravelSlider` responsive with compact mobile text.
+  - [x] Constrain `ShodashavargaView` banner heading, filter pills, carousel container, and chart canvas (`max-w-[340px] xs:max-w-[400px] sm:max-w-[460px]`).
+  - [x] Constrain `KundliChart` and `MobileBottomNav` with `w-full max-w-full min-w-0 overflow-hidden`.
+
+- [x] **Phase 71.4: Production Build Verification & Automated Quality Gates**
+  - [x] Run `npx tsc --noEmit` and confirm 0 TypeScript errors.
+  - [x] Run `npm test` and confirm all 165 tests pass.
+  - [x] Run `npm run build` and confirm production Next.js build compiles cleanly with all static routes generated.
+

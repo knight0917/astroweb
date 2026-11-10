@@ -307,23 +307,23 @@ export default function ShodashavargaView() {
   };
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-200">
+    <div className="flex flex-col gap-4 sm:gap-6 animate-in fade-in duration-200 w-full max-w-full min-w-0">
       {/* Header Banner */}
-      <div className="glass-panel p-4 md:p-6 rounded-2xl border border-slate-800 shadow-2xl flex flex-wrap items-center justify-between gap-4 bg-slate-950/80">
+      <div className="glass-panel p-3 sm:p-4 md:p-6 rounded-2xl border border-slate-800 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-slate-950/80 w-full max-w-full min-w-0">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-2xl text-amber-400">✨</span>
-            <h2 className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
+            <span className="text-xl sm:text-2xl text-amber-400">✨</span>
+            <h2 className="text-base sm:text-xl md:text-2xl font-extrabold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent break-words">
               Classical Parashari Shodashavarga (षोडशवर्ग / 16 Divisional Charts)
             </h2>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-400 mt-1 break-words">
             Brihat Parashara Hora Shastra (BPHS Ch. 6) • Precision Micro-Divisional Charts for Complete Karmic Verification
           </p>
         </div>
 
         {/* Category Filter Pills including Rashi Tulya Navamsha */}
-        <div className="flex flex-wrap items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs">
+        <div className="flex flex-wrap items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs max-w-full">
           {(["ALL", "Shadvarga", "Saptavarga", "Dashavarga", "RTN"] as const).map((cat) => {
             const isActive = categoryFilter === cat || (cat === "RTN" && isRtnMode);
             return (
@@ -355,7 +355,7 @@ export default function ShodashavargaView() {
       </div>
 
       {/* 16-Varga Quick Selector Horizontal Carousel with Snap Scrolling */}
-      <div className="glass-panel p-2.5 sm:p-3 rounded-2xl border border-slate-800 shadow-xl bg-slate-950/90 overflow-x-auto snap-scroll-x no-scrollbar">
+      <div className="glass-panel p-2.5 sm:p-3 rounded-2xl border border-slate-800 shadow-xl bg-slate-950/90 overflow-x-auto snap-scroll-x no-scrollbar w-full max-w-full min-w-0">
         <div className="flex items-center gap-2 min-w-max">
           {/* Dedicated RTN Button in Carousel */}
           <button
@@ -430,11 +430,11 @@ export default function ShodashavargaView() {
       </div>
 
       {/* Main Grid: Chart Canvas (Left) + Varga Deep Analysis & Table (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start w-full max-w-full min-w-0">
         {/* Left Column: Interactive Varga Chart Canvas (7 cols) */}
-        <div className="lg:col-span-7 glass-panel p-3.5 sm:p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 flex flex-col items-center">
+        <div className="lg:col-span-7 glass-panel p-2.5 sm:p-3.5 md:p-5 rounded-2xl border border-slate-800 shadow-2xl bg-slate-950/85 flex flex-col items-center w-full max-w-full min-w-0">
           {/* Chart Header */}
-          <div className="w-full flex flex-wrap items-center justify-between gap-2 mb-3 sm:mb-4">
+          <div className="w-full max-w-full min-w-0 flex flex-wrap items-center justify-between gap-2 mb-3 sm:mb-4">
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-lg text-amber-400">☸</span>
@@ -603,7 +603,7 @@ export default function ShodashavargaView() {
           )}
 
           {/* SVG Chart Renderer */}
-          <div className="relative w-full max-w-[460px] aspect-square flex items-center justify-center bg-slate-950/80 rounded-2xl border border-slate-800/80 p-2 shadow-inner">
+          <div className="relative w-full max-w-[340px] xs:max-w-[400px] sm:max-w-[460px] aspect-square flex items-center justify-center bg-slate-950/80 rounded-2xl border border-slate-800/80 p-1.5 sm:p-2 shadow-inner">
             {chartType === "north" ? (
               <svg viewBox="0 0 400 400" className="w-full h-full text-slate-200">
                 <rect x="5" y="5" width="390" height="390" fill="none" stroke="#334155" strokeWidth="2.5" />
@@ -766,7 +766,7 @@ export default function ShodashavargaView() {
         </div>
 
         {/* Right Column: Varga Planetary Details Table & Commentary (5 cols) */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
+        <div className="lg:col-span-5 flex flex-col gap-4 sm:gap-6 w-full max-w-full min-w-0">
           {/* RTN Mode Right Dashboard */}
           {isRtnMode ? (
             <>

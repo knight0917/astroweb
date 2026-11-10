@@ -337,23 +337,23 @@ export default function TimeTravelSlider() {
   const formatLon = (lon: number) => `${Math.abs(lon).toFixed(2)}° ${lon >= 0 ? "E" : "W"}`;
 
   return (
-    <div className="glass-panel p-3 md:p-4 rounded-2xl border border-slate-800 shadow-2xl flex flex-col gap-2.5 md:gap-3 bg-slate-950/85">
-      {/* Top Bar: Reversed Layout - Date/Time/Place Inputs on LEFT, Live Display on RIGHT */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="glass-panel p-2.5 sm:p-3 md:p-4 rounded-2xl border border-slate-800 shadow-2xl flex flex-col gap-2.5 md:gap-3 bg-slate-950/85 w-full max-w-full min-w-0">
+      {/* Top Bar: Responsive Layout - Date/Time/Place Inputs on LEFT, Live Display on RIGHT */}
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 w-full max-w-full min-w-0">
         {/* LEFT SECTION: Place Selector + Date & Time Inputs */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
           {/* 1. Location / Place Enter Button */}
           <button
             onClick={() => setShowLocationModal(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-700/80 hover:border-amber-400 text-slate-200 font-semibold transition-all shadow-sm cursor-pointer group flex-shrink-0"
+            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-700/80 hover:border-amber-400 text-slate-200 font-semibold transition-all shadow-sm cursor-pointer group flex-shrink-0"
             title="Edit Place & Observer Location (GPS)"
           >
-            <svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
             <div className="text-left">
-              <span className="font-bold text-[11px] md:text-xs block max-w-[110px] sm:max-w-[140px] truncate text-slate-100 group-hover:text-amber-300 transition-colors">
+              <span className="font-bold text-[10px] sm:text-[11px] md:text-xs block max-w-[80px] xs:max-w-[110px] sm:max-w-[140px] truncate text-slate-100 group-hover:text-amber-300 transition-colors">
                 {location.cityName}
               </span>
               <span className="text-[8.5px] text-slate-400 font-mono hidden sm:block">
@@ -366,7 +366,7 @@ export default function TimeTravelSlider() {
           {/* 2. Saved Charts & Profiles Switcher Button */}
           <button
             onClick={() => setShowProfilesDropdown(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-400 text-slate-200 font-semibold transition-all shadow-sm cursor-pointer group flex-shrink-0"
+            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-400 text-slate-200 font-semibold transition-all shadow-sm cursor-pointer group flex-shrink-0"
             title="Saved Birth Charts & Profiles"
           >
             <svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -384,7 +384,7 @@ export default function TimeTravelSlider() {
           {/* 3. Direct 1-Click "Save Chart" Button (Visible on Mobile & Desktop) */}
           <button
             onClick={() => setShowSaveModal(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold text-xs shadow-sm transition-all cursor-pointer flex-shrink-0"
+            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold text-xs shadow-sm transition-all cursor-pointer flex-shrink-0"
             title="Save Current Birth Details as a Profile"
           >
             <svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -398,7 +398,7 @@ export default function TimeTravelSlider() {
           {/* 3.5 Gender Selector Button (Male ♂ / Female ♀) */}
           <button
             onClick={() => setGender(gender === "male" ? "female" : "male")}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm cursor-pointer flex-shrink-0 ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm cursor-pointer flex-shrink-0 ${
               gender === "female"
                 ? "bg-pink-950/70 hover:bg-pink-900/80 border-pink-500/50 text-pink-300 shadow-pink-950/30"
                 : "bg-sky-950/70 hover:bg-sky-900/80 border-sky-500/50 text-sky-300 shadow-sky-950/30"
@@ -414,7 +414,7 @@ export default function TimeTravelSlider() {
           {/* 4. Mobile Direct Date & Place Picker Trigger */}
           <button
             onClick={() => setShowPickerModal(true)}
-            className="md:hidden px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+            className="md:hidden px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md flex items-center gap-1.5 cursor-pointer flex-shrink-0"
           >
             <svg className="w-3.5 h-3.5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -422,7 +422,8 @@ export default function TimeTravelSlider() {
               <line x1="8" y1="2" x2="8" y2="6" />
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
-            <span>Set Date & Time</span>
+            <span className="hidden xs:inline">Set Date & Time</span>
+            <span className="xs:hidden">Set Time</span>
           </button>
 
           {/* 5. Desktop Inline Date & Time Inputs (Hidden on Mobile) */}
@@ -553,37 +554,37 @@ export default function TimeTravelSlider() {
           </div>
         </div>
 
-        {/* RIGHT SECTION: Live Display + Live Now + Time Format Toggles (Always anchored to the right) */}
-        <div className="ml-auto flex items-center gap-2.5 flex-shrink-0">
+        {/* RIGHT SECTION: Live Display + Live Now + Time Format Toggles */}
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2.5 flex-wrap sm:flex-nowrap flex-shrink-0">
           {/* Quick "LIVE NOW" button (Snaps to current date, time, and location) */}
           <button
             onClick={handleLiveNow}
-            className={`px-2.5 md:px-3 py-1.5 font-bold text-xs rounded-xl shadow transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2 sm:px-2.5 md:px-3 py-1 sm:py-1.5 font-bold text-[11px] sm:text-xs rounded-xl shadow transition-all active:scale-95 cursor-pointer flex items-center gap-1 sm:gap-1.5 ${
               isLive
                 ? "bg-emerald-500 text-slate-950 ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-950 shadow-emerald-500/30"
                 : "bg-emerald-600 hover:bg-emerald-500 text-slate-950"
             }`}
             title={isLive ? "Tracking Live Real-Time Ephemeris" : "Snap to current live moment and your current location"}
           >
-            <span className={`w-2 h-2 rounded-full inline-block ${isLive ? "bg-slate-950 animate-ping" : "bg-slate-950 animate-pulse"}`} />
+            <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full inline-block ${isLive ? "bg-slate-950 animate-ping" : "bg-slate-950 animate-pulse"}`} />
             <span className="hidden sm:inline">{isLive ? "LIVE" : "LIVE NOW"}</span>
             <span className="sm:hidden">{isLive ? "LIVE" : "NOW"}</span>
           </button>
 
           {/* Formatted Date/Time Banner with Hourglass */}
-          <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 p-2 rounded-xl">
-            <div className="p-1 rounded-lg bg-amber-500/10 text-amber-400 text-sm">
-              <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-900/80 border border-slate-800 p-1.5 sm:p-2 rounded-xl">
+            <div className="p-1 rounded-lg bg-amber-500/10 text-amber-400 text-xs sm:text-sm hidden xs:block">
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[9px] md:text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <span className="text-[8.5px] sm:text-[9px] md:text-[10px] font-bold text-slate-400 tracking-wider uppercase">
                   {timeMode === "local" ? `LOCAL` : "UTC"}
                 </span>
-                <div className="flex gap-0.5 bg-slate-950 p-0.5 rounded border border-slate-800 text-[8.5px]">
+                <div className="flex gap-0.5 bg-slate-950 p-0.5 rounded border border-slate-800 text-[8px] sm:text-[8.5px]">
                   <button
                     onClick={() => setTimeMode("local")}
                     className={`px-1 py-0.2 rounded font-bold transition-all cursor-pointer ${
@@ -603,7 +604,7 @@ export default function TimeTravelSlider() {
                 </div>
               </div>
 
-              <div className="text-xs md:text-sm font-bold text-slate-100 font-mono flex items-center gap-1.5 mt-0.5">
+              <div className="text-[11px] sm:text-xs md:text-sm font-bold text-slate-100 font-mono flex items-center gap-1 sm:gap-1.5 mt-0.5">
                 <span>
                   {displayDate.toLocaleDateString("en-US", {
                     weekday: "short",
@@ -629,7 +630,7 @@ export default function TimeTravelSlider() {
       </div>
 
       {/* Play Controls & Multi-Speed Scrubbing Deck */}
-      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-800/80 overflow-x-auto no-scrollbar">
+      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-800/80 overflow-x-auto no-scrollbar w-full max-w-full min-w-0">
         {/* Play / Pause button */}
         <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
           <button

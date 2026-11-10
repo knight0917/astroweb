@@ -224,7 +224,7 @@ export default function TithiCalendarView() {
 
       {/* 4. CALENDAR GRID VIEW */}
       {viewTab === "grid" && (
-        <div className="overflow-x-auto custom-scrollbar">
+        <div className="w-full max-w-full min-w-0 overflow-x-auto custom-scrollbar">
           <div className="min-w-[680px] w-full border border-slate-800 rounded-2xl overflow-hidden bg-slate-950/80 shadow-2xl">
             {/* Weekday Header Row */}
             <div className="grid grid-cols-7 border-b border-slate-800 bg-slate-900/90 text-center text-xs font-bold divide-x divide-slate-800/80">

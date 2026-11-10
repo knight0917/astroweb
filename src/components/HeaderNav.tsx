@@ -380,19 +380,19 @@ export default function HeaderNav() {
   }, [viewMode]);
 
   return (
-    <header className="glass-panel sticky top-0 z-40 px-2 sm:px-4 md:px-6 py-2.5 border-b border-slate-800 shadow-xl bg-slate-950/90 backdrop-blur-xl">
-      <div className="w-full flex items-center justify-between gap-2 md:gap-4">
+    <header className="glass-panel sticky top-0 z-40 px-2 sm:px-4 md:px-6 py-2 md:py-2.5 border-b border-slate-800 shadow-xl bg-slate-950/90 backdrop-blur-xl w-full max-w-full min-w-0">
+      <div className="w-full max-w-full min-w-0 flex items-center justify-between gap-1.5 sm:gap-2 md:gap-4">
         {/* Left: Top Hamburger Menu Button + Logo & Active Module */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
           {/* Top-Left Hamburger Button */}
           <button
             onClick={() => setShowMenuDrawer(true)}
-            className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 text-slate-200 hover:text-amber-400 transition-all flex items-center justify-center cursor-pointer shadow-sm group"
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 text-slate-200 hover:text-amber-400 transition-all flex items-center justify-center cursor-pointer shadow-sm group"
             title="Open Jyotish Modules Menu"
             aria-label="Open Navigation Menu"
           >
             <svg
-              className="w-5 h-5 text-slate-300 group-hover:text-amber-400 transition-colors"
+              className="w-4 h-4 sm:w-5 sm:h-5 text-slate-300 group-hover:text-amber-400 transition-colors"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -402,9 +402,9 @@ export default function HeaderNav() {
           </button>
 
           {/* Logo & Brand - Click returns home to Traditional Kundli Chart */}
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setViewMode("kundli-north")} title="Home — Traditional Kundli Chart">
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 flex items-center justify-center shadow-lg shadow-amber-500/20 flex-shrink-0 text-slate-950">
-              <svg className="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <div className="flex items-center gap-1.5 sm:gap-2 cursor-pointer" onClick={() => setViewMode("kundli-north")} title="Home — Traditional Kundli Chart">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 flex items-center justify-center shadow-lg shadow-amber-500/20 flex-shrink-0 text-slate-950">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="4" />
                 <path d="M12 2v2" />
                 <path d="M12 20v2" />
@@ -417,7 +417,7 @@ export default function HeaderNav() {
               </svg>
             </div>
             <div>
-              <h1 className="font-black text-sm md:text-base bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent tracking-tight leading-none">
+              <h1 className="font-black text-xs sm:text-sm md:text-base bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent tracking-tight leading-none">
                 PUROHITJI AI
               </h1>
               <p className="text-[8.5px] md:text-[9.5px] text-slate-400 font-medium hidden sm:block mt-0.5">
@@ -460,7 +460,7 @@ export default function HeaderNav() {
         </div>
 
         {/* Center: Universal Quick Search Trigger Bar (Elevated Radiant Celestial Design) */}
-        <div className="flex-1 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mx-1 sm:mx-3 relative group">
+        <div className="flex-1 min-w-0 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mx-1 sm:mx-3 relative group">
           {/* Ambient Celestial Glow Aura */}
           <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500/30 via-yellow-400/20 to-amber-600/30 rounded-2xl blur-xs opacity-70 group-hover:opacity-100 group-hover:blur-sm transition-all duration-300 pointer-events-none" />
 
@@ -470,22 +470,23 @@ export default function HeaderNav() {
               setSearchQuery("");
               setSearchSelectedIndex(0);
             }}
-            className="relative w-full flex items-center justify-between gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-slate-900/95 via-slate-900/90 to-slate-950/95 hover:from-slate-850 hover:to-slate-900 border border-amber-500/40 hover:border-amber-400/90 text-slate-100 hover:text-white transition-all duration-300 shadow-[0_2px_12px_-2px_rgba(245,158,11,0.18)] hover:shadow-[0_4px_22px_0px_rgba(245,158,11,0.35)] cursor-pointer text-xs"
+            className="relative w-full flex items-center justify-between gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-slate-900/95 via-slate-900/90 to-slate-950/95 hover:from-slate-850 hover:to-slate-900 border border-amber-500/40 hover:border-amber-400/90 text-slate-100 hover:text-white transition-all duration-300 shadow-[0_2px_12px_-2px_rgba(245,158,11,0.18)] hover:shadow-[0_4px_22px_0px_rgba(245,158,11,0.35)] cursor-pointer text-xs min-w-0"
             title="Search any Jyotish module, Kundli, Vastu, Dasha (Ctrl+K)"
           >
-            <div className="flex items-center gap-2 sm:gap-2.5 truncate">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 truncate min-w-0">
               {/* Jewel Search Icon Capsule */}
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-400/25 via-amber-500/15 to-amber-600/10 border border-amber-400/40 flex items-center justify-center text-amber-400 group-hover:text-amber-300 group-hover:border-amber-300/80 group-hover:scale-105 transition-all shadow-xs flex-shrink-0">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-gradient-to-br from-amber-400/25 via-amber-500/15 to-amber-600/10 border border-amber-400/40 flex items-center justify-center text-amber-400 group-hover:text-amber-300 group-hover:border-amber-300/80 group-hover:scale-105 transition-all shadow-xs flex-shrink-0">
+                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
                   <circle cx="11" cy="11" r="8" />
                   <path d="m21 21-4.35-4.35" strokeLinecap="round" />
                 </svg>
               </div>
 
               {/* High-Contrast Search Label & Sparkle Indicator */}
-              <div className="flex items-center gap-1.5 truncate">
-                <span className="text-slate-200 group-hover:text-amber-100 font-semibold text-xs sm:text-[12.5px] tracking-wide truncate">
-                  Search modules, kundli, vastu...
+              <div className="flex items-center gap-1.5 truncate min-w-0">
+                <span className="text-slate-200 group-hover:text-amber-100 font-semibold text-[11px] sm:text-xs md:text-[12.5px] tracking-wide truncate">
+                  <span className="hidden sm:inline">Search modules, kundli, vastu...</span>
+                  <span className="sm:hidden">Search...</span>
                 </span>
                 <span className="hidden xl:inline text-amber-400/70 group-hover:text-amber-300 text-[10px] animate-pulse">
                   ✦
@@ -498,7 +499,7 @@ export default function HeaderNav() {
               <span className="hidden lg:inline text-[9px] font-bold uppercase tracking-wider text-amber-400/80 group-hover:text-amber-300 transition-colors">
                 Quick Jump
               </span>
-              <kbd className="inline-flex items-center gap-0.5 px-2 py-0.5 text-[9.5px] sm:text-[10px] font-mono font-bold text-amber-300/90 group-hover:text-amber-200 bg-gradient-to-b from-slate-800 to-slate-900 border border-amber-500/40 group-hover:border-amber-400/80 rounded-md shadow-inner shadow-black/50">
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[9.5px] sm:text-[10px] font-mono font-bold text-amber-300/90 group-hover:text-amber-200 bg-gradient-to-b from-slate-800 to-slate-900 border border-amber-500/40 group-hover:border-amber-400/80 rounded-md shadow-inner shadow-black/50">
                 <span className="text-[10px] font-sans">Ctrl</span>
                 <span>K</span>
               </kbd>
@@ -507,16 +508,19 @@ export default function HeaderNav() {
         </div>
 
         {/* Right: Location Chip & Settings */}
-        <div className="flex items-center gap-1.5 md:gap-2 text-xs">
+        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 text-xs flex-shrink-0">
           {/* Life Report Button (For non-astrologers & quick life reading) */}
           <button
             onClick={() => setShowBirthReportModal(true)}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 hover:from-amber-500 hover:to-yellow-400 border border-amber-500/50 hover:border-amber-400 text-amber-300 hover:text-slate-950 font-bold transition-all shadow-sm cursor-pointer group"
+            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 hover:from-amber-500 hover:to-yellow-400 border border-amber-500/50 hover:border-amber-400 text-amber-300 hover:text-slate-950 font-bold transition-all shadow-sm cursor-pointer group flex-shrink-0"
             title="Generate Complete Layperson Kundli Life Report & Download PDF"
           >
             <span className="text-sm">✨</span>
-            <span className="text-[11px] md:text-xs tracking-tight whitespace-nowrap">
+            <span className="text-[11px] md:text-xs tracking-tight whitespace-nowrap hidden sm:inline">
               Life Report
+            </span>
+            <span className="text-[10px] tracking-tight whitespace-nowrap sm:hidden">
+              Report
             </span>
             <span className="hidden xl:inline text-[8.5px] font-extrabold uppercase px-1 py-0.2 rounded bg-amber-500/30 text-amber-200 group-hover:bg-slate-900 group-hover:text-amber-300">
               PDF
@@ -526,15 +530,15 @@ export default function HeaderNav() {
           {/* Location Trigger Chip */}
           <button
             onClick={() => setShowLocationModal(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-500/50 text-slate-200 font-semibold transition-all shadow-sm cursor-pointer"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-500/50 text-slate-200 font-semibold transition-all shadow-sm cursor-pointer flex-shrink-0"
             title="Edit Observer Location & GPS"
           >
-            <svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
             <div className="text-left">
-              <span className="font-bold text-[11px] md:text-xs block max-w-[90px] sm:max-w-[120px] truncate text-slate-100">
+              <span className="font-bold text-[10px] sm:text-[11px] md:text-xs block max-w-[55px] sm:max-w-[90px] md:max-w-[120px] truncate text-slate-100">
                 {location.cityName}
               </span>
               <span className="text-[8.5px] text-slate-400 font-mono hidden sm:block">
@@ -580,7 +584,7 @@ export default function HeaderNav() {
           {/* Mobile Settings Gear Drawer Trigger */}
           <button
             onClick={() => setShowSettingsDrawer(true)}
-            className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-amber-400 transition-all flex items-center justify-center cursor-pointer shadow-sm"
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-amber-400 transition-all flex items-center justify-center cursor-pointer shadow-sm flex-shrink-0"
             title="Jyotish Configuration & Settings"
             aria-label="Settings"
           >
