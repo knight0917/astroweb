@@ -442,7 +442,7 @@ export default function HeaderNav() {
           {/* Direct Visible Trading Terminal Tab */}
           <button
             onClick={() => setViewMode(viewMode === "pre-market" ? "kundli-north" : "pre-market")}
-            className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer font-bold text-xs ${
+            className={`hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer font-bold text-xs ${
               viewMode === "pre-market"
                 ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/30 font-extrabold"
                 : "bg-amber-950/40 hover:bg-amber-900/60 border-amber-600/50 text-amber-300 hover:text-white"
@@ -460,7 +460,7 @@ export default function HeaderNav() {
         </div>
 
         {/* Center: Universal Quick Search Trigger Bar (Elevated Radiant Celestial Design) */}
-        <div className="flex-1 min-w-0 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mx-1 sm:mx-3 relative group">
+        <div className="flex-1 min-w-[130px] sm:min-w-[190px] max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mx-1 sm:mx-3 relative group">
           {/* Ambient Celestial Glow Aura */}
           <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500/30 via-yellow-400/20 to-amber-600/30 rounded-2xl blur-xs opacity-70 group-hover:opacity-100 group-hover:blur-sm transition-all duration-300 pointer-events-none" />
 
@@ -470,11 +470,11 @@ export default function HeaderNav() {
               setSearchQuery("");
               setSearchSelectedIndex(0);
             }}
-            className="relative w-full flex items-center justify-between gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-slate-900/95 via-slate-900/90 to-slate-950/95 hover:from-slate-850 hover:to-slate-900 border border-amber-500/40 hover:border-amber-400/90 text-slate-100 hover:text-white transition-all duration-300 shadow-[0_2px_12px_-2px_rgba(245,158,11,0.18)] hover:shadow-[0_4px_22px_0px_rgba(245,158,11,0.35)] cursor-pointer text-xs min-w-0"
+            className="relative w-full flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-slate-900/95 via-slate-900/90 to-slate-950/95 hover:from-slate-850 hover:to-slate-900 border border-amber-500/40 hover:border-amber-400/90 text-slate-100 hover:text-white transition-all duration-300 shadow-[0_2px_12px_-2px_rgba(245,158,11,0.18)] hover:shadow-[0_4px_22px_0px_rgba(245,158,11,0.35)] cursor-pointer text-xs"
             title="Search any Jyotish module, Kundli, Vastu, Dasha (Ctrl+K)"
           >
-            <div className="flex items-center gap-1.5 sm:gap-2.5 truncate min-w-0">
-              {/* Jewel Search Icon Capsule */}
+            <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+              {/* Jewel Search Icon Capsule - Guaranteed flex-shrink-0 to never clip */}
               <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-gradient-to-br from-amber-400/25 via-amber-500/15 to-amber-600/10 border border-amber-400/40 flex items-center justify-center text-amber-400 group-hover:text-amber-300 group-hover:border-amber-300/80 group-hover:scale-105 transition-all shadow-xs flex-shrink-0">
                 <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
                   <circle cx="11" cy="11" r="8" />
@@ -483,23 +483,20 @@ export default function HeaderNav() {
               </div>
 
               {/* High-Contrast Search Label & Sparkle Indicator */}
-              <div className="flex items-center gap-1.5 truncate min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0 truncate">
                 <span className="text-slate-200 group-hover:text-amber-100 font-semibold text-[11px] sm:text-xs md:text-[12.5px] tracking-wide truncate">
                   <span className="hidden sm:inline">Search modules, kundli, vastu...</span>
                   <span className="sm:hidden">Search...</span>
                 </span>
-                <span className="hidden xl:inline text-amber-400/70 group-hover:text-amber-300 text-[10px] animate-pulse">
+                <span className="hidden 2xl:inline text-amber-400/70 group-hover:text-amber-300 text-[10px] animate-pulse">
                   ✦
                 </span>
               </div>
             </div>
 
             {/* Right: Tactile 3D Keycap Badge */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <span className="hidden lg:inline text-[9px] font-bold uppercase tracking-wider text-amber-400/80 group-hover:text-amber-300 transition-colors">
-                Quick Jump
-              </span>
-              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[9.5px] sm:text-[10px] font-mono font-bold text-amber-300/90 group-hover:text-amber-200 bg-gradient-to-b from-slate-800 to-slate-900 border border-amber-500/40 group-hover:border-amber-400/80 rounded-md shadow-inner shadow-black/50">
+            <div className="flex items-center gap-1 flex-shrink-0 ml-1">
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9.5px] sm:text-[10px] font-mono font-bold text-amber-300/90 group-hover:text-amber-200 bg-gradient-to-b from-slate-800 to-slate-900 border border-amber-500/40 group-hover:border-amber-400/80 rounded-md shadow-inner shadow-black/50">
                 <span className="text-[10px] font-sans">Ctrl</span>
                 <span>K</span>
               </kbd>
@@ -547,8 +544,8 @@ export default function HeaderNav() {
             </div>
           </button>
 
-          {/* Desktop Direct Settings Dropdowns */}
-          <div className="hidden lg:flex items-center gap-1.5">
+          {/* Desktop Direct Settings Dropdowns (xl+ for ample breathing room) */}
+          <div className="hidden xl:flex items-center gap-1.5">
             <select
               value={ayanamsha}
               onChange={(e) => setAyanamsha(e.target.value as AyanamshaType)}

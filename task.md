@@ -2005,3 +2005,33 @@
   - [x] Run `npm test` and confirm all 165 tests pass.
   - [x] Run `npm run build` and confirm production Next.js build compiles cleanly with all static routes generated.
 
+---
+
+# Phase 72: Positions Table Ishta/Kashta Redesign & Header Searchbar Responsive Decongestion
+
+## Status: Complete & Verified (All 165 Tests Passing & Next.js Build Clean)
+- **Trigger Keywords**: `positions-table-redesign`, `ishta-kashta-gauge`, `responsive-header-nav`, `searchbar-decongestion`, `flexbox-icon-clip-fix`
+- **Single Source of Truth**: Tracking the visual redesign of Ishta/Kashta fruition gauges in `src/components/PositionsTable.tsx` and responsive layout decongestion in `src/components/HeaderNav.tsx`.
+
+## Phases & Milestones
+
+- [x] **Phase 72.1: Positions Table Ishta / Kashta (Res %) Publication-Grade Redesign (`src/components/PositionsTable.tsx`)**
+  - [x] Enforce consistent 2-decimal precision (`.toFixed(2)`) on Ishta and Kashta metrics to replace jagged floating numbers.
+  - [x] Replace raw unstyled `I:` and `K:` debug labels with styled semantic micro-badges (`[Ishta]` emerald `bg-emerald-950/90` and `[Kashta]` rose `bg-rose-950/90`).
+  - [x] Add dual-gradient visual proportion micro-bar (`from-emerald-500 to-teal-400` vs `from-rose-500 to-rose-700`) encoding classical `netBeneficRatio` auspicious balance.
+  - [x] Style residential fruition capacity (`Res: %`) with threshold coloring ($\ge 75\%$ green, $\ge 40\%$ amber, $<40\%$ slate) and classical quality badge (`Supreme`, `Favorable`, `Neutral`, `Remedy`).
+  - [x] Add detailed classical Jyotish tooltip on hover explaining fruition capacity and practical remedial guidance.
+  - [x] Align Lagna and lunar nodes with centered monospace dash (`—`).
+
+- [x] **Phase 72.2: Universal Search Trigger Bar & Navigation Decongestion (`src/components/HeaderNav.tsx`)**
+  - [x] Remove redundant, space-hogging `"QUICK JUMP"` label from the search trigger button.
+  - [x] Decouple jewel search icon capsule (`flex-shrink-0`) from the text truncation wrapper to eliminate vertical slicing/crescent icon clipping under narrow flex widths.
+  - [x] Enforce minimum container width `min-w-[130px] sm:min-w-[190px]` on the center search bar so it never collapses into a crushed sliver.
+  - [x] Shift secondary direct dropdowns (`Ayanamsha`, `Node`, `Upagrahas`) and `Trading Terminal` tab to `xl:flex` ($\ge 1280\text{px}$) to avoid breakpoint collisions and preserve ample searchbar breathing room on standard 1024px–1279px screens.
+
+- [x] **Phase 72.3: Automated Quality Gates & Production Build Verification**
+  - [x] Run `npx tsc --noEmit` and confirm 0 TypeScript errors.
+  - [x] Run `npm test` and confirm all 165 unit tests pass.
+  - [x] Run `npm run build` and confirm Next.js production build compiles cleanly.
+
+

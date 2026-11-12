@@ -108,7 +108,12 @@ export default function PositionsTable() {
                   <th className="py-2.5 px-3">Nakshatra (Pada)</th>
                   <th className="py-2.5 px-3">House</th>
                   <th className="py-2.5 px-3">Pancha-da / System</th>
-                  <th className="py-2.5 px-3">Ishta / Kashta (Res %)</th>
+                  <th className="py-2.5 px-3 min-w-[155px]">
+                    <div className="flex flex-col">
+                      <span className="text-slate-300 font-bold">Ishta / Kashta</span>
+                      <span className="text-[9.5px] font-normal text-slate-400">इष्ट / कष्ट (Res %)</span>
+                    </div>
+                  </th>
                   <th className="py-2.5 px-3">Avastha & Badhaka</th>
                   <th className="py-2.5 px-3">Motion</th>
                   <th className="py-2.5 px-3 text-right">Inspect</th>
@@ -151,7 +156,7 @@ export default function PositionsTable() {
                       Parashari Core
                     </span>
                   </td>
-                  <td className="py-2 px-3 text-slate-500">—</td>
+                  <td className="py-2 px-3 text-slate-500 font-mono text-center">—</td>
                   <td className="py-2 px-3 text-emerald-400 text-[10px] font-mono">Physical Self</td>
                   <td className="py-2 px-3 text-slate-400 text-[10px]">Direct</td>
                   <td className="py-2 px-3 text-right">
@@ -224,20 +229,72 @@ export default function PositionsTable() {
                     </td>
 
                     {/* Ishta / Kashta & Res % */}
-                    <td className="py-2 px-3">
+                    <td className="py-2.5 px-3">
                       {ik ? (
-                        <div className="flex flex-col gap-0.5">
-                          <div className="flex items-center gap-1.5 text-[11px]">
-                            <span className="text-emerald-400 font-semibold">I:{ik.ishtaPhala}</span>
-                            <span className="text-slate-600">/</span>
-                            <span className="text-rose-400 font-semibold">K:{ik.kashtaPhala}</span>
+                        <div
+                          className="flex flex-col gap-1 min-w-[145px]"
+                          title={`Ishta Phala (Benefic): ${ik.ishtaPhala.toFixed(2)} / 60\nKashta Phala (Adverse): ${ik.kashtaPhala.toFixed(2)} / 60\nResidential Strength: ${ik.residentialPercent}% (Fruition capacity based on Bhava Madhya)\nVerdict: ${ik.qualityBadge}\n${ik.practicalGuidance}`}
+                        >
+                          {/* Top: Formatted Ishta (Emerald) vs Kashta (Rose) with consistent 2-decimal numbers */}
+                          <div className="flex items-center justify-between text-[11px] font-mono leading-none">
+                            <span className="flex items-center gap-1 font-bold text-emerald-400">
+                              <span className="text-[8.5px] px-1 py-0.2 rounded bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 font-sans font-bold uppercase tracking-wider">
+                                Ishta
+                              </span>
+                              <span>{ik.ishtaPhala.toFixed(2)}</span>
+                            </span>
+                            <span className="text-slate-600 font-sans text-[10px]">/</span>
+                            <span className="flex items-center gap-1 font-bold text-rose-400">
+                              <span className="text-[8.5px] px-1 py-0.2 rounded bg-rose-950/90 border border-rose-500/50 text-rose-300 font-sans font-bold uppercase tracking-wider">
+                                Kashta
+                              </span>
+                              <span>{ik.kashtaPhala.toFixed(2)}</span>
+                            </span>
                           </div>
-                          <div className="text-[9px] text-slate-400 font-mono">
-                            Res: <span className="text-amber-300">{ik.residentialPercent}%</span>
+
+                          {/* Middle: Visual Proportion Ratio Bar */}
+                          <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden flex border border-slate-800 shadow-inner">
+                            <div
+                              className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
+                              style={{ width: `${Math.round(ik.netBeneficRatio * 100)}%` }}
+                              title={`Ishta Auspicious Proportion: ${Math.round(ik.netBeneficRatio * 100)}%`}
+                            />
+                            <div
+                              className="h-full bg-gradient-to-r from-rose-500 to-rose-700 transition-all duration-300"
+                              style={{ width: `${100 - Math.round(ik.netBeneficRatio * 100)}%` }}
+                              title={`Kashta Adverse Proportion: ${100 - Math.round(ik.netBeneficRatio * 100)}%`}
+                            />
+                          </div>
+
+                          {/* Bottom: Residential Strength (Res %) + Classical Quality Badge */}
+                          <div className="flex items-center justify-between text-[9.5px]">
+                            <span className="text-slate-400 font-mono">
+                              Res:{" "}
+                              <span
+                                className={`font-bold ${
+                                  ik.residentialPercent >= 75
+                                    ? "text-emerald-400"
+                                    : ik.residentialPercent >= 40
+                                    ? "text-amber-300"
+                                    : "text-slate-400"
+                                }`}
+                              >
+                                {ik.residentialPercent}%
+                              </span>
+                            </span>
+                            <span
+                              className={`text-[8.5px] px-1.5 py-0.2 rounded font-semibold border ${ik.badgeColor}`}
+                            >
+                              {ik.qualityBadge === "Supreme Auspicious"
+                                ? "Supreme"
+                                : ik.qualityBadge === "Testing / Requires Remedy"
+                                ? "Remedy"
+                                : ik.qualityBadge}
+                            </span>
                           </div>
                         </div>
                       ) : (
-                        <span className="text-slate-500">—</span>
+                        <span className="text-slate-500 font-mono text-center block">—</span>
                       )}
                     </td>
 
