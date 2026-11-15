@@ -6,7 +6,7 @@
  */
 
 export const DEFAULT_PUBLIC_ORIGIN = "https://astroweb-swart.vercel.app";
-export const DEFAULT_WAKE_PHRASE = "Hey Purohitji";
+export const DEFAULT_WAKE_PHRASE = "Purohitji";
 
 const SAFE_ORIGIN_REGEX = /^https?:\/\/[A-Za-z0-9.\-:]+$/;
 const SAFE_WAKE_PHRASE_REGEX = /^[A-Za-z0-9]+(?:[ -][A-Za-z0-9]+)*$/;
@@ -138,22 +138,10 @@ export function buildLaunchDeepLink(options: LaunchDeepLinkOptions = {}): string
 }
 
 /**
- * Produces deduplicated wake-phrase variants recognized by Windows Speech Engine.
+ * Returns the single validated wake word recognized by Windows Speech Engine.
  */
 export function buildWakePhrasesList(primaryPhrase?: string): string[] {
-  const primary = sanitizeWakePhraseOrThrow(primaryPhrase);
-  const defaults = [primary, "Open Purohitji", "Open Purohitji AI", "Hey Purohitji"];
-  const seen = new Set<string>();
-  const unique: string[] = [];
-
-  for (const phrase of defaults) {
-    const key = phrase.toLowerCase();
-    if (!seen.has(key)) {
-      seen.add(key);
-      unique.push(phrase);
-    }
-  }
-  return unique;
+  return [sanitizeWakePhraseOrThrow(primaryPhrase)];
 }
 
 /**

@@ -10038,15 +10038,15 @@ test("Phase 73: Cross-User PC Voice Wake Launcher Generator, Adversarial Sanitiz
   assert.strictEqual(parsed.searchParams.get("voice"), "1");
   assert.strictEqual(parsed.searchParams.get("prompt"), "today panchang");
 
-  // 4. Case-insensitive deduplication of wake phrase variants
-  const variants = buildWakePhrasesList("open purohitji");
-  assert.strictEqual(variants.filter((v) => v.toLowerCase() === "open purohitji").length, 1);
-  assert.ok(variants.includes("Hey Purohitji"));
+  // 4. Single wake-word guarantee (only "Purohitji" by default, no extra variants added)
+  assert.strictEqual(DEFAULT_WAKE_PHRASE, "Purohitji");
+  assert.deepStrictEqual(buildWakePhrasesList(), ["Purohitji"]);
+  assert.deepStrictEqual(buildWakePhrasesList("purohitji"), ["purohitji"]);
 
   // 5. Generated Windows .cmd + PowerShell Tray Launcher structure
   const cmdScript = generateWindowsVoiceLauncherCmd({
     origin: "https://astroweb-swart.vercel.app",
-    wakePhrase: "Namaste Purohitji",
+    wakePhrase: "Purohitji",
     openChat: true,
     autoVoice: true,
   });
@@ -10055,7 +10055,8 @@ test("Phase 73: Cross-User PC Voice Wake Launcher Generator, Adversarial Sanitiz
   assert.ok(cmdScript.includes('set "PUROHITJI_SELF=%~f0"'), "Must use env var for self path to safely handle apostrophes in user folders");
   assert.ok(cmdScript.includes("-STA -NoProfile -WindowStyle Hidden"), "PowerShell tray app must launch in STA mode");
   assert.ok(cmdScript.includes("$LaunchUrl = 'https://astroweb-swart.vercel.app/?openChat=1&voice=1'"));
-  assert.ok(cmdScript.includes("$PrimaryWakePhrase = 'Namaste Purohitji'"));
+  assert.ok(cmdScript.includes("$PrimaryWakePhrase = 'Purohitji'"));
+  assert.ok(cmdScript.includes("$WakePhrases = @('Purohitji')"), "Must listen only for the single Purohitji wake word");
   assert.ok(cmdScript.includes("activeTrayText.Length -gt 63"), "Must guard .NET NotifyIcon 63-char maximum length");
   assert.ok(cmdScript.includes("PurohitjiSpeechWatcher"), "Must include native C# SpeechRecognitionEngine bridge");
 

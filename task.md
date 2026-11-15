@@ -2040,7 +2040,7 @@
 
 ## Status: Complete & Verified (All 166 Tests Passing & Next.js Build Clean)
 - **Trigger Keywords**: `audit-code-review`, `systematic-debugging`, `pwa-voice-launcher`, `desktop-wake-word`, `deep-linking`, `web-speech-recognition`, `boundary-validation`, `powershell-tray-launcher`
-- **Single Source of Truth**: Implementing Option 1 so any user on their own PC can install or run a lightweight offline voice wake launcher (`"Hey Purohitji"` / `"Open Purohitji"`) or built-in Windows 11 Voice Access / macOS Siri shortcut, launch directly into the PurohitJI AI chat (`/?openChat=1&voice=1`), and speak hands-free.
+- **Single Source of Truth**: Implementing Option 1 so any user on their own PC can install or run a lightweight offline voice wake launcher listening only for `"Purohitji"` (or built-in Windows 11 Voice Access / macOS Siri shortcut), launch directly into the PurohitJI AI chat (`/?openChat=1&voice=1`), and speak hands-free.
 
 ## Phases & Milestones
 

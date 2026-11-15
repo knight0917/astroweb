@@ -24,13 +24,6 @@ interface BeforeInstallPromptLike extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-const PRESET_PHRASES = [
-  "Hey Purohitji",
-  "Open Purohitji",
-  "Open Astrology",
-  "Namaste Purohitji",
-];
-
 export default function VoiceLauncherModal({ isOpen, onClose }: VoiceLauncherModalProps) {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<VoiceTab>("windows-tray");
@@ -263,7 +256,7 @@ export default function VoiceLauncherModal({ isOpen, onClose }: VoiceLauncherMod
           <div className="space-y-3">
             <div className="space-y-1.5">
               <label htmlFor="wake-phrase-input" className="text-xs font-bold text-slate-200 block">
-                Your Spoken Wake Phrase (English letters/numbers, 3–40 chars)
+                Your Spoken Wake Word (English letters/numbers, 3–40 chars)
               </label>
               <input
                 id="wake-phrase-input"
@@ -274,31 +267,15 @@ export default function VoiceLauncherModal({ isOpen, onClose }: VoiceLauncherMod
                   setWakePhrase(e.target.value);
                   setDownloadStatus(null);
                 }}
-                placeholder="Hey Purohitji"
+                placeholder="Purohitji"
                 className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none"
               />
-              <div className="flex flex-wrap gap-1.5 pt-0.5">
-                {PRESET_PHRASES.map((preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => setWakePhrase(preset)}
-                    className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold border cursor-pointer transition-colors ${
-                      wakePhrase.trim().toLowerCase() === preset.toLowerCase()
-                        ? "bg-amber-500/20 border-amber-400 text-amber-200"
-                        : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    &ldquo;{preset}&rdquo;
-                  </button>
-                ))}
-              </div>
               {!phraseValidation.valid && (
                 <p className="text-[11px] text-rose-400 font-medium">{phraseValidation.error}</p>
               )}
               {phraseValidation.valid && (
                 <p className="text-[10.5px] text-slate-400">
-                  Also recognizes:{" "}
+                  Listens only for:{" "}
                   <span className="text-slate-200 font-medium">
                     {activePhraseVariants.map((p) => `"${p}"`).join(", ")}
                   </span>
@@ -387,7 +364,7 @@ export default function VoiceLauncherModal({ isOpen, onClose }: VoiceLauncherMod
                   Say <strong className="text-amber-300">&ldquo;Open PurohitJI AI&rdquo;</strong> from anywhere in Windows to launch it.
                 </li>
                 <li>
-                  Want a custom phrase to jump straight into Voice Chat? Add a Voice Access shortcut in Windows Voice Access Settings that opens the URL copied above.
+                  Want to say only <strong className="text-amber-300">&ldquo;Purohitji&rdquo;</strong>? Add a custom Voice Access shortcut in Windows Voice Access Settings that opens the URL copied above.
                 </li>
               </ol>
             </div>
@@ -407,10 +384,10 @@ export default function VoiceLauncherModal({ isOpen, onClose }: VoiceLauncherMod
                 Add the <strong className="text-slate-100">Open URLs</strong> action and paste the copied PurohitJI AI link.
               </li>
               <li>
-                Rename the shortcut to <strong className="text-amber-300">&ldquo;Open Purohitji&rdquo;</strong>.
+                Rename the shortcut to <strong className="text-amber-300">&ldquo;Purohitji&rdquo;</strong>.
               </li>
               <li>
-                Now simply say <strong className="text-amber-300">&ldquo;Hey Siri, Open Purohitji&rdquo;</strong> on your Mac or iPhone!
+                Now simply say <strong className="text-amber-300">&ldquo;Hey Siri, Purohitji&rdquo;</strong> on your Mac or iPhone!
               </li>
             </ol>
           </div>

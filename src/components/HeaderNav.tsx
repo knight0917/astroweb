@@ -584,7 +584,7 @@ export default function HeaderNav() {
           <button
             onClick={() => setShowVoiceModal(true)}
             className="hidden md:flex p-1.5 sm:p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 text-amber-300 hover:text-amber-200 transition-all items-center justify-center cursor-pointer shadow-sm flex-shrink-0"
-            title="Set Up 'Hey Purohitji' Voice Launch on Your PC"
+            title="Set Up 'Purohitji' Voice Launch on Your PC"
             aria-label="PC Voice Wake Setup"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -1096,7 +1096,7 @@ export default function HeaderNav() {
                       🎙️ PC Voice Wake Setup
                     </span>
                     <span className="text-[10px] text-slate-400">
-                      Say &ldquo;Hey Purohitji&rdquo; or &ldquo;Open Purohitji&rdquo; on Windows/Mac
+                      Say &ldquo;Purohitji&rdquo; on Windows or Mac
                     </span>
                   </div>
                   <span className="text-xs text-amber-400 font-bold">→</span>
