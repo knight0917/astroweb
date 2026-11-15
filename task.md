@@ -2034,4 +2034,35 @@
   - [x] Run `npm test` and confirm all 165 unit tests pass.
   - [x] Run `npm run build` and confirm Next.js production build compiles cleanly.
 
+---
+
+# Phase 73: Cross-User PC Voice Wake Launcher, PWA Deep-Linking & Hands-Free Chat
+
+## Status: Complete & Verified (All 166 Tests Passing & Next.js Build Clean)
+- **Trigger Keywords**: `audit-code-review`, `systematic-debugging`, `pwa-voice-launcher`, `desktop-wake-word`, `deep-linking`, `web-speech-recognition`, `boundary-validation`, `powershell-tray-launcher`
+- **Single Source of Truth**: Implementing Option 1 so any user on their own PC can install or run a lightweight offline voice wake launcher (`"Hey Purohitji"` / `"Open Purohitji"`) or built-in Windows 11 Voice Access / macOS Siri shortcut, launch directly into the PurohitJI AI chat (`/?openChat=1&voice=1`), and speak hands-free.
+
+## Phases & Milestones
+
+- [x] **Phase 73.1: Security-Hardened Voice Launcher Generator (`src/lib/voiceLauncher.ts`)**
+  - [x] Implement strict `http:` / `https:` URL origin allowlist validation (`sanitizeOriginUrl`) and deep-link construction (`buildLaunchDeepLink`).
+  - [x] Implement strict wake-phrase validation (`sanitizeWakePhraseOrThrow`: ASCII alphanumeric + spaces + hyphens, 3–40 chars, blocking shell/Batch/PowerShell metacharacters).
+  - [x] Generate self-contained offline Windows `.cmd` + PowerShell System Tray Launcher (`generateWindowsVoiceLauncherCmd`) using `.NET System.Speech.Recognition` with installed-recognizer locale fallback, 0.80 confidence gating, 5s cooldown, Pause/Test/Startup-shortcut tray menu, and clean Edge/Chrome `--app=` or default-browser launch.
+
+- [x] **Phase 73.2: Deep-Linking, Permissions & PWA Shortcuts (`next.config.mjs`, `src/app/manifest.ts`, `src/app/page.tsx`, `src/components/PwaRegister.tsx`)**
+  - [x] Update `Permissions-Policy` in `next.config.mjs` from `microphone=()` to `microphone=(self)` so same-origin browser speech recognition works.
+  - [x] Add PWA `shortcuts` in `src/app/manifest.ts` for Voice Consultation, Chat, and Daily Panchanga.
+  - [x] Handle `?openChat=1`, `?voice=1`, and sanitized `?prompt=` URL parameters in `src/app/page.tsx` and expose global PWA install trigger in `src/components/PwaRegister.tsx`.
+
+- [x] **Phase 73.3: Hands-Free In-Chat Voice Input & End-User PC Voice Setup Modal (`src/components/AstroChatbot.tsx`, `src/components/VoiceLauncherModal.tsx`, `src/components/HeaderNav.tsx`)**
+  - [x] Add Web Speech API (`SpeechRecognition` / `webkitSpeechRecognition`) microphone input button, listening state indicator, error handling, and `initialAutoVoice` handling inside `src/components/AstroChatbot.tsx`.
+  - [x] Create `src/components/VoiceLauncherModal.tsx` with 3 tabs: (1) Windows Custom Wake Word Launcher download + customization + SmartScreen trust instructions, (2) Zero-download Windows 11 Voice Access + PWA install guide, and (3) macOS / iOS Siri Shortcuts guide.
+  - [x] Surface **"Voice Wake"** trigger cleanly in `src/components/HeaderNav.tsx` (compact header button, Settings Drawer, and `Ctrl+K` Command Palette).
+
+- [x] **Phase 73.4: Automated Tests, PowerShell AST Validation & Production Build (`tests/engine.test.mjs`)**
+  - [x] Add Phase 73 test in `tests/engine.test.mjs` testing URL/phrase boundary validation, injection blocking, deep-link sanitization, and `.cmd` / PowerShell script structure.
+  - [x] Validate generated PowerShell script syntax using `powershell.exe` AST parser on Windows.
+  - [x] Run `npx tsc --noEmit`, `npm test`, and `npm run build` with 0 errors.
+
+
 

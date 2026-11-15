@@ -7,10 +7,12 @@ import { POPULAR_CITIES } from "../engine/constants";
 import { AyanamshaType, HouseSystem, NodeType, GeoLocation } from "../engine/types";
 import { PlaceAutocompleteInput } from "./PlaceAutocompleteInput";
 import BirthDetailsModal from "./BirthDetailsModal";
+import VoiceLauncherModal from "./VoiceLauncherModal";
 
 export default function HeaderNav() {
   const [mounted, setMounted] = useState(false);
   const [showBirthReportModal, setShowBirthReportModal] = useState(false);
+  const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showCoordinatesDropdown, setShowCoordinatesDropdown] = useState(false);
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
@@ -578,6 +580,20 @@ export default function HeaderNav() {
             </button>
           </div>
 
+          {/* PC Voice Wake Launcher Button (Desktop/Tablet header quick access) */}
+          <button
+            onClick={() => setShowVoiceModal(true)}
+            className="hidden md:flex p-1.5 sm:p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 text-amber-300 hover:text-amber-200 transition-all items-center justify-center cursor-pointer shadow-sm flex-shrink-0"
+            title="Set Up 'Hey Purohitji' Voice Launch on Your PC"
+            aria-label="PC Voice Wake Setup"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="22" />
+            </svg>
+          </button>
+
           {/* Mobile Settings Gear Drawer Trigger */}
           <button
             onClick={() => setShowSettingsDrawer(true)}
@@ -761,7 +777,16 @@ export default function HeaderNav() {
                 <span><kbd className="px-1 py-0.5 bg-slate-800 rounded border border-slate-700">↵</kbd> Select</span>
                 <span><kbd className="px-1 py-0.5 bg-slate-800 rounded border border-slate-700">ESC</kbd> Close</span>
               </div>
-              <span className="hidden sm:inline">PurohitJI AI Navigation</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSearchModal(false);
+                  setShowVoiceModal(true);
+                }}
+                className="px-2 py-0.5 rounded bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 font-sans font-semibold text-[10px] cursor-pointer"
+              >
+                🎙️ Voice Wake Setup
+              </button>
             </div>
           </div>
         </div>,
@@ -912,6 +937,16 @@ export default function HeaderNav() {
               <button
                 onClick={() => {
                   setShowMenuDrawer(false);
+                  setShowVoiceModal(true);
+                }}
+                className="w-full py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:text-amber-200 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>🎙️</span>
+                <span>Open by Voice on Your PC</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowMenuDrawer(false);
                   setShowSettingsDrawer(true);
                 }}
                 className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer"
@@ -1047,6 +1082,25 @@ export default function HeaderNav() {
                     className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
                   />
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSettingsDrawer(false);
+                    setShowVoiceModal(true);
+                  }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-left transition-colors cursor-pointer"
+                >
+                  <div>
+                    <span className="font-bold text-xs text-amber-300 block">
+                      🎙️ PC Voice Wake Setup
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      Say &ldquo;Hey Purohitji&rdquo; or &ldquo;Open Purohitji&rdquo; on Windows/Mac
+                    </span>
+                  </div>
+                  <span className="text-xs text-amber-400 font-bold">→</span>
+                </button>
               </div>
             </div>
 
@@ -1285,6 +1339,14 @@ export default function HeaderNav() {
         <BirthDetailsModal
           isOpen={showBirthReportModal}
           onClose={() => setShowBirthReportModal(false)}
+        />
+      )}
+
+      {/* Cross-User PC Voice Wake Setup Modal */}
+      {mounted && showVoiceModal && (
+        <VoiceLauncherModal
+          isOpen={showVoiceModal}
+          onClose={() => setShowVoiceModal(false)}
         />
       )}
     </header>

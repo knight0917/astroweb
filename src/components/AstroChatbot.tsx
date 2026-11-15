@@ -4821,9 +4821,44 @@ export function renderFormattedChatMarkdown(content: string): React.ReactNode {
 export interface AstroChatbotProps {
   initialOpen?: boolean;
   initialPrompt?: string;
+  initialAutoVoice?: boolean;
 }
 
-export default function AstroChatbot({ initialOpen = false, initialPrompt = "" }: AstroChatbotProps = {}) {
+interface BrowserSpeechRecognitionAlternative {
+  transcript: string;
+}
+
+interface BrowserSpeechRecognitionResult {
+  isFinal: boolean;
+  0: BrowserSpeechRecognitionAlternative;
+}
+
+interface BrowserSpeechRecognitionEvent {
+  resultIndex: number;
+  results: ArrayLike<BrowserSpeechRecognitionResult>;
+}
+
+interface BrowserSpeechRecognitionErrorEvent {
+  error: string;
+}
+
+interface BrowserSpeechRecognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: BrowserSpeechRecognitionEvent) => void) | null;
+  onerror: ((event: BrowserSpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+}
+
+export default function AstroChatbot({
+  initialOpen = false,
+  initialPrompt = "",
+  initialAutoVoice = false,
+}: AstroChatbotProps = {}) {
   const currentDate = useAstroStore((s) => s.currentDate);
   const natalEphemeris = useAstroStore((s) => s.ephemeris);
   const location = useAstroStore((s) => s.location);
@@ -4876,10 +4911,114 @@ export default function AstroChatbot({ initialOpen = false, initialPrompt = "" }
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const streamAbortRef = useRef<AbortController | null>(null);
+  const speechRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const voicePrefixRef = useRef<string>("");
+
+  const [isListeningVoice, setIsListeningVoice] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const [voiceHint, setVoiceHint] = useState<string | null>(null);
+
+  const stopVoiceListening = () => {
+    try {
+      speechRecognitionRef.current?.stop();
+    } catch {
+      // Ignore already-stopped recognition errors
+    }
+    setIsListeningVoice(false);
+  };
+
+  const startVoiceListening = (fromAutoLaunch = false) => {
+    if (typeof window === "undefined") return;
+    const win = window as unknown as {
+      SpeechRecognition?: new () => BrowserSpeechRecognition;
+      webkitSpeechRecognition?: new () => BrowserSpeechRecognition;
+    };
+    const SpeechRecCtor = win.SpeechRecognition || win.webkitSpeechRecognition;
+    if (!SpeechRecCtor) {
+      setVoiceHint("Voice dictation requires Chrome, Edge, or Safari.");
+      return;
+    }
+
+    try {
+      speechRecognitionRef.current?.abort();
+    } catch {
+      // Safe cleanup before starting a fresh recognition session
+    }
+
+    const recognition = new SpeechRecCtor();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = navigator.language || "en-IN";
+    voicePrefixRef.current = inputPrompt.trim() ? `${inputPrompt.trim()} ` : "";
+
+    recognition.onresult = (event) => {
+      let interim = "";
+      let finalChunk = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const res = event.results[i];
+        const transcript = res?.[0]?.transcript || "";
+        if (res.isFinal) {
+          finalChunk += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+      const combined = `${voicePrefixRef.current}${finalChunk}${interim}`.trimStart();
+      setInputPrompt(combined);
+      if (finalChunk) {
+        voicePrefixRef.current = `${voicePrefixRef.current}${finalChunk}`.trim() + " ";
+      }
+    };
+
+    recognition.onerror = (evt) => {
+      setIsListeningVoice(false);
+      if (evt.error === "not-allowed" || evt.error === "service-not-allowed") {
+        setVoiceHint(
+          fromAutoLaunch
+            ? "Browser requires a tap to enable microphone. Click 🎙️ Speak below."
+            : "Microphone permission blocked. Allow microphone access in browser site settings."
+        );
+      } else if (evt.error !== "aborted" && evt.error !== "no-speech") {
+        setVoiceHint(`Voice input stopped (${evt.error}). Try tapping 🎙️ again.`);
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListeningVoice(false);
+    };
+
+    speechRecognitionRef.current = recognition;
+    try {
+      recognition.start();
+      setVoiceHint(null);
+      setIsListeningVoice(true);
+    } catch {
+      setIsListeningVoice(false);
+      setVoiceHint("Tap 🎙️ below to start speaking your Jyotish question.");
+    }
+  };
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const win = window as unknown as {
+        SpeechRecognition?: unknown;
+        webkitSpeechRecognition?: unknown;
+      };
+      const supported = Boolean(win.SpeechRecognition || win.webkitSpeechRecognition);
+      setVoiceSupported(supported);
+      if (initialAutoVoice && supported) {
+        startVoiceListening(true);
+      } else if (initialAutoVoice) {
+        setVoiceHint("Opened in voice mode. Type or use Chrome/Edge for voice dictation.");
+      }
+    }
     return () => {
       streamAbortRef.current?.abort();
+      try {
+        speechRecognitionRef.current?.abort();
+      } catch {
+        // Ignore teardown abort error
+      }
     };
   }, []);
 
@@ -4945,13 +5084,16 @@ export default function AstroChatbot({ initialOpen = false, initialPrompt = "" }
     }
   }, [profileThreadKey]);
 
-  // Listen for global open-astro-chat event from 3D Sky Dome HUD
+  // Listen for global open-astro-chat event from 3D Sky Dome HUD or Voice Wake
   useEffect(() => {
     const handleOpenChat = (e?: Event) => {
       setIsOpen(true);
-      const customEvt = e as CustomEvent<{ prompt?: string }>;
+      const customEvt = e as CustomEvent<{ prompt?: string; voice?: boolean }>;
       if (customEvt?.detail?.prompt) {
         setInputPrompt(customEvt.detail.prompt);
+      }
+      if (customEvt?.detail?.voice) {
+        startVoiceListening(true);
       }
     };
     window.addEventListener("open-astro-chat", handleOpenChat);
@@ -5346,6 +5488,9 @@ export default function AstroChatbot({ initialOpen = false, initialPrompt = "" }
   const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || inputPrompt).trim();
     if (!query || isLoading) return;
+    if (isListeningVoice) {
+      stopVoiceListening();
+    }
 
     // 1. Check 0ms Instant Client-Side Interceptor (0 tokens, 0ms latency)
     const instantAnswer = tryInstantEngineAnswer(query, natalEphemeris, transitEphemeris, new Date(), currentDate, gender);
@@ -6369,7 +6514,47 @@ export default function AstroChatbot({ initialOpen = false, initialPrompt = "" }
             ))}
           </div>
 
-          {/* Multiline Input Box supporting Shift+Enter */}
+          {/* Voice Listening Status / Hint Banner */}
+          {(isListeningVoice || voiceHint) && (
+            <div
+              className={`px-3 py-1.5 border-t flex items-center justify-between gap-2 text-[10.5px] ${
+                isListeningVoice
+                  ? "bg-rose-950/70 border-rose-500/40 text-rose-200"
+                  : "bg-amber-950/60 border-amber-500/30 text-amber-200"
+              }`}
+            >
+              <span className="flex items-center gap-1.5 truncate">
+                <span className={isListeningVoice ? "w-2 h-2 rounded-full bg-rose-400 animate-ping" : ""}>
+                  {isListeningVoice ? "" : "🎙️"}
+                </span>
+                <span className="truncate font-semibold">
+                  {isListeningVoice
+                    ? "Listening... speak your Vedic question clearly"
+                    : voiceHint}
+                </span>
+              </span>
+              {isListeningVoice ? (
+                <button
+                  type="button"
+                  onClick={stopVoiceListening}
+                  className="px-2 py-0.5 rounded bg-rose-500/20 hover:bg-rose-500/40 border border-rose-400/50 text-rose-200 font-bold text-[10px] cursor-pointer flex-shrink-0"
+                >
+                  Stop
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setVoiceHint(null)}
+                  className="text-slate-400 hover:text-white text-xs cursor-pointer flex-shrink-0"
+                  aria-label="Dismiss voice hint"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Multiline Input Box supporting Shift+Enter + Voice Dictation */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -6402,6 +6587,26 @@ export default function AstroChatbot({ initialOpen = false, initialPrompt = "" }
                 <span className="font-mono text-amber-400/80 font-semibold">Shift + ↵ for new line</span>
               </span>
             </div>
+            {voiceSupported && (
+              <button
+                type="button"
+                onClick={() => (isListeningVoice ? stopVoiceListening() : startVoiceListening(false))}
+                disabled={isLoading}
+                title={isListeningVoice ? "Stop voice dictation" : "Speak your question"}
+                aria-label={isListeningVoice ? "Stop voice dictation" : "Speak your question"}
+                className={`p-2.5 mb-4 rounded-xl border transition-all cursor-pointer flex items-center justify-center flex-shrink-0 ${
+                  isListeningVoice
+                    ? "bg-rose-600 hover:bg-rose-500 border-rose-400 text-white shadow-lg shadow-rose-500/30 animate-pulse"
+                    : "bg-slate-800 hover:bg-slate-750 border-slate-700 hover:border-amber-400/70 text-amber-300 hover:text-amber-200"
+                }`}
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="22" />
+                </svg>
+              </button>
+            )}
             <button
               type="submit"
               disabled={isLoading || !inputPrompt.trim()}

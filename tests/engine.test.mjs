@@ -9986,3 +9986,103 @@ test("Phase 70: Complete Classical Daily Panchanga, Samvatsara, Tithi Lord, Hora
   assert.ok(personal.chandrabala.houseFromJanmaRashi >= 1 && personal.chandrabala.houseFromJanmaRashi <= 12, "Chandrabala house must be 1..12");
   assert.ok(personal.horaHarmony.verdict.length > 10, "Hora harmony verdict must be populated");
 });
+
+test("Phase 73: Cross-User PC Voice Wake Launcher Generator, Adversarial Sanitization & PowerShell AST Verification", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const {
+    DEFAULT_PUBLIC_ORIGIN,
+    DEFAULT_WAKE_PHRASE,
+    sanitizeOriginUrl,
+    validateWakePhrase,
+    sanitizeWakePhraseOrThrow,
+    buildLaunchDeepLink,
+    buildWakePhrasesList,
+    generateWindowsVoiceLauncherCmd,
+  } = await import("../src/lib/voiceLauncher.ts");
+
+  // 1. Origin URL sanitization & SSRF/protocol rejection
+  assert.strictEqual(sanitizeOriginUrl("https://astroweb-swart.vercel.app/some/path?x=1"), DEFAULT_PUBLIC_ORIGIN);
+  assert.strictEqual(sanitizeOriginUrl("http://localhost:3000/dashboard"), "http://localhost:3000");
+  assert.strictEqual(sanitizeOriginUrl("javascript:alert(1)"), DEFAULT_PUBLIC_ORIGIN);
+  assert.strictEqual(sanitizeOriginUrl("file:///C:/Windows/System32/cmd.exe"), DEFAULT_PUBLIC_ORIGIN);
+  assert.strictEqual(sanitizeOriginUrl("https://evil.com';Start-Process calc"), DEFAULT_PUBLIC_ORIGIN);
+
+  // 2. Wake phrase boundary validation & shell injection rejection
+  assert.deepStrictEqual(validateWakePhrase(""), { valid: true, normalized: DEFAULT_WAKE_PHRASE });
+  assert.deepStrictEqual(validateWakePhrase("  Open   Astrology  "), { valid: true, normalized: "Open Astrology" });
+  assert.strictEqual(validateWakePhrase("Hi").valid, false, "Wake phrase < 3 chars must fail");
+  assert.strictEqual(validateWakePhrase("A".repeat(41)).valid, false, "Wake phrase > 40 chars must fail");
+
+  const injectionPayloads = [
+    "Hey Purohitji'; Start-Process calc",
+    "Open $(calc)",
+    "Hey %COMSPEC%",
+    "Open `powershell`",
+    "Hey Purohitji\r\ncalc.exe",
+    "Hey & del *",
+  ];
+  for (const payload of injectionPayloads) {
+    assert.strictEqual(validateWakePhrase(payload).valid, false, `Must reject shell injection payload: ${payload}`);
+    assert.throws(() => sanitizeWakePhraseOrThrow(payload), /Invalid|letters/i);
+  }
+
+  // 3. Deep-link builder
+  const link = buildLaunchDeepLink({
+    origin: "https://astroweb-swart.vercel.app",
+    openChat: true,
+    autoVoice: true,
+    prompt: "today\n\tpanchang",
+  });
+  const parsed = new URL(link);
+  assert.strictEqual(parsed.searchParams.get("openChat"), "1");
+  assert.strictEqual(parsed.searchParams.get("voice"), "1");
+  assert.strictEqual(parsed.searchParams.get("prompt"), "today panchang");
+
+  // 4. Case-insensitive deduplication of wake phrase variants
+  const variants = buildWakePhrasesList("open purohitji");
+  assert.strictEqual(variants.filter((v) => v.toLowerCase() === "open purohitji").length, 1);
+  assert.ok(variants.includes("Hey Purohitji"));
+
+  // 5. Generated Windows .cmd + PowerShell Tray Launcher structure
+  const cmdScript = generateWindowsVoiceLauncherCmd({
+    origin: "https://astroweb-swart.vercel.app",
+    wakePhrase: "Namaste Purohitji",
+    openChat: true,
+    autoVoice: true,
+  });
+
+  assert.ok(cmdScript.includes("\r\n"), "Windows .cmd file must use CRLF line endings");
+  assert.ok(cmdScript.includes('set "PUROHITJI_SELF=%~f0"'), "Must use env var for self path to safely handle apostrophes in user folders");
+  assert.ok(cmdScript.includes("-STA -NoProfile -WindowStyle Hidden"), "PowerShell tray app must launch in STA mode");
+  assert.ok(cmdScript.includes("$LaunchUrl = 'https://astroweb-swart.vercel.app/?openChat=1&voice=1'"));
+  assert.ok(cmdScript.includes("$PrimaryWakePhrase = 'Namaste Purohitji'"));
+  assert.ok(cmdScript.includes("activeTrayText.Length -gt 63"), "Must guard .NET NotifyIcon 63-char maximum length");
+  assert.ok(cmdScript.includes("PurohitjiSpeechWatcher"), "Must include native C# SpeechRecognitionEngine bridge");
+
+  // Validate marker separation: batch line must NOT contain raw contiguous marker literal
+  const marker = "###__PUROHITJI_PS_START__###";
+  const firstIdx = cmdScript.indexOf(marker);
+  assert.ok(firstIdx > 0, "Marker separator must exist");
+  assert.strictEqual(cmdScript.indexOf(marker, firstIdx + 1), -1, "Marker literal must appear exactly once");
+
+  // Fail-loud check inside generateWindowsVoiceLauncherCmd
+  assert.throws(
+    () => generateWindowsVoiceLauncherCmd({ wakePhrase: "Hey';calc" }),
+    /letters|Invalid/i
+  );
+
+  // 6. On Windows hosts, parse the extracted PowerShell AST to prove zero syntax errors
+  if (process.platform === "win32") {
+    const psCode = cmdScript.slice(firstIdx + marker.length).trimStart();
+    const astCheck = execFileSync(
+      "powershell.exe",
+      [
+        "-NoProfile",
+        "-Command",
+        "$raw = [Console]::In.ReadToEnd(); $errors = $null; [System.Management.Automation.Language.Parser]::ParseInput($raw, [ref]$null, [ref]$errors) | Out-Null; if ($errors -and $errors.Count -gt 0) { $errors | ForEach-Object { Write-Error $_.ToString() }; exit 1 }; Write-Output 'AST_OK'",
+      ],
+      { input: psCode, encoding: "utf8" }
+    );
+    assert.ok(astCheck.includes("AST_OK"), "Generated PowerShell script must pass PowerShell Parser AST validation");
+  }
+});

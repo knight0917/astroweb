@@ -64,6 +64,8 @@ export default function PwaRegister() {
       e.preventDefault();
       setDeferredPrompt(e);
       if (typeof window !== "undefined") {
+        (window as unknown as { __purohitjiInstallPrompt?: Event }).__purohitjiInstallPrompt = e;
+        window.dispatchEvent(new CustomEvent("purohitji-pwa-install-available"));
         const isDismissed = localStorage.getItem("vedic_pwa_dismissed");
         const isInstalled = localStorage.getItem("vedic_pwa_installed");
         if (!isDismissed && !isInstalled) {
@@ -107,6 +109,9 @@ export default function PwaRegister() {
         }
       } else {
         handleDismissInstall();
+      }
+      if (typeof window !== "undefined") {
+        delete (window as unknown as { __purohitjiInstallPrompt?: Event }).__purohitjiInstallPrompt;
       }
       setDeferredPrompt(null);
     }

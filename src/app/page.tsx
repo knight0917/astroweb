@@ -143,10 +143,38 @@ export default function HomePage() {
 
   const [chatMounted, setChatMounted] = React.useState(false);
   const [pendingChatPrompt, setPendingChatPrompt] = React.useState<string | undefined>(undefined);
+  const [pendingAutoVoice, setPendingAutoVoice] = React.useState(false);
 
   React.useEffect(() => {
     initFromStorage();
   }, [initFromStorage]);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const wantsVoice = params.get("voice") === "1" || params.get("voice") === "true";
+    const wantsChat =
+      wantsVoice ||
+      params.get("openChat") === "1" ||
+      params.get("openChat") === "true" ||
+      params.get("chat") === "open";
+
+    const rawPrompt = params.get("prompt");
+    if (rawPrompt) {
+      const cleanedPrompt = rawPrompt.replace(/[\u0000-\u001F\u007F]/g, " ").trim().slice(0, 250);
+      if (cleanedPrompt) {
+        setPendingChatPrompt(cleanedPrompt);
+      }
+    }
+
+    if (wantsVoice) {
+      setPendingAutoVoice(true);
+    }
+
+    if (wantsChat) {
+      setChatMounted(true);
+      window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+    }
+  }, []);
 
   React.useEffect(() => {
     // Strictly reset any rogue horizontal scroll displacement on mount or view switch
@@ -154,10 +182,14 @@ export default function HomePage() {
   }, [viewMode]);
 
   React.useEffect(() => {
-    const handleOpenChat = (e: any) => {
+    const handleOpenChat = (e: Event) => {
+      const customEvt = e as CustomEvent<{ prompt?: string; voice?: boolean }>;
       setChatMounted(true);
-      if (e?.detail?.prompt) {
-        setPendingChatPrompt(e.detail.prompt);
+      if (customEvt?.detail?.prompt) {
+        setPendingChatPrompt(customEvt.detail.prompt);
+      }
+      if (customEvt?.detail?.voice) {
+        setPendingAutoVoice(true);
       }
     };
     window.addEventListener("open-astro-chat", handleOpenChat);
@@ -324,7 +356,11 @@ export default function HomePage() {
 
       {/* Floating Vedic AI Astrologer Chatbot (Deferred loading for performance) */}
       {chatMounted ? (
-        <AstroChatbot initialOpen={true} initialPrompt={pendingChatPrompt} />
+        <AstroChatbot
+          initialOpen={true}
+          initialPrompt={pendingChatPrompt}
+          initialAutoVoice={pendingAutoVoice}
+        />
       ) : (
         <button
           onClick={() => setChatMounted(true)}
