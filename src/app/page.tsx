@@ -336,11 +336,11 @@ export default function HomePage() {
 
         {viewMode === "dual" && (
           <div className="w-full max-w-full min-w-0 flex flex-col gap-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[560px]">
-              <div className="h-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+              <div className="w-full min-w-0 h-[520px] sm:h-[580px] lg:sticky lg:top-[76px] lg:h-[calc(100vh-96px)] lg:min-h-[540px] lg:max-h-[780px]">
                 <SkyDome />
               </div>
-              <div className="h-full overflow-y-auto">
+              <div className="w-full min-w-0">
                 <KundliChart />
               </div>
             </div>
